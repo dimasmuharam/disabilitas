@@ -1,10 +1,10 @@
-import "@/app/globals.css"
+import "./globals.css" // <-- INI PERBAIKANNYA (Pakai titik slash)
 import { Inter as FontSans } from "next/font/google"
 
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer" // <-- Kita import Footer di sini
+import { SiteFooter } from "@/components/site-footer"
 
 const fontSans = FontSans({
   subsets: ["latin"],
