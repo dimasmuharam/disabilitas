@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { MapPin, Briefcase, DollarSign, Filter, Search, Building2, BadgeCheck } from "lucide-react"
+import { MapPin, Briefcase, DollarSign, Filter, Search, Building2, CheckCircle } from "lucide-react"
 
 // Data Dummy (Contoh Lowongan)
 const jobs = [
@@ -138,8 +138,8 @@ export default function LowonganPage() {
                     {/* BADGE VERIFIED (Fixed for Accessibility) */}
                     {job.verified && (
                       <span className="inline-flex items-center ml-1" title="Perusahaan Terverifikasi">
-                        {/* Ikon Visual (Diabaikan Screen Reader) */}
-                        <BadgeCheck className="h-5 w-5 text-blue-500" aria-hidden="true" />
+                        {/* Ikon Visual (CheckCircle) */}
+                        <CheckCircle className="h-5 w-5 text-blue-500" aria-hidden="true" />
                         {/* Teks Screen Reader Only */}
                         <span className="sr-only"> - Perusahaan Terverifikasi</span>
                       </span>
