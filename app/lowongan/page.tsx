@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { MapPin, Briefcase, DollarSign, Filter, Search, Building2, BadgeCheck } from "lucide-react"
 
-// Data Dummy (Contoh Lowongan) - Nanti ini diganti dengan Database Supabase
+// Data Dummy (Contoh Lowongan)
 const jobs = [
   {
     id: 1,
@@ -12,7 +12,7 @@ const jobs = [
     salary: "Rp 5.000.000 - 7.000.000",
     tags: ["Tunanetra", "Daksa", "Tuli"],
     posted: "2 hari lalu",
-    verified: true, // Ikon centang biru untuk perusahaan terverifikasi
+    verified: true, // Perusahaan ini terverifikasi
   },
   {
     id: 2,
@@ -63,10 +63,11 @@ export default function LowonganPage() {
           {/* Search Bar Sederhana */}
           <div className="flex gap-2 max-w-2xl">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" aria-hidden="true" />
               <input 
                 type="text" 
                 placeholder="Cari posisi atau nama perusahaan..." 
+                aria-label="Cari lowongan berdasarkan posisi atau perusahaan"
                 className="w-full h-10 pl-10 pr-4 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300"
               />
             </div>
@@ -82,7 +83,7 @@ export default function LowonganPage() {
         {/* SIDEBAR FILTER (Kiri) */}
         <aside className="w-full md:w-64 space-y-6">
           <div className="flex items-center gap-2 font-semibold text-lg text-slate-900 dark:text-slate-50">
-            <Filter className="h-5 w-5" /> Filter
+            <Filter className="h-5 w-5" aria-hidden="true" /> Filter
           </div>
           
           {/* Filter Ragam Disabilitas */}
@@ -90,7 +91,7 @@ export default function LowonganPage() {
             <h3 className="font-medium text-sm text-slate-900 dark:text-slate-200">Ragam Disabilitas</h3>
             <div className="space-y-2">
               {['Netra/Low Vision', 'Tuli/Dengar', 'Daksa/Fisik', 'Mental/Intelektual'].map((item) => (
-                <label key={item} className="flex items-center space-x-2">
+                <label key={item} className="flex items-center space-x-2 cursor-pointer">
                   <input type="checkbox" className="rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
                   <span className="text-sm text-slate-600 dark:text-slate-400">{item}</span>
                 </label>
@@ -103,7 +104,7 @@ export default function LowonganPage() {
             <h3 className="font-medium text-sm text-slate-900 dark:text-slate-200">Tipe Pekerjaan</h3>
             <div className="space-y-2">
               {['Full-time', 'Part-time', 'Freelance', 'Magang'].map((item) => (
-                <label key={item} className="flex items-center space-x-2">
+                <label key={item} className="flex items-center space-x-2 cursor-pointer">
                   <input type="checkbox" className="rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
                   <span className="text-sm text-slate-600 dark:text-slate-400">{item}</span>
                 </label>
@@ -115,7 +116,9 @@ export default function LowonganPage() {
         {/* LIST LOWONGAN (Kanan) */}
         <main className="flex-1 space-y-4">
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Menampilkan <strong>4</strong> lowongan terbaru</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400" role="status">
+              Menampilkan <strong>4</strong> lowongan terbaru
+            </p>
           </div>
 
           {/* Mapping Data Dummy ke Kartu Lowongan */}
@@ -125,30 +128,37 @@ export default function LowonganPage() {
                 
                 {/* Informasi Utama */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 flex-wrap">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       <Link href={`/lowongan/${job.id}`} className="focus:outline-none focus:underline">
                         {job.title}
                       </Link>
                     </h2>
+
+                    {/* BADGE VERIFIED (Fixed for Accessibility) */}
                     {job.verified && (
-                      <BadgeCheck className="h-5 w-5 text-blue-500" aria-label="Perusahaan Terverifikasi" />
+                      <span className="inline-flex items-center ml-1" title="Perusahaan Terverifikasi">
+                        {/* Ikon Visual (Diabaikan Screen Reader) */}
+                        <BadgeCheck className="h-5 w-5 text-blue-500" aria-hidden="true" />
+                        {/* Teks Screen Reader Only */}
+                        <span className="sr-only"> - Perusahaan Terverifikasi</span>
+                      </span>
                     )}
                   </div>
                   
                   <div className="text-base font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <Building2 className="h-4 w-4" /> {job.company}
+                    <Building2 className="h-4 w-4" aria-hidden="true" /> {job.company}
                   </div>
 
                   <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" /> {job.location}
+                      <MapPin className="h-4 w-4" aria-hidden="true" /> {job.location}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Briefcase className="h-4 w-4" /> {job.type}
+                      <Briefcase className="h-4 w-4" aria-hidden="true" /> {job.type}
                     </span>
                     <span className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" /> {job.salary}
+                      <DollarSign className="h-4 w-4" aria-hidden="true" /> {job.salary}
                     </span>
                   </div>
 
