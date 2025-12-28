@@ -2,8 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, Building2, MapPin, Briefcase, DollarSign, CheckCircle, Clock, Globe } from "lucide-react"
 
+// --- KODE SAKTI CLOUDFLARE ---
+// Ini wajib ada agar halaman dinamis bisa jalan di Cloudflare Pages
+export const runtime = 'edge'; 
+// -----------------------------
+
 // Data Dummy (Simulasi Database)
-// Nanti ini kita ganti dengan pengambilan data real dari Supabase
 const jobsData: Record<string, any> = {
   "1": {
     title: "Customer Service Specialist (Chat Support)",
