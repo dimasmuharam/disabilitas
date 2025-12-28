@@ -3,7 +3,7 @@ import { ArrowRight, Building2, GraduationCap, Landmark, Users } from "lucide-re
 
 export default function IndexPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       
       {/* SECTION 1: HERO (Banner Utama) */}
       <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-slate-50 dark:bg-slate-950">
@@ -82,7 +82,7 @@ export default function IndexPage() {
               </Link>
             </div>
 
-            {/* 4. PEMERINTAH (Update: Tambah Audit Layanan Publik) */}
+            {/* 4. PEMERINTAH */}
             <div className="flex flex-col space-y-3 rounded-lg border border-slate-200 p-6 shadow-sm dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
               <Landmark className="h-10 w-10 text-purple-600 mb-2" />
               <h3 className="text-xl font-bold">Pemerintah</h3>
@@ -98,22 +98,9 @@ export default function IndexPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="w-full py-6 bg-slate-100 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 mt-auto">
-        <div className="container px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            © 2025 PT Dimaster Education Berprestasi.
-          </p>
-          <nav className="flex gap-4 sm:gap-6">
-            <Link className="text-xs hover:underline underline-offset-4" href="#">
-              Tentang Kami
-            </Link>
-            <Link className="text-xs hover:underline underline-offset-4" href="#">
-              Kebijakan Privasi
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      {/* FOOTER MANUAL SUDAHDIHAPUS DARI SINI */}
+      {/* Footer Global akan otomatis muncul dari layout.tsx */}
+
     </div>
   )
 }
