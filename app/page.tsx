@@ -93,7 +93,59 @@ export default function IndexPage() {
           </div>
         </div>
       </section>
+{/* ALUR KERJA EKOSISTEM (BENANG MERAH VISUAL) */}
+      <section className="w-full py-12 bg-white dark:bg-slate-900">
+        <div className="container px-4 md:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold tracking-tighter">Bagaimana Kami Menghubungkan Anda?</h2>
+          </div>
+          
+          <div className="relative flex flex-col md:flex-row justify-between items-center max-w-5xl mx-auto gap-8">
+            
+            {/* Step 1: Kampus/Lembaga */}
+            <div className="flex flex-col items-center text-center z-10 bg-white dark:bg-slate-900 p-2">
+              <div className="bg-green-100 dark:bg-green-900 p-4 rounded-full mb-3">
+                <GraduationCap className="h-8 w-8 text-green-700 dark:text-green-300" />
+              </div>
+              <h4 className="font-bold text-sm">1. Kampus/Lembaga</h4>
+              <p className="text-xs text-slate-500 max-w-[150px]">Melatih & mendata kompetensi talenta.</p>
+            </div>
 
+            {/* Panah Konektor 1 */}
+            <div className="hidden md:block flex-1 h-1 bg-slate-200 dark:bg-slate-800 relative mx-4">
+              <div className="absolute right-0 -top-1.5 h-3 w-3 border-t-2 border-r-2 border-slate-300 rotate-45"></div>
+            </div>
+            {/* Panah Mobile (Bawah) */}
+            <div className="md:hidden h-8 w-1 bg-slate-200 dark:bg-slate-800"></div>
+
+            {/* Step 2: Platform Disabilitas.com */}
+            <div className="flex flex-col items-center text-center z-10 bg-white dark:bg-slate-900 p-4 border-2 border-blue-600 rounded-xl shadow-lg transform scale-110">
+              <div className="bg-blue-600 p-4 rounded-full mb-3 shadow-md">
+                <Search className="h-8 w-8 text-white" />
+              </div>
+              <h4 className="font-bold text-base text-blue-700 dark:text-blue-400">2. Disabilitas.com</h4>
+              <p className="text-xs text-slate-500 max-w-[150px]">Validasi data, matching, & audit aksesibilitas.</p>
+            </div>
+
+            {/* Panah Konektor 2 */}
+            <div className="hidden md:block flex-1 h-1 bg-slate-200 dark:bg-slate-800 relative mx-4">
+               <div className="absolute right-0 -top-1.5 h-3 w-3 border-t-2 border-r-2 border-slate-300 rotate-45"></div>
+            </div>
+             {/* Panah Mobile (Bawah) */}
+            <div className="md:hidden h-8 w-1 bg-slate-200 dark:bg-slate-800"></div>
+
+            {/* Step 3: Industri */}
+            <div className="flex flex-col items-center text-center z-10 bg-white dark:bg-slate-900 p-2">
+              <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-full mb-3">
+                <Building2 className="h-8 w-8 text-orange-700 dark:text-orange-300" />
+              </div>
+              <h4 className="font-bold text-sm">3. Industri</h4>
+              <p className="text-xs text-slate-500 max-w-[150px]">Merekrut talenta yang terverifikasi.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
       {/* STATISTIK / SOCIAL PROOF */}
       <section className="w-full py-12 border-t border-slate-200 dark:border-slate-800">
         <div className="container px-4 md:px-6">
