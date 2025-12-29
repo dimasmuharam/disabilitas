@@ -30,7 +30,8 @@ export function SiteHeader() {
                 priority
               />
             </div>
-            <span className="inline-block font-bold text-xl text-slate-900 dark:text-white hidden sm:inline-block">
+            {/* PERBAIKAN DI SINI: Hapus 'inline-block' pertama, ganti jadi 'hidden' */}
+            <span className="hidden font-bold text-xl text-slate-900 dark:text-white sm:inline-block">
               Disabilitas.com
             </span>
           </Link>
