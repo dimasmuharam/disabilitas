@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Globe, Mail, MapPin } from "lucide-react"
+import { Globe, Mail, MapPin, Phone } from "lucide-react"
 
 export function SiteFooter() {
   return (
@@ -95,16 +95,29 @@ export function SiteFooter() {
               Kantor Pusat
             </h3>
             <address className="text-sm text-slate-600 dark:text-slate-400 not-italic leading-relaxed">
-              <span className="flex items-start mb-2">
+              <span className="flex items-start mb-3">
                 <MapPin className="h-5 w-5 mr-2 shrink-0 text-slate-400" aria-hidden="true" />
                 <span>
-                  Gedung Dimaster Center,<br />
-                  Jakarta, Indonesia.
+                  Jl. Mulya Makarya No. A/1,<br />
+                  Larangan, Tangerang,<br />
+                  Banten 15154.
                 </span>
               </span>
-              <span className="flex items-center">
+              <span className="flex items-center mb-2">
                 <Mail className="h-4 w-4 mr-2 shrink-0 text-slate-400" aria-hidden="true" />
                 <a href="mailto:halo@disabilitas.com" className="hover:text-blue-600">halo@disabilitas.com</a>
+              </span>
+              <span className="flex items-center">
+                <Phone className="h-4 w-4 mr-2 shrink-0 text-slate-400" aria-hidden="true" />
+                <a 
+                  href="https://wa.me/6282310301799" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="hover:text-blue-600"
+                  aria-label="Hubungi WhatsApp Kami"
+                >
+                  +62 823-1030-1799
+                </a>
               </span>
             </address>
           </div>
