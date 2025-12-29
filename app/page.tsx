@@ -1,105 +1,146 @@
 import Link from "next/link"
-import { ArrowRight, Building2, GraduationCap, Landmark, Users } from "lucide-react"
+import { ArrowRight, Building2, Users, GraduationCap, Landmark, CheckCircle, Search } from "lucide-react"
 
 export default function IndexPage() {
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col min-h-screen">
       
-      {/* SECTION 1: HERO (Banner Utama) */}
-      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-slate-50 dark:bg-slate-950">
+      {/* HERO SECTION: Headline Utama */}
+      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-slate-900 dark:text-slate-50">
-                Satu Data Disabilitas Nasional
+                Satu Data, Sejuta Peluang <br className="hidden sm:inline" />
+                <span className="text-blue-600">Ekosistem Karir Inklusif</span>
               </h1>
-              <p className="mx-auto max-w-[800px] text-slate-600 md:text-xl dark:text-slate-400">
-                Platform terintegrasi yang menghubungkan Talenta, Kampus, Dunia Usaha, dan Pemerintah dalam satu ekosistem inklusif.
+              <p className="mx-auto max-w-[700px] text-slate-500 md:text-xl dark:text-slate-400">
+                Platform pertama yang menghubungkan Talenta Disabilitas, Kampus, Perusahaan, dan Pemerintah dalam satu sistem terintegrasi.
               </p>
             </div>
-            
-            <div className="space-x-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 href="/lowongan"
-                className="inline-flex h-12 items-center justify-center rounded-md bg-slate-900 px-8 text-sm font-medium text-slate-50 shadow transition-colors hover:bg-slate-900/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/90"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-slate-900 px-8 text-sm font-medium text-slate-50 shadow transition-colors hover:bg-slate-900/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/90"
               >
-                Gabung sebagai Talenta
+                <Search className="mr-2 h-4 w-4" /> Cari Lowongan
               </Link>
               <Link
-                href="/mitra"
-                className="inline-flex h-12 items-center justify-center rounded-md border border-slate-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-800 dark:hover:text-slate-50"
+                href="/bisnis"
+                className="inline-flex h-11 items-center justify-center rounded-md border border-slate-200 bg-white px-8 text-sm font-medium shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-800 dark:hover:text-slate-50"
               >
-                Login Mitra
+                Untuk Perusahaan
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 2: 4 PILAR EKOSISTEM */}
-      <section className="w-full py-12 md:py-24 bg-white dark:bg-slate-900">
+      {/* SEKSI 4 PILAR (EKOSISTEM) - INI YANG PENTING */}
+      <section className="w-full py-12 md:py-24 bg-slate-50 dark:bg-slate-950">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Solusi untuk Semua Stakeholder</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Kolaborasi lintas sektor untuk masa depan yang setara.</p>
+            <h2 className="text-3xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">Siapa Anda?</h2>
+            <p className="text-slate-500 dark:text-slate-400">Pilih peran Anda untuk mendapatkan layanan yang tepat.</p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            {/* 1. TALENTA */}
-            <div className="flex flex-col space-y-3 rounded-lg border border-slate-200 p-6 shadow-sm dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
-              <Users className="h-10 w-10 text-blue-600 mb-2" />
-              <h3 className="text-xl font-bold">Talenta Disabilitas</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 flex-1">
-                Bangun profil profesional, temukan karir impian, dan akses pelatihan skill digital.
+            {/* 1. TALENTA (Penyandang Disabilitas) */}
+            <Link href="/lowongan" className="group relative overflow-hidden rounded-xl border bg-white dark:bg-slate-900 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 mb-4">
+                <Users className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-xl mb-2 group-hover:text-blue-600 transition-colors">Talenta</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Akses ribuan lowongan kerja inklusif dan program pengembangan skill.
               </p>
-              <Link href="/lowongan" className="text-sm font-medium text-blue-600 hover:underline">
-                Mulai Karir &rarr;
-              </Link>
-            </div>
+            </Link>
 
-            {/* 2. PERUSAHAAN (Swasta & BUMN) */}
-            <div className="flex flex-col space-y-3 rounded-lg border border-slate-200 p-6 shadow-sm dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
-              <Building2 className="h-10 w-10 text-orange-600 mb-2" />
-              <h3 className="text-xl font-bold">Dunia Usaha</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 flex-1">
-                Rekrutmen inklusif pemenuhan kuota 1%, serta audit aksesibilitas kantor & sistem digital perusahaan.
+            {/* 2. KAMPUS (Perguruan Tinggi) */}
+            <Link href="/kampus" className="group relative overflow-hidden rounded-xl border bg-white dark:bg-slate-900 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 mb-4">
+                <GraduationCap className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-xl mb-2 group-hover:text-green-600 transition-colors">Kampus</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Digitalisasi Unit Layanan Disabilitas (ULD) dan tracer study alumni.
               </p>
-              <Link href="/bisnis" className="text-sm font-medium text-orange-600 hover:underline">
-                Layanan Bisnis &rarr;
-              </Link>
-            </div>
+            </Link>
 
-            {/* 3. PERGURUAN TINGGI */}
-            <div className="flex flex-col space-y-3 rounded-lg border border-slate-200 p-6 shadow-sm dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
-              <GraduationCap className="h-10 w-10 text-green-600 mb-2" />
-              <h3 className="text-xl font-bold">Perguruan Tinggi</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 flex-1">
-                Sistem pendataan mahasiswa disabilitas & pengelolaan Unit Layanan Disabilitas (ULD) Kampus.
+            {/* 3. PERUSAHAAN (Bisnis) */}
+            <Link href="/bisnis" className="group relative overflow-hidden rounded-xl border bg-white dark:bg-slate-900 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-300 mb-4">
+                <Building2 className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-xl mb-2 group-hover:text-orange-600 transition-colors">Perusahaan</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Rekrutmen inklusif, pemenuhan kuota 1%, dan Audit Aksesibilitas.
               </p>
-              <Link href="/kampus" className="text-sm font-medium text-green-600 hover:underline">
-                Sistem ULD &rarr;
-              </Link>
-            </div>
+            </Link>
 
-            {/* 4. PEMERINTAH */}
-            <div className="flex flex-col space-y-3 rounded-lg border border-slate-200 p-6 shadow-sm dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
-              <Landmark className="h-10 w-10 text-purple-600 mb-2" />
-              <h3 className="text-xl font-bold">Pemerintah</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 flex-1">
-                Dashboard sebaran data nasional, pemantauan kuota ASN, serta <span className="font-semibold">audit kepatuhan aksesibilitas website (SPBE) & layanan publik.</span>
+            {/* 4. PEMERINTAH (Government) */}
+            <Link href="/mitra" className="group relative overflow-hidden rounded-xl border bg-white dark:bg-slate-900 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 mb-4">
+                <Landmark className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-xl mb-2 group-hover:text-purple-600 transition-colors">Pemerintah</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Pantau data penyerapan tenaga kerja dan kepatuhan regulasi secara real-time.
               </p>
-              <Link href="/pemerintah" className="text-sm font-medium text-purple-600 hover:underline">
-                Akses Dashboard &rarr;
-              </Link>
-            </div>
+            </Link>
 
           </div>
         </div>
       </section>
 
-      {/* FOOTER MANUAL SUDAHDIHAPUS DARI SINI */}
-      {/* Footer Global akan otomatis muncul dari layout.tsx */}
+      {/* STATISTIK / SOCIAL PROOF */}
+      <section className="w-full py-12 border-t border-slate-200 dark:border-slate-800">
+        <div className="container px-4 md:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold">1,000+</h3>
+              <p className="text-sm text-slate-500">Talenta Siap Kerja</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold">50+</h3>
+              <p className="text-sm text-slate-500">Mitra Perusahaan</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold">20+</h3>
+              <p className="text-sm text-slate-500">Kampus Terdaftar</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold">100%</h3>
+              <p className="text-sm text-slate-500">Aksesibel (WCAG 2.1)</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA AKHIR */}
+      <section className="w-full py-12 md:py-24 bg-slate-900 text-slate-50">
+        <div className="container px-4 md:px-6 text-center">
+          <h2 className="text-3xl font-bold tracking-tighter mb-4">Siap Menciptakan Perubahan?</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto mb-8">
+            Bergabunglah sekarang untuk mewujudkan Indonesia yang inklusif, di mana setiap orang memiliki kesempatan yang sama.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              href="/mitra"
+              className="inline-flex h-12 items-center justify-center rounded-md bg-blue-600 px-8 text-sm font-medium text-white shadow hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+            >
+              Daftar Sebagai Mitra
+            </Link>
+            <Link
+              href="/lowongan"
+              className="inline-flex h-12 items-center justify-center rounded-md border border-slate-700 bg-transparent px-8 text-sm font-medium text-slate-100 shadow-sm transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+            >
+              Lihat Lowongan Terbaru
+            </Link>
+          </div>
+        </div>
+      </section>
 
     </div>
   )
