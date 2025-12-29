@@ -78,3 +78,18 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ... kode css yang sudah ada sebelumnya biarkan saja ... */
+
+/* TAMBAHAN UNTUK DASHBOARD */
+@layer components {
+  /* Style standar untuk Input Form */
+  .input-std {
+    @apply w-full p-2 border rounded-md bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all;
+  }
+  
+  /* Style standar untuk Tombol Utama */
+  .btn-primary {
+    @apply py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+}
