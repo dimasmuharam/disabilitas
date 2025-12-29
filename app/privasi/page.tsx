@@ -37,9 +37,8 @@ export default function PrivasiPage() {
               <li>Pemetaan potensi talenta disabilitas (Tracer Study) untuk rekomendasi formasi kerja ke Pemerintah.</li>
             </ul>
             
-            {/* PERBAIKAN: Menggunakan &quot; pengganti tanda kutip agar deploy sukses */}
-            <p className="mt-2 text-sm italic border-l-4 border-blue-500 pl-4 py-1 bg-blue-50 dark:bg-blue-900/20">
-              &quot;Data Anda bukan sekadar statistik, melainkan bukti nyata untuk mengubah kebijakan negara menjadi lebih inklusif.&quot;
+                        <p className="mt-2 text-sm italic border-l-4 border-blue-500 pl-4 py-1 bg-blue-50 dark:bg-blue-900/20">
+              Data Anda bukan sekadar statistik, melainkan bukti nyata untuk mengubah kebijakan negara menjadi lebih inklusif.
             </p>
 
             <h3 className="text-lg font-bold mt-6 mb-2 text-slate-900 dark:text-slate-50">4. Hak Pengguna</h3>
