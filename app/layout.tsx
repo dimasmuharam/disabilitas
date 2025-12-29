@@ -1,6 +1,6 @@
 import "./globals.css"
-import { Inter as FontSans } from "next/font/google"
 import { Metadata } from "next"
+import { Inter as FontSans } from "next/font/google"
 
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -15,22 +15,25 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.disabilitas.com"),
   title: {
-    default: "Disabilitas.com - Ekosistem Karir & Audit Aksesibilitas",
+    // UPDATE: Title Startup pilihan Mas Dimas
+    default: "Disabilitas.com | Inklusi Jadi Nyata.",
     template: "%s | Disabilitas.com",
   },
-  description: "Platform lowongan kerja inklusif dan layanan audit aksesibilitas digital (SPBE) serta lingkungan kerja.",
+  description: "Platform hub talenta disabilitas dan rekrutmen inklusif terbesar di Indonesia. Menghubungkan potensi dengan peluang tanpa batas melalui data dan riset.",
   keywords: [
     "lowongan disabilitas",
     "audit aksesibilitas",
     "inklusi kerja",
     "audit SPBE",
-    "Dimaster Group"
+    "Dimaster Group",
+    "ASN Inklusif"
   ],
   alternates: {
-    canonical: "/",
+    // UPDATE: Sesuai instruksi Mas Dimas ke domain utama
+    canonical: "https://www.disabilitas.com",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logo.png", // Menggunakan logo yang sudah Mas pasang sebelumnya
   },
   authors: [
     {
@@ -47,7 +50,10 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <head />
+      <head>
+        {/* Canonical Link manual untuk kepastian SEO */}
+        <link rel="canonical" href="https://www.disabilitas.com" />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
