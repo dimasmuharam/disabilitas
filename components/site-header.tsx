@@ -30,7 +30,7 @@ export function SiteHeader() {
                 priority
               />
             </div>
-            {/* PERBAIKAN DI SINI: Hapus 'inline-block' pertama, ganti jadi 'hidden' */}
+            {/* Teks Logo: Hidden di HP, Muncul di Tablet+ */}
             <span className="hidden font-bold text-xl text-slate-900 dark:text-white sm:inline-block">
               Disabilitas.com
             </span>
@@ -44,12 +44,15 @@ export function SiteHeader() {
             >
               Cari Lowongan
             </Link>
+            
+            {/* UPDATE DI SINI: Menggunakan istilah yang lebih spesifik */}
             <Link
               href="/bisnis"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded p-1"
             >
-              Layanan Bisnis
+              Audit & Rekrutmen
             </Link>
+            
             <Link
               href="/kampus"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded p-1"
