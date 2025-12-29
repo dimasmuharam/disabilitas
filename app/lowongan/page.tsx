@@ -1,5 +1,9 @@
 "use client"
 
+// TAMBAHKAN INI JUGA AGAR AMAN
+export const runtime = 'edge' 
+
+// ... import lainnya ...
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
