@@ -2,40 +2,49 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation" // Tambah useSearchParams
 
 export default function DashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams() // Hook untuk baca URL
+  
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState("")
 
-  // State untuk Data Profil (Sesuai Database)
+  // State untuk Notifikasi Verifikasi
+  const [showVerifiedSuccess, setShowVerifiedSuccess] = useState(false)
+
+  // State Data Profil
   const [fullName, setFullName] = useState("")
   const [city, setCity] = useState("")
   const [gender, setGender] = useState("male")
   const [disabilityCategory, setDisabilityCategory] = useState("")
   const [lastEducation, setLastEducation] = useState("")
-  const [skills, setSkills] = useState("") // Input text dipisah koma
+  const [skills, setSkills] = useState("")
   const [workPref, setWorkPref] = useState("hybrid")
   const [isConsent, setIsConsent] = useState(false)
 
-  // 1. Ambil Data User saat Halaman Dibuka
   useEffect(() => {
+    // 1. Cek apakah ada tanda 'verified=true' di URL
+    if (searchParams.get('verified') === 'true') {
+      setShowVerifiedSuccess(true)
+      // Opsional: Hilangkan parameter dari URL agar bersih (tanpa refresh)
+      router.replace('/dashboard')
+    }
+
     getProfile()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function getProfile() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
-        // Kalau belum login, lempar ke halaman masuk
         router.push("/masuk")
         return
       }
 
-      // Ambil data dari tabel 'profiles'
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -53,7 +62,7 @@ export default function DashboardPage() {
         setDisabilityCategory(data.disability_category || "")
         setLastEducation(data.last_education || "")
         setWorkPref(data.work_preference || "hybrid")
-        setSkills(data.skills ? data.skills.join(", ") : "") // Ubah array ke text
+        setSkills(data.skills ? data.skills.join(", ") : "")
         setIsConsent(data.is_research_consent || false)
       }
     } catch (error) {
@@ -63,7 +72,6 @@ export default function DashboardPage() {
     }
   }
 
-  // 2. Simpan Data (Update Profile)
   async function updateProfile(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
@@ -73,7 +81,6 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("No user logged in")
 
-      // Proses update ke Supabase
       const updates = {
         id: user.id,
         full_name: fullName,
@@ -82,7 +89,7 @@ export default function DashboardPage() {
         disability_category: disabilityCategory,
         last_education: lastEducation,
         work_preference: workPref,
-        skills: skills.split(",").map((s) => s.trim()), // Ubah text jadi array
+        skills: skills.split(",").map((s) => s.trim()),
         is_research_consent: isConsent,
         updated_at: new Date(),
       }
@@ -91,6 +98,7 @@ export default function DashboardPage() {
 
       if (error) throw error
       setMsg("Data berhasil disimpan! Terima kasih sudah melengkapi profil.")
+      setShowVerifiedSuccess(false) // Hilangkan notifikasi verifikasi jika user sudah simpan data
     } catch (error) {
       setMsg("Gagal menyimpan data. Silakan coba lagi.")
     } finally {
@@ -106,13 +114,33 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12">
       <div className="container px-4 md:px-6 max-w-3xl mx-auto">
         
+        {/* ALERT KHUSUS JIKA BARU VERIFIKASI */}
+        {showVerifiedSuccess && (
+          <div className="mb-6 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 rounded-r shadow-sm">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                  Email berhasil diverifikasi!
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                  Selamat datang di Disabilitas.com. Silakan lengkapi data diri Anda di bawah ini untuk mulai melamar kerja.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white dark:bg-slate-900 shadow rounded-lg border border-slate-200 dark:border-slate-800 p-6 md:p-8">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-6">
             Profil & Data Riset
           </h1>
 
           <form onSubmit={updateProfile} className="space-y-6">
-            
             {/* Bagian 1: Identitas */}
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-md space-y-4">
               <h2 className="font-semibold text-lg text-slate-800 dark:text-slate-200">1. Identitas Diri</h2>
@@ -141,7 +169,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Bagian 2: Data Disabilitas (PENTING RISET) */}
+            {/* Bagian 2: Data Disabilitas */}
             <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-md space-y-4 border border-blue-100 dark:border-blue-900">
               <h2 className="font-semibold text-lg text-blue-800 dark:text-blue-300">2. Ragam Disabilitas</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">Data ini digunakan untuk pencocokan alat kerja.</p>
@@ -161,7 +189,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Bagian 3: Kompetensi & Pendidikan */}
+            {/* Bagian 3: Kompetensi */}
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-md space-y-4">
               <h2 className="font-semibold text-lg text-slate-800 dark:text-slate-200">3. Pendidikan & Skill</h2>
               
@@ -201,7 +229,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Bagian 4: Informed Consent (JAIP/BRIN) */}
+            {/* Bagian 4: Consent */}
             <div className="flex items-start space-x-3 p-4 border border-slate-200 dark:border-slate-700 rounded-md">
               <input 
                 id="consent" 
