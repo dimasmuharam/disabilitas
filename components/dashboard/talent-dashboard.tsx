@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
-import { INDONESIA_CITIES, UNIVERSITIES } from "@/lib/data-static"
+import { INDONESIA_CITIES, UNIVERSITIES, DISABILITY_TOOLS } from "@/lib/data-static"
 
 export default function TalentDashboard({ user }: { user: any }) {
   const router = useRouter()
@@ -18,15 +18,18 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [city, setCity] = useState("")
   const [gender, setGender] = useState("male")
   const [disabilityCategory, setDisabilityCategory] = useState("")
+  // Field Baru: Alat Bantu
+  const [assistiveTool, setAssistiveTool] = useState("") 
+  
   const [institutionName, setInstitutionName] = useState("")
   const [lastEducation, setLastEducation] = useState("")
   const [skills, setSkills] = useState("")
   const [isConsent, setIsConsent] = useState(false)
   
-  // State untuk Link Validasi
+  // Link Validasi
   const [linkedin, setLinkedin] = useState("")
   const [cvLink, setCvLink] = useState("")
-  const [proofLink, setProofLink] = useState("") // Surat Dokter / KTA OPD
+  const [proofLink, setProofLink] = useState("")
 
   useEffect(() => {
     if (searchParams.get('verified') === 'true') {
@@ -49,12 +52,17 @@ export default function TalentDashboard({ user }: { user: any }) {
         setCity(data.city || "")
         setGender(data.gender || "male")
         setDisabilityCategory(data.disability_category || "")
+        
+        // Ambil Alat Bantu (Karena di database bentuknya Array, kita ambil item pertama dulu untuk form ini)
+        if (data.assistive_tools && data.assistive_tools.length > 0) {
+            setAssistiveTool(data.assistive_tools[0])
+        }
+
         setInstitutionName(data.institution_name || "")
         setLastEducation(data.last_education || "")
         setSkills(data.skills ? data.skills.join(", ") : "")
         setIsConsent(data.is_research_consent || false)
         
-        // Load Link Validasi
         setLinkedin(data.linkedin_url || "")
         setCvLink(data.cv_url || "")
         setProofLink(data.disability_proof_url || "")
@@ -78,12 +86,15 @@ export default function TalentDashboard({ user }: { user: any }) {
         city,
         gender,
         disability_category: disabilityCategory,
+        
+        // Simpan Alat Bantu sebagai Array (agar sesuai tipe data SQL text[])
+        assistive_tools: assistiveTool ? [assistiveTool] : [],
+
         institution_name: institutionName,
         last_education: lastEducation,
         skills: skills.split(",").map((s) => s.trim()),
         is_research_consent: isConsent,
         
-        // Simpan Link Validasi
         linkedin_url: linkedin,
         cv_url: cvLink,
         disability_proof_url: proofLink,
@@ -135,6 +146,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                     <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="input-std" />
                   </div>
                   
+                  {/* COMBOBOX KOTA */}
                   <div>
                     <label className="block text-sm font-medium mb-1">Kota Domisili</label>
                     <input list="cities" value={city} onChange={(e) => setCity(e.target.value)} className="input-std" placeholder="Ketik cari..." />
@@ -151,24 +163,42 @@ export default function TalentDashboard({ user }: { user: any }) {
               </div>
            </div>
 
-           {/* SECTION 2: DISABILITAS */}
+           {/* SECTION 2: DISABILITAS & ALAT BANTU */}
            <div className="border-b border-slate-100 dark:border-slate-800 pb-6">
-              <h3 className="font-semibold mb-4 text-slate-800 dark:text-slate-200 text-lg">2. Ragam Disabilitas</h3>
-              <div>
-                <label className="block text-sm font-medium mb-1">Kategori Utama</label>
-                <select value={disabilityCategory} onChange={(e) => setDisabilityCategory(e.target.value)} className="input-std">
-                  <option value="">-- Pilih --</option>
-                  <option value="Sensorik Netra">Sensorik Netra (Blind/Low Vision)</option>
-                  <option value="Sensorik Rungu">Sensorik Rungu (Tuli/HoH)</option>
-                  <option value="Fisik">Fisik / Daksa</option>
-                  <option value="Intelektual">Intelektual</option>
-                  <option value="Mental">Mental</option>
-                  <option value="Non-Disabilitas">Non-Disabilitas</option>
-                </select>
+              <h3 className="font-semibold mb-4 text-slate-800 dark:text-slate-200 text-lg">2. Kondisi & Alat Bantu</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Kategori Disabilitas</label>
+                    <select value={disabilityCategory} onChange={(e) => setDisabilityCategory(e.target.value)} className="input-std">
+                      <option value="">-- Pilih --</option>
+                      <option value="Sensorik Netra">Sensorik Netra (Blind/Low Vision)</option>
+                      <option value="Sensorik Rungu">Sensorik Rungu (Tuli/HoH)</option>
+                      <option value="Fisik">Fisik / Daksa</option>
+                      <option value="Intelektual">Intelektual</option>
+                      <option value="Mental">Mental</option>
+                      <option value="Non-Disabilitas">Non-Disabilitas</option>
+                    </select>
+                  </div>
+
+                  {/* COMBOBOX ALAT BANTU (BARU) */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Alat Bantu Utama</label>
+                    <input 
+                        list="tools" 
+                        value={assistiveTool} 
+                        onChange={(e) => setAssistiveTool(e.target.value)} 
+                        className="input-std" 
+                        placeholder="Cari alat bantu..." 
+                    />
+                    <datalist id="tools">
+                        {DISABILITY_TOOLS.map((t) => <option key={t} value={t} />)}
+                    </datalist>
+                    <p className="text-xs text-slate-500 mt-1">Contoh: Screen Reader NVDA, Kursi Roda, dll.</p>
+                  </div>
               </div>
            </div>
 
-           {/* SECTION 3: PENDIDIKAN */}
+           {/* SECTION 3: PENDIDIKAN & SKILL */}
            <div className="border-b border-slate-100 dark:border-slate-800 pb-6">
               <h3 className="font-semibold mb-4 text-slate-800 dark:text-slate-200 text-lg">3. Pendidikan & Keahlian</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,6 +214,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                     </select>
                   </div>
 
+                  {/* COMBOBOX KAMPUS */}
                   <div>
                     <label className="block text-sm font-medium mb-1">Nama Kampus / Sekolah</label>
                     <input list="campus" value={institutionName} onChange={(e) => setInstitutionName(e.target.value)} className="input-std" placeholder="Cari kampus..." />
@@ -197,7 +228,7 @@ export default function TalentDashboard({ user }: { user: any }) {
               </div>
            </div>
 
-           {/* SECTION 4: BERKAS DIGITAL (NEW) */}
+           {/* SECTION 4: BERKAS DIGITAL */}
            <div className="border-b border-slate-100 dark:border-slate-800 pb-6 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-md">
               <h3 className="font-semibold mb-2 text-slate-800 dark:text-slate-200 text-lg">4. Berkas & Validasi (Opsional)</h3>
               <p className="text-sm text-slate-500 mb-4">
@@ -207,38 +238,18 @@ export default function TalentDashboard({ user }: { user: any }) {
               <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Link CV / Resume (Google Drive)</label>
-                    <input 
-                      type="url" 
-                      value={cvLink} 
-                      onChange={(e) => setCvLink(e.target.value)} 
-                      className="input-std" 
-                      placeholder="https://docs.google.com/document/d/..." 
-                    />
+                    <input type="url" value={cvLink} onChange={(e) => setCvLink(e.target.value)} className="input-std" placeholder="https://docs.google.com/document/d/..." />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1">Link Bukti Disabilitas (Surat Dokter / KTA OPD)</label>
-                    <input 
-                      type="url" 
-                      value={proofLink} 
-                      onChange={(e) => setProofLink(e.target.value)} 
-                      className="input-std" 
-                      placeholder="https://drive.google.com/file/d/..." 
-                    />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Bisa berupa Surat Keterangan Dokter, atau Kartu Anggota Organisasi (Pertuni, Gerkatin, ITMI, dll).
-                    </p>
+                    <input type="url" value={proofLink} onChange={(e) => setProofLink(e.target.value)} className="input-std" placeholder="https://drive.google.com/file/d/..." />
+                    <p className="text-xs text-slate-500 mt-1">Bisa berupa Surat Keterangan Dokter, atau Kartu Anggota Organisasi (Pertuni, Gerkatin, ITMI, dll).</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1">Link Profil LinkedIn</label>
-                    <input 
-                      type="url" 
-                      value={linkedin} 
-                      onChange={(e) => setLinkedin(e.target.value)} 
-                      className="input-std" 
-                      placeholder="https://linkedin.com/in/username" 
-                    />
+                    <input type="url" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} className="input-std" placeholder="https://linkedin.com/in/username" />
                   </div>
               </div>
            </div>
