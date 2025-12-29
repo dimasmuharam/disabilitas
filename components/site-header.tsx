@@ -20,16 +20,18 @@ export function SiteHeader() {
             className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded-md p-1"
             aria-label="Disabilitas.com, kembali ke halaman depan"
           >
-            <div className="relative h-8 w-8 overflow-hidden rounded-md">
+            {/* UPDATE LOGO: Ada bg-white agar aman di Dark Mode & object-contain agar tidak terpotong */}
+            <div className="relative h-8 w-8 overflow-hidden rounded-md bg-white p-0.5">
               <Image 
                 src="/logo.png" 
                 alt="Logo Disabilitas.com" 
                 width={32}
                 height={32}
-                className="object-cover"
+                className="object-contain"
                 priority
               />
             </div>
+            
             {/* Teks Logo: Hidden di HP, Muncul di Tablet+ */}
             <span className="hidden font-bold text-xl text-slate-900 dark:text-white sm:inline-block">
               Disabilitas.com
@@ -45,7 +47,6 @@ export function SiteHeader() {
               Cari Lowongan
             </Link>
             
-            {/* UPDATE DI SINI: Menggunakan istilah yang lebih spesifik */}
             <Link
               href="/bisnis"
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded p-1"
