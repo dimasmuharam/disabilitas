@@ -1,5 +1,9 @@
 "use client"
 
+// --- TAMBAHAN PENTING UNTUK CLOUDFLARE ---
+export const runtime = 'edge'
+// ------------------------------------------
+
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
