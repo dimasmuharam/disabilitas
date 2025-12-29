@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, Building2, Users, GraduationCap, Landmark, CheckCircle, Search } from "lucide-react"
+import { Building2, Users, GraduationCap, Landmark, Search } from "lucide-react"
 
 export default function IndexPage() {
   return (
@@ -36,7 +36,7 @@ export default function IndexPage() {
         </div>
       </section>
 
-      {/* SEKSI 4 PILAR (EKOSISTEM) - INI YANG PENTING */}
+      {/* SEKSI 4 PILAR (EKOSISTEM) */}
       <section className="w-full py-12 md:py-24 bg-slate-50 dark:bg-slate-950">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-12">
@@ -80,7 +80,7 @@ export default function IndexPage() {
             </Link>
 
             {/* 4. PEMERINTAH (Government) */}
-            <Link href="/mitra" className="group relative overflow-hidden rounded-xl border bg-white dark:bg-slate-900 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+            <Link href="/tentang" className="group relative overflow-hidden rounded-xl border bg-white dark:bg-slate-900 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 mb-4">
                 <Landmark className="h-6 w-6" />
               </div>
@@ -93,7 +93,8 @@ export default function IndexPage() {
           </div>
         </div>
       </section>
-{/* ALUR KERJA EKOSISTEM (BENANG MERAH VISUAL) */}
+
+      {/* ALUR KERJA EKOSISTEM */}
       <section className="w-full py-12 bg-white dark:bg-slate-900">
         <div className="container px-4 md:px-6">
           <div className="text-center mb-10">
@@ -115,7 +116,6 @@ export default function IndexPage() {
             <div className="hidden md:block flex-1 h-1 bg-slate-200 dark:bg-slate-800 relative mx-4">
               <div className="absolute right-0 -top-1.5 h-3 w-3 border-t-2 border-r-2 border-slate-300 rotate-45"></div>
             </div>
-            {/* Panah Mobile (Bawah) */}
             <div className="md:hidden h-8 w-1 bg-slate-200 dark:bg-slate-800"></div>
 
             {/* Step 2: Platform Disabilitas.com */}
@@ -129,9 +129,8 @@ export default function IndexPage() {
 
             {/* Panah Konektor 2 */}
             <div className="hidden md:block flex-1 h-1 bg-slate-200 dark:bg-slate-800 relative mx-4">
-               <div className="absolute right-0 -top-1.5 h-3 w-3 border-t-2 border-r-2 border-slate-300 rotate-45"></div>
+                <div className="absolute right-0 -top-1.5 h-3 w-3 border-t-2 border-r-2 border-slate-300 rotate-45"></div>
             </div>
-             {/* Panah Mobile (Bawah) */}
             <div className="md:hidden h-8 w-1 bg-slate-200 dark:bg-slate-800"></div>
 
             {/* Step 3: Industri */}
@@ -146,6 +145,7 @@ export default function IndexPage() {
           </div>
         </div>
       </section>
+
       {/* STATISTIK / SOCIAL PROOF */}
       <section className="w-full py-12 border-t border-slate-200 dark:border-slate-800">
         <div className="container px-4 md:px-6">
@@ -170,7 +170,7 @@ export default function IndexPage() {
         </div>
       </section>
 
-      {/* CTA AKHIR */}
+      {/* CTA AKHIR (PENTING) */}
       <section className="w-full py-12 md:py-24 bg-slate-900 text-slate-50">
         <div className="container px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold tracking-tighter mb-4">Siap Menciptakan Perubahan?</h2>
@@ -178,11 +178,12 @@ export default function IndexPage() {
             Bergabunglah sekarang untuk mewujudkan Indonesia yang inklusif, di mana setiap orang memiliki kesempatan yang sama.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
+            {/* UPDATE: Link ke Pendaftaran langsung */}
             <Link
-              href="/mitra"
+              href="/daftar"
               className="inline-flex h-12 items-center justify-center rounded-md bg-blue-600 px-8 text-sm font-medium text-white shadow hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              Daftar Sebagai Mitra
+              Daftar Sekarang
             </Link>
             <Link
               href="/lowongan"
