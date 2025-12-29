@@ -4,27 +4,27 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 
-// Import 4 Komponen Dashboard yang sudah dibuat
+// Import Dashboard Komponen
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
 import CampusDashboard from "@/components/dashboard/campus-dashboard"
 import GovDashboard from "@/components/dashboard/gov-dashboard"
+import AdminDashboard from "@/components/dashboard/admin-dashboard" // <--- TAMBAHAN BARU
 
 export default function DashboardManager() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
-  const [role, setRole] = useState("talent") // Default role jika belum diset
+  const [role, setRole] = useState("talent")
 
   useEffect(() => {
     checkUser()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function checkUser() {
-    // 1. Cek Login
     const { data: { user } } = await supabase.auth.getUser()
     
-    // Jika tidak login, tendang ke halaman masuk
     if (!user) {
       router.push("/masuk")
       return
@@ -32,8 +32,6 @@ export default function DashboardManager() {
     
     setUser(user)
 
-    // 2. Cek Role di Database Profiles
-    // Kita ambil kolom 'role' untuk menentukan tampilan mana yang dirender
     const { data } = await supabase
       .from('profiles')
       .select('role')
@@ -56,19 +54,19 @@ export default function DashboardManager() {
     )
   }
 
-  // RENDER TAMPILAN SESUAI PERAN (ROLE)
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
-      <div className="container px-4 md:px-6 mx-auto max-w-5xl">
+      <div className="container px-4 md:px-6 mx-auto max-w-6xl">
         
         {/* Render Komponen Berdasarkan Role */}
         {role === 'talent' && <TalentDashboard user={user} />}
         {role === 'company' && <CompanyDashboard user={user} />}
         {role === 'campus' && <CampusDashboard user={user} />}
         {role === 'government' && <GovDashboard user={user} />}
+        {role === 'admin' && <AdminDashboard user={user} />} {/* <--- TAMBAHAN BARU */}
         
-        {/* Fallback jika role tidak dikenali (default ke Talent) */}
-        {!['talent', 'company', 'campus', 'government'].includes(role) && (
+        {/* Fallback */}
+        {!['talent', 'company', 'campus', 'government', 'admin'].includes(role) && (
            <TalentDashboard user={user} />
         )}
         
