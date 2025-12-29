@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { supabase } from "@/lib/supabase" // Mengambil kunci dari file yang kita buat
+import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -19,6 +19,10 @@ export default function RegisterPage() {
     setLoading(true)
     setMsg("")
 
+    // Ambil URL website saat ini secara otomatis
+    // Ini agar berfungsi baik di Localhost maupun Cloudflare tanpa ganti coding
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
+
     try {
       // 1. Mendaftar ke Supabase Auth
       const { data, error } = await supabase.auth.signUp({
@@ -29,19 +33,28 @@ export default function RegisterPage() {
           data: {
             full_name: fullName, 
           },
+          // PENTING: Arahkan langsung ke dashboard dengan tanda 'verified=true'
+          // Supaya nanti muncul notifikasi hijau di dashboard
+          emailRedirectTo: `${siteUrl}/dashboard?verified=true`,
         },
       })
 
       if (error) throw error
 
-      // 2. Jika sukses
-      setType("success")
-      setMsg("Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi.")
-      
-      // Opsional: Reset form
-      setEmail("")
-      setPassword("")
-      setFullName("")
+      // 2. Jika sukses (Cek apakah butuh verifikasi email atau langsung login)
+      if (data.session) {
+        // Kalau settingan Supabase "Confirm Email" dimatikan, dia langsung login
+        router.push("/dashboard")
+      } else {
+        // Kalau settingan "Confirm Email" nyala (Default), tampilkan pesan
+        setType("success")
+        setMsg("Pendaftaran berhasil! Silakan cek kotak masuk (Inbox/Spam) email Anda untuk verifikasi.")
+        
+        // Bersihkan form
+        setEmail("")
+        setPassword("")
+        setFullName("")
+      }
 
     } catch (error: any) {
       setType("error")
