@@ -8,6 +8,7 @@ export default function GovDashboard({ user }: { user: any }) {
 
   useEffect(() => {
     fetchNationalStats()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function fetchNationalStats() {
@@ -78,7 +79,7 @@ export default function GovDashboard({ user }: { user: any }) {
                     <h3 className="font-bold mb-2">Analisis Kebijakan</h3>
                     <p className="text-sm text-slate-600">
                         *Data ini dapat digunakan sebagai dasar pengajuan kuota formasi CPNS/BUMN sesuai UU No. 8/2016.
-                        Jika data 'Fisik' mendominasi, disarankan memperbanyak aksesibilitas bangunan fisik di kantor pemerintah.
+                        Jika data Fisik mendominasi, disarankan memperbanyak aksesibilitas bangunan fisik di kantor pemerintah.
                     </p>
                 </div>
             </>
