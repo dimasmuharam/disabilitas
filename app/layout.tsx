@@ -1,6 +1,7 @@
 import "./globals.css"
 import { Metadata } from "next"
 import { Inter as FontSans } from "next/font/google"
+import Script from "next/script" // Import untuk Google Analytics
 
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     canonical: "https://www.disabilitas.com",
   },
   icons: {
-    icon: "/logo.png", // Menggunakan logo yang sudah Mas pasang sebelumnya
+    icon: "/logo.png",
   },
   authors: [
     {
@@ -67,6 +68,20 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <SiteFooter />
           </div>
         </ThemeProvider>
+
+        {/* GOOGLE ANALYTICS (G-Q9H6SLY8R0) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-Q9H6SLY8R0"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-Q9H6SLY8R0');
+          `}
+        </Script>
       </body>
     </html>
   )
