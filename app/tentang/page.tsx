@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Users, Target, Heart, Award, ArrowRight } from "lucide-react"
+import { Users, Target, Heart, ArrowRight } from "lucide-react"
 
 export default function TentangPage() {
   return (
@@ -54,9 +54,8 @@ export default function TentangPage() {
             </div>
             <h3 className="text-xl font-bold">Dimas Prasetyo Muharam</h3>
             <p className="text-blue-600 dark:text-blue-400 text-sm font-medium mb-4">Founder & CEO</p>
-            {/* PERBAIKAN DI SINI: Menggunakan kode &ldquo; dan &rdquo; pengganti tanda kutip */}
             <p className="text-slate-600 dark:text-slate-400 text-sm italic">
-              &ldquo;Keterbatasan penglihatan mengajarkan saya untuk melihat peluang dengan hati dan pikiran. Disabilitas.com adalah wujud nyata dari visi tersebut.&rdquo;
+              Keterbatasan penglihatan mengajarkan saya untuk melihat peluang dengan hati dan pikiran. Disabilitas.com adalah wujud nyata dari visi tersebut.
             </p>
           </div>
         </div>
