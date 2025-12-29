@@ -20,11 +20,16 @@ export function SiteHeader() {
             className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded-md p-1"
             aria-label="Disabilitas.com, kembali ke halaman depan"
           >
-            {/* UPDATE LOGO: Ada bg-white agar aman di Dark Mode & object-contain agar tidak terpotong */}
+            {/* UPDATE VISUAL & AKSESIBILITAS: 
+              1. bg-white: Agar logo biru aman di Dark Mode.
+              2. object-contain: Agar logo perisai utuh.
+              3. alt text: Menjelaskan filosofi logo (Perisai, Buku, Lampu).
+            */}
             <div className="relative h-8 w-8 overflow-hidden rounded-md bg-white p-0.5">
               <Image 
                 src="/logo.png" 
-                alt="Logo Disabilitas.com" 
+                // UPDATE: Alt text lebih deskriptif untuk Screen Reader
+                alt="Logo Disabilitas.com - Simbol Perisai Edukasi dan Inovasi" 
                 width={32}
                 height={32}
                 className="object-contain"
