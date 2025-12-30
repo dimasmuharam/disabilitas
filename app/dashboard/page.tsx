@@ -1,76 +1,74 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
-
-// Import Dashboard Komponen
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
-import CampusDashboard from "@/components/dashboard/campus-dashboard"
-import GovDashboard from "@/components/dashboard/gov-dashboard"
-import AdminDashboard from "@/components/dashboard/admin-dashboard" // <--- TAMBAHAN BARU
+import AdminDashboard from "@/components/dashboard/admin-dashboard"
 
-export default function DashboardManager() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
+export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
-  const [role, setRole] = useState("talent")
+  const [role, setRole] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     checkUser()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function checkUser() {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      router.push("/masuk")
-      return
-    }
-    
-    setUser(user)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push("/login")
+        return
+      }
+      setUser(user)
 
-    const { data } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+      // Ambil role dari profil untuk menentukan dashboard yang tampil
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-    if (data && data.role) {
-      setRole(data.role)
+      if (profile) {
+        setRole(profile.role)
+      }
+    } catch (error) {
+      console.error("Dashboard router error:", error)
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-slate-500">Memuat dashboard...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">
+          Menyelaraskan Autentikasi Riset...
+        </p>
       </div>
     )
   }
 
+  // RENDER BERDASARKAN ROLE
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
-      <div className="container px-4 md:px-6 mx-auto max-w-6xl">
-        
-        {/* Render Komponen Berdasarkan Role */}
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10 px-4">
+      <div className="container max-w-7xl mx-auto">
+        {role === 'admin' && <AdminDashboard user={user} />}
         {role === 'talent' && <TalentDashboard user={user} />}
         {role === 'company' && <CompanyDashboard user={user} />}
-        {role === 'campus' && <CampusDashboard user={user} />}
-        {role === 'government' && <GovDashboard user={user} />}
-        {role === 'admin' && <AdminDashboard user={user} />} {/* <--- TAMBAHAN BARU */}
         
-        {/* Fallback */}
-        {!['talent', 'company', 'campus', 'government', 'admin'].includes(role) && (
-           <TalentDashboard user={user} />
+        {!role && (
+          <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed">
+            <p className="text-slate-500 font-bold uppercase italic">
+              Role akun tidak teridentifikasi. Silakan hubungi sistem admin.
+            </p>
+          </div>
         )}
-        
       </div>
-    </div>
+    </main>
   )
 }
