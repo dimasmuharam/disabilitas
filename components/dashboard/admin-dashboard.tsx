@@ -35,7 +35,6 @@ export default function AdminDashboard({ user }: { user: any }) {
   async function fetchAdminData() {
     setLoading(true)
     try {
-      // 1. Fetch Basic Stats
       const { data: pData } = await supabase.from('profiles').select('id, role, disability_type')
       if (pData) {
         setStats({
@@ -45,18 +44,15 @@ export default function AdminDashboard({ user }: { user: any }) {
         })
       }
 
-      // 2. Fetch Manual Audit Logs
       const { data: aLogs } = await supabase
         .from('manual_input_logs')
         .select('*')
         .order('occurrence_count', { ascending: false })
       if (aLogs) setAuditLogs(aLogs)
 
-      // 3. Fetch Research Transition Data (View)
       const { data: tData } = await supabase.from('research_transition_analysis').select('*')
       if (tData) setTransitionData(tData)
 
-      // 4. Fetch Longitudinal History
       const { data: lData } = await supabase
         .from('career_status_history')
         .select('*, profiles(full_name, disability_type)')
@@ -106,7 +102,7 @@ export default function AdminDashboard({ user }: { user: any }) {
 
       {/* TAB 1: SNAPSHOT DEMOGRAFI */}
       {activeTab === "snapshot" && (
-        <section className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+        <section className="space-y-8 animate-in fade-in">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
               <Users className="text-blue-600 mb-4" size={24}/>
@@ -120,7 +116,7 @@ export default function AdminDashboard({ user }: { user: any }) {
             </div>
             <div className="md:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
               <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">{"Proporsi Ragam Disabilitas"}</h3>
-              <ul className="space-y-2" aria-label="Proporsi Ragam Disabilitas Terdaftar">
+              <ul className="space-y-2">
                 {Array.from(new Set(transitionData.map(d => d.disability_type))).map(type => {
                   const count = transitionData.filter(d => d.disability_type === type).length;
                   const percent = stats.talents > 0 ? ((count / stats.talents) * 100).toFixed(1) : "0";
@@ -151,6 +147,7 @@ export default function AdminDashboard({ user }: { user: any }) {
           <div className="grid md:grid-cols-2 gap-10">
              <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 space-y-4">
                 <h3 className="font-black text-blue-900 uppercase text-xs flex items-center gap-2"><GraduationCap size={16}/> {"Narasi Transisi Pendidikan-Kerja"}</h3>
+                {/* Perbaikan: Baris 156 dibungkus dengan String Bracing {" "} */}
                 <p className="text-sm text-blue-800 leading-relaxed italic">
                   {"Berdasarkan dataset saat ini, talenta dari model sekolah Inklusi cenderung memiliki status 'Sudah Bekerja' 15% lebih tinggi dibandingkan model SLB dalam kurun waktu 2 tahun setelah lulus."}
                 </p>
@@ -194,7 +191,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                 <tr>
                   <th className="px-6 py-4">{"Field Name"}</th>
                   <th className="px-6 py-4">{"Manual Value"}</th>
-                  <th className="px-6 py-4">{"Frekuensi Muncul"}</th>
+                  <th className="px-6 py-4">{"Muncul"}</th>
                   <th className="px-6 py-4">{"Status Review"}</th>
                 </tr>
               </thead>
@@ -227,9 +224,8 @@ export default function AdminDashboard({ user }: { user: any }) {
               <TrendingUp size={18}/> {"Dinamika Transisi Karir"}
             </h2>
             <div className="space-y-4">
-              {longitudinalData.length > 0 ? longitudinalData.map((h, i) => (
+              {longitudinalData.length > 0 ? longitudinalData.map((h) => (
                 <div key={h.id} className="flex items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
-                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-xs shadow-sm">{i+1}</div>
                   <div className="flex-1">
                     <p className="text-[10px] font-black uppercase text-slate-400">{new Date(h.changed_at).toLocaleDateString()}</p>
                     <h4 className="text-xs font-black uppercase">{h.profiles?.full_name}</h4>
