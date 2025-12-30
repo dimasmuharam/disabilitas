@@ -2,8 +2,8 @@ import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
 import { 
   User, GraduationCap, Briefcase, Award, MapPin, 
-  Linkedin, Globe, FileText, Youtube, CheckCircle2,
-  BriefcaseBusiness, Building2, Calendar
+  Linkedin, Globe, FileText, Youtube, CheckCircle, // CheckCircle2 diganti menjadi CheckCircle
+  Building2, Calendar
 } from "lucide-react"
 
 export const revalidate = 60 
@@ -45,7 +45,8 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
             {profile.full_name}
           </h1>
           <p className="text-blue-400 font-black uppercase tracking-[0.3em] text-[10px] mb-6 flex items-center gap-2">
-            <BriefcaseBusiness size={14}/> {profile.career_status || "Talenta Inklusif"}
+            {/* BriefcaseBusiness diganti menjadi Briefcase agar build sukses */}
+            <Briefcase size={14}/> {profile.career_status || "Talenta Inklusif"}
           </p>
           
           <div className="flex flex-wrap justify-center gap-3 mb-6">
@@ -53,7 +54,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
               #{profile.disability_type}
             </span>
             <span className="px-4 py-1.5 bg-white/10 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center gap-2">
-              <CheckCircle2 size={14} className="text-green-400"/> Verified Profile
+              <CheckCircle size={14} className="text-green-400"/> Verified Profile
             </span>
           </div>
           <p className="text-slate-400 font-bold flex items-center gap-2 uppercase tracking-widest text-[10px]">
@@ -80,10 +81,8 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
         )}
 
         <div className="grid md:grid-cols-3 gap-8">
-          {/* KIRI: DETAIL PROFESIONAL */}
           <div className="md:col-span-2 space-y-8">
             
-            {/* RIWAYAT PEKERJAAN - BARU */}
             <section className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800">
               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-8 flex items-center gap-2">
                 <Briefcase size={18}/> Pengalaman Profesional
@@ -107,7 +106,6 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
               </div>
             </section>
 
-            {/* KEAHLIAN */}
             <section className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800">
               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-6 flex items-center gap-2">
                 <Award size={18}/> Kepakaran Utama
@@ -121,7 +119,6 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
               </div>
             </section>
 
-            {/* PENDIDIKAN */}
             <section className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800">
               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-600 mb-6 flex items-center gap-2">
                 <GraduationCap size={20}/> Pendidikan Terakhir
@@ -134,7 +131,6 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
             </section>
           </div>
 
-          {/* KANAN: KONTAK & AKsesibilitas */}
           <div className="space-y-6">
             <section className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl">
               <h2 className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-6">Hubungi Profesional</h2>
