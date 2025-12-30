@@ -1,3 +1,7 @@
+// File: lib/data-static.ts
+// Deskripsi: Basis data statis komprehensif untuk sinkronisasi riset disabilitas.com
+// Aturan: Menggunakan format string bersih, menghindari tanda kutip ganda dalam teks narasi.
+
 export const DISABILITY_TYPES = [
   "Netra / Low Vision",
   "Tuli / Wicara",
@@ -28,8 +32,7 @@ export const EDUCATION_LEVELS = [
 
 export const EDUCATION_MODELS = [
   "Sekolah Luar Biasa (SLB)",
-  "Sekolah Inklusi",
-  "Sekolah Reguler",
+    "Sekolah Reguler / inklusi",
   "Home Schooling",
   "Pendidikan Informal / BLK"
 ];
@@ -112,27 +115,21 @@ export const SKILLS_LIST = [
 ].sort();
 
 export const INDONESIA_CITIES = [
-  // Jabodetabek
   "Jakarta Pusat", "Jakarta Selatan", "Jakarta Barat", "Jakarta Timur", "Jakarta Utara", "Kepulauan Seribu",
   "Bogor", "Kota Bogor", "Depok", "Tangerang", "Kota Tangerang", "Tangerang Selatan", "Bekasi", "Kota Bekasi",
-  // Jawa & DIY
   "Bandung", "Kota Bandung", "Cimahi", "Sumedang", "Garut", "Tasikmalaya", "Ciamis", "Cianjur", "Sukabumi", "Cirebon",
   "Semarang", "Kota Semarang", "Surakarta (Solo)", "Magelang", "Salatiga", "Purwokerto", "Cilacap", "Kebumen", "Tegal",
   "Yogyakarta", "Sleman", "Bantul", "Kulon Progo", "Gunungkidul",
   "Surabaya", "Malang", "Kota Malang", "Batu", "Sidoarjo", "Gresik", "Mojokerto", "Pasuruan", "Probolinggo", "Jember", "Banyuwangi", "Kediri", "Madiun",
-  // Sumatera
   "Banda Aceh", "Lhokseumawe", "Medan", "Pematangsiantar", "Binjai", "Padang", "Bukittinggi", "Pekanbaru", "Dumai", "Batam", "Tanjungpinang", 
   "Jambi", "Palembang", "Lubuklinggau", "Bengkulu", "Bandar Lampung", "Metro", "Pangkal Pinang",
-  // Kalimantan
   "Pontianak", "Singkawang", "Banjarmasin", "Banjarbaru", "Palangkaraya", "Samarinda", "Balikpapan", "Bontang", "Tarakan",
-  // Sulawesi
   "Makassar", "Parepare", "Palopo", "Manado", "Bitung", "Tomohon", "Palu", "Kendari", "Gorontalo", "Mamuju",
-  // Bali & Nusa Tenggara
   "Denpasar", "Badung", "Gianyar", "Mataram", "Kupang",
-  // Maluku & Papua
   "Ambon", "Tual", "Ternate", "Tidore", "Jayapura", "Kota Jayapura", "Merauke", "Mimika", "Sorong", "Manokwari"
 ].sort();
 
+// KATEGORI 1: PERGURUAN TINGGI
 export const UNIVERSITIES = [
   "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
   "Institut Pertanian Bogor (IPB)", "Universitas Brawijaya (UB)", "Universitas Airlangga (UNAIR)", 
@@ -156,6 +153,40 @@ export const UNIVERSITIES = [
   "Universitas Tarumanagara (Untar)", "Universitas Pelita Harapan (UPH)", "Universitas Mercu Buana",
   "Universitas Gunadarma", "Universitas Kristen Satya Wacana (UKSW)", "Universitas Pasundan (Unpas)"
 ].sort();
+
+// KATEGORI 2: LEMBAGA PELATIHAN & PEMERINTAH (TRAINING PARTNERS)
+export const TRAINING_PARTNERS = [
+  "Kementerian Komunikasi dan Digital (Komdigi)",
+  "BBPVP Bekasi (Cevest)",
+  "BBPVP Semarang",
+  "BBPVP Bandung",
+  "BBPVP Medan",
+  "Pusat Pelatihan Kerja Daerah (PPKD) Jakarta",
+  "Digitalent Scholarship",
+  "Ruangguru (Lembaga Kursus Swasta)",
+  "Binar Academy",
+  "Hacktiv8",
+  "Mitra Lembaga Latihan Kerja (LLK) Daerah"
+].sort();
+
+// KATEGORI 3: ORGANISASI & KOMUNITAS DISABILITAS (COMMUNITY PARTNERS)
+export const COMMUNITY_PARTNERS = [
+  "Forum ASN Inklusif",
+  "Konekin (Koneksi Inklusi)",
+  "Kartunet (Karya Tunanetra)",
+  "Persatuan Tuna Netra Indonesia (PERTUNI)",
+  "Gerakan Kesejahteraan Tuna Rungu Indonesia (GERKATIN)",
+  "Himpunan Wanita Disabilitas Indonesia (HWDI)",
+  "Persatuan Penyandang Disabilitas Indonesia (PPDI)",
+  "Yayasan Pembinaan Anak Cacat (YPAC)",
+  "Diffalink",
+  "Dnetwork",
+  "Kerjabilitas",
+  "Paradifa",
+  "Sigab Indonesia",
+  "Pusat Layanan Disabilitas (PLD) Kampus"
+].sort();
+
 export const INCLUSIVE_JOB_TEMPLATE = `[STANDAR INKLUSIVITAS KERJA]
 
 Kami percaya pada kesetaraan peluang bagi semua talenta. Instansi kami membuka pintu bagi rekan-rekan disabilitas untuk berkarya di posisi ini.
@@ -163,8 +194,8 @@ Kami percaya pada kesetaraan peluang bagi semua talenta. Instansi kami membuka p
 KOMITMEN AKOMODASI:
 Kami menyediakan akomodasi layak yang mencakup (namun tidak terbatas pada):
 1. Aksesibilitas Digital: Dokumen ramah pembaca layar (screen reader) dan sistem internal berbasis web yang aksesibel.
-2. Lingkungan Fisik: (Contoh: Ramp kursi roda, toilet aksesibel, atau ruang kerja tenang).
-3. Dukungan Kerja: (Contoh: Jam kerja fleksibel, penyediaan Juru Bahasa Isyarat untuk rapat penting, atau pendampingan mentor).
+2. Lingkungan Fisik: Penyesuaian akses mobilitas di area kerja.
+3. Dukungan Kerja: Pendampingan mentor atau penyesuaian instruksi kerja sesuai ragam disabilitas.
 
 KUALIFIKASI KHUSUS:
 Kami mengutamakan kandidat yang mandiri dalam penggunaan alat bantu mobilitas atau teknologi asistif masing-masing.
