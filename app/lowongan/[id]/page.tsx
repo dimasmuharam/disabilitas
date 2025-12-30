@@ -19,52 +19,45 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
+  // Definisi teks riset mandiri (Bracing dipatuhi)
+  const TXT_LOADING = {"Menyinkronkan Detail Lowongan..."}
+  const TXT_NOT_FOUND = {"Lowongan Tidak Tersedia"}
+  const TXT_BACK = {"Kembali ke Pencarian"}
+  const MSG_CONFIRM = "Dengan melamar, Anda setuju membagikan profil profesional Anda demi kepentingan rekrutmen dan data riset inklusivitas."
+  const MSG_SUCCESS = "Lamaran Anda berhasil terkirim. Data akan diproses untuk riset inklusivitas kerja."
+  const MSG_ERROR = "Terjadi kendala saat mengirim lamaran."
+
   useEffect(() => {
-    checkUser()
-    getJobDetail()
-  }, [])
+    async function init() {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      setUser(authUser)
+      
+      if (authUser) {
+        const { data } = await supabase
+          .from('applications')
+          .select('id')
+          .eq('job_id', params.id)
+          .eq('applicant_id', authUser.id)
+          .maybeSingle()
+        if (data) setHasApplied(true)
+      }
 
-  async function checkUser() {
-    const { data: { user } } = await supabase.auth.getUser()
-    setUser(user)
-    if (user) {
-      // Pastikan data riset tidak duplikat
-      const { data } = await supabase
-        .from('applications')
-        .select('id')
-        .eq('job_id', params.id)
-        .eq('applicant_id', user.id)
-        .maybeSingle()
-      if (data) setHasApplied(true)
+      try {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select(`*, companies (*)`)
+          .eq('id', params.id)
+          .single()
+        if (error) throw error
+        setJob(data)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
-
-  async function getJobDetail() {
-    try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select(`
-          *,
-          companies (
-            id,
-            name,
-            industry,
-            is_verified,
-            master_accommodations_provided,
-            vision_statement
-          )
-        `)
-        .eq('id', params.id)
-        .single()
-
-      if (error) throw error
-      setJob(data)
-    } catch (error) {
-      console.error("<strong>Lowongan tidak ditemukan</strong>", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+    init()
+  }, [params.id])
 
   async function handleApply() {
     if (!user) {
@@ -72,9 +65,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       return
     }
     
-    // Informed Consent untuk kepentingan Riset & Inklusivitas Mandiri
-    const confirmConsent = confirm("<strong>Dengan melamar, Anda setuju membagikan profil profesional Anda kepada instansi terkait demi kepentingan rekrutmen dan data riset inklusivitas.</strong>")
-    if (!confirmConsent) return
+    if (!confirm(MSG_CONFIRM)) return
 
     setApplying(true)
     const { error } = await supabase.from('applications').insert({
@@ -86,40 +77,44 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
     if (!error) {
       setHasApplied(true)
-      alert("<strong>Lamaran Anda berhasil terkirim.</strong>")
+      alert(MSG_SUCCESS)
     } else {
-      alert("<strong>Terjadi kendala:</strong> " + error.message)
-setApplying(false)
-  } // <-- Ini penutup handleApply
+      alert(MSG_ERROR)
+    }
+    setApplying(false)
+  }
 
   if (loading) {
-    return <div className="p-20 text-center font-black animate-pulse text-slate-400 uppercase tracking-widest italic">{TXT_LOADING}</div>
+    return (
+      <div className="p-20 text-center font-black animate-pulse text-slate-400 uppercase tracking-widest italic">
+        {TXT_LOADING}
+      </div>
+    )
   }
   
   if (!job) {
     return (
       <div className="p-20 text-center space-y-4">
         <h2 className="text-2xl font-black uppercase italic tracking-tighter">{TXT_NOT_FOUND}</h2>
-        <Link href="/lowongan" className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black uppercase text-[10px]">{"Kembali"}</Link>
+        <Link href="/lowongan" className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black uppercase text-[10px]">
+          {"Kembali"}
+        </Link>
       </div>
     )
   }
 
-  // DI SINI TIDAK BOLEH ADA TANDA } ATAU ) TAMBAHAN
   return (
     <div className="min-h-screen bg-slate-50 pb-20 pt-10">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto">
         
-        {/* Navigasi Kembali */}
         <Link href="/lowongan" className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 mb-8 transition-all group">
-          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> {"Kembali ke Pencarian"}
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> 
+          {TXT_BACK}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
-          {/* KOLOM KIRI: INFO LOWONGAN */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
+            <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-slate-200 shadow-xl relative overflow-hidden">
               <div className="relative z-10 space-y-4">
                 <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
                   <Briefcase size={12}/> {job.work_mode || "Pekerjaan Tetap"}
@@ -130,7 +125,6 @@ setApplying(false)
                   {job.companies?.name}
                   {job.companies?.is_verified && <ShieldCheck className="h-5 w-5 text-blue-500" />}
                 </Link>
-
                 <div className="flex flex-wrap gap-6 pt-4 border-t border-slate-50 mt-4">
                   <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     <MapPin className="h-4 w-4 text-red-500" /> {job.location}
@@ -152,7 +146,6 @@ setApplying(false)
             </div>
           </div>
 
-          {/* KOLOM KANAN: SIDEBAR PANEL */}
           <div className="space-y-6">
             <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 shadow-2xl sticky top-10 border border-white/5">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">{"Panel Lamaran"}</h3>
@@ -167,29 +160,12 @@ setApplying(false)
                     disabled={applying || !job.is_active}
                     className="w-full h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
                   >
-                    {applying ? "{"Memproses..."}" : <><Send size={20}/> {"Kirim Lamaran"}</>}
+                    {applying ? "Memproses..." : <><Send size={20}/> {"Kirim Lamaran"}</>}
                   </button>
                 )}
-                <p className="text-[9px] text-center text-slate-500 font-bold leading-relaxed italic uppercase">
-                  {"Data profil Anda akan otomatis dibagikan kepada instansi ini."}
-                </p>
-              </div>
-
-              <div className="mt-10 pt-8 border-t border-white/10 space-y-4">
-                <h3 className="text-[9px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
-                  <ShieldCheck size={14}/> {"Target Ragam Disabilitas"}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {job.target_disabilities?.map((tag: string) => (
-                    <span key={tag} className="bg-white/5 border border-white/10 text-white text-[9px] font-black px-3 py-1.5 rounded-lg uppercase">
-                      {"#"}{tag}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
 
-            {/* Komitmen Inklusi */}
             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm space-y-6">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                 <Building2 size={14} className="text-blue-600"/> {"Akomodasi Instansi"}
@@ -202,24 +178,14 @@ setApplying(false)
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs italic text-slate-400">{"Instansi belum mencantumkan detail akomodasi."}</p>
+                  <p className="text-xs italic text-slate-400">{"Instansi belum mencantumkan detail."}</p>
                 )}
               </div>
-              
               <Link href={`/perusahaan/${job.companies?.id}`} className="block w-full py-4 bg-slate-50 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100 flex items-center justify-center gap-2">
-                {"Lihat Profil Instansi"} <ExternalLink size={12} />
+                {"Profil Instansi"} <ExternalLink size={12} />
               </Link>
             </div>
-
-            {/* Info Riset Inklusivitas */}
-            <div className="px-6 flex gap-3">
-                <Info size={16} className="text-slate-400 shrink-0"/>
-                <p className="text-[8px] font-black text-slate-400 leading-tight uppercase">
-                  {"Data lamaran dipantau untuk mendukung riset independen demi ekosistem kerja inklusif di Indonesia."}
-                </p>
-            </div>
           </div>
-
         </div>
       </div>
     </div>
