@@ -20,9 +20,9 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
 
   // Definisi teks riset mandiri (Bracing dipatuhi)
-  const TXT_LOADING = {"Menyinkronkan Detail Lowongan..."}
-  const TXT_NOT_FOUND = {"Lowongan Tidak Tersedia"}
-  const TXT_BACK = {"Kembali ke Pencarian"}
+  const TXT_LOADING = "Menyinkronkan Detail Lowongan..."
+  const TXT_NOT_FOUND = "Lowongan Tidak Tersedia"
+  const TXT_BACK = "Kembali ke Pencarian"
   const MSG_CONFIRM = "Dengan melamar, Anda setuju membagikan profil profesional Anda demi kepentingan rekrutmen dan data riset inklusivitas."
   const MSG_SUCCESS = "Lamaran Anda berhasil terkirim. Data akan diproses untuk riset inklusivitas kerja."
   const MSG_ERROR = "Terjadi kendala saat mengirim lamaran."
