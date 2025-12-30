@@ -14,40 +14,41 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    checkUser()
-  }, [])
+    // Memasukkan fungsi ke dalam useEffect menghilangkan peringatan 'missing dependency'
+    async function checkUser() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push("/login")
+          return
+        }
+        setUser(user)
 
-  async function checkUser() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push("/login")
-        return
+        // Ambil role dari profil untuk menentukan dashboard yang tampil
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (profile) {
+          setRole(profile.role)
+        }
+      } catch (error) {
+        console.error("Dashboard router error:", error)
+      } finally {
+        setLoading(false)
       }
-      setUser(user)
-
-      // Ambil role dari profil untuk menentukan dashboard yang tampil
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (profile) {
-        setRole(profile.role)
-      }
-    } catch (error) {
-      console.error("Dashboard router error:", error)
-    } finally {
-      setLoading(false)
     }
-  }
+
+    checkUser()
+  }, [router]) // Menambahkan router sebagai dependency standar
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">
-          Menyelaraskan Autentikasi Riset...
+          {"Menyelaraskan Autentikasi Riset..."}
         </p>
       </div>
     )
@@ -62,9 +63,9 @@ export default function DashboardPage() {
         {role === 'company' && <CompanyDashboard user={user} />}
         
         {!role && (
-          <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed">
+          <div className="text-center p-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
             <p className="text-slate-500 font-bold uppercase italic">
-              Role akun tidak teridentifikasi. Silakan hubungi sistem admin.
+              {"Role akun tidak teridentifikasi. Silakan hubungi sistem admin."}
             </p>
           </div>
         )}
