@@ -149,7 +149,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                 <h3 className="font-black text-blue-900 uppercase text-xs flex items-center gap-2"><GraduationCap size={16}/> {"Narasi Transisi Pendidikan-Kerja"}</h3>
                 {/* Perbaikan: Baris 156 dibungkus dengan String Bracing {" "} */}
                 <p className="text-sm text-blue-800 leading-relaxed italic">
-                  {"Berdasarkan dataset saat ini, talenta dari model sekolah Inklusi cenderung memiliki status 'Sudah Bekerja' 15% lebih tinggi dibandingkan model SLB dalam kurun waktu 2 tahun setelah lulus."}
+                  {"Berdasarkan dataset saat ini, talenta dari model sekolah Inklusi cenderung memiliki status Sudah Bekerja 15% lebih tinggi dibandingkan model SLB dalam kurun waktu 2 tahun setelah lulus."}
                 </p>
                 <div className="bg-white/50 p-4 rounded-xl text-[10px] font-medium text-blue-700 leading-relaxed border border-blue-200">
                   {"Data korelasi menunjukkan kaitan kuat antara Pendidikan Terakhir dengan ekspektasi gaji di wilayah urban."}
