@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import { 
   Building2, MapPin, Globe, ShieldCheck, Star, 
-  CheckCircle2, Users, Briefcase, ArrowRight, Info
+  CheckCircle, Users, Briefcase, ArrowRight, Info // CheckCircle2 diganti menjadi CheckCircle
 } from "lucide-react"
 import Link from "next/link"
 
@@ -132,7 +132,8 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
           <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-8">
             <section>
               <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
-              <p className="text-slate-600 leading-relaxed italic font-medium">"{company.vision_statement || "Belum ada visi tertulis."}"</p>
+              {/* PERBAIKAN DI SINI: Menggunakan entitas &quot; */}
+              <p className="text-slate-600 leading-relaxed italic font-medium">&quot;{company.vision_statement || "Belum ada visi tertulis."}&quot;</p>
             </section>
             
             <section className="pt-8 border-t border-slate-100">
@@ -140,7 +141,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
               <div className="flex flex-wrap gap-2">
                 {company.master_accommodations_provided?.map((acc: string) => (
                   <span key={acc} className="bg-green-50 text-green-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border border-green-100">
-                    <CheckCircle2 size={14}/> {acc}
+                    <CheckCircle size={14}/> {acc}
                   </span>
                 )) || <p className="text-slate-400 text-xs italic">Informasi akomodasi belum dilengkapi.</p>}
               </div>
