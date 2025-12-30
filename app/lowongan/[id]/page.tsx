@@ -95,16 +95,19 @@ setApplying(false)
   // --- PASTIKAN TIDAK ADA KURUNG TUTUP NYASAR DI SINI ---
 
   if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400 uppercase tracking-widest italic">{TXT_LOADING}</div>
-  
-  if (!job) return (
-    <div className="p-20 text-center space-y-4">
-      <h2 className="text-2xl font-black uppercase italic tracking-tighter">{TXT_NOT_FOUND}</h2>
-      <Link href="/lowongan" className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black uppercase text-[10px]">{"Kembali"}</Link>
-    </div>
-  )
+  if (!job) {
+    return (
+      <div className="p-20 text-center space-y-4">
+        <h2 className="text-2xl font-black uppercase italic tracking-tighter">{TXT_NOT_FOUND}</h2>
+        <Link href="/lowongan" className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black uppercase text-[10px]">{"Kembali"}</Link>
+      </div>
+    );
+  }
+
+  // DI SINI HARUS BERSIH, TIDAK BOLEH ADA ) ATAU } NYASAR
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 pt-10">    }
+    <div className="min-h-screen bg-slate-50 pb-20 pt-10">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto">
         
         {/* Navigasi Kembali */}
