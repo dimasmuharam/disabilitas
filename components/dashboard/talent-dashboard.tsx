@@ -5,11 +5,12 @@ import { supabase } from "@/lib/supabase"
 import { 
   INDONESIA_CITIES, UNIVERSITIES, DISABILITY_TOOLS, DISABILITY_TYPES,
   EDUCATION_LEVELS, EDUCATION_MODELS, SCHOLARSHIP_TYPES, EDUCATION_BARRIERS,
-  ACCOMMODATION_TYPES, SKILLS_LIST
+  ACCOMMODATION_TYPES
 } from "@/lib/data-static"
 import { 
   User, GraduationCap, Briefcase, FileText, ShieldCheck, Save, 
-  Edit3, ExternalLink, Award, Plus, Trash2, MapPin, CheckCircle
+  Edit3, ExternalLink, Award, Plus, Trash2, MapPin, CheckCircle,
+  Search, Clock, Building2, ArrowRight
 } from "lucide-react"
 
 export default function TalentDashboard({ user }: { user: any }) {
@@ -20,7 +21,6 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [msg, setMsg] = useState("")
 
   // -- STATE DATA PROFIL --
-  const [profile, setProfile] = useState<any>(null)
   const [fullName, setFullName] = useState("")
   const [city, setCity] = useState("")
   const [disabilityType, setDisabilityType] = useState("")
@@ -37,10 +37,11 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [proofLink, setProofLink] = useState("")
   const [isConsent, setIsConsent] = useState(false)
 
-  // -- STATE SERTIFIKASI --
+  // -- STATE AKTIVITAS --
   const [certs, setCerts] = useState<any[]>([])
+  const [myApplications, setMyApplications] = useState<any[]>([])
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([])
   const [newCertName, setNewCertName] = useState("")
-  const [newCertOrg, setNewCertOrg] = useState("")
 
   useEffect(() => {
     fetchInitialData()
@@ -48,34 +49,45 @@ export default function TalentDashboard({ user }: { user: any }) {
 
   async function fetchInitialData() {
     try {
+      // 1. Ambil Profil
       const { data: pData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       if (pData) {
-        setProfile(pData)
-        setFullName(pData.full_name || "")
-        setCity(pData.city || "")
-        setDisabilityType(pData.disability_type || "")
-        setLastEducation(pData.education_level || "")
-        setEducationModel(pData.education_model || "")
-        setInstitutionName(pData.university || "")
-        setScholarshipType(pData.scholarship_type || "")
+        setFullName(pData.full_name || ""); setCity(pData.city || ""); setDisabilityType(pData.disability_type || "")
+        setLastEducation(pData.education_level || ""); setEducationModel(pData.education_model || "")
+        setInstitutionName(pData.university || ""); setScholarshipType(pData.scholarship_type || "")
         setEducationBarrier(pData.education_barrier || "")
         setSkills(pData.skills ? pData.skills.join(", ") : "")
         setAssistiveTools(pData.used_assistive_tools ? pData.used_assistive_tools.join(", ") : "")
         setAccommodations(pData.preferred_accommodations ? pData.preferred_accommodations.join(", ") : "")
-        setLinkedin(pData.linkedin_url || "")
-        setResumeLink(pData.resume_url || "")
-        setProofLink(pData.document_disability_url || "")
+        setLinkedin(pData.linkedin_url || ""); setResumeLink(pData.resume_url || ""); setProofLink(pData.document_disability_url || "")
         setIsConsent(pData.has_informed_consent || false)
         
         if (!pData.has_informed_consent) setShowConsentModal(true)
-        if (!pData.full_name) setIsEditing(true) // Jika data kosong, langsung mode edit
+        if (!pData.full_name) setIsEditing(true)
       } else {
-        setShowConsentModal(true)
-        setIsEditing(true)
+        setShowConsentModal(true); setIsEditing(true)
       }
 
+      // 2. Ambil Sertifikasi
       const { data: cData } = await supabase.from('certifications').select('*').eq('profile_id', user.id)
       if (cData) setCerts(cData)
+
+      // 3. Ambil Lamaran Saya
+      const { data: aData } = await supabase
+        .from('applications')
+        .select('*, jobs(*, companies(*))')
+        .eq('profile_id', user.id)
+      if (aData) setMyApplications(aData)
+
+      // 4. Ambil Rekomendasi Lowongan (Berdasarkan Ragam Disabilitas)
+      if (pData?.disability_type) {
+        const { data: jData } = await supabase
+          .from('jobs')
+          .select('*, companies(*)')
+          .contains('target_disabilities', [pData.disability_type])
+          .limit(3)
+        if (jData) setRecommendedJobs(jData)
+      }
 
     } catch (e) { console.error(e) } finally { setLoading(false) }
   }
@@ -83,8 +95,7 @@ export default function TalentDashboard({ user }: { user: any }) {
   async function handleSaveProfile() {
     setSaving(true)
     const updates = {
-      id: user.id,
-      full_name: fullName, city, disability_type: disabilityType,
+      id: user.id, full_name: fullName, city, disability_type: disabilityType,
       education_level: lastEducation, education_model: educationModel,
       university: institutionName, scholarship_type: scholarshipType,
       education_barrier: educationBarrier,
@@ -94,140 +105,155 @@ export default function TalentDashboard({ user }: { user: any }) {
       linkedin_url: linkedin, resume_url: resumeLink, document_disability_url: proofLink,
       has_informed_consent: isConsent, updated_at: new Date()
     }
-    const { error } = await supabase.from('profiles').upsert(updates)
-    if (!error) {
-      setMsg("Profil berhasil diperbarui.")
-      setIsEditing(false)
-      fetchInitialData()
-    }
+    await supabase.from('profiles').upsert(updates)
+    setIsEditing(false)
+    fetchInitialData()
     setSaving(false)
   }
 
-  async function addCert() {
-    if (!newCertName) return
-    const { data, error } = await supabase.from('certifications').insert({
-      profile_id: user.id, name: newCertName, issuing_organization: newCertOrg
-    }).select().single()
-    if (data) {
-      setCerts([...certs, data])
-      setNewCertName(""); setNewCertOrg("")
-    }
-  }
-
-  if (loading) return <div className="p-20 text-center animate-pulse italic text-slate-500 font-bold">Menyelaraskan data kepakaran...</div>
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400">MENYELARASKAN DATA RISET...</div>
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 space-y-8">
-      {/* INFORMED CONSENT MODAL */}
+    <div className="max-w-6xl mx-auto pb-20 space-y-10">
+      
+      {/* MODAL INFORMED CONSENT TETAP ADA DI SINI */}
       {showConsentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl border-4 border-blue-600">
-            <h2 className="text-2xl font-black mb-4 uppercase italic tracking-tighter">Informed Consent</h2>
+          <div className="bg-white w-full max-w-lg rounded-3xl p-8 border-4 border-blue-600 shadow-2xl">
+            <h2 className="text-2xl font-black mb-4 uppercase italic">Informed Consent</h2>
             <p className="text-sm text-slate-600 mb-8 leading-relaxed">
-              Saya setuju data saya digunakan untuk proses rekrutmen inklusif dan diolah sebagai data anonim riset disabilitas.com demi kemajuan kebijakan inklusi nasional.
+              Saya setuju data saya digunakan untuk rekrutmen inklusif dan diolah sebagai data anonim riset disabilitas.com.
             </p>
-            <button onClick={() => {setIsConsent(true); setShowConsentModal(false)}} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 shadow-xl">Setuju & Lanjutkan</button>
+            <button onClick={() => {setIsConsent(true); setShowConsentModal(false)}} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-blue-700">Setuju & Lanjutkan</button>
           </div>
         </div>
       )}
 
-      {/* HEADER & STATUS PROFIL */}
-      <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-2xl flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-5">
-            <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg uppercase">
-                {fullName ? fullName.substring(0,2) : "T"}
-            </div>
+      {/* HEADER DASHBOARD */}
+      <div className="flex flex-col md:flex-row justify-between items-center bg-slate-900 text-white p-8 rounded-3xl shadow-xl gap-6">
+        <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-3xl font-black shadow-inner uppercase">{fullName ? fullName.substring(0,2) : "T"}</div>
             <div>
-                <h1 className="text-2xl font-black tracking-tighter uppercase leading-none mb-1">{fullName || "Talenta Baru"}</h1>
-                <p className="text-blue-400 text-sm font-bold flex items-center gap-2 italic"><CheckCircle size={14}/> Profil Riset Aktif</p>
+                <h1 className="text-2xl font-black tracking-tighter uppercase mb-1">{fullName || "Talenta Baru"}</h1>
+                <p className="text-blue-400 text-sm font-bold flex items-center gap-2 italic"><CheckCircle size={14}/> Profil Terverifikasi untuk Riset</p>
             </div>
         </div>
-        {!isEditing && (
-            <button onClick={() => setIsEditing(true)} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all border border-white/10"><Edit3 size={16}/> Edit Profil</button>
-        )}
+        <div className="flex gap-3">
+            <button onClick={() => setIsEditing(!isEditing)} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-all">
+                {isEditing ? "Tutup Editor" : <><Edit3 size={16}/> Edit Profil</>}
+            </button>
+        </div>
       </div>
 
       {isEditing ? (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            {/* FORM EDIT (Sama seperti sebelumnya namun lebih compact) */}
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-                <h3 className="font-black text-blue-600 uppercase tracking-widest text-sm mb-6 flex items-center gap-2"><User size={18}/> Data Personal & Domisili</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">Nama Lengkap</label><input value={fullName} onChange={e => setFullName(e.target.value)} className="input-std font-bold" /></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">Kota (Hybrid)</label><input list="city-list" value={city} onChange={e => setCity(e.target.value)} className="input-std" /><datalist id="city-list">{INDONESIA_CITIES.map(c => <option key={c} value={c} />)}</datalist></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">Ragam (Hybrid)</label><input list="dis-list" value={disabilityType} onChange={e => setDisabilityType(e.target.value)} className="input-std" /><datalist id="dis-list">{DISABILITY_TYPES.map(t => <option key={t} value={t} />)}</datalist></div>
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm animate-in slide-in-from-top-4">
+            <h2 className="text-xl font-black uppercase mb-8 border-b pb-4 flex items-center gap-2 text-blue-600"><Edit3 size={20}/> Edit Informasi Talenta</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+                {/* Field yang sudah kita bahas sebelumnya tetap ada di sini (Hybrid Autocomplete) */}
+                <div className="space-y-4">
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nama Lengkap</label><input value={fullName} onChange={e => setFullName(e.target.value)} className="input-std font-bold" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Kota Domisili (Hybrid)</label><input list="city-list" value={city} onChange={e => setCity(e.target.value)} className="input-std" /><datalist id="city-list">{INDONESIA_CITIES.map(c => <option key={c} value={c} />)}</datalist></div>
                 </div>
-
-                <h3 className="font-black text-purple-600 uppercase tracking-widest text-sm pt-4 flex items-center gap-2"><GraduationCap size={18}/> Pendidikan & Riset</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">Jenjang</label><select value={lastEducation} onChange={e => setLastEducation(e.target.value)} className="input-std">{EDUCATION_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">Model Sekolah</label><select value={educationModel} onChange={e => setEducationModel(e.target.value)} className="input-std">{EDUCATION_MODELS.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
-                    <div className="space-y-1 md:col-span-2"><label className="text-[10px] font-black uppercase text-slate-400">Nama Institusi (Hybrid)</label><input list="uni-list" value={institutionName} onChange={e => setInstitutionName(e.target.value)} className="input-std" /><datalist id="uni-list">{UNIVERSITIES.map(u => <option key={u} value={u} />)}</datalist></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">Beasiswa</label><select value={scholarshipType} onChange={e => setScholarshipType(e.target.value)} className="input-std">{SCHOLARSHIP_TYPES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">Hambatan Utama</label><select value={educationBarrier} onChange={e => setEducationBarrier(e.target.value)} className="input-std">{EDUCATION_BARRIERS.map(b => <option key={b} value={b}>{b}</option>)}</select></div>
-                </div>
-
-                <div className="pt-6 border-t flex gap-4">
-                    <button onClick={handleSaveProfile} disabled={saving} className="flex-1 h-14 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl">{saving ? "Menyimpan..." : "Simpan Profil"}</button>
-                    <button onClick={() => setIsEditing(false)} className="px-8 h-14 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs">Batal</button>
+                <div className="space-y-4">
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ragam Disabilitas (Hybrid)</label><input list="dis-list" value={disabilityType} onChange={e => setDisabilityType(e.target.value)} className="input-std" /><datalist id="dis-list">{DISABILITY_TYPES.map(t => <option key={t} value={t} />)}</datalist></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Model Pendidikan</label><select value={educationModel} onChange={e => setEducationModel(e.target.value)} className="input-std">{EDUCATION_MODELS.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
                 </div>
             </div>
+            <button onClick={handleSaveProfile} disabled={saving} className="w-full mt-10 h-16 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-700 transition-all">
+                {saving ? "Sinkronisasi Data..." : "Simpan Pembaruan Profil"}
+            </button>
         </div>
       ) : (
-        <div className="grid md:grid-cols-3 gap-8 animate-in fade-in duration-500">
-            {/* KARTU PROFIL (VIEW MODE) */}
-            <div className="md:col-span-2 space-y-6">
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-5"><User size={120}/></div>
-                    <div className="grid grid-cols-2 gap-y-6 relative z-10">
-                        <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Domisili</p><p className="font-bold flex items-center gap-2"><MapPin size={14} className="text-blue-500"/> {city || "-"}</p></div>
-                        <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ragam Disabilitas</p><p className="font-bold text-blue-600 italic">#{disabilityType || "-"}</p></div>
-                        <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pendidikan</p><p className="font-bold">{lastEducation} - {institutionName}</p></div>
-                        <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Model Sekolah</p><p className="font-bold">{educationModel}</p></div>
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
+            
+            {/* KIRI: AKTIVITAS LAMARAN & REKOMENDASI */}
+            <div className="lg:col-span-2 space-y-8">
+                
+                {/* 1. TRACKER LAMARAN */}
+                <section aria-label="Status Lamaran Saya">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Clock size={16}/> Pelacakan Lamaran Aktif</h2>
+                    <div className="grid gap-4">
+                        {myApplications.length > 0 ? myApplications.map(app => (
+                            <div key={app.id} className="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center"><Building2 className="text-slate-400" /></div>
+                                    <div>
+                                        <h3 className="font-black text-sm uppercase">{app.jobs.title}</h3>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{app.jobs.companies.name}</p>
+                                    </div>
+                                </div>
+                                <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${app.status === 'Hired' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    {app.status}
+                                </div>
+                            </div>
+                        )) : (
+                            <div className="p-10 border-2 border-dashed border-slate-200 rounded-3xl text-center text-slate-400 italic text-sm font-medium">Belum ada lamaran terkirim.</div>
+                        )}
                     </div>
-                    <div className="mt-8 pt-6 border-t">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Keahlian & Kompetensi</p>
-                        <div className="flex flex-wrap gap-2">
-                            {skills.split(",").map(s => s.trim()).filter(s => s).map(s => (
-                                <span key={s} className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-700">#{s}</span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                </section>
 
-                {/* BAGIAN SERTIFIKASI */}
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 shadow-sm">
-                    <h3 className="font-black uppercase tracking-widest text-sm mb-6 flex items-center gap-2"><Award size={18} className="text-orange-500"/> Sertifikasi & Pelatihan</h3>
+                {/* 2. REKOMENDASI JOB MATCHING (RISET-BASED) */}
+                <section aria-label="Rekomendasi Lowongan Inklusif">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2"><Search size={16}/> Rekomendasi untuk Anda</h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {recommendedJobs.map(job => (
+                            <div key={job.id} className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 hover:border-blue-300 transition-all group relative overflow-hidden">
+                                <h3 className="font-black text-lg leading-tight mb-1 group-hover:text-blue-700">{job.title}</h3>
+                                <p className="text-xs font-bold text-slate-500 mb-4 uppercase">{job.companies.name}</p>
+                                <div className="flex gap-2 mb-6">
+                                    <span className="text-[9px] font-black bg-white px-2 py-1 rounded-md border border-blue-100 uppercase tracking-tighter">#{job.work_mode}</span>
+                                    <span className="text-[9px] font-black bg-blue-600 text-white px-2 py-1 rounded-md uppercase tracking-tighter italic">Cocok Ragam</span>
+                                </div>
+                                <button className="w-full py-3 bg-white border border-blue-200 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-600 hover:text-white transition-all">
+                                    Lihat Detail <ArrowRight size={14}/>
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            </div>
+
+            {/* KANAN: RINGKASAN PROFIL & SERTIFIKASI */}
+            <div className="space-y-8">
+                <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm" aria-label="Ringkasan Profil">
+                    <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 border-b pb-2">Informasi Kepakaran</h2>
                     <div className="space-y-4">
-                        {certs.map(c => (
-                            <div key={c.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div><p className="font-black text-sm">{c.name}</p><p className="text-[10px] font-bold text-slate-400 uppercase">{c.issuing_organization}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1 tracking-widest">Keahlian</p><p className="text-xs font-bold">{skills || "Belum diisi"}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1 tracking-widest">Alat Bantu</p><p className="text-xs font-bold">{assistiveTools || "Tidak ada"}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1 tracking-widest">Akomodasi</p><p className="text-xs font-bold">{accommodations || "Standar"}</p></div>
+                    </div>
+                </section>
+
+                <section className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl" aria-label="Sertifikasi Pelatihan">
+                    <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2"><Award size={14} className="text-orange-400"/> Sertifikasi</h2>
+                    <div className="space-y-3 mb-6">
+                        {certs.length > 0 ? certs.map(c => (
+                            <div key={c.id} className="p-3 bg-white/5 rounded-xl border border-white/10 flex justify-between items-center group">
+                                <div><p className="text-xs font-bold">{c.name}</p><p className="text-[9px] text-slate-500 font-bold uppercase">{c.issuing_organization}</p></div>
                                 <button onClick={async () => {
                                     await supabase.from('certifications').delete().eq('id', c.id)
                                     setCerts(certs.filter(item => item.id !== c.id))
-                                }} className="text-red-400 hover:text-red-600"><Trash2 size={16}/></button>
+                                }} className="opacity-0 group-hover:opacity-100 text-red-400 transition-all"><Trash2 size={14}/></button>
                             </div>
-                        ))}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4 border-t">
-                            <input placeholder="Nama Sertifikat" value={newCertName} onChange={e => setNewCertName(e.target.value)} className="md:col-span-1 input-std text-xs" />
-                            <input placeholder="Lembaga Penerbit" value={newCertOrg} onChange={e => setNewCertOrg(e.target.value)} className="md:col-span-1 input-std text-xs" />
-                            <button onClick={addCert} className="bg-slate-900 text-white rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-2"><Plus size={14}/> Tambah</button>
-                        </div>
+                        )) : <p className="text-[10px] italic text-slate-500 text-center py-4">Belum ada sertifikat.</p>}
                     </div>
-                </div>
-            </div>
+                    <div className="flex gap-2">
+                        <input value={newCertName} onChange={e => setNewCertName(e.target.value)} placeholder="Nama Sertifikat..." className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-[10px] font-bold focus:outline-none focus:border-blue-500" />
+                        <button onClick={async () => {
+                            if(!newCertName) return
+                            const { data } = await supabase.from('certifications').insert({ profile_id: user.id, name: newCertName }).select().single()
+                            if(data) { setCerts([...certs, data]); setNewCertName("") }
+                        }} className="p-2 bg-blue-600 rounded-lg hover:bg-blue-700"><Plus size={16}/></button>
+                    </div>
+                </section>
 
-            {/* SIDEBAR DOKUMEN (OPSIONAL) */}
-            <div className="space-y-6">
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-200">
-                    <h3 className="font-black uppercase tracking-widest text-[10px] mb-4 text-slate-500">Tautan & Verifikasi</h3>
-                    <div className="space-y-3">
-                        {linkedin && <a href={linkedin} target="_blank" className="flex items-center gap-3 p-3 bg-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all"><ExternalLink size={14} className="text-blue-600"/> LinkedIn Profil</a>}
-                        {resumeLink && <a href={resumeLink} target="_blank" className="flex items-center gap-3 p-3 bg-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all"><FileText size={14} className="text-red-600"/> Resume / CV</a>}
-                        {proofLink && <a href={proofLink} target="_blank" className="flex items-center gap-3 p-3 bg-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all"><ShieldCheck size={14} className="text-green-600"/> Bukti Disabilitas</a>}
-                        {!linkedin && !resumeLink && !proofLink && <p className="text-[10px] italic text-slate-400 text-center py-4 underline cursor-pointer" onClick={() => setIsEditing(true)}>Belum ada dokumen dilampirkan. Lengkapi di sini.</p>}
+                <section className="bg-slate-50 p-6 rounded-3xl border border-slate-200" aria-label="Validasi Dokumen">
+                    <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Verifikasi Link</h2>
+                    <div className="space-y-2">
+                        {linkedin && <a href={linkedin} target="_blank" className="flex items-center gap-3 p-3 bg-white rounded-xl text-[10px] font-black shadow-sm hover:shadow-md transition-all border border-slate-100"><ExternalLink size={12} className="text-blue-600"/> LINKEDIN</a>}
+                        {resumeLink && <a href={resumeLink} target="_blank" className="flex items-center gap-3 p-3 bg-white rounded-xl text-[10px] font-black shadow-sm hover:shadow-md transition-all border border-slate-100"><FileText size={12} className="text-red-600"/> RESUME / CV</a>}
                     </div>
-                </div>
+                </section>
             </div>
         </div>
       )}
