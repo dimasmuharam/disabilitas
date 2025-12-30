@@ -181,7 +181,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                   <p className="text-xs italic text-slate-400">{"Instansi belum mencantumkan detail."}</p>
                 )}
               </div>
-              <Link href={`/perusahaan/${job.companies?.id}`} className="block w-full py-4 bg-slate-50 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100 flex items-center justify-center gap-2">
+              <Link href={`/perusahaan/${job.companies?.id}`} className="flex w-full py-4 bg-slate-50 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100 flex items-center justify-center gap-2">
                 {"Profil Instansi"} <ExternalLink size={12} />
               </Link>
             </div>
