@@ -109,7 +109,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
             <section>
               <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
               <p className="text-slate-600 leading-relaxed italic font-medium">
-                {company.vision_statement || Belum tersedia visi tertulis dari perusahaan.}
+                {company.vision_statement || "Belum tersedia visi tertulis dari perusahaan."}
               </p>
             </section>
             
