@@ -11,7 +11,8 @@ import {
 import { 
   User, GraduationCap, Briefcase, FileText, ShieldCheck, Save, 
   Edit3, ExternalLink, Award, Plus, Trash2, MapPin, CheckCircle,
-  Search, Clock, Building2, ArrowRight, Share2, Send, Youtube, Phone, Info
+  Search, Clock, Building2, ArrowRight, Share2, Send, Youtube, Phone, Info,
+  Coins, BriefcaseBusiness
 } from "lucide-react"
 
 export default function TalentDashboard({ user }: { user: any }) {
@@ -39,15 +40,22 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [proofLink, setProofLink] = useState("")
   const [isConsent, setIsConsent] = useState(false)
   
-  // -- FITUR BARU --
+  // -- FITUR MANAJEMEN TALENTA --
   const [commPreference, setCommPreference] = useState("WhatsApp")
   const [videoIntroUrl, setVideoIntroUrl] = useState("")
+  const [careerStatus, setCareerStatus] = useState("Job Seeker")
+  const [expectedSalary, setExpectedSalary] = useState("")
 
-  // -- STATE AKTIVITAS --
+  // -- STATE AKTIVITAS (RELASIONAL) --
   const [certs, setCerts] = useState<any[]>([])
+  const [workEx, setWorkEx] = useState<any[]>([])
   const [myApplications, setMyApplications] = useState<any[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([])
+  
+  // Temporary State for Add New
   const [newCertName, setNewCertName] = useState("")
+  const [newJobTitle, setNewJobTitle] = useState("")
+  const [newJobCompany, setNewJobCompany] = useState("")
 
   const publicProfileUrl = typeof window !== 'undefined' ? `${window.location.origin}/talent/${user.id}` : ""
 
@@ -70,6 +78,8 @@ export default function TalentDashboard({ user }: { user: any }) {
         setIsConsent(pData.has_informed_consent || false)
         setCommPreference(pData.communication_preference || "WhatsApp")
         setVideoIntroUrl(pData.video_intro_url || "")
+        setCareerStatus(pData.career_status || "Job Seeker")
+        setExpectedSalary(pData.expected_salary || "")
         
         if (!pData.has_informed_consent) setShowConsentModal(true)
         if (!pData.full_name) setIsEditing(true)
@@ -77,12 +87,19 @@ export default function TalentDashboard({ user }: { user: any }) {
         setShowConsentModal(true); setIsEditing(true)
       }
 
+      // Load Certifications
       const { data: cData } = await supabase.from('certifications').select('*').eq('profile_id', user.id)
       if (cData) setCerts(cData)
 
+      // Load Work Experiences
+      const { data: wData } = await supabase.from('work_experiences').select('*').eq('profile_id', user.id).order('is_current_work', { ascending: false })
+      if (wData) setWorkEx(wData)
+
+      // Load Applications
       const { data: aData } = await supabase.from('applications').select('*, jobs(*, companies(*))').eq('profile_id', user.id)
       if (aData) setMyApplications(aData)
 
+      // Job Recommendations
       if (pData?.disability_type) {
         const { data: jData } = await supabase.from('jobs').select('*, companies(*)').contains('target_disabilities', [pData.disability_type]).limit(3)
         if (jData) setRecommendedJobs(jData)
@@ -102,17 +119,31 @@ export default function TalentDashboard({ user }: { user: any }) {
       preferred_accommodations: accommodations.split(",").map(a => a.trim()).filter(a => a),
       linkedin_url: linkedin, resume_url: resumeLink, document_disability_url: proofLink,
       communication_preference: commPreference, video_intro_url: videoIntroUrl,
+      career_status: careerStatus, expected_salary: expectedSalary,
       has_informed_consent: isConsent, updated_at: new Date()
     }
     const { error } = await supabase.from('profiles').upsert(updates)
     if (!error) {
-      setMsg("Profil berhasil diperbarui dan disinkronkan.")
+      setMsg("Data Talent berhasil diperbarui dan disinkronkan.")
       setIsEditing(false)
       fetchInitialData()
-      // Focus Management: Pindah fokus ke pesan sukses
       setTimeout(() => msgRef.current?.focus(), 100)
     }
     setSaving(false)
+  }
+
+  async function handleAddWork() {
+    if(!newJobTitle || !newJobCompany) return
+    const { data } = await supabase.from('work_experiences').insert({
+        profile_id: user.id,
+        position: newJobTitle,
+        company_name: newJobCompany,
+        is_current_work: workEx.length === 0 // Default true if first entry
+    }).select().single()
+    if(data) {
+        setWorkEx([data, ...workEx])
+        setNewJobTitle(""); setNewJobCompany("")
+    }
   }
 
   async function handleApply(jobId: string) {
@@ -125,11 +156,10 @@ export default function TalentDashboard({ user }: { user: any }) {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400">MENYELARASKAN DATA RISET...</div>
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400">MENYELARASKAN DATA MANAJEMEN TALENTA...</div>
 
   return (
     <div className="max-w-6xl mx-auto pb-20 space-y-10">
-      {/* Skip Navigation untuk Aksesibilitas */}
       <a href="#main-content" className="sr-only focus:not-sr-only bg-blue-600 text-white p-4 absolute z-[100] rounded-b-xl">Loncat ke konten utama</a>
 
       {showConsentModal && (
@@ -137,7 +167,7 @@ export default function TalentDashboard({ user }: { user: any }) {
           <div className="bg-white w-full max-w-lg rounded-3xl p-8 border-4 border-blue-600 shadow-2xl">
             <h2 className="text-2xl font-black mb-4 uppercase italic tracking-tighter">Informed Consent</h2>
             <p className="text-sm text-slate-600 mb-8 leading-relaxed">
-              Saya setuju data saya digunakan untuk rekrutmen inklusif dan diolah sebagai data anonim riset disabilitas.com demi kemajuan kebijakan inklusi nasional sesuai standar riset yang berlaku.
+              Saya setuju data saya dikelola oleh disabilitas.com untuk keperluan rekrutmen inklusif dan riset nasional secara anonim.
             </p>
             <button onClick={() => {setIsConsent(true); setShowConsentModal(false)}} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Setuju & Lanjutkan</button>
           </div>
@@ -152,7 +182,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                 <div ref={msgRef} tabIndex={-1} className="outline-none">
                     {msg && <p className="text-green-400 text-[10px] font-black uppercase mb-2 tracking-widest animate-pulse">✅ {msg}</p>}
                     <h1 className="text-2xl font-black tracking-tighter uppercase mb-1">{fullName || "Talenta Baru"}</h1>
-                    <p className="text-blue-400 text-sm font-bold flex items-center gap-2 italic"><CheckCircle size={14}/> Profil Riset Aktif</p>
+                    <p className="text-blue-400 text-sm font-bold flex items-center gap-2 italic"><BriefcaseBusiness size={14}/> {careerStatus}</p>
                 </div>
             </div>
         </div>
@@ -164,7 +194,6 @@ export default function TalentDashboard({ user }: { user: any }) {
       {!isEditing && fullName && (
         <section className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-[2.5rem] p-1 shadow-2xl overflow-hidden relative group">
             <div className="bg-white dark:bg-slate-900 rounded-[2.4rem] p-8 flex flex-col md:flex-row gap-8 items-center relative z-10">
-                {/* Visual Kartu Profesional */}
                 <div className="w-full md:w-72 aspect-[3/4] bg-slate-950 rounded-3xl p-6 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden border border-white/10">
                     <div className="flex justify-between items-start">
                         <img src="/logo.png" alt="Logo Disabilitas.com" className="h-6 object-contain" />
@@ -174,31 +203,24 @@ export default function TalentDashboard({ user }: { user: any }) {
                         <h3 className="text-xl font-black leading-tight mb-1 uppercase tracking-tighter">{fullName}</h3>
                         <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest mb-4">{disabilityType}</p>
                         <div className="space-y-1">
-                            <p className="text-[8px] text-slate-500 uppercase font-black tracking-widest">Kepakaran Utama</p>
+                            <p className="text-[8px] text-slate-500 uppercase font-black tracking-widest">Keahlian Utama</p>
                             <p className="text-[10px] font-bold truncate">{skills.split(',')[0] || "General Talent"}</p>
                         </div>
                     </div>
                     <div className="flex justify-between items-end border-t border-white/10 pt-4">
-                        <div className="bg-white p-1 rounded-lg">
-                           <QRCodeSVG value={publicProfileUrl} size={64} aria-label="Scan untuk profil publik" />
-                        </div>
-                        <p className="text-[8px] font-black text-slate-500 text-right uppercase leading-tight">Verified<br/>Professional<br/>Talent</p>
+                        <div className="bg-white p-1 rounded-lg"><QRCodeSVG value={publicProfileUrl} size={64} /></div>
+                        <p className="text-[8px] font-black text-slate-500 text-right uppercase leading-tight italic">Verified<br/>Talent ID</p>
                     </div>
                 </div>
 
-                {/* Konten Promosi */}
                 <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-3xl font-black tracking-tighter mb-4 italic uppercase">Paspor Karir Inklusif</h2>
+                    <h2 className="text-3xl font-black tracking-tighter mb-4 italic uppercase">Identity Card</h2>
                     <p className="text-slate-500 font-medium mb-6 leading-relaxed max-w-lg">
-                        Bagikan kartu identitas digital Anda untuk menunjukkan kompetensi profesional yang telah terverifikasi. Membangun kebanggaan, mematahkan stigma.
+                        Bagikan kartu identitas profesional Anda. Tunjukkan kepada dunia bahwa disabilitas bukan halangan untuk berkompetisi secara bonafit.
                     </p>
                     <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                        <button onClick={handleShare} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center gap-3 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95">
-                            <Share2 size={20}/> Share Ke WhatsApp
-                        </button>
-                        <a href={publicProfileUrl} target="_blank" className="bg-slate-100 text-slate-800 px-8 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center gap-3 hover:bg-slate-200 transition-all border border-slate-200">
-                            <ExternalLink size={20}/> Preview Profil
-                        </a>
+                        <button onClick={handleShare} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center gap-3 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95"><Share2 size={20}/> Share WhatsApp</button>
+                        <a href={publicProfileUrl} target="_blank" className="bg-slate-100 text-slate-800 px-8 py-4 rounded-2xl font-black uppercase tracking-widest flex items-center gap-3 hover:bg-slate-200 border border-slate-200"><ExternalLink size={20}/> Profil Publik</a>
                     </div>
                 </div>
             </div>
@@ -206,110 +228,102 @@ export default function TalentDashboard({ user }: { user: any }) {
       )}
 
       {isEditing ? (
-        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm animate-in slide-in-from-top-4">
-            <h2 className="text-xl font-black uppercase mb-8 border-b pb-4 flex items-center gap-2 text-blue-600"><Edit3 size={20}/> Form Pembaruan Profil</h2>
-            <div className="grid md:grid-cols-2 gap-8">
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm animate-in slide-in-from-top-4 space-y-12">
+            <h2 className="text-xl font-black uppercase mb-8 border-b pb-4 flex items-center gap-2 text-blue-600"><Edit3 size={20}/> Pembaruan Data Talenta</h2>
+            
+            <div className="grid md:grid-cols-2 gap-10">
                 <div className="space-y-6">
-                    <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><User size={14}/> Identitas & Kontak</h3>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Nama Lengkap</label><input value={fullName} onChange={e => setFullName(e.target.value)} className="input-std font-bold" /></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Preferensi Dihubungi</label>
-                        <select value={commPreference} onChange={e => setCommPreference(e.target.value)} className="input-std">
-                            <option value="WhatsApp">WhatsApp / Pesan Teks</option>
-                            <option value="Email">Email Resmi</option>
-                            <option value="Telepon">Panggilan Suara Direct</option>
+                    <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><BriefcaseBusiness size={14}/> Status Profesional</h3>
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Status Karir</label>
+                        <select value={careerStatus} onChange={e => setCareerStatus(e.target.value)} className="input-std font-bold text-blue-600">
+                            <option value="Job Seeker">Aktif Mencari Kerja</option>
+                            <option value="Employed (Open)">Bekerja (Terbuka Peluang)</option>
+                            <option value="Employed (Fixed)">Bekerja (Tidak Mencari Kerja)</option>
+                            <option value="Entrepreneur">Wirausaha / Freelancer</option>
                         </select>
                     </div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Kota (Hybrid Autocomplete)</label><input list="city-list" value={city} onChange={e => setCity(e.target.value)} className="input-std" /><datalist id="city-list">{INDONESIA_CITIES.map(c => <option key={c} value={c} />)}</datalist></div>
-                </div>
-                
-                <div className="space-y-6">
-                    <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><GraduationCap size={14}/> Latar Belakang Riset</h3>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Ragam Disabilitas (Hybrid)</label><input list="dis-list" value={disabilityType} onChange={e => setDisabilityType(e.target.value)} className="input-std" /><datalist id="dis-list">{DISABILITY_TYPES.map(t => <option key={t} value={t} />)}</datalist></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Model Sekolah</label><select value={educationModel} onChange={e => setEducationModel(e.target.value)} className="input-std">{EDUCATION_MODELS.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Gaji Diharapkan (Opsional)</label><input value={expectedSalary} onChange={e => setExpectedSalary(e.target.value)} className="input-std" placeholder="Contoh: 5-7 Juta" /></div>
                 </div>
 
-                <div className="md:col-span-2 space-y-4 pt-4 border-t">
-                    <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><Youtube size={16} className="text-red-600"/> Video Intro (YouTube Link - Opsional)</h3>
-                    <input type="url" value={videoIntroUrl} onChange={e => setVideoIntroUrl(e.target.value)} className="input-std" placeholder="https://youtube.com/watch?v=..." />
-                    <div className="bg-red-50 p-4 rounded-2xl flex gap-3 border border-red-100">
-                        <Info className="text-red-500 shrink-0" size={18}/>
-                        <p className="text-[10px] font-medium text-red-800 leading-relaxed italic">
-                            <strong>Saran Durasi:</strong> 60-90 detik. <br/>
-                            <strong>Isi Video:</strong> Perkenalan nama, ringkasan keahlian, dan alat bantu yang digunakan. Bantu perusahaan mengenal karakter profesional Anda lebih dekat.
-                        </p>
+                <div className="space-y-6">
+                    <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><Phone size={14}/> Komunikasi</h3>
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Preferensi Dihubungi</label>
+                        <select value={commPreference} onChange={e => setCommPreference(e.target.value)} className="input-std">
+                            <option value="WhatsApp">WhatsApp</option><option value="Email">Email</option><option value="Telepon">Panggilan Suara</option>
+                        </select>
                     </div>
+                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Kota Domisili (Hybrid)</label><input list="city-list" value={city} onChange={e => setCity(e.target.value)} className="input-std" /><datalist id="city-list">{INDONESIA_CITIES.map(c => <option key={c} value={c} />)}</datalist></div>
                 </div>
             </div>
-            <button onClick={handleSaveProfile} disabled={saving} className="w-full mt-10 h-16 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3">
-                {saving ? "Menyelaraskan..." : <><Save size={20}/> Simpan & Aktifkan Profil</>}
+
+            <div className="space-y-6 pt-10 border-t">
+                <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><Youtube size={16} className="text-red-600"/> Video Intro YouTube</h3>
+                <input type="url" value={videoIntroUrl} onChange={e => setVideoIntroUrl(e.target.value)} className="input-std" placeholder="Link video perkenalan..." />
+            </div>
+
+            <button onClick={handleSaveProfile} disabled={saving} className="w-full h-16 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-700 flex items-center justify-center gap-3">
+                {saving ? "Menyelaraskan..." : <><Save size={20}/> Simpan & Sinkronkan Profil</>}
             </button>
         </div>
       ) : (
         <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
-                <section aria-labelledby="applications-title">
-                    <h2 id="applications-title" className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Clock size={16}/> Pelacakan Lamaran</h2>
+                {/* TRACKER LAMARAN */}
+                <section>
+                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Clock size={16}/> Lamaran Aktif</h2>
                     <div className="grid gap-4">
-                        {myApplications.length > 0 ? myApplications.map(app => (
+                        {myApplications.map(app => (
                             <div key={app.id} className="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center"><Building2 className="text-slate-400" /></div>
-                                    <div>
-                                        <h3 className="font-black text-sm uppercase">{app.jobs.title}</h3>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase">{app.jobs.companies.name}</p>
-                                    </div>
+                                    <div><h3 className="font-black text-sm uppercase">{app.jobs.title}</h3><p className="text-[10px] font-bold text-slate-400 uppercase">{app.jobs.companies.name}</p></div>
                                 </div>
                                 <div className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700">{app.status}</div>
                             </div>
-                        )) : <div className="p-10 border-2 border-dashed border-slate-200 rounded-3xl text-center text-slate-400 font-medium italic">Belum mengirim lamaran.</div>}
+                        ))}
                     </div>
                 </section>
 
-                <section aria-labelledby="recommendations-title">
-                    <h2 id="recommendations-title" className="text-sm font-black uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2"><Search size={16}/> Lowongan Relevan</h2>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {recommendedJobs.map(job => (
-                            <div key={job.id} className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 group transition-all">
-                                <h3 className="font-black text-lg leading-tight mb-1">{job.title}</h3>
-                                <p className="text-xs font-bold text-slate-500 mb-4 uppercase">{job.companies.name}</p>
-                                <button 
-                                    onClick={() => handleApply(job.id)}
-                                    disabled={myApplications.some(a => a.job_id === job.id)}
-                                    className="w-full py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 disabled:bg-slate-300 transition-all shadow-md active:scale-95"
-                                >
-                                    {myApplications.some(a => a.job_id === job.id) ? 'Sudah Dilamar' : <><Send size={14}/> Lamar Sekarang</>}
-                                </button>
+                {/* MANAJEMEN RIWAYAT KERJA */}
+                <section>
+                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Briefcase size={16}/> Pengalaman Karir</h2>
+                    <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
+                        {workEx.map(w => (
+                            <div key={w.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                                <div>
+                                    <h4 className="font-black text-sm uppercase">{w.position}</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase">{w.company_name} {w.is_current_work && <span className="text-blue-600">(Saat Ini)</span>}</p>
+                                </div>
+                                <button onClick={async () => {
+                                    await supabase.from('work_experiences').delete().eq('id', w.id)
+                                    setWorkEx(workEx.filter(item => item.id !== w.id))
+                                }} className="text-red-400 opacity-0 group-hover:opacity-100"><Trash2 size={16}/></button>
                             </div>
                         ))}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4 border-t">
+                            <input value={newJobTitle} onChange={e => setNewJobTitle(e.target.value)} placeholder="Posisi..." className="input-std text-xs" />
+                            <input value={newJobCompany} onChange={e => setNewJobCompany(e.target.value)} placeholder="Perusahaan..." className="input-std text-xs" />
+                            <button onClick={handleAddWork} className="bg-slate-900 text-white rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-2"><Plus size={14}/> Tambah</button>
+                        </div>
                     </div>
                 </section>
             </div>
 
             <div className="space-y-8">
-                <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm" aria-labelledby="meta-info">
-                    <h2 id="meta-info" className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 border-b pb-2">Kontak & Kepakaran</h2>
+                {/* SIDEBAR SUMMARY */}
+                <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 border-b pb-2">Status Riset</h2>
                     <div className="space-y-4">
-                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Preferensi Hubungi</p><p className="text-xs font-bold flex items-center gap-2"><Phone size={12}/> {commPreference}</p></div>
-                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Keahlian</p><p className="text-xs font-bold">{skills || "Menunggu pengisian"}</p></div>
-                        {videoIntroUrl && <div><p className="text-[9px] font-black text-red-600 uppercase mb-1 tracking-widest">Video Intro</p><a href={videoIntroUrl} target="_blank" className="text-xs font-bold underline flex items-center gap-1"><Youtube size={14}/> Lihat Video</a></div>}
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Status Karir</p><p className="text-xs font-bold">{careerStatus}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Gaji Diharapkan</p><p className="text-xs font-bold">{expectedSalary || "N/A"}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Keahlian</p><p className="text-xs font-bold">{skills || "Kosong"}</p></div>
                     </div>
                 </section>
                 
                 <section className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl">
                     <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2"><Award size={14} className="text-orange-400"/> Sertifikasi</h2>
-                    <div className="space-y-3 mb-6">
-                        {certs.map(c => (
-                             <div key={c.id} className="p-3 bg-white/5 rounded-xl border border-white/10 flex justify-between items-center text-xs">
-                                <span>{c.name}</span>
-                                <button onClick={async () => {
-                                    await supabase.from('certifications').delete().eq('id', c.id)
-                                    setCerts(certs.filter(item => item.id !== c.id))
-                                }} className="text-red-400 hover:text-red-500"><Trash2 size={14}/></button>
-                             </div>
-                        ))}
-                    </div>
                     <div className="flex gap-2">
-                        <input value={newCertName} onChange={e => setNewCertName(e.target.value)} placeholder="Nama Sertifikat..." className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-[10px] font-bold focus:outline-none focus:border-blue-500" />
+                        <input value={newCertName} onChange={e => setNewCertName(e.target.value)} placeholder="Nama..." className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-[10px] font-bold" />
                         <button onClick={async () => {
                             if(!newCertName) return
                             const { data } = await supabase.from('certifications').insert({ profile_id: user.id, name: newCertName }).select().single()
