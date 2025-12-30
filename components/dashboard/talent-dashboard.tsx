@@ -12,7 +12,7 @@ import {
   User, GraduationCap, Briefcase, FileText, ShieldCheck, Save, 
   Edit3, ExternalLink, Award, Plus, Trash2, MapPin, CheckCircle,
   Search, Clock, Building2, ArrowRight, Share2, Send, Youtube, Phone, Info,
-  Coins, BriefcaseBusiness, Star
+  Coins, Star
 } from "lucide-react"
 
 export default function TalentDashboard({ user }: { user: any }) {
@@ -99,7 +99,7 @@ export default function TalentDashboard({ user }: { user: any }) {
       const { data: wData } = await supabase.from('work_experiences').select('*').eq('profile_id', user.id).order('is_current_work', { ascending: false })
       if (wData) setWorkEx(wData)
 
-      const { data: aData } = await supabase.from('applications').select('*, jobs(*, companies(*))').eq('profile_id', user.id)
+      const { data: aData } = await supabase.from('applications').select('*, jobs(*, companies(*))').eq('applicant_id', user.id)
       if (aData) setMyApplications(aData)
 
       if (pData?.disability_type) {
@@ -165,7 +165,7 @@ export default function TalentDashboard({ user }: { user: any }) {
   }
 
   async function handleApply(jobId: string) {
-    const { error } = await supabase.from('applications').insert({ job_id: jobId, profile_id: user.id })
+    const { error } = await supabase.from('applications').insert({ job_id: jobId, applicant_id: user.id })
     if (!error) fetchInitialData()
   }
 
@@ -200,7 +200,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                 <div ref={msgRef} tabIndex={-1} className="outline-none">
                     {msg && <p className="text-green-400 text-[10px] font-black uppercase mb-2 tracking-widest animate-pulse">✅ {msg}</p>}
                     <h1 className="text-2xl font-black tracking-tighter uppercase mb-1 leading-none">{fullName || "Talenta Baru"}</h1>
-                    <p className="text-blue-400 text-xs font-bold flex items-center gap-2 italic mt-1"><BriefcaseBusiness size={14}/> {careerStatus}</p>
+                    <p className="text-blue-400 text-xs font-bold flex items-center gap-2 italic mt-1"><Briefcase size={14}/> {careerStatus}</p>
                 </div>
             </div>
         </div>
@@ -251,7 +251,7 @@ export default function TalentDashboard({ user }: { user: any }) {
             
             <div className="grid md:grid-cols-2 gap-10">
                 <div className="space-y-6">
-                    <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><BriefcaseBusiness size={14}/> Status Profesional</h3>
+                    <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><Briefcase size={14}/> Status Profesional</h3>
                     <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500">Status Karir</label>
                         <select value={careerStatus} onChange={e => setCareerStatus(e.target.value)} className="input-std font-bold text-blue-600">
                             <option value="Job Seeker">Aktif Mencari Kerja</option>
