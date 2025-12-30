@@ -12,7 +12,7 @@ import {
   User, GraduationCap, Briefcase, FileText, ShieldCheck, Save, 
   Edit3, ExternalLink, Award, Plus, Trash2, MapPin, CheckCircle,
   Search, Clock, Building2, ArrowRight, Share2, Send, Youtube, Phone, Info,
-  Coins, BriefcaseBusiness
+  Coins, BriefcaseBusiness, Star
 } from "lucide-react"
 
 export default function TalentDashboard({ user }: { user: any }) {
@@ -52,6 +52,12 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [myApplications, setMyApplications] = useState<any[]>([])
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([])
   
+  // -- STATE RATING/SURVEY --
+  const [showRatingId, setShowRatingId] = useState<string | null>(null)
+  const [ratingScores, setRatingScores] = useState({
+    accessibility: 5, culture: 5, management: 5, onboarding: 5
+  })
+
   // Temporary State for Add New
   const [newCertName, setNewCertName] = useState("")
   const [newJobTitle, setNewJobTitle] = useState("")
@@ -87,19 +93,15 @@ export default function TalentDashboard({ user }: { user: any }) {
         setShowConsentModal(true); setIsEditing(true)
       }
 
-      // Load Certifications
       const { data: cData } = await supabase.from('certifications').select('*').eq('profile_id', user.id)
       if (cData) setCerts(cData)
 
-      // Load Work Experiences
       const { data: wData } = await supabase.from('work_experiences').select('*').eq('profile_id', user.id).order('is_current_work', { ascending: false })
       if (wData) setWorkEx(wData)
 
-      // Load Applications
       const { data: aData } = await supabase.from('applications').select('*, jobs(*, companies(*))').eq('profile_id', user.id)
       if (aData) setMyApplications(aData)
 
-      // Job Recommendations
       if (pData?.disability_type) {
         const { data: jData } = await supabase.from('jobs').select('*, companies(*)').contains('target_disabilities', [pData.disability_type]).limit(3)
         if (jData) setRecommendedJobs(jData)
@@ -138,11 +140,27 @@ export default function TalentDashboard({ user }: { user: any }) {
         profile_id: user.id,
         position: newJobTitle,
         company_name: newJobCompany,
-        is_current_work: workEx.length === 0 // Default true if first entry
+        is_current_work: workEx.length === 0 
     }).select().single()
     if(data) {
         setWorkEx([data, ...workEx])
         setNewJobTitle(""); setNewJobCompany("")
+    }
+  }
+
+  async function handlePostRating(companyId: string) {
+    const { error } = await supabase.from('inclusion_ratings').insert({
+        talent_id: user.id,
+        company_id: companyId,
+        score_accessibility: ratingScores.accessibility,
+        score_culture: ratingScores.culture,
+        score_management: ratingScores.management,
+        score_onboarding: ratingScores.onboarding
+    })
+    if(!error) {
+        setMsg("Terima kasih! Penilaian inklusi Anda sangat berharga bagi riset kami.")
+        setShowRatingId(null)
+        fetchInitialData()
     }
   }
 
@@ -156,7 +174,7 @@ export default function TalentDashboard({ user }: { user: any }) {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400">MENYELARASKAN DATA MANAJEMEN TALENTA...</div>
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400 italic">MENYELARASKAN DATA MANAJEMEN TALENTA...</div>
 
   return (
     <div className="max-w-6xl mx-auto pb-20 space-y-10">
@@ -181,12 +199,12 @@ export default function TalentDashboard({ user }: { user: any }) {
             <div>
                 <div ref={msgRef} tabIndex={-1} className="outline-none">
                     {msg && <p className="text-green-400 text-[10px] font-black uppercase mb-2 tracking-widest animate-pulse">✅ {msg}</p>}
-                    <h1 className="text-2xl font-black tracking-tighter uppercase mb-1">{fullName || "Talenta Baru"}</h1>
-                    <p className="text-blue-400 text-sm font-bold flex items-center gap-2 italic"><BriefcaseBusiness size={14}/> {careerStatus}</p>
+                    <h1 className="text-2xl font-black tracking-tighter uppercase mb-1 leading-none">{fullName || "Talenta Baru"}</h1>
+                    <p className="text-blue-400 text-xs font-bold flex items-center gap-2 italic mt-1"><BriefcaseBusiness size={14}/> {careerStatus}</p>
                 </div>
             </div>
         </div>
-        <button onClick={() => setIsEditing(!isEditing)} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-all">
+        <button onClick={() => setIsEditing(!isEditing)} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 border border-white/10 transition-all shadow-lg">
             {isEditing ? "Tutup Editor" : <><Edit3 size={16}/> Edit Profil</>}
         </button>
       </div>
@@ -268,17 +286,52 @@ export default function TalentDashboard({ user }: { user: any }) {
       ) : (
         <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
-                {/* TRACKER LAMARAN */}
+                {/* TRACKER LAMARAN & RATING SYSTEM */}
                 <section>
-                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Clock size={16}/> Lamaran Aktif</h2>
+                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Clock size={16}/> Lamaran & Status Karir</h2>
                     <div className="grid gap-4">
                         {myApplications.map(app => (
-                            <div key={app.id} className="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center"><Building2 className="text-slate-400" /></div>
-                                    <div><h3 className="font-black text-sm uppercase">{app.jobs.title}</h3><p className="text-[10px] font-bold text-slate-400 uppercase">{app.jobs.companies.name}</p></div>
+                            <div key={app.id} className="space-y-3">
+                                <div className="bg-white p-5 rounded-2xl border border-slate-200 flex justify-between items-center shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center"><Building2 className="text-slate-400" /></div>
+                                        <div><h3 className="font-black text-sm uppercase leading-none mb-1">{app.jobs.title}</h3><p className="text-[10px] font-bold text-slate-400 uppercase">{app.jobs.companies.name}</p></div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${app.status === 'Hired' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{app.status}</div>
+                                        {app.status === 'Hired' && (
+                                            <button onClick={() => setShowRatingId(app.jobs.companies.id)} className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-all"><Star size={16}/></button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700">{app.status}</div>
+                                
+                                {/* SURVEY RATING BOX (Hanya jika Hired) */}
+                                {showRatingId === app.jobs.companies.id && (
+                                    <div className="bg-orange-50 border-2 border-orange-200 p-6 rounded-3xl animate-in zoom-in-95">
+                                        <h4 className="text-sm font-black uppercase italic mb-1">Inclusion Audit: {app.jobs.companies.name}</h4>
+                                        <p className="text-[10px] text-orange-700 font-medium mb-4">Bantu kami menilai kualitas inklusi perusahaan ini. Penilaian Anda bersifat ANONIM.</p>
+                                        <div className="grid grid-cols-2 gap-4 mb-6">
+                                            {['accessibility', 'culture', 'management', 'onboarding'].map((indicator) => (
+                                                <div key={indicator} className="space-y-1">
+                                                    <label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">{indicator}</label>
+                                                    <div className="flex gap-1">
+                                                        {[1,2,3,4,5].map(star => (
+                                                            <button 
+                                                                key={star} 
+                                                                onClick={() => setRatingScores({...ratingScores, [indicator]: star})}
+                                                                className={`p-1 transition-all ${ratingScores[indicator as keyof typeof ratingScores] >= star ? 'text-orange-500' : 'text-slate-300'}`}
+                                                            ><Star size={14} fill={ratingScores[indicator as keyof typeof ratingScores] >= star ? 'currentColor' : 'none'}/></button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handlePostRating(app.jobs.companies.id)} className="flex-1 py-3 bg-orange-600 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-orange-200">Kirim Rating Inklusi</button>
+                                            <button onClick={() => setShowRatingId(null)} className="px-4 py-3 bg-white text-slate-400 rounded-xl text-[10px] font-black uppercase border border-slate-200">Batal</button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -303,7 +356,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-4 border-t">
                             <input value={newJobTitle} onChange={e => setNewJobTitle(e.target.value)} placeholder="Posisi..." className="input-std text-xs" />
                             <input value={newJobCompany} onChange={e => setNewJobCompany(e.target.value)} placeholder="Perusahaan..." className="input-std text-xs" />
-                            <button onClick={handleAddWork} className="bg-slate-900 text-white rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-2"><Plus size={14}/> Tambah</button>
+                            <button onClick={handleAddWork} className="bg-slate-900 text-white rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-2 h-10"><Plus size={14}/> Tambah</button>
                         </div>
                     </div>
                 </section>
@@ -314,21 +367,32 @@ export default function TalentDashboard({ user }: { user: any }) {
                 <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                     <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 border-b pb-2">Status Riset</h2>
                     <div className="space-y-4">
-                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Status Karir</p><p className="text-xs font-bold">{careerStatus}</p></div>
-                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Gaji Diharapkan</p><p className="text-xs font-bold">{expectedSalary || "N/A"}</p></div>
-                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1">Keahlian</p><p className="text-xs font-bold">{skills || "Kosong"}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1 tracking-widest">Status Karir</p><p className="text-xs font-bold">{careerStatus}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1 tracking-widest">Gaji Diharapkan</p><p className="text-xs font-bold">{expectedSalary || "N/A"}</p></div>
+                        <div><p className="text-[9px] font-black text-blue-600 uppercase mb-1 tracking-widest">Keahlian</p><p className="text-xs font-bold leading-relaxed">{skills || "Kosong"}</p></div>
                     </div>
                 </section>
                 
                 <section className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl">
                     <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2"><Award size={14} className="text-orange-400"/> Sertifikasi</h2>
+                    <div className="space-y-3 mb-4">
+                        {certs.map(c => (
+                            <div key={c.id} className="text-[10px] font-bold p-2 bg-white/5 rounded-lg border border-white/10 flex justify-between items-center group">
+                                {c.name}
+                                <button onClick={async () => {
+                                    await supabase.from('certifications').delete().eq('id', c.id)
+                                    setCerts(certs.filter(item => item.id !== c.id))
+                                }} className="text-red-400 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={12}/></button>
+                            </div>
+                        ))}
+                    </div>
                     <div className="flex gap-2">
-                        <input value={newCertName} onChange={e => setNewCertName(e.target.value)} placeholder="Nama..." className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-[10px] font-bold" />
+                        <input value={newCertName} onChange={e => setNewCertName(e.target.value)} placeholder="Nama..." className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-[10px] font-bold focus:outline-none" />
                         <button onClick={async () => {
                             if(!newCertName) return
                             const { data } = await supabase.from('certifications').insert({ profile_id: user.id, name: newCertName }).select().single()
                             if(data) { setCerts([...certs, data]); setNewCertName("") }
-                        }} className="p-2 bg-blue-600 rounded-lg hover:bg-blue-700"><Plus size={16}/></button>
+                        }} className="p-2 bg-blue-600 rounded-lg hover:bg-blue-700 h-10 w-10 flex items-center justify-center"><Plus size={16}/></button>
                     </div>
                 </section>
             </div>
