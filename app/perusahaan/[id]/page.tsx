@@ -133,7 +133,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
             <section>
               <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
               {/* PERBAIKAN DI SINI: Menggunakan entitas &quot; */}
-              <p className="text-slate-600 leading-relaxed italic font-medium">&quot;{company.vision_statement || "Belum ada visi tertulis."}&quot;</p>
+              <p className="text-slate-600 leading-relaxed italic font-medium">&quot;{company.vision_statement || Belum ada visi tertulis.&quot;</p>
             </section>
             
             <section className="pt-8 border-t border-slate-100">
