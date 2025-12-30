@@ -1,14 +1,14 @@
 import {
   Moon,
-  SunMedium,
+  Sun, // Ganti SunMedium ke Sun agar lebih standar
   Twitter,
-  type LucideIcon, // PERUBAHAN DI SINI
+  type LucideIcon,
 } from "lucide-react"
 
-export type Icon = LucideIcon // PERUBAHAN DI SINI
+export type Icon = LucideIcon
 
 export const Icons = {
-  sun: SunMedium,
+  sun: Sun,
   moon: Moon,
   twitter: Twitter,
   logo: (props: any) => (
