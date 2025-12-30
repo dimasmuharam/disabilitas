@@ -60,7 +60,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       if (error) throw error
       setJob(data)
     } catch (error) {
-      console.error("{"Lowongan tidak ditemukan"}", error)
+      console.error("<strong>Lowongan tidak ditemukan</strong>", error)
     } finally {
       setLoading(false)
     }
