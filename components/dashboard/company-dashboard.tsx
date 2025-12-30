@@ -14,7 +14,7 @@ import {
 import { updateCompanyMaster, getCompanyStats } from "@/lib/actions/company"
 import { updateApplicationStatus } from "@/lib/actions/applications"
 import { 
-  Briefcase, LayoutDashboard, Plus, Users, CheckCircle2, 
+  Briefcase, Building2, MapPin, LayoutDashboard, Plus, Users, CheckCircle2, 
   Eye, ShieldCheck, Info, Settings, Save, Sparkles, Clipboard, 
   SearchCheck, Globe, Zap, X, ArrowUpRight, Filter
 } from "lucide-react"
