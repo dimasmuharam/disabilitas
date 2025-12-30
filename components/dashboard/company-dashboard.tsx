@@ -1,17 +1,14 @@
 "use client"
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
-import { INDONESIA_CITIES } from "@/lib/data-static"
+// IMPORT DATA STATIS YANG SUDAH DIKUNCI
+import { INDONESIA_CITIES, DISABILITY_TYPES, WORK_MODES } from "@/lib/data-static"
 import { INCLUSIVE_JOB_TEMPLATE } from "@/app/lowongan/create/template"
 import { 
   Briefcase, LayoutDashboard, Plus, Users, CheckCircle2, 
   AlertCircle, Eye, Edit3, ShieldCheck, FileText,
   ArrowRight, Send, MapPin, Globe
 } from "lucide-react"
-
-// Konstanta terstruktur untuk data riset
-const DISABILITY_TYPES = ["Netra", "Rungu/Tuli", "Daksa", "Intelektual", "Mental", "Sensorik Lainnya"]
-const WORK_MODES = ["WFO (Di Kantor)", "Remote (WFH)", "Hybrid"]
 
 export default function CompanyDashboard({ user }: { user: any }) {
   const [company, setCompany] = useState<any>(null)
@@ -23,7 +20,7 @@ export default function CompanyDashboard({ user }: { user: any }) {
   const [jobTitle, setJobTitle] = useState("")
   const [jobDesc, setJobDesc] = useState("")
   const [jobLocation, setJobLocation] = useState("Jakarta Selatan")
-  const [jobWorkMode, setJobWorkMode] = useState("WFO (Di Kantor)")
+  const [jobWorkMode, setJobWorkMode] = useState(WORK_MODES[0])
   const [targetDisabilities, setTargetDisabilities] = useState<string[]>([])
   const [jobMsg, setJobMsg] = useState("")
 
@@ -113,7 +110,6 @@ export default function CompanyDashboard({ user }: { user: any }) {
 
   async function requestAudit() {
     setAuditLoading(true)
-    // Simulasi integrasi permintaan audit ke sistem riset
     setTimeout(() => {
       setAuditLoading(false)
       setAuditRequested(true)
@@ -122,7 +118,7 @@ export default function CompanyDashboard({ user }: { user: any }) {
 
   if (loading) return <div className="p-8 text-center text-slate-500 font-medium italic">Sinkronisasi data riset...</div>
 
-  // UI Pendaftaran PT (Jika data belum ada)
+  // UI Pendaftaran PT
   if (!company) {
     return (
       <div className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-2xl mx-auto">
@@ -169,14 +165,14 @@ export default function CompanyDashboard({ user }: { user: any }) {
               <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"><ShieldCheck className="h-8 w-8 text-orange-600 mb-4" /><h3 className="text-xs text-slate-500 font-black uppercase tracking-widest">Skor Audit</h3><p className="text-lg font-black text-orange-600 uppercase">Pending</p></div>
             </div>
 
-            {/* BANNER LAYANAN AUDIT - INTEGRASI RISET */}
+            {/* BANNER LAYANAN AUDIT */}
             <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 text-white flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
                <div className="absolute right-0 bottom-0 opacity-10"><FileText size={200} /></div>
                <div className="bg-white/10 p-5 rounded-2xl backdrop-blur-sm border border-white/20"><FileText className="h-10 w-10 text-white" /></div>
                <div className="flex-1 text-center md:text-left z-10">
                   <h3 className="text-2xl font-black mb-2 uppercase tracking-tighter italic">Layanan Audit Aksesibilitas</h3>
                   <p className="text-blue-100 text-sm leading-relaxed max-w-xl font-medium">
-                    Tingkatkan standar inklusivitas digital Anda. Tim pakar kami akan mengaudit aset digital Anda berdasarkan standar WCAG 2.1 untuk memastikan keramahan bagi pengguna disabilitas.
+                    Pastikan aset digital instansi Anda ramah bagi semua pengguna. Dapatkan laporan audit berbasis standar WCAG 2.1 oleh tim pakar kami.
                   </p>
                </div>
                <div className="z-10 w-full md:w-auto">
@@ -195,16 +191,45 @@ export default function CompanyDashboard({ user }: { user: any }) {
             <div className={`lg:col-span-3 bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm ${isPreview ? 'hidden lg:block opacity-30 pointer-events-none' : 'block'}`}>
                 <h3 className="text-xl font-black mb-8 flex items-center gap-2 text-slate-900 dark:text-slate-100 uppercase tracking-tighter"><Edit3 className="h-5 w-5 text-blue-600" /> Detail Lowongan</h3>
                 <div className="space-y-6">
-                    <div className="space-y-2"><label className="text-xs font-black uppercase text-slate-500 tracking-widest">Judul Posisi</label><input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)} className="input-std text-lg font-bold" /></div>
+                    <div className="space-y-2"><label className="text-xs font-black uppercase text-slate-500 tracking-widest">Judul Posisi</label><input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)} className="input-std text-lg font-bold" placeholder="Misal: Researcher (Netra / Low Vision)" /></div>
+                    
                     <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2"><label className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-1"><MapPin className="h-3 w-3" /> Lokasi</label><select value={jobLocation} onChange={e => setJobLocation(e.target.value)} className="input-std">{INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                        <div className="space-y-2"><label className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-1"><Globe className="h-3 w-3" /> Mode Kerja</label><select value={jobWorkMode} onChange={e => setJobWorkMode(e.target.value)} className="input-std">{WORK_MODES.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-1"><MapPin className="h-3 w-3" /> Lokasi</label>
+                          <select value={jobLocation} onChange={e => setJobLocation(e.target.value)} className="input-std">
+                            {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-black uppercase text-slate-500 tracking-widest flex items-center gap-1"><Globe className="h-3 w-3" /> Mode Kerja</label>
+                          <select value={jobWorkMode} onChange={e => setJobWorkMode(e.target.value)} className="input-std">
+                            {WORK_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        </div>
                     </div>
+
                     <div className="space-y-3 p-5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <label className="text-[11px] font-black uppercase text-blue-600 tracking-widest">Target Ragam Disabilitas (Data Riset)</label>
-                        <div className="flex flex-wrap gap-2">{DISABILITY_TYPES.map(type => (<button key={type} type="button" onClick={() => toggleDisability(type)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${targetDisabilities.includes(type) ? 'bg-blue-600 text-white border-blue-600 shadow-lg' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-400'}`}>{type}</button>))}</div>
+                        <label className="text-[11px] font-black uppercase text-blue-600 tracking-widest">Target Ragam Disabilitas (Sinkron Riset)</label>
+                        <div className="flex flex-wrap gap-2">
+                          {DISABILITY_TYPES.map(type => (
+                            <button 
+                              key={type} 
+                              type="button" 
+                              onClick={() => toggleDisability(type)} 
+                              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${targetDisabilities.includes(type) ? 'bg-blue-600 text-white border-blue-600 shadow-lg' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-400'}`}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-slate-400 italic">Data ini akan disinkronkan dengan dashboard profil pelamar.</p>
                     </div>
-                    <div className="space-y-2"><label className="text-xs font-black uppercase text-slate-500 tracking-widest">Deskripsi (Format Inklusif)</label><textarea value={jobDesc} onChange={e => setJobDesc(e.target.value)} className="input-std min-h-[300px] font-mono text-sm leading-relaxed" /></div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase text-slate-500 tracking-widest">Deskripsi (Format Inklusif)</label>
+                        <textarea value={jobDesc} onChange={e => setJobDesc(e.target.value)} className="input-std min-h-[300px] font-mono text-sm leading-relaxed" />
+                    </div>
+
                     <button onClick={() => setIsPreview(true)} className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-slate-800 transition-all uppercase tracking-widest shadow-xl"><Eye className="h-5 w-5" /> Simulasi Preview</button>
                 </div>
             </div>
@@ -216,7 +241,12 @@ export default function CompanyDashboard({ user }: { user: any }) {
                         <div className="p-5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200">
                             <h1 className="text-2xl font-black mb-1 leading-tight">{jobTitle}</h1>
                             <p className="text-[10px] font-bold text-blue-600 uppercase mb-4 tracking-tighter">{jobWorkMode} • {jobLocation}</p>
-                            <div className="flex flex-wrap gap-1 mb-6">{targetDisabilities.length > 0 ? targetDisabilities.map(t => <span key={t} className="text-[9px] bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-black uppercase">#{t}</span>) : <span className="text-[9px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">Harap pilih ragam disabilitas</span>}</div>
+                            <div className="flex flex-wrap gap-1 mb-6">
+                              {targetDisabilities.length > 0 ? 
+                                targetDisabilities.map(t => <span key={t} className="text-[9px] bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-black uppercase">#{t}</span>) 
+                                : <span className="text-[9px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">Harap pilih ragam disabilitas</span>
+                              }
+                            </div>
                             <div className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed border-t pt-4 font-sans">{jobDesc}</div>
                         </div>
                         <div className="bg-blue-50 dark:bg-blue-900/30 p-5 rounded-2xl border border-blue-100 dark:border-blue-800">
