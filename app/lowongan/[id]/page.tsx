@@ -73,7 +73,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
     }
     
     // Informed Consent untuk kepentingan Riset & Inklusivitas Mandiri
-    const confirmConsent = confirm("{"Dengan melamar, Anda setuju membagikan profil profesional Anda kepada instansi terkait demi kepentingan rekrutmen dan data riset inklusivitas."}")
+    const confirmConsent = confirm("<strong>Dengan melamar, Anda setuju membagikan profil profesional Anda kepada instansi terkait demi kepentingan rekrutmen dan data riset inklusivitas.</strong>")
     if (!confirmConsent) return
 
     setApplying(true)
