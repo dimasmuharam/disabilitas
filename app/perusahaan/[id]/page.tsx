@@ -37,13 +37,12 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
     return ratings.reduce((a, b) => a + (b[key] || 0), 0) / ratings.length
   }
 
-  // Definisikan variabel secara mandiri agar tidak merusak rendering JSX
-  const accessibilityVal = calculateAvg('score_accessibility')
-  const cultureVal = calculateAvg('score_culture')
-  const managementVal = calculateAvg('score_management')
-  const onboardingVal = calculateAvg('score_onboarding')
+  const scoreAccessibility = calculateAvg('score_accessibility')
+  const scoreCulture = calculateAvg('score_culture')
+  const scoreManagement = calculateAvg('score_management')
+  const scoreOnboarding = calculateAvg('score_onboarding')
   
-  const avgTotal = (accessibilityVal + cultureVal + managementVal + onboardingVal) / 4
+  const avgTotal = (scoreAccessibility + scoreCulture + scoreManagement + scoreOnboarding) / 4
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -63,13 +62,14 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
               )}
             </div>
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 text-slate-400 font-bold text-sm">
-              <span className="flex items-center gap-2"><MapPin size={16} className="text-blue-500"/> {company.location || "Lokasi tidak diset"}</span>
+              <span className="flex items-center gap-2"><MapPin size={16} className="text-blue-500"/> {company.location || "Lokasi tidak tersedia"}</span>
               <span className="flex items-center gap-2"><Globe size={16} className="text-blue-500"/> {company.industry}</span>
             </div>
           </div>
         </div>
       </div>
 
+      {/* CONTENT AREA */}
       <div className="max-w-5xl mx-auto px-6 -mt-16 grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
@@ -82,10 +82,10 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
             </div>
             <div className="space-y-4">
               {[
-                { label: "Aksesibilitas", val: accessibilityVal },
-                { label: "Budaya Kerja", val: cultureVal },
-                { label: "Dukungan Manajemen", val: managementVal },
-                { label: "Proses Onboarding", val: onboardingVal },
+                { label: "Aksesibilitas", val: scoreAccessibility },
+                { label: "Budaya Kerja", val: scoreCulture },
+                { label: "Dukungan Manajemen", val: scoreManagement },
+                { label: "Proses Onboarding", val: scoreOnboarding },
               ].map((s) => (
                 <div key={s.label} className="space-y-1">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
@@ -93,7 +93,10 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
                     <span className="text-blue-600">{s.val.toFixed(1)}</span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600 rounded-full transition-all duration-1000" style={{ width: `${(s.val / 5) * 100}%` }} />
+                    <div 
+                      className="h-full bg-blue-600 rounded-full transition-all duration-1000" 
+                      style={{ width: `${(s.val / 5) * 100}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -103,12 +106,12 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
 
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-8">
-<section>
-  <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
-  <p className="text-slate-600 leading-relaxed italic font-medium">
-    {company.vision_statement || "Belum ada visi tertulis."}
-  </p>
-</section>
+            <section>
+              <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
+              <p className="text-slate-600 leading-relaxed italic font-medium">
+                {company.vision_statement || Belum tersedia visi tertulis dari perusahaan.}
+              </p>
+            </section>
             
             <section className="pt-8 border-t border-slate-100">
               <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Akomodasi yang Disediakan</h3>
@@ -117,7 +120,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
                   <span key={acc} className="bg-green-50 text-green-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 border border-green-100">
                     <CheckCircle size={14}/> {acc}
                   </span>
-                )) || <p className="text-slate-400 text-xs italic">Informasi akomodasi belum dilengkapi.</p>}
+                )) || <p className="text-slate-400 text-xs italic">Informasi belum dilengkapi.</p>}
               </div>
             </section>
           </div>
@@ -128,21 +131,30 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
             </h3>
             {activeJobs && activeJobs.length > 0 ? (
               activeJobs.map((job) => (
-                <Link key={job.id} href={`/lowongan/${job.id}`} className="block bg-white p-6 rounded-3xl border border-slate-100 hover:border-blue-600 transition-all group">
-                  <div className="flex justify-between items-center">
-                    <div className="space-y-1">
-                      <h4 className="text-xl font-black uppercase tracking-tight">{job.title}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{job.location}</p>
+                <Link key={job.id} href={`/lowongan/${job.id}`} className="block bg-white p-6 rounded-3xl border border-slate-100 hover:border-blue-600 hover:shadow-2xl transition-all group">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <h4 className="text-xl font-black group-hover:text-blue-600 transition-colors uppercase tracking-tight">{job.title}</h4>
+                      <div className="flex gap-3 text-[10px] font-bold text-slate-400 uppercase">
+                        <span>{job.work_mode}</span>
+                        <span>•</span>
+                        <span>{job.location}</span>
+                      </div>
                     </div>
-                    <ArrowRight size={20} className="text-slate-300 group-hover:text-blue-600" />
+                    <div className="bg-slate-100 p-3 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      <ArrowRight size={20}/>
+                    </div>
                   </div>
                 </Link>
               ))
             ) : (
-              <p className="p-10 text-center italic text-slate-400">Belum ada lowongan aktif.</p>
+              <div className="bg-slate-100 p-10 rounded-[2.5rem] text-center italic text-slate-400 font-medium">
+                Belum ada lowongan aktif saat ini.
+              </div>
             )}
           </div>
         </div>
+
       </div>
     </div>
   )
