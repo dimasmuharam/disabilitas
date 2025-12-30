@@ -6,6 +6,7 @@ import {
   Building2, Calendar
 } from "lucide-react"
 
+export const runtime = 'edge';
 export const revalidate = 60 
 
 async function getTalentProfile(id: string) {
