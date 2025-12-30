@@ -1,4 +1,4 @@
-// lib/data-static.ts
+// lib/data-static.ts - MASTER DATA DISABILITAS.COM (LOCKED)
 
 export const DISABILITY_TYPES = [
   "Netra / Low Vision",
@@ -25,9 +25,46 @@ export const EDUCATION_LEVELS = [
   "Diploma (D1/D2/D3)",
   "Sarjana (S1 / D4)",
   "Magister (S2)",
-  "Doktor (S3)",
-  "Pendidikan Non-Formal / Kursus"
+  "Doktor (S3)"
 ];
+
+export const EDUCATION_MODELS = [
+  "Sekolah Luar Biasa (SLB)",
+  "Sekolah Inklusi",
+  "Sekolah Reguler",
+  "Home Schooling",
+  "Pendidikan Informal / BLK"
+];
+
+export const SCHOLARSHIP_TYPES = [
+  "Tanpa Beasiswa (Mandiri)",
+  "Beasiswa Pemerintah (KIP-K/LPDP/Dsb)",
+  "Beasiswa Swasta / Yayasan",
+  "Beasiswa Luar Negeri",
+  "Bantuan Sosial / Dinas Sosial"
+];
+
+export const EDUCATION_BARRIERS = [
+  "Kendala Biaya / Ekonomi",
+  "Jarak Sekolah Terlalu Jauh",
+  "Ditolak oleh Pihak Sekolah",
+  "Fasilitas Sekolah Tidak Aksesibel",
+  "Kurangnya Tenaga Pendidik Khusus",
+  "Masalah Kesehatan",
+  "Fokus Bekerja",
+  "Faktor Lingkungan / Bullying"
+].sort();
+
+export const ACCOMMODATION_TYPES = [
+  "Materi Format Braille / Audio",
+  "Pendampingan Juru Bahasa Isyarat",
+  "Waktu Ujian / Kerja Tambahan",
+  "Aksesibilitas Fisik (Ramp/Lift)",
+  "Modifikasi Kurikulum / Tugas",
+  "Software Alat Bantu (Screen Reader)",
+  "Ruang Kerja / Belajar Tenang (Sensory)",
+  "Lampu Penerangan Tinggi (Low Vision)"
+].sort();
 
 export const DISABILITY_TOOLS = [
   "Screen Reader - NVDA",
@@ -99,7 +136,6 @@ export const INDONESIA_CITIES = [
 ].sort();
 
 export const UNIVERSITIES = [
-  // PTN
   "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
   "Institut Pertanian Bogor (IPB)", "Universitas Brawijaya (UB)", "Universitas Airlangga (UNAIR)", 
   "Universitas Padjadjaran (UNPAD)", "Universitas Diponegoro (UNDIP)", "Institut Teknologi Sepuluh Nopember (ITS)", 
@@ -114,10 +150,8 @@ export const UNIVERSITIES = [
   "Universitas Negeri Medan (UNIMED)", "Universitas Negeri Padang (UNP)", "Universitas Udayana (UNUD)",
   "Universitas Mataram (UNRAM)", "Universitas Nusa Cendana (UNDANA)", "Universitas Pattimura (UNPATTI)",
   "Universitas Cendrawasih (UNCEN)", "Universitas Terbuka (UT)",
-  // UIN
   "UIN Syarif Hidayatullah Jakarta", "UIN Sunan Kalijaga Yogyakarta", "UIN Sunan Ampel Surabaya", 
   "UIN Maulana Malik Ibrahim Malang", "UIN Alauddin Makassar", "UIN Raden Fatah Palembang", "UIN Ar-Raniry Banda Aceh",
-  // PTS Besar
   "Universitas Telkom (Tel-U)", "Universitas Bina Nusantara (Binus)", "Universitas Muhammadiyah Yogyakarta (UMY)",
   "Universitas Muhammadiyah Malang (UMM)", "Universitas Muhammadiyah Surakarta (UMS)", "Universitas Islam Indonesia (UII)",
   "Universitas Katolik Parahyangan (Unpar)", "Universitas Katolik Indonesia Atma Jaya", "Universitas Trisakti",
