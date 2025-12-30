@@ -288,7 +288,7 @@ export default function CompanyDashboard({ user }: { user: any }) {
                 ) : (
                     <div className="bg-slate-50 p-10 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center text-slate-400 italic">
                         <Info size={40} className="mb-4 opacity-20"/>
-                        <p className="text-sm font-medium">Klik "Preview" untuk melihat bagaimana talenta disabilitas melihat lowongan Anda.</p>
+                        <p className="text-sm font-medium">Klik <strong>Preview</strong> untuk melihat bagaimana talenta disabilitas melihat lowongan Anda.</p>
                     </div>
                 )}
             </div>
