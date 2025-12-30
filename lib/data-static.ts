@@ -1,5 +1,3 @@
-// lib/data-static.ts - MASTER DATA DISABILITAS.COM (LOCKED)
-
 export const DISABILITY_TYPES = [
   "Netra / Low Vision",
   "Tuli / Wicara",
@@ -158,3 +156,17 @@ export const UNIVERSITIES = [
   "Universitas Tarumanagara (Untar)", "Universitas Pelita Harapan (UPH)", "Universitas Mercu Buana",
   "Universitas Gunadarma", "Universitas Kristen Satya Wacana (UKSW)", "Universitas Pasundan (Unpas)"
 ].sort();
+export const INCLUSIVE_JOB_TEMPLATE = `[STANDAR INKLUSIVITAS KERJA]
+
+Kami percaya pada kesetaraan peluang bagi semua talenta. Instansi kami membuka pintu bagi rekan-rekan disabilitas untuk berkarya di posisi ini.
+
+KOMITMEN AKOMODASI:
+Kami menyediakan akomodasi layak yang mencakup (namun tidak terbatas pada):
+1. Aksesibilitas Digital: Dokumen ramah pembaca layar (screen reader) dan sistem internal berbasis web yang aksesibel.
+2. Lingkungan Fisik: (Contoh: Ramp kursi roda, toilet aksesibel, atau ruang kerja tenang).
+3. Dukungan Kerja: (Contoh: Jam kerja fleksibel, penyediaan Juru Bahasa Isyarat untuk rapat penting, atau pendampingan mentor).
+
+KUALIFIKASI KHUSUS:
+Kami mengutamakan kandidat yang mandiri dalam penggunaan alat bantu mobilitas atau teknologi asistif masing-masing.
+
+Informasi ini disediakan untuk mendukung transparansi rekrutmen dan riset inklusivitas di Indonesia.`;
