@@ -103,11 +103,12 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
 
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-8">
-            <section>
-              <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
-              {/* Tanda kutip manual dihilangkan sepenuhnya */}
-              <p className="text-slate-600 leading-relaxed italic font-medium">{company.vision_statement || "Belum ada visi tertulis."}</p>
-            </section>
+<section>
+  <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
+  <p className="text-slate-600 leading-relaxed italic font-medium">
+    {company.vision_statement || "Belum ada visi tertulis."}
+  </p>
+</section>
             
             <section className="pt-8 border-t border-slate-100">
               <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Akomodasi yang Disediakan</h3>
