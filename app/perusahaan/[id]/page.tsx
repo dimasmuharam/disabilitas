@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
+export const runtime = 'edge';
 export default async function PublicCompanyProfile({ params }: { params: { id: string } }) {
   const supabase = createServerComponentClient({ cookies })
 
