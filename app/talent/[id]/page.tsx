@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     title: `${profile.full_name} | Profil Profesional Talenta Inklusif`,
     description: `Lihat profil profesional ${profile.full_name}, talenta ${profile.disability_type} di disabilitas.com. Pelajari keahlian dan rekam jejak karirnya.`,
     alternates: {
-      canonical: `https://disabilitas.com/talent/${params.id}`,
+      canonical: `https://www.disabilitas.com/talent/${params.id}`,
     },
   }
 }
