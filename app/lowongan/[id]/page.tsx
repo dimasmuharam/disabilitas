@@ -1,22 +1,42 @@
 "use client"
 
-// --- TAMBAHAN PENTING UNTUK CLOUDFLARE ---
 export const runtime = 'edge'
-// ------------------------------------------
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
-import { MapPin, Briefcase, DollarSign, Building2, Calendar, ArrowLeft, CheckCircle, ExternalLink } from "lucide-react"
+import { 
+  MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
+  CheckCircle, ExternalLink, Send, ShieldCheck, Info 
+} from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function JobDetailPage({ params }: { params: { id: string } }) {
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [applying, setApplying] = useState(false)
+  const [hasApplied, setHasApplied] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const router = useRouter()
 
   useEffect(() => {
+    checkUser()
     getJobDetail()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function checkUser() {
+    const { data: { user } } = await supabase.auth.getUser()
+    setUser(user)
+    if (user) {
+      const { data } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('job_id', params.id)
+        .eq('profile_id', user.id)
+        .single()
+      if (data) setHasApplied(true)
+    }
+  }
 
   async function getJobDetail() {
     try {
@@ -25,10 +45,12 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         .select(`
           *,
           companies (
+            id,
             name,
             industry,
-            website,
-            is_verified
+            is_verified,
+            master_accommodations_provided,
+            vision_statement
           )
         `)
         .eq('id', params.id)
@@ -37,152 +59,159 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       if (error) throw error
       setJob(data)
     } catch (error) {
-      console.log("Job not found", error)
+      console.error("Job not found", error)
     } finally {
       setLoading(false)
     }
   }
 
-  // Helper Format Uang
-  const formatSalary = (min: number, max: number) => {
-    if (!min && !max) return "Kompetitif"
-    const format = (n: number) => n?.toLocaleString('id-ID')
-    if (min && max) return `Rp ${format(min)} - ${format(max)}`
-    return `Rp ${format(min || max)}`
+  async function handleApply() {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    
+    setApplying(true)
+    const { error } = await supabase.from('applications').insert({
+      job_id: params.id,
+      profile_id: user.id,
+      status: 'Review'
+    })
+
+    if (!error) {
+      setHasApplied(true)
+      alert("Lamaran Anda berhasil dikirim secara profesional.")
+    } else {
+      alert("Gagal mengirim lamaran: " + error.message)
+    }
+    setApplying(false)
   }
 
-  if (loading) return <div className="p-20 text-center">Memuat detail lowongan...</div>
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400 uppercase tracking-widest italic">Menyinkronkan Detail Lowongan...</div>
   
   if (!job) return (
-    <div className="p-20 text-center">
-      <h2 className="text-xl font-bold mb-2">Lowongan Tidak Ditemukan</h2>
-      <Link href="/lowongan" className="text-blue-600 hover:underline">Kembali ke daftar</Link>
+    <div className="p-20 text-center space-y-4">
+      <h2 className="text-2xl font-black uppercase italic tracking-tighter">Lowongan Tidak Tersedia</h2>
+      <Link href="/lowongan" className="btn-primary px-8 py-3 inline-block">Kembali Cari Lowongan</Link>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10">
-      <div className="container px-4 md:px-6 max-w-4xl">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 pt-10">
+      <div className="container px-4 md:px-6 max-w-5xl mx-auto">
         
-        {/* Tombol Kembali */}
-        <Link href="/lowongan" className="inline-flex items-center text-sm text-slate-500 hover:text-blue-600 mb-6 transition-colors">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Kembali ke Pencarian
+        <Link href="/lowongan" className="inline-flex items-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 mb-8 transition-all group">
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> Kembali ke Pencarian
         </Link>
 
-        {/* Header Lowongan */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm mb-6">
-          <div className="flex flex-col md:flex-row justify-between gap-6">
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-2">{job.title}</h1>
-                <div className="flex items-center gap-2 text-lg font-medium text-slate-700 dark:text-slate-300">
-                  <Building2 className="h-5 w-5 text-slate-400" /> 
-                  {job.companies?.name || "Perusahaan Mitra"}
-                  
-                  {job.companies?.is_verified && (
-                    <span className="inline-flex items-center ml-1" title="Terverifikasi">
-                      <CheckCircle className="h-5 w-5 text-blue-500" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          
+          {/* KOLOM KIRI: DETAIL UTAMA */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Header Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-10 border border-slate-200 shadow-xl shadow-slate-200/50">
+              <div className="flex flex-col md:flex-row justify-between gap-6">
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                    <Briefcase size={12}/> {job.work_mode || "Full-time"}
+                  </div>
+                  <h1 className="text-4xl font-black text-slate-900 dark:text-white leading-none tracking-tighter uppercase italic">{job.title}</h1>
+                  <Link href={`/perusahaan/${job.companies?.id}`} className="flex items-center gap-2 text-lg font-bold text-blue-600 hover:underline">
+                    <Building2 className="h-5 w-5" /> 
+                    {job.companies?.name}
+                    {job.companies?.is_verified && <CheckCircle className="h-5 w-5 text-blue-500" />}
+                  </Link>
+
+                  <div className="flex flex-wrap gap-4 pt-2">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-tight">
+                      <MapPin className="h-4 w-4 text-red-500" /> {job.location}
                     </span>
-                  )}
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-tight">
+                      <Calendar className="h-4 w-4 text-blue-500" /> Diposting {new Date(job.created_at).toLocaleDateString("id-ID")}
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-400">
-                <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                  <MapPin className="h-4 w-4" /> {job.location}
-                </span>
-                <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                  <Briefcase className="h-4 w-4" /> {job.job_type}
-                </span>
-                <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                  <DollarSign className="h-4 w-4" /> {formatSalary(job.salary_min, job.salary_max)}
-                </span>
-                <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                  <Calendar className="h-4 w-4" /> Diposting {new Date(job.created_at).toLocaleDateString("id-ID")}
-                </span>
-              </div>
             </div>
 
-            {/* Tombol Lamar (Action) */}
-            <div className="flex flex-col gap-3 min-w-[200px]">
-              {job.application_url ? (
-                 <a 
-                   href={job.application_url.includes('@') ? `mailto:${job.application_url}` : job.application_url}
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   className="inline-flex items-center justify-center h-12 rounded-md bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg transition-all"
-                 >
-                   Lamar Sekarang <ExternalLink className="ml-2 h-4 w-4" />
-                 </a>
-              ) : (
-                 <button disabled className="h-12 rounded-md bg-slate-200 text-slate-500 font-bold cursor-not-allowed">
-                   Aplikasi Ditutup
-                 </button>
-              )}
-              <p className="text-xs text-center text-slate-500">
-                Anda akan diarahkan ke sistem rekrutmen perusahaan.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Konten Detail */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* Kolom Kiri: Deskripsi Utama */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm">
-              <h3 className="text-xl font-bold mb-4 border-b pb-2 border-slate-100 dark:border-slate-800">Deskripsi Pekerjaan</h3>
-              <div className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 whitespace-pre-line">
+            {/* Deskripsi Area */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-10 border border-slate-200 shadow-sm">
+              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-blue-600 mb-8 pb-4 border-b">Deskripsi & Kualifikasi</h2>
+              <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed font-medium">
                 {job.description}
               </div>
             </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm">
-              <h3 className="text-xl font-bold mb-4 border-b pb-2 border-slate-100 dark:border-slate-800">Kualifikasi</h3>
-              <div className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 whitespace-pre-line">
-                {job.requirements}
-              </div>
-            </div>
           </div>
 
-          {/* Kolom Kanan: Info Aksesibilitas */}
+          {/* KOLOM KANAN: SIDEBAR AKSI & INKLUSI */}
           <div className="space-y-6">
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900 p-6">
-              <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" /> Komitmen Inklusi
-              </h3>
-              <p className="text-sm text-blue-900/80 dark:text-blue-200/80 mb-4">
-                Posisi ini terbuka untuk penyandang disabilitas dengan kategori:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {job.disability_tags && job.disability_tags.length > 0 ? (
-                    job.disability_tags.map((tag: string) => (
-                        <span key={tag} className="inline-block bg-white dark:bg-slate-950 text-blue-700 dark:text-blue-400 text-xs font-semibold px-2.5 py-1 rounded border border-blue-200 dark:border-blue-800">
-                        {tag}
-                        </span>
-                    ))
+            
+            {/* Action Card */}
+            <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 shadow-2xl sticky top-10 border border-white/5">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Panel Lamaran</h3>
+              <div className="space-y-4">
+                {hasApplied ? (
+                  <div className="w-full py-4 bg-green-500/20 border border-green-500/30 text-green-400 rounded-2xl font-black text-center uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+                    <CheckCircle size={18}/> Lamaran Terkirim
+                  </div>
                 ) : (
-                    <span className="text-sm text-slate-500 italic">Semua ragam disabilitas dipersilakan melamar.</span>
+                  <button 
+                    onClick={handleApply}
+                    disabled={applying || !job.is_active}
+                    className="w-full h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+                  >
+                    {applying ? "Memproses..." : <><Send size={20}/> Lamar Sekarang</>}
+                  </button>
                 )}
+                <p className="text-[9px] text-center text-slate-400 font-medium leading-relaxed italic">
+                  Data profil dan CV Anda akan otomatis disinkronkan ke sistem perusahaan ini.
+                </p>
+              </div>
+
+              {/* Target Ragam */}
+              <div className="mt-10 pt-8 border-t border-white/10 space-y-4">
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
+                  <ShieldCheck size={14}/> Target Ragam Inklusi
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {job.target_disabilities?.map((tag: string) => (
+                    <span key={tag} className="bg-white/5 border border-white/10 text-white text-[9px] font-black px-3 py-1.5 rounded-lg uppercase">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <h3 className="font-bold mb-3">Tentang Perusahaan</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                Industri: {job.companies?.industry || "Umum"}
-              </p>
-              {job.companies?.website && (
-                <a 
-                  href={job.companies.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1"
-                >
-                  Kunjungi Website <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
+            {/* Company Access Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-200 shadow-sm space-y-6">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <Building2 size={14} className="text-blue-600"/> Komitmen Akomodasi
+              </h3>
+              <div className="space-y-3">
+                {job.companies?.master_accommodations_provided?.length > 0 ? (
+                  job.companies.master_accommodations_provided.map((acc: string) => (
+                    <div key={acc} className="flex items-center gap-3 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <CheckCircle2 size={16} className="text-green-500 shrink-0" /> {acc}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs italic text-slate-400">Menunggu verifikasi detail akomodasi.</p>
+                )}
+              </div>
+              
+              <Link href={`/perusahaan/${job.companies?.id}`} className="block w-full py-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100 dark:border-slate-700">
+                Cek Profil Inklusivitas <ExternalLink size={12} className="inline ml-1" />
+              </Link>
+            </div>
+
+            {/* Disclaimer Informed Consent */}
+            <div className="px-6 flex gap-3">
+                <Info size={16} className="text-slate-400 shrink-0"/>
+                <p className="text-[8px] font-medium text-slate-400 leading-tight uppercase">
+                    Seluruh proses rekrutmen dipantau oleh tim riset disabilitas.com demi menjamin pengalaman kerja yang inklusif.
+                </p>
             </div>
           </div>
 
