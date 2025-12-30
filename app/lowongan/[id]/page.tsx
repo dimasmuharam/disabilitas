@@ -100,9 +100,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       <h2 className="text-2xl font-black uppercase italic tracking-tighter">{"Lowongan Tidak Tersedia"}</h2>
       <Link href="/lowongan" className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black uppercase text-[10px]">{"Kembali Cari Lowongan"}</Link>
     </div>
-  )
-
-  return (
+    return (
     <div className="min-h-screen bg-slate-50 pb-20 pt-10">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto">
         
