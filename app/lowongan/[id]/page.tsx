@@ -32,7 +32,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         .from('applications')
         .select('id')
         .eq('job_id', params.id)
-        .eq('profile_id', user.id)
+        .eq('applicant_id', user.id) // Diperbaiki dari profile_id ke applicant_id sesuai screenshot DB
         .single()
       if (data) setHasApplied(true)
     }
@@ -67,14 +67,14 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
   async function handleApply() {
     if (!user) {
-      router.push('/login')
+      router.push('/masuk')
       return
     }
     
     setApplying(true)
     const { error } = await supabase.from('applications').insert({
       job_id: params.id,
-      profile_id: user.id,
+      applicant_id: user.id, // Diperbaiki dari profile_id ke applicant_id
       status: 'Review'
     })
 
@@ -193,7 +193,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                 {job.companies?.master_accommodations_provided?.length > 0 ? (
                   job.companies.master_accommodations_provided.map((acc: string) => (
                     <div key={acc} className="flex items-center gap-3 text-xs font-bold text-slate-700 dark:text-slate-300">
-                      <CheckCircle2 size={16} className="text-green-500 shrink-0" /> {acc}
+                      <CheckCircle size={16} className="text-green-500 shrink-0" /> {acc}
                     </div>
                   ))
                 ) : (
