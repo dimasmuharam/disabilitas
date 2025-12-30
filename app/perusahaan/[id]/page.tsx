@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import { 
   Building2, MapPin, Globe, ShieldCheck, Star, 
-  CheckCircle, Users, Briefcase, ArrowRight, Info // CheckCircle2 diganti menjadi CheckCircle
+  CheckCircle, Users, Briefcase, ArrowRight, Info
 } from "lucide-react"
 import Link from "next/link"
 
@@ -38,13 +38,13 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
   }
 
   const scores = {
-    avg: 0,
     accessibility: calculateAvg('score_accessibility'),
     culture: calculateAvg('score_culture'),
     management: calculateAvg('score_management'),
     onboarding: calculateAvg('score_onboarding')
   }
-  scores.avg = (scores.accessibility + scores.culture + scores.management + scores.onboarding) / 4
+  
+  const avgTotal = (scores.accessibility + scores.culture + scores.management + scores.onboarding) / 4
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -82,7 +82,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
               <Star size={14} className="text-orange-400"/> Inclusion Scorecard
             </h3>
             <div className="flex items-end gap-3 mb-8">
-              <span className="text-6xl font-black italic leading-none">{scores.avg > 0 ? scores.avg.toFixed(1) : "N/A"}</span>
+              <span className="text-6xl font-black italic leading-none">{avgTotal > 0 ? avgTotal.toFixed(1) : "N/A"}</span>
               <span className="text-slate-400 font-bold mb-1">/ 5.0</span>
             </div>
             <div className="space-y-4">
@@ -106,9 +106,6 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-[9px] text-slate-400 italic leading-relaxed">
-              *Skor dihitung secara otomatis berdasarkan penilaian anonim dari talenta disabilitas yang bekerja di sini.
-            </p>
           </div>
 
           {/* STATS */}
@@ -132,8 +129,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
           <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-8">
             <section>
               <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
-              {/* PERBAIKAN DI SINI: Menggunakan entitas &quot; */}
-              <p className="text-slate-600 leading-relaxed italic font-medium">&quot;{company.vision_statement || Belum ada visi tertulis.&quot;</p>
+              <p className="text-slate-600 leading-relaxed italic font-medium">{company.vision_statement || "Belum ada visi tertulis."}</p>
             </section>
             
             <section className="pt-8 border-t border-slate-100">
