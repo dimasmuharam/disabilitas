@@ -34,18 +34,16 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
   // Hitung Rata-rata Rating
   const calculateAvg = (key: string) => {
     if (!ratings || ratings.length === 0) return 0
-    return ratings.reduce((a, b) => a + b[key], 0) / ratings.length
+    return ratings.reduce((a, b) => a + (b[key] || 0), 0) / ratings.length
   }
 
-  const scores = {
-    accessibility: calculateAvg('score_accessibility'),
-    culture: calculateAvg('score_culture'),
-    management: calculateAvg('score_management'),
-    onboarding: calculateAvg('score_onboarding')
-  }
-
-  // Perbaikan variabel agar tidak merusak tag div di bawah
-  const avgTotal = (scores.accessibility + scores.culture + scores.management + scores.onboarding) / 4
+  // Definisikan variabel secara mandiri agar tidak merusak rendering JSX
+  const accessibilityVal = calculateAvg('score_accessibility')
+  const cultureVal = calculateAvg('score_culture')
+  const managementVal = calculateAvg('score_management')
+  const onboardingVal = calculateAvg('score_onboarding')
+  
+  const avgTotal = (accessibilityVal + cultureVal + managementVal + onboardingVal) / 4
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -72,7 +70,6 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
         </div>
       </div>
 
-      {/* CONTENT AREA */}
       <div className="max-w-5xl mx-auto px-6 -mt-16 grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
@@ -85,10 +82,10 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
             </div>
             <div className="space-y-4">
               {[
-                { label: "Aksesibilitas", val: scores.accessibility },
-                { label: "Budaya Kerja", val: scores.culture },
-                { label: "Dukungan Manajemen", val: scores.management },
-                { label: "Proses Onboarding", val: scores.onboarding },
+                { label: "Aksesibilitas", val: accessibilityVal },
+                { label: "Budaya Kerja", val: cultureVal },
+                { label: "Dukungan Manajemen", val: managementVal },
+                { label: "Proses Onboarding", val: onboardingVal },
               ].map((s) => (
                 <div key={s.label} className="space-y-1">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
@@ -108,7 +105,8 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
           <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-8">
             <section>
               <h3 className="text-sm font-black uppercase italic text-blue-600 mb-4">Visi Inklusi</h3>
-              <p className="text-slate-600 leading-relaxed italic font-medium">Belum ada visi tertulis.</p>
+              {/* Tanda kutip manual dihilangkan sepenuhnya */}
+              <p className="text-slate-600 leading-relaxed italic font-medium">{company.vision_statement || "Belum ada visi tertulis."}</p>
             </section>
             
             <section className="pt-8 border-t border-slate-100">
@@ -131,7 +129,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
               activeJobs.map((job) => (
                 <Link key={job.id} href={`/lowongan/${job.id}`} className="block bg-white p-6 rounded-3xl border border-slate-100 hover:border-blue-600 transition-all group">
                   <div className="flex justify-between items-center">
-                    <div>
+                    <div className="space-y-1">
                       <h4 className="text-xl font-black uppercase tracking-tight">{job.title}</h4>
                       <p className="text-[10px] font-bold text-slate-400 uppercase">{job.location}</p>
                     </div>
