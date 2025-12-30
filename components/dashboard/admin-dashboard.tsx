@@ -3,9 +3,21 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { 
-  Users, Building2, BarChart3, History, ShieldCheck, 
-  Database, TrendingUp, GraduationCap, MapPin, 
-  Search, Download, Info, AlertTriangle
+  Users, 
+  Building2, 
+  BarChart3, 
+  History, 
+  ShieldCheck, 
+  Database, 
+  TrendingUp, 
+  GraduationCap, 
+  MapPin, 
+  Search, 
+  Download, 
+  Info, 
+  AlertTriangle,
+  LayoutDashboard, // Ditambahkan berdasarkan log error
+  ArrowRight      // Ditambahkan berdasarkan log error
 } from "lucide-react"
 
 export default function AdminDashboard({ user }: { user: any }) {
@@ -85,6 +97,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                 activeTab === tab.id ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white/10'
               }`}
             >
+              {tab.icon}
               {tab.label}
             </button>
           ))}
@@ -105,13 +118,12 @@ export default function AdminDashboard({ user }: { user: any }) {
               <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Mitra Industri</h3>
               <p className="text-3xl font-black leading-none mt-1">{stats.companies}</p>
             </div>
-            {/* Disability Proportion Chart Placeholder (Represented via accessible list) */}
             <div className="md:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
               <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Proporsi Ragam Disabilitas</h3>
               <ul className="space-y-2" aria-label="Proporsi Ragam Disabilitas Terdaftar">
                 {Array.from(new Set(transitionData.map(d => d.disability_type))).map(type => {
                   const count = transitionData.filter(d => d.disability_type === type).length;
-                  const percent = ((count / stats.talents) * 100).toFixed(1);
+                  const percent = stats.talents > 0 ? ((count / stats.talents) * 100).toFixed(1) : "0";
                   return (
                     <li key={type} className="flex items-center gap-4">
                       <span className="text-[10px] font-bold w-20 truncate">{type || "N/A"}</span>
@@ -137,18 +149,17 @@ export default function AdminDashboard({ user }: { user: any }) {
           </div>
           
           <div className="grid md:grid-cols-2 gap-10">
-             {/* Accessible Narration Layer */}
              <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 space-y-4">
                 <h3 className="font-black text-blue-900 uppercase text-xs flex items-center gap-2"><GraduationCap size={16}/> Narasi Transisi Pendidikan-Kerja</h3>
+                {/* Menggunakan &quot; untuk tanda kutip agar build tidak error */}
                 <p className="text-sm text-blue-800 leading-relaxed italic">
-                  Berdasarkan dataset saat ini, talenta dari model sekolah <strong>Inklusi</strong> cenderung memiliki status "Sudah Bekerja" 15% lebih tinggi dibandingkan model SLB dalam kurun waktu 2 tahun setelah lulus.
+                  Berdasarkan dataset saat ini, talenta dari model sekolah <strong>Inklusi</strong> cenderung memiliki status &quot;Sudah Bekerja&quot; 15% lebih tinggi dibandingkan model SLB dalam kurun waktu 2 tahun setelah lulus.
                 </p>
                 <div className="bg-white/50 p-4 rounded-xl text-[10px] font-medium text-blue-700 leading-relaxed border border-blue-200">
                   Data korelasi menunjukkan kaitan kuat antara <strong>Pendidikan Terakhir</strong> dengan ekspektasi gaji di wilayah urban.
                 </div>
              </div>
 
-             {/* Table for Screen Reader (Hidden Visual) */}
              <div className="space-y-4">
                 <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Korelasi Model Sekolah & Status Kerja</h3>
                 <div className="overflow-hidden rounded-2xl border border-slate-100">
