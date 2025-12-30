@@ -86,9 +86,9 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
     if (!error) {
       setHasApplied(true)
-      alert("{"Lamaran Anda berhasil terkirim. Data akan diproses untuk riset inklusivitas kerja."}")
+      alert("<strong>Lamaran Anda berhasil terkirim.</strong>")
     } else {
-      alert("{"Terjadi kendala: "}" + error.message)
+      alert("<strong>Terjadi kendala:</strong> " + error.message)
     }
     setApplying(false)
   }
