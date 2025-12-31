@@ -80,7 +80,7 @@ export default function TalentDashboard({ user }: { user: any }) {
 
   async function fetchInitialData() {
     try {
-      const { data: pData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      const { data: pData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
       if (pData) {
         setFullName(pData.full_name || ""); setCity(pData.city || ""); setDisabilityType(pData.disability_type || "")
         setLastEducation(pData.education_level || ""); setEducationModel(pData.education_model || "")
@@ -100,14 +100,14 @@ export default function TalentDashboard({ user }: { user: any }) {
       }
 
       const [cRes, wRes, aRes] = await Promise.all([
-        supabase.from('certifications').select('*').eq('profile_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('work_experiences').select('*').eq('profile_id', user.id).order('is_current_work', { ascending: false }),
-        supabase.from('applications').select('*, jobs(*, companies(*))').eq('applicant_id', user.id)
+        supabase.from("certifications").select("*").eq("profile_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("work_experiences").select("*").eq("profile_id", user.id).order("is_current_work", { ascending: false }),
+        supabase.from("applications").select("*, jobs(*, companies(*))").eq("applicant_id", user.id)
       ])
       if (cRes.data) setCerts(cRes.data); if (wRes.data) setWorkEx(wRes.data); if (aRes.data) setMyApplications(aRes.data)
 
       if (pData?.disability_type) {
-        const { data: jData } = await supabase.from('jobs').select('*, companies(*)').contains('target_disabilities', [pData.disability_type]).limit(3)
+        const { data: jData } = await supabase.from("jobs").select("*, companies(*)").contains("target_disabilities", [pData.disability_type]).limit(3)
         if (jData) setRecommendedJobs(jData)
       }
     } catch (e) { console.error(e) } finally { setLoading(false) }
@@ -128,7 +128,7 @@ export default function TalentDashboard({ user }: { user: any }) {
       career_status: careerStatus, expected_salary: expectedSalary,
       has_informed_consent: isConsent, updated_at: new Date()
     }
-    const { error } = await supabase.from('profiles').upsert(updates)
+    const { error } = await supabase.from("profiles").upsert(updates)
     if (!error) {
       setMsg("Data berhasil disinkronkan."); setIsEditing(false); fetchInitialData()
       setTimeout(() => msgRef.current?.focus(), 100)
@@ -136,9 +136,10 @@ export default function TalentDashboard({ user }: { user: any }) {
     setSaving(false)
   }
 
+  // MODUL BARU: TAMBAH SERTIFIKAT + AGREGASI SKILLS OTOMATIS
   async function handleAddCertification() {
     if (!newCert.title || !newCert.organizer_name) return
-    const { data, error } = await supabase.from('certifications').insert({
+    const { data, error } = await supabase.from("certifications").insert({
       profile_id: user.id,
       name: newCert.title,
       organizer_category: newCert.organizer_category,
@@ -149,9 +150,20 @@ export default function TalentDashboard({ user }: { user: any }) {
     }).select().single()
 
     if (data) {
+      // PROSEDUR AGREGASI SKILLS KE PROFIL UTAMA
+      const currentSkillsArray = skills.split(",").map(s => s.trim()).filter(s => s);
+      const combinedSkills = Array.from(new Set([...currentSkillsArray, ...newCert.skills_acquired]));
+      
+      // Update database profile dengan skill yang baru digabung
+      await supabase.from("profiles").update({ 
+        skills: combinedSkills 
+      }).eq("id", user.id);
+
+      // Sinkronkan state lokal agar UI langsung terupdate
+      setSkills(combinedSkills.join(", "));
       setCerts([data, ...certs])
       setNewCert({ title: "", organizer_category: "Training Center", organizer_name: "", year: "2025", certificate_url: "", skills_acquired: [] })
-      setMsg("Sertifikasi pelatihan berhasil ditambahkan.");
+      setMsg("Sertifikasi ditambahkan dan keahlian profil diperbarui.");
     }
   }
 
@@ -283,6 +295,20 @@ export default function TalentDashboard({ user }: { user: any }) {
                 </div>
             </div>
 
+            {/* MODUL SKILLS MANUAL (UNTUK AUTODIDAK) */}
+            <div className="pt-10 border-t space-y-4">
+                <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-widest flex items-center gap-2"><Award size={14}/> {"Keahlian Tambahan (Autodidak)"}</h3>
+                <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-500 ml-2">{"Ketik keahlian Anda (pisahkan dengan koma)"}</label>
+                    <input 
+                        value={skills} 
+                        onChange={e => setSkills(e.target.value)} 
+                        placeholder="Contoh: Menjahit, Public Speaking, Microsoft Excel" 
+                        className="input-std font-bold text-blue-600" 
+                    />
+                </div>
+            </div>
+
             <button onClick={handleSaveProfile} disabled={saving} className="w-full h-16 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3">{saving ? "MENYIMPAN..." : <><Save size={20}/> {"Simpan Seluruh Data & Profil"}</>}</button>
         </div>
       ) : (
@@ -318,8 +344,8 @@ export default function TalentDashboard({ user }: { user: any }) {
                             <div key={app.id} className="bg-white p-5 rounded-3xl border border-slate-200 flex justify-between items-center shadow-sm">
                                 <div><h3 className="font-black text-xs uppercase mb-1">{app.jobs.title}</h3><p className="text-[10px] font-bold text-slate-400 uppercase">{app.jobs.companies.name}</p></div>
                                 <div className="flex items-center gap-3">
-                                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${app.status === 'Hired' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{app.status}</span>
-                                    {app.status === 'Hired' && (
+                                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${app.status === "Hired" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>{app.status}</span>
+                                    {app.status === "Hired" && (
                                         <button onClick={() => setShowRatingId(app.jobs.companies.id)} className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-all"><Star size={16}/></button>
                                     )}
                                 </div>
@@ -334,7 +360,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                                <p className="text-[9px] font-bold text-orange-600 bg-orange-100 px-3 py-1 rounded-full uppercase">{"Anonymous Research"}</p>
                              </div>
                              <div className="grid md:grid-cols-2 gap-6">
-                                {['accessibility', 'culture', 'management', 'onboarding'].map((k) => (
+                                {["accessibility", "culture", "management", "onboarding"].map((k) => (
                                     <div key={k} className="space-y-3">
                                         <div className="flex justify-between items-center">
                                           <label className="text-[10px] font-black uppercase text-orange-700">{k}</label>
@@ -379,7 +405,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                                     <p className="text-[9px] font-bold text-blue-600 uppercase mt-1">{c.organizer_name} ({c.year})</p>
                                   </div>
                                   <button onClick={async () => {
-                                      await supabase.from('certifications').delete().eq('id', c.id)
+                                      await supabase.from("certifications").delete().eq("id", c.id)
                                       setCerts(certs.filter(item => item.id !== c.id))
                                   }} className="text-red-400 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14}/></button>
                                 </div>
