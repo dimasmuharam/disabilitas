@@ -4,7 +4,6 @@ import { useState } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-// 1. Import Turnstile
 import { Turnstile } from '@marsidev/react-turnstile'
 
 export default function RegisterPage() {
@@ -16,16 +15,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState("")
   const [type, setType] = useState("info")
-  
-  // 2. State untuk Token Turnstile
   const [turnstileToken, setTurnstileToken] = useState("")
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // 3. Validasi Tambahan: Cek Turnstile
     if (!turnstileToken) {
-        setMsg("Mohon selesaikan verifikasi keamanan (CAPTCHA) di bawah.")
+        setMsg("Mohon selesaikan verifikasi keamanan di bawah.")
         setType("error")
         return
     }
@@ -37,14 +33,13 @@ export default function RegisterPage() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase().trim(),
         password,
         options: {
           data: {
             full_name: fullName, 
             role: role 
           },
-          // Kirim token turnstile sebagai captcha proof (Fitur Supabase Enterprise, tapi untuk sekarang kita validasi di client side dulu agar tombol aktif)
           captchaToken: turnstileToken, 
           emailRedirectTo: `${siteUrl}/dashboard?verified=true`,
         },
@@ -52,19 +47,19 @@ export default function RegisterPage() {
 
       if (error) throw error
 
-      if (data.session) {
-        router.push("/dashboard")
-      } else {
+      if (data.user && !data.session) {
         setType("success")
-        setMsg("Pendaftaran berhasil! Cek email untuk verifikasi.")
+        setMsg("Pendaftaran berhasil! Silakan cek email Anda untuk konfirmasi aktivasi profil.")
         setEmail("")
         setPassword("")
         setFullName("")
+      } else if (data.session) {
+        router.push("/dashboard")
       }
 
     } catch (error: any) {
       setType("error")
-      setMsg(error.message || "Terjadi kesalahan.")
+      setMsg(error.message || "Terjadi kesalahan sistem.")
     } finally {
       setLoading(false)
     }
@@ -72,75 +67,118 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-slate-50">
-          Daftar Akun Baru
+      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
+        <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6" aria-hidden="true">
+            <span className="text-white font-black text-2xl">{"D"}</span>
+        </div>
+        <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50">
+          {"Daftar Akun Baru"}
         </h1>
-        <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-          Disabilitas.com - Ekosistem Karir Inklusif
+        <p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">
+          {"Bergabung ke Ekosistem Inklusif disabilitas.com"}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200 dark:border-slate-800">
-          <form className="space-y-6" onSubmit={handleRegister}>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
+        <div className="bg-white dark:bg-slate-900 py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
+          
+          {/* ARIA Live Region untuk notifikasi error/sukses agar langsung terbaca Screen Reader */}
+          <div aria-live="polite" className="mb-4">
+            {msg && (
+                <div role="alert" className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border ${type === 'success' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                    {msg}
+                </div>
+            )}
+          </div>
+
+          <form className="space-y-6" onSubmit={handleRegister} aria-label="Formulir Pendaftaran Akun">
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Saya mendaftar sebagai:
+              <label htmlFor="role-select" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+                {"Daftar Sebagai"}
               </label>
               <select 
+                id="role-select"
                 value={role} 
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full p-2 border rounded-md bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                className="w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
               >
-                <option value="talent">Pencari Kerja (Talenta)</option>
-                <option value="company">Pemberi Kerja (Perusahaan)</option>
+                <option value="talent">{"Pencari Kerja (Talenta Disabilitas)"}</option>
+                <option value="company">{"Pemberi Kerja (Perusahaan/Mitra)"}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nama Lengkap / Perusahaan</label>
-              <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 w-full p-2 border rounded-md bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700" />
+              <label htmlFor="full_name" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+                {"Nama Lengkap atau Instansi"}
+              </label>
+              <input 
+                id="full_name"
+                type="text" 
+                required 
+                autoComplete="name"
+                value={fullName} 
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Contoh: Dimas Muharam"
+                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full p-2 border rounded-md bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700" />
+              <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+                {"Alamat Email Aktif"}
+              </label>
+              <input 
+                id="email"
+                type="email" 
+                required 
+                autoComplete="email"
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nama@email.com"
+                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-              <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full p-2 border rounded-md bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700" />
+              <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+                {"Kata Sandi (Minimal 6 Karakter)"}
+              </label>
+              <input 
+                id="password"
+                type="password" 
+                required 
+                minLength={6} 
+                autoComplete="new-password"
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none" 
+              />
             </div>
 
-            {/* 4. WIDGET TURNSTILE */}
-            <div className="flex justify-center my-4">
+            <div className="flex justify-center py-2" aria-label="Verifikasi Keamanan Cloudflare">
                 <Turnstile 
                     siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
                     onSuccess={(token) => setTurnstileToken(token)}
-                    options={{ theme: 'light' }} // Bisa 'auto'
+                    options={{ theme: 'auto' }} 
                 />
             </div>
 
-            {msg && <div className={`p-3 rounded text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{msg}</div>}
-
-            {/* Tombol dimatikan (disabled) jika token Turnstile belum ada */}
             <button 
                 type="submit" 
                 disabled={loading || !turnstileToken} 
-                className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="w-full flex justify-center py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
             >
-              {loading ? "Memproses..." : "Daftar Sekarang"}
+              {loading ? "SEDANG MEMPROSES..." : "DAFTAR SEKARANG"}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-             <Link href="/masuk" className="text-sm text-blue-600 hover:underline">Sudah punya akun? Masuk</Link>
-          </div>
+          <nav className="mt-8 text-center" aria-label="Navigasi Login">
+             <Link href="/masuk" className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline focus:outline-dotted focus:outline-2">
+                {"Sudah punya akun? Masuk di sini"}
+             </Link>
+          </nav>
         </div>
       </div>
     </div>
