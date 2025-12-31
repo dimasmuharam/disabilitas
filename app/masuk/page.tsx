@@ -4,7 +4,6 @@ import { useState } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-// 1. Import Turnstile
 import { Turnstile } from '@marsidev/react-turnstile'
 
 export default function LoginPage() {
@@ -14,14 +13,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState("")
   const [isError, setIsError] = useState(false)
-  
-  // 2. State Token
   const [turnstileToken, setTurnstileToken] = useState("")
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // 3. Validasi Token
     if (!turnstileToken) {
         setMsg("Mohon tunggu verifikasi keamanan (Turnstile) selesai.")
         setIsError(true)
@@ -33,14 +29,31 @@ export default function LoginPage() {
     setIsError(false)
 
     try {
+      // 1. Melakukan SignIn
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.toLowerCase().trim(), // Normalisasi email agar case-insensitive
         password,
-        options: { captchaToken: turnstileToken } // Opsional: Supabase bisa verifikasi ini di settingan dashboard
+        options: { captchaToken: turnstileToken }
       })
 
       if (error) throw error
 
+      if (data?.user) {
+        // 2. Verifikasi instan apakah data profil sudah ada di tabel profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
+        if (!profile) {
+          // Jika login berhasil tapi profil belum ada (kasus sinkronisasi gagal)
+          setMsg("Akun autentikasi aktif, namun profil riset belum tersedia. Menghubungi server...")
+          // Opsional: Di sini bisa ditambahkan fungsi auto-create profile jika diperlukan
+        }
+      }
+
+      // 3. Arahkan ke dashboard
       router.push("/dashboard")
       router.refresh() 
 
@@ -49,7 +62,7 @@ export default function LoginPage() {
       if (error.message.includes("Invalid login")) {
         setMsg("Email atau password salah.")
       } else if (error.message.includes("Email not confirmed")) {
-        setMsg("Email belum diverifikasi.")
+        setMsg("Email belum diverifikasi. Silakan cek kotak masuk Anda.")
       } else {
         setMsg(error.message)
       }
@@ -61,54 +74,54 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-slate-50">
-          Masuk ke Akun
+      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
+        <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
+            <span className="text-white font-black text-2xl">{"D"}</span>
+        </div>
+        <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50">
+          {"Masuk ke Akun"}
         </h1>
-        <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-          Akses profil karir dan kelola data Anda.
+        <p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">
+          {"Akses Pusat Riset & Karir Disabilitas"}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200 dark:border-slate-800">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
+        <div className="bg-white dark:bg-slate-900 py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
           
           <form className="space-y-6" onSubmit={handleLogin}>
-            
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Alamat Email
+              <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+                {"Alamat Email"}
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white sm:text-sm"
-                />
-              </div>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nama@email.com"
+                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Password
+              <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+                {"Kata Sandi"}
               </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white sm:text-sm"
-                />
-              </div>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              />
             </div>
 
-            {/* 4. WIDGET TURNSTILE */}
-            <div className="flex justify-center">
+            {/* Turnstile Verification */}
+            <div className="flex justify-center py-2">
                 <Turnstile 
                     siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
                     onSuccess={(token) => setTurnstileToken(token)}
@@ -117,40 +130,35 @@ export default function LoginPage() {
             </div>
 
             {msg && (
-              <div role="alert" className={`p-4 rounded-md text-sm ${isError ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800'}`}>
+              <div role="alert" className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border ${isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-blue-50 text-blue-700 border-blue-100'} animate-in zoom-in-95`}>
                 {msg}
               </div>
             )}
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading || !turnstileToken}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Memproses..." : "Masuk"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading || !turnstileToken}
+              className="w-full flex justify-center py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+            >
+              {loading ? "MENSINKRONISASI..." : "MASUK KE DASHBOARD"}
+            </button>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-8">
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-300 dark:border-slate-700" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-slate-900 text-slate-500">
-                  Belum punya akun?
-                </span>
-              </div>
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800" /></div>
+              <div className="relative flex justify-center text-[10px] font-black uppercase"><span className="px-4 bg-white dark:bg-slate-900 text-slate-400">{"Atau"}</span></div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col gap-3">
               <Link
                 href="/daftar"
-                className="w-full flex justify-center py-2 px-4 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+                className="w-full flex justify-center py-4 px-4 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
               >
-                Daftar akun baru
+                {"Daftar Akun Baru"}
+              </Link>
+              <Link href="/" className="text-center text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] mt-2">
+                {"← Kembali ke Beranda"}
               </Link>
             </div>
           </div>
