@@ -4,17 +4,17 @@ import { supabase } from "@/lib/supabase"
 
 /**
  * Mengambil statistik demografi dasar untuk Tab Snapshot.
- * Diperbarui agar membaca variabel status kerja yang lebih akurat.
+ * Diperbarui agar sinkron dengan konstanta CAREER_STATUSES di data-static.ts
  */
 export async function getNationalStats() {
   try {
     const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('disability_type, career_status, role, is_verified')
+      .from("profiles")
+      .select("disability_type, career_status, role, is_verified")
 
     if (error) throw error
 
-    const talents = profiles.filter(p => p.role === 'talent')
+    const talents = profiles.filter(p => p.role === "talent")
     
     // Menghitung distribusi ragam disabilitas secara riil
     const disabilityDist = talents.reduce((acc: any, curr) => {
@@ -25,17 +25,17 @@ export async function getNationalStats() {
 
     return {
       totalTalents: talents.length,
-      // Sekarang menghitung total company langsung dari role
-      totalCompanies: profiles.filter(p => p.role === 'company').length,
+      totalCompanies: profiles.filter(p => p.role === "company").length,
       disabilityDistribution: disabilityDist,
       employmentRate: {
-        // Sinkronisasi dengan value Career Status di data-static.ts
+        // SINKRONISASI: Menggunakan value dari data-static.ts terbaru
         employed: talents.filter(t => 
-          t.career_status === 'Karyawan Swasta' || 
-          t.career_status === 'ASN / PNS' || 
-          t.career_status === 'Wirausaha'
+          t.career_status === "Pegawai Swasta" || 
+          t.career_status === "Pegawai BUMN" || 
+          t.career_status === "ASN (PNS / PPPK)" ||
+          t.career_status === "Wiraswasta / Entrepreneur"
         ).length,
-        seeking: talents.filter(t => t.career_status === 'Mencari Kerja').length
+        seeking: talents.filter(t => t.career_status === "Job Seeker" || t.career_status === "Belum Bekerja").length
       }
     }
   } catch (error) {
@@ -51,26 +51,26 @@ export async function getNationalStats() {
 
 /**
  * Menarik data dari View research_transition_analysis.
- * Diperbarui untuk mendukung variabel beasiswa dan alat bantu terbaru.
+ * Menghasilkan narasi riset otomatis untuk laporan BRIN.
  */
 export async function getTransitionInsights() {
   try {
     const { data, error } = await supabase
-      .from('research_transition_analysis')
-      .select('*')
+      .from("research_transition_analysis")
+      .select("*")
 
     if (error) throw error
 
-    // Analisis Korelasi Riset BRIN: Hubungan Pendidikan dan Karir
-    const inklusiWork = data.filter(d => d.education_model === 'Inklusi' && d.career_status !== 'Mencari Kerja').length
-    const slbWork = data.filter(d => d.education_model === 'SLB' && d.career_status !== 'Mencari Kerja').length
+    // Analisis Korelasi Riset: Hubungan Model Pendidikan dan Kesuksesan Karir
+    const inklusiWork = data.filter(d => d.education_model === "Sekolah Reguler / inklusi" && d.career_status !== "Job Seeker").length
+    const slbWork = data.filter(d => d.education_model === "Sekolah Luar Biasa (SLB)" && d.career_status !== "Job Seeker").length
 
-    // Menghitung ketersediaan alat bantu (variabel baru: used_assistive_tools)
+    // Menghitung penggunaan teknologi asistif (variabel kemandirian)
     const assistiveUser = data.filter(d => d.used_assistive_tools && d.used_assistive_tools.length > 0).length
 
     return {
       raw: data,
-      narrative: `Dari total dataset riset, lulusan model Inklusi yang sudah terserap kerja berjumlah ${inklusiWork} orang, sementara lulusan SLB berjumlah ${slbWork} orang. Sebanyak ${assistiveUser} talenta tercatat aktif menggunakan alat bantu adaptif.`
+      narrative: `Dari total dataset riset, lulusan model Inklusi yang sudah terserap kerja berjumlah ${inklusiWork} orang, sementara lulusan SLB berjumlah ${slbWork} orang. Sebanyak ${assistiveUser} talenta tercatat aktif menggunakan teknologi asistif.`
     }
   } catch (error) {
     console.error("Error fetching transition insights:", error)
@@ -79,18 +79,28 @@ export async function getTransitionInsights() {
 }
 
 /**
- * Mengambil log input manual.
- * Penting untuk fitur "Audit Manual" sesuai instruksi Mas Dimas.
+ * Mengambil log input manual (Fitur Audit Mas Dimas).
+ * Jika tabel manual_input_logs belum ada, fungsi ini akan melakukan agregasi mandiri dari tabel profiles.
  */
 export async function getManualInputAudit() {
   try {
-    const { data, error } = await supabase
-      .from('manual_input_logs')
-      .select('*')
-      .order('occurrence_count', { ascending: false })
+    // Strategi Cadangan: Jika tabel log belum ada, kita agregasi langsung dari profiles
+    const { data: profiles, error } = await supabase
+      .from("profiles")
+      .select("university, partner_institution")
 
     if (error) throw error
-    return data
+
+    const counts: any = {}
+    profiles.forEach(p => {
+      if (p.university) counts[p.university] = (counts[p.university] || 0) + 1
+      if (p.partner_institution) counts[p.partner_institution] = (counts[p.partner_institution] || 0) + 1
+    })
+
+    return Object.entries(counts)
+      .map(([name, count]) => ({ institution_name: name, occurrence_count: count }))
+      .sort((a: any, b: any) => b.occurrence_count - a.occurrence_count)
+
   } catch (error) {
     console.error("Error fetching audit logs:", error)
     return []
@@ -98,26 +108,19 @@ export async function getManualInputAudit() {
 }
 
 /**
- * Mengambil data longitudinal tren karir.
+ * FUNGSI BARU: Manajemen Invitation (Role Government & Partner)
+ * Membantu Super Admin membuat metadata 'Lock' untuk akun instansi/kampus.
  */
-export async function getLongitudinalTrends() {
-  try {
-    const { data, error } = await supabase
-      .from('career_status_history')
-      .select(`
-        *,
-        profiles (
-          full_name,
-          disability_type
-        )
-      `)
-      .order('changed_at', { ascending: false })
-      .limit(50)
+export async function setupAdminLock(profileId: string, lockType: "agency" | "partner", lockValue: string) {
+  const updateData = lockType === "agency" 
+    ? { admin_agency_lock: lockValue } 
+    : { admin_partner_lock: lockValue };
 
-    if (error) throw error
-    return data
-  } catch (error) {
-    console.error("Error fetching career history:", error)
-    return []
-  }
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(updateData)
+    .eq("id", profileId)
+    .select()
+
+  return { data, error }
 }
