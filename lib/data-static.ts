@@ -19,6 +19,18 @@ export const WORK_MODES = [
   "Hybrid (Kombinasi)"
 ];
 
+// BARU: KATEGORI KARIR UNTUK MONITORING ASN & INDUSTRI
+export const CAREER_STATUSES = [
+  "Job Seeker",
+  "Fresh Graduate",
+  "Pegawai Swasta",
+  "Pegawai BUMN",
+  "ASN (PNS / PPPK)",
+  "Wiraswasta / Entrepreneur",
+  "Freelancer / Tenaga Lepas",
+  "Belum Bekerja"
+];
+
 export const EDUCATION_LEVELS = [
   "Tidak Sekolah",
   "SD / Sederajat",
@@ -32,7 +44,7 @@ export const EDUCATION_LEVELS = [
 
 export const EDUCATION_MODELS = [
   "Sekolah Luar Biasa (SLB)",
-    "Sekolah Reguler / inklusi",
+  "Sekolah Reguler / inklusi",
   "Home Schooling",
   "Pendidikan Informal / BLK"
 ];
@@ -129,6 +141,21 @@ export const INDONESIA_CITIES = [
   "Ambon", "Tual", "Ternate", "Tidore", "Jayapura", "Kota Jayapura", "Merauke", "Mimika", "Sorong", "Manokwari"
 ].sort();
 
+// BARU: LIST INSTANSI PEMERINTAH (UNTUK TARGET LOCK GOV DASHBOARD)
+export const GOVERNMENT_AGENCIES = [
+  "Kementerian Keuangan",
+  "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+  "Kementerian Sosial",
+  "Kementerian Ketenagakerjaan",
+  "Badan Kepegawaian Negara (BKN)",
+  "Kementerian PAN-RB",
+  "BRIN",
+  "Pemerintah Provinsi Jakarta",
+  "Pemerintah Provinsi Jawa Tengah",
+  "Kementerian Kesehatan",
+  "Kementerian Hukum dan HAM"
+].sort();
+
 // KATEGORI 1: PERGURUAN TINGGI
 export const UNIVERSITIES = [
   "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
@@ -137,7 +164,7 @@ export const UNIVERSITIES = [
   "Universitas Sebelas Maret (UNS)", "Universitas Hasanuddin (UNHAS)", "Universitas Sumatera Utara (USU)", 
   "Universitas Andalas (UNAND)", "Universitas Sriwijaya (UNSRI)", "Universitas Lampung (UNILA)",
   "Universitas Syiah Kuala (USK)", "Universitas Riau (UNRI)", "Universitas Jambi (UNJA)", 
-  "Universitas Bengkulu (UNIB)", "Universitas Tanjungpura (UNTAN)", "Universitas Lambung Mangkurat (ULM)",
+  "Universitas Bengkulu (UNIB)", "Universitas Tanjungpura (UNTAN)", "Universitas Lambung Makurat (ULM)",
   "Universitas Mulawarman (UNMUL)", "Universitas Sam Ratulangi (UNSRAT)", "Universitas Tadulako (UNTAD)",
   "Universitas Halu Oleo (UHO)", "Universitas Negeri Gorontalo (UNG)", "Universitas Negeri Jakarta (UNJ)",
   "Universitas Pendidikan Indonesia (UPI)", "Universitas Negeri Yogyakarta (UNY)", "Universitas Negeri Semarang (UNNES)",
