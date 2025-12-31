@@ -19,7 +19,7 @@ import {
   User, GraduationCap, Briefcase, ShieldCheck, Save, 
   Award, Trash2, Building2, Share2, Star, 
   CheckCircle, FileDown, Search, ArrowUpRight, X, 
-  PlusCircle, MapPin, Linkedin, Link, BriefcaseBusiness
+  PlusCircle, MapPin, Linkedin, Link, Briefcase
 } from "lucide-react"
 
 export default function TalentDashboard({ user }: { user: any }) {
@@ -179,7 +179,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                 </div>
                 <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400">{"Executive Bio"}</label><textarea value={bio} onChange={e => setBio(e.target.value)} className="input-std min-h-[120px] text-xs" placeholder="Tulis ringkasan profesional untuk CV anda..." /></div>
                 <button onClick={handleProfileSave} disabled={saving} className="w-full h-16 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                    {saving ? "Menyimpan..." : <><Save size={20}/> Update Seluruh Data</>}
+                    {saving ? "Menyimpan..." : <><Save size={20}/> {"Update Seluruh Data"}</>}
                 </button>
             </div>
           ) : (
@@ -297,7 +297,7 @@ export default function TalentDashboard({ user }: { user: any }) {
                     <div className="space-y-1"><label className="text-[8px] font-black uppercase text-slate-400">{"Mulai"}</label><input type="date" value={newWork.start_date} onChange={e => setNewWork({...newWork, start_date: e.target.value})} className="input-std text-[10px]" /></div>
                     <div className="space-y-1"><label className="text-[8px] font-black uppercase text-slate-400">{"Selesai"}</label><input type="date" disabled={newWork.is_current_work} value={newWork.end_date} onChange={e => setNewWork({...newWork, end_date: e.target.value})} className="input-std text-[10px]" /></div>
                 </div>
-                <label className="flex items-center gap-2 text-[10px] font-black uppercase cursor-pointer"><input type="checkbox" checked={newWork.is_current_work} onChange={e => setNewWork({...newWork, is_current_work: e.target.checked})} className="w-4 h-4" /> Masih bekerja di sini</label>
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase cursor-pointer"><input type="checkbox" checked={newWork.is_current_work} onChange={e => setNewWork({...newWork, is_current_work: e.target.checked})} className="w-4 h-4" /> {"Masih bekerja di sini"}</label>
                 <textarea placeholder="Deskripsi Tugas..." value={newWork.description} onChange={e => setNewWork({...newWork, description: e.target.value})} className="input-std text-xs min-h-[100px]" />
                 <button onClick={handleAddWork} className="w-full h-14 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px]">{"Simpan Pengalaman"}</button>
              </div>
