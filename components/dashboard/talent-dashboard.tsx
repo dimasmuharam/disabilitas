@@ -16,7 +16,7 @@ import {
 import { postInclusionRating } from "@/lib/actions/ratings"
 
 import { 
-  User, GraduationCap, Briefcase, ShieldCheck, Save, 
+  User, GraduationCap, ShieldCheck, Save, 
   Award, Trash2, Building2, Share2, Star, 
   CheckCircle, FileDown, Search, ArrowUpRight, X, 
   PlusCircle, MapPin, Linkedin, Link, Briefcase
