@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "@/lib/supabase"
-// Library untuk PDF
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+
 // SINKRONISASI DATA STATIC
 import { 
   INDONESIA_CITIES, 
@@ -13,13 +13,16 @@ import {
   ACCOMMODATION_TYPES,
   INCLUSIVE_JOB_TEMPLATE 
 } from "@/lib/data-static"
+
 // SINKRONISASI ACTIONS
 import { updateCompanyMaster, getCompanyStats } from "@/lib/actions/company"
 import { updateApplicationStatus } from "@/lib/actions/applications"
+import { getCompanyRatingAggregate } from "@/lib/actions/ratings"
+
 import { 
   Briefcase, Building2, MapPin, LayoutDashboard, Plus, Users, CheckCircle2, 
   Eye, ShieldCheck, Info, Settings, Save, Sparkles, Clipboard, 
-  SearchCheck, Globe, Zap, X, ArrowUpRight, Filter, FileDown
+  Zap, X, ArrowUpRight, Filter, FileDown, CheckSquare, Square, Trash2
 } from "lucide-react"
 
 export default function CompanyDashboard({ user }: { user: any }) {
@@ -49,6 +52,10 @@ export default function CompanyDashboard({ user }: { user: any }) {
   const [targetDisabilities, setTargetDisabilities] = useState<string[]>([])
   const [applicants, setApplicants] = useState<any[]>([])
   const [filterDisability, setFilterDisability] = useState("Semua")
+  const [myJobs, setMyJobs] = useState<any[]>([])
+  
+  // -- STATE BATCH/BULK ACTION --
+  const [selectedApps, setSelectedApps] = useState<string[]>([])
   
   const [stats, setStats] = useState({ applicants: 0, jobs: 0 })
   const [ratings, setRatings] = useState({ avg: 0, accessibility: 0, culture: 0, management: 0, onboarding: 0 })
@@ -71,108 +78,69 @@ export default function CompanyDashboard({ user }: { user: any }) {
         const statsData = await getCompanyStats(comp.id)
         setStats({ jobs: statsData.jobCount, applicants: statsData.applicantCount })
 
-        // Ambil Data Pelamar (Ditingkatkan untuk menarik data profil & sertifikat lengkap)
+        // 1. Ambil Lowongan Aktif
+        const { data: jobs } = await supabase.from("jobs").select("*").eq("company_id", comp.id).order("created_at", { ascending: false })
+        setMyJobs(jobs || [])
+
+        // 2. Ambil Data Pelamar Lengkap
         const { data: apps } = await supabase.from("applications")
           .select(`
             *, 
             profiles(*), 
-            jobs(title),
-            work_experiences:profiles(work_experiences(*)),
-            certifications:profiles(certifications(*))
+            jobs(title)
           `)
-          .eq("company_id", comp.id)
+          .eq("jobs.company_id", comp.id)
           .order("created_at", { ascending: false })
         setApplicants(apps || [])
 
-        const { data: rData } = await supabase.from("inclusion_ratings").select("*").eq("company_id", comp.id)
-        if (rData && rData.length > 0) {
-            const avg = (key: string) => rData.reduce((a, b) => a + b[key], 0) / rData.length
+        // 3. Ambil Rating via Server Action
+        const rData = await getCompanyRatingAggregate(comp.id)
+        if (rData) {
             setRatings({
-                avg: (avg("score_accessibility") + avg("score_culture") + avg("score_management") + avg("score_onboarding")) / 4,
-                accessibility: avg("score_accessibility"), culture: avg("score_culture"),
-                management: avg("score_management"), onboarding: avg("score_onboarding")
+                avg: rData.totalAvg,
+                accessibility: rData.accessibility, culture: rData.culture,
+                management: rData.management, onboarding: rData.onboarding
             })
         }
       }
     } catch (e) { console.error(e) } finally { setLoading(false) }
   }
 
-  // FITUR BARU: GENERATE CV PELAMAR UNTUK PERUSAHAAN (KONTEKSTUAL)
+  // LOGIKA BULK ACTIONS
+  const toggleSelect = (id: string) => {
+    setSelectedApps(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id])
+  }
+
+  async function handleBulkStatusChange(newStatus: string) {
+    if (selectedApps.length === 0) return
+    setSaving(true)
+    try {
+      await Promise.all(selectedApps.map(id => updateApplicationStatus(id, newStatus)))
+      setMsg(`${selectedApps.length} pelamar berhasil diubah ke status ${newStatus}.`)
+      setSelectedApps([])
+      fetchInitialData()
+    } catch (e) { console.error(e) }
+    setSaving(false)
+  }
+
   const generateCompanyCV = async (app: any) => {
     const doc = new jsPDF()
     const p = app.profiles
     const jobName = app.jobs?.title || "Posisi Tertentu"
+    const { data: wEx } = await supabase.from("work_experiences").select("*").eq("profile_id", p.id).order("is_current_work", { ascending: false })
     
-    // Ambil data relasional tambahan jika belum lengkap di state
-    const { data: wEx } = await supabase.from("work_experiences").select("*").eq("profile_id", p.id)
-    const { data: certs } = await supabase.from("certifications").select("*").eq("profile_id", p.id)
+    doc.setFillColor(30, 41, 59); doc.rect(0, 0, 210, 50, "F")
+    doc.setTextColor(255, 255, 255); doc.setFontSize(20); doc.text(p.full_name.toUpperCase(), 20, 25)
+    doc.setFontSize(10); doc.text(`${p.disability_type} | ${p.city}`, 20, 35)
 
-    // 1. HEADER KHUSUS PERUSAHAAN
-    doc.setFillColor(30, 41, 59)
-    doc.rect(0, 0, 210, 55, "F")
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.setFontSize(20)
-    doc.text(p.full_name.toUpperCase(), 20, 20)
-    
-    doc.setFontSize(10)
-    doc.setFont("helvetica", "normal")
-    doc.text(`DOKUMEN LAMARAN RESMI - DISABILITAS.COM`, 130, 20)
-    doc.text(`${p.disability_type} | ${p.city}`, 20, 28)
-    
-    // INFO POSISI (CONTEXTUAL BRANDING)
-    doc.setFillColor(37, 99, 235)
-    doc.rect(20, 35, 170, 12, "F")
-    doc.text(`MELAMAR POSISI: ${jobName.toUpperCase()}`, 25, 43)
-    doc.text(`UNTUK: ${companyName.toUpperCase()}`, 120, 43)
-
-    // 2. EXECUTIVE SUMMARY (BIO)
-    doc.setTextColor(0, 0, 0)
-    doc.setFont("helvetica", "bold")
-    doc.text("RINGKASAN PROFESIONAL & BIO", 20, 70)
-    doc.setFont("helvetica", "normal")
-    const bioText = p.bio || `Talenta ${p.disability_type} dengan keahlian ${p.skills?.join(", ") || "-"}.`
-    doc.text(bioText, 20, 78, { maxWidth: 170 })
-
-    // 3. AKOMODASI & ALAT BANTU (DATA REAL)
-    doc.setFillColor(241, 245, 249)
-    doc.rect(20, 95, 170, 10, "F")
-    doc.setFont("helvetica", "bold")
-    doc.text("ALAT BANTU / AKOMODASI:", 25, 101)
-    doc.setFont("helvetica", "normal")
-    const tools = p.used_assistive_tools?.join(", ") || "Mandiri"
-    doc.text(tools, 75, 101)
-
-    // 4. PENGALAMAN KERJA
-    doc.setFont("helvetica", "bold")
-    doc.text("RIWAYAT PENGALAMAN KERJA", 20, 115)
+    doc.setTextColor(0, 0, 0); doc.text("PENGALAMAN KERJA TALENTA", 20, 70)
     autoTable(doc, {
-      startY: 120,
-      head: [["Posisi", "Perusahaan", "Durasi", "Deskripsi"]],
-      body: wEx?.map(w => [w.position, w.company_name, `${w.start_date} - ${w.is_current_work ? "Sekarang" : w.end_date}`, w.description || "-"]),
-      theme: "striped",
+      startY: 75,
+      head: [["Posisi", "Instansi", "Status"]],
+      body: wEx?.map(w => [w.position, w.company_name, w.is_current_work ? "AKTIF" : "SELESAI"]),
       headStyles: { fillColor: [37, 99, 235] }
     })
-
-    // 5. SERTIFIKASI
-    const finalY = (doc as any).lastAutoTable.finalY || 180
-    doc.setFont("helvetica", "bold")
-    doc.text("SERTIFIKASI TERKAIT", 20, finalY + 15)
-    let certY = finalY + 22
-    certs?.slice(0, 3).forEach(c => {
-      doc.setFont("helvetica", "normal")
-      doc.text(`- ${c.name} (${c.organizer_name}, ${c.year})`, 25, certY)
-      certY += 7
-    })
-
-    // 6. FOOTER QR
-    doc.line(20, 275, 190, 275)
-    doc.setFontSize(8)
-    doc.text(`Dicetak oleh ${companyName} pada ${new Date().toLocaleDateString("id-ID")}`, 20, 282)
-    doc.rect(175, 277, 15, 15)
-    doc.text("QR VALID", 173, 295)
-
-    doc.save(`CV_Pelamar_${p.full_name.replace(/\s+/g, "_")}.pdf`)
+    doc.save(`Audit_CV_${p.full_name}.pdf`)
   }
 
   const useTemplate = () => { setJobDesc(INCLUSIVE_JOB_TEMPLATE); setMsg("Template inklusif diterapkan.") }
@@ -187,13 +155,8 @@ export default function CompanyDashboard({ user }: { user: any }) {
     setSaving(false)
   }
 
-  async function handleStatusChange(appId: string, newStatus: string) {
-    const res = await updateApplicationStatus(appId, newStatus)
-    if (!res.error) { setMsg(`Status pelamar diubah menjadi ${newStatus}`); fetchInitialData() }
-  }
-
   async function handlePostJob() {
-    if(!jobTitle || !jobDesc) { setMsg("Judul & Deskripsi wajib."); return }
+    if(!jobTitle || !jobDesc) { setMsg("Wajib isi judul & deskripsi."); return }
     setSaving(true)
     const { error } = await supabase.from("jobs").insert({
         company_id: company.id, title: jobTitle, description: jobDesc,
@@ -203,157 +166,180 @@ export default function CompanyDashboard({ user }: { user: any }) {
     setSaving(false)
   }
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400 italic">{"MENYIAPKAN DASHBOARD INKLUSI..."}</div>
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400 italic">{"MEMYIAPKAN DASHBOARD..."}</div>
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 space-y-8">
-      {/* HEADER */}
-      <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-6">
+    <div className="max-w-6xl mx-auto pb-20 space-y-8 px-4">
+      {/* HEADER UTAMA */}
+      <header role="banner" className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl font-black italic">{companyName.substring(0,2)}</div>
-            <div>
-                <h2 className="text-2xl font-black uppercase tracking-tighter">{companyName}</h2>
-                <div className="flex items-center gap-4 mt-2">
-                    {isVerified ? <p className="text-blue-400 text-[10px] font-black uppercase flex items-center gap-1"><ShieldCheck size={14}/> {"Partner Terverifikasi"}</p> : <p className="text-slate-500 text-[10px] font-black uppercase flex items-center gap-1"><Info size={14}/> {"Verifikasi Pending"}</p>}
-                </div>
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl font-black italic">{companyName.substring(0,2)}</div>
+          <div>
+            <h1 className="text-2xl font-black uppercase tracking-tighter leading-tight">{companyName || "Instansi Baru"}</h1>
+            <div className="flex items-center gap-4 mt-2">
+              {isVerified ? <p className="text-blue-400 text-[10px] font-black uppercase flex items-center gap-1"><ShieldCheck size={14}/> {"Terverifikasi"}</p> : <p className="text-slate-500 text-[10px] font-black uppercase flex items-center gap-1"><Info size={14}/> {"Verifikasi Pending"}</p>}
             </div>
+          </div>
         </div>
-        <nav className="flex bg-white/5 p-2 rounded-2xl gap-1">
-            <button onClick={() => setActiveTab("overview")} className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${activeTab === "overview" ? "bg-blue-600 text-white shadow-lg" : "hover:bg-white/10"}`}><LayoutDashboard size={14}/> {"Ikhtisar"}</button>
-            <button onClick={() => setActiveTab("profile")} className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${activeTab === "profile" ? "bg-blue-600 text-white shadow-lg" : "hover:bg-white/10"}`}><Settings size={14}/> {"Profil Riset"}</button>
-            <button onClick={() => setActiveTab("jobs")} className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${activeTab === "jobs" ? "bg-blue-600 text-white shadow-lg" : "hover:bg-white/10"}`}><Plus size={14}/> {"Lowongan"}</button>
-            <button onClick={() => setActiveTab("applicants")} className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${activeTab === "applicants" ? "bg-blue-600 text-white shadow-lg" : "hover:bg-white/10"}`}><Users size={14}/> {"Pelamar"}</button>
+        <nav role="tablist" className="flex bg-white/5 p-2 rounded-2xl gap-1 border border-white/5">
+          {["overview", "profile", "jobs", "applicants"].map((tab) => (
+            <button key={tab} role="tab" aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)} className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? "bg-blue-600 text-white shadow-lg" : "hover:bg-white/10 text-slate-400"}`}>
+              {tab === "overview" && <LayoutDashboard size={14} className="inline mr-2"/>}
+              {tab === "profile" && <Settings size={14} className="inline mr-2"/>}
+              {tab === "jobs" && <Plus size={14} className="inline mr-2"/>}
+              {tab === "applicants" && <Users size={14} className="inline mr-2"/>}
+              {tab}
+            </button>
+          ))}
         </nav>
-      </div>
+      </header>
 
-      {msg && <div ref={msgRef} tabIndex={-1} className="p-4 bg-blue-50 text-blue-700 text-[10px] font-black uppercase text-center rounded-2xl border border-blue-200 shadow-sm">{"✅ "}{msg}</div>}
+      {msg && <div role="alert" className="p-4 bg-blue-50 text-blue-700 text-[10px] font-black uppercase text-center rounded-2xl border border-blue-200">{"✅ "}{msg}</div>}
 
       {/* OVERVIEW TAB */}
       {activeTab === "overview" && (
-        <div className="space-y-8 animate-in fade-in">
-            <div className="grid md:grid-cols-4 gap-6 text-slate-800">
+        <main className="space-y-8 animate-in fade-in">
+            <div className="grid md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <Users className="text-blue-600 mb-2" size={24}/><p className="text-[9px] font-black uppercase text-slate-400">{"Total Pelamar"}</p>
-                    <p className="text-3xl font-black mt-1">{stats.applicants}</p>
+                    <h2 className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-2"><Users size={14}/> {"Pelamar"}</h2>
+                    <p className="text-3xl font-black text-slate-800 mt-2">{stats.applicants}</p>
                 </div>
                 <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <Briefcase className="text-purple-600 mb-2" size={24}/><p className="text-[9px] font-black uppercase text-slate-400">{"Lowongan Aktif"}</p>
-                    <p className="text-3xl font-black mt-1">{stats.jobs}</p>
+                    <h2 className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-2"><Briefcase size={14}/> {"Lowongan"}</h2>
+                    <p className="text-3xl font-black text-slate-800 mt-2">{stats.jobs}</p>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm md:col-span-2 flex items-center justify-between">
-                    <div><p className="text-[9px] font-black uppercase text-slate-400">{"Inclusion Index"}</p>
-                    <div className="flex gap-4 mt-2">
-                        <div className="text-center"><p className="text-[10px] font-bold text-blue-600">{ratings.accessibility.toFixed(1)}</p><p className="text-[8px] font-black uppercase text-slate-400">{"Akses"}</p></div>
-                        <div className="text-center"><p className="text-[10px] font-bold text-blue-600">{ratings.culture.toFixed(1)}</p><p className="text-[8px] font-black uppercase text-slate-400">{"Budaya"}</p></div>
-                    </div></div>
-                    <div className="text-4xl font-black italic bg-slate-50 p-4 rounded-2xl">{ratings.avg.toFixed(1)}</div>
+                <div className="bg-slate-900 text-white p-6 rounded-[2rem] md:col-span-2 flex justify-between items-center border border-white/10 shadow-xl">
+                    <div>
+                        <h2 className="text-[9px] font-black uppercase text-blue-400 tracking-widest">{"Inclusion Index Rating"}</h2>
+                        <p className="text-5xl font-black italic mt-1">{ratings.avg.toFixed(1)}<span className="text-sm not-italic opacity-30">{"/5.0"}</span></p>
+                    </div>
+                    <div className="text-right text-[8px] font-bold space-y-1 opacity-60 uppercase tracking-tighter">
+                        <p>{"Akses Fisik: "}{ratings.accessibility.toFixed(1)}</p>
+                        <p>{"Budaya Kerja: "}{ratings.culture.toFixed(1)}</p>
+                    </div>
                 </div>
             </div>
 
-            {/* BANNER AUDIT */}
-            <section className="bg-gradient-to-r from-slate-900 to-blue-950 rounded-[2.5rem] p-10 relative overflow-hidden border border-white/5">
-                <div className="absolute top-0 right-0 p-8 opacity-10"><Zap size={180} className="text-blue-400 -rotate-12"/></div>
-                <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 font-black text-[8px] uppercase tracking-widest"><Sparkles size={12}/> {"Audit Aksesibilitas"}</div>
-                        <h3 className="text-3xl font-black text-white leading-none uppercase italic">{"Website rekrutmen anda "}<span className="text-blue-500">{"Sudah Inklusif?"}</span></h3>
-                        <p className="text-slate-400 text-xs leading-relaxed">{"Dapatkan laporan kepatuhan WCAG 2.1 untuk memastikan talenta Tunanetra dapat melamar dengan mandiri di portal Anda."}</p>
-                        <button onClick={() => window.open("https://wa.me/6281234567890")} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-[9px] uppercase tracking-widest flex items-center gap-2 transition-all">{"Hubungi Ahli Kami"}</button>
-                    </div>
+            <section className="bg-white p-8 rounded-[2.5rem] border border-slate-200">
+                <h2 className="text-sm font-black uppercase italic mb-6 text-slate-800">{"Lowongan Terpublikasi"}</h2>
+                <div className="grid gap-4">
+                    {myJobs.length === 0 ? <p className="text-xs italic text-slate-400">{"Belum ada lowongan."}</p> : myJobs.map(job => (
+                        <div key={job.id} className="p-5 border border-slate-100 rounded-2xl flex justify-between items-center bg-slate-50/30">
+                            <div>
+                                <h4 className="text-xs font-black uppercase">{job.title}</h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase">{job.location} • {job.work_mode}</p>
+                            </div>
+                            <button className="text-red-400 hover:text-red-600 p-2"><Trash2 size={18}/></button>
+                        </div>
+                    ))}
                 </div>
             </section>
-        </div>
+        </main>
       )}
 
-      {/* PROFIL MASTER */}
+      {/* PROFILE TAB (DATA RISET & AKOMODASI) */}
       {activeTab === "profile" && (
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-10 animate-in fade-in">
-            <div className="flex justify-between items-center border-b pb-6">
-                <h2 className="text-xl font-black uppercase italic text-blue-600 flex items-center gap-2"><Building2 size={24}/> {"Data Induk Riset Perusahaan"}</h2>
-                <button onClick={handleUpdateMasterProfile} disabled={saving} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] flex items-center gap-2 shadow-lg">{saving ? "MENYIMPAN..." : <><Save size={16}/> {"Simpan Perubahan"}</>}</button>
+        <section className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm space-y-10 animate-in slide-in-from-bottom-4">
+          <div className="flex justify-between items-center border-b pb-8">
+            <h2 className="text-xl font-black uppercase italic text-blue-600 flex items-center gap-3"><Building2 size={24}/> {"Profil Riset Instansi"}</h2>
+            <button onClick={handleUpdateMasterProfile} disabled={saving} className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] flex items-center gap-3 shadow-xl shadow-blue-200">
+              {saving ? "SIMPAN..." : <><Save size={18}/> {"Update Profil"}</>}
+            </button>
+          </div>
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className="space-y-6">
+              <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Nama Instansi"}</label><input value={companyName} onChange={e => setCompanyName(e.target.value)} className="input-std font-bold text-lg" /></div>
+              <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Sektor"}</label><input value={industry} onChange={e => setIndustry(e.target.value)} className="input-std" /></div>
             </div>
-            <div className="grid md:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Nama Instansi"}</label><input value={companyName} onChange={e => setCompanyName(e.target.value)} className="input-std font-bold" /></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Domisili Kantor Pusat"}</label><select value={location} onChange={e => setLocation(e.target.value)} className="input-std font-bold">{INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Visi Inklusi"}</label><textarea value={vision} onChange={e => setVision(e.target.value)} className="input-std h-32" /></div>
+            <div className="space-y-6">
+              <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Pegawai Disabilitas"}</label><input type="number" value={totalDisabilityEmp} onChange={e => setTotalDisabilityEmp(parseInt(e.target.value) || 0)} className="input-std font-black text-xl text-blue-600" /></div>
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Akomodasi Tersedia"}</label>
+                <div className="flex flex-wrap gap-2">
+                  {ACCOMMODATION_TYPES.map(acc => (
+                    <button key={acc} onClick={() => setMasterAcomodations(prev => prev.includes(acc) ? prev.filter(a => a !== acc) : [...prev, acc])} className={`px-4 py-2 rounded-xl text-[9px] font-bold border transition-all ${masterAcomodations.includes(acc) ? "bg-blue-600 text-white border-blue-600 shadow-lg" : "bg-slate-50 text-slate-400 border-slate-100"}`}>
+                      {acc}
+                    </button>
+                  ))}
                 </div>
-                <div className="space-y-6">
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Karyawan Disabilitas Saat Ini"}</label><input type="number" value={totalDisabilityEmp} onChange={e => setTotalDisabilityEmp(parseInt(e.target.value) || 0)} className="input-std font-black" /></div>
-                    <div className="space-y-3"><label className="text-[10px] font-black uppercase text-slate-400">{"Fasilitas Akomodasi"}</label><div className="flex flex-wrap gap-2">{ACCOMMODATION_TYPES.map(acc => (<button key={acc} onClick={() => setMasterAcomodations(prev => prev.includes(acc) ? prev.filter(a => a !== acc) : [...prev, acc])} className={`px-4 py-2 rounded-xl text-[10px] font-bold border transition-all ${masterAcomodations.includes(acc) ? "bg-blue-600 text-white border-blue-600 shadow-md" : "bg-slate-50 text-slate-400"}`}>{acc}</button>))}</div></div>
-                </div>
+              </div>
             </div>
-        </div>
+          </div>
+        </section>
       )}
 
-      {/* MANAJEMEN PELAMAR */}
-      {activeTab === "applicants" && (
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8 animate-in fade-in">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
-                <h2 className="text-xl font-black uppercase italic text-blue-600 flex items-center gap-2"><Users size={24}/> {"Daftar Pelamar Riset"}</h2>
-                <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                    <Filter size={16} className="text-slate-400 ml-2"/><span className="text-[9px] font-black text-slate-400 uppercase">{"Filter Ragam:"}</span>
-                    <select value={filterDisability} onChange={(e) => setFilterDisability(e.target.value)} className="bg-transparent border-none text-[10px] font-black uppercase text-blue-600 focus:ring-0">
-                        <option value="Semua">{"Semua"}</option>
-                        {DISABILITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                </div>
-            </div>
-
-            <div className="overflow-x-auto">
-                <table className="w-full text-left" aria-label="Tabel Pelamar">
-                    <thead><tr className="border-b border-slate-100"><th className="px-4 py-4 text-[10px] font-black uppercase text-slate-400">{"Nama"}</th><th className="px-4 py-4 text-[10px] font-black uppercase text-slate-400">{"Posisi"}</th><th className="px-4 py-4 text-[10px] font-black uppercase text-slate-400">{"Ragam"}</th><th className="px-4 py-4 text-[10px] font-black uppercase text-slate-400">{"Status"}</th><th className="px-4 py-4 text-[10px] font-black uppercase text-slate-400 text-center">{"Aksi"}</th></tr></thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {applicants.filter(a => filterDisability === "Semua" || a.profiles.disability_type === filterDisability).map((app) => (
-                            <tr key={app.id} className="hover:bg-slate-50/50 transition-all group">
-                                <td className="px-4 py-4 font-bold text-slate-700">{app.profiles.full_name}</td>
-                                <td className="px-4 py-4 text-[10px] font-medium text-slate-500">{app.jobs.title}</td>
-                                <td className="px-4 py-4"><span className="px-2 py-1 bg-purple-50 text-purple-600 rounded-md text-[8px] font-black uppercase">{app.profiles.disability_type}</span></td>
-                                <td className="px-4 py-4">
-                                    <select value={app.status} onChange={(e) => handleStatusChange(app.id, e.target.value)} className="bg-blue-50 text-blue-700 text-[9px] font-black uppercase px-2 py-1 rounded-lg border-none">
-                                        <option value="pending">{"Pending"}</option><option value="interview">{"Interview"}</option><option value="accepted">{"Accepted"}</option><option value="rejected">{"Rejected"}</option>
-                                    </select>
-                                </td>
-                                <td className="px-4 py-4 text-center">
-                                  <div className="flex items-center justify-center gap-2">
-                                    <button onClick={() => generateCompanyCV(app)} title="Cetak CV" className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"><FileDown size={18}/></button>
-                                    <button title="Lihat Profil" className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Eye size={18}/></button>
-                                  </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-      )}
-
-      {/* LOWONGAN TAB */}
+      {/* JOBS TAB (POSTING & TEMPLATE) */}
       {activeTab === "jobs" && (
-        <div className="grid lg:grid-cols-5 gap-8 animate-in slide-in-from-right-4">
-            <div className="lg:col-span-3 bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8 text-slate-800">
-                <div className="flex justify-between items-center border-b pb-4"><h2 className="text-xl font-black uppercase italic text-purple-600 flex items-center gap-2"><Plus/> {"Posting Lowongan"}</h2><button onClick={useTemplate} className="px-4 py-2 bg-orange-50 text-orange-700 rounded-xl text-[9px] font-black uppercase flex items-center gap-2 transition-all"><Sparkles size={14}/> {"Pakai Template"}</button></div>
-                <div className="space-y-6">
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Judul Posisi"}</label><input value={jobTitle} onChange={e => setJobTitle(e.target.value)} className="input-std font-bold text-lg" /></div>
-                    <div className="grid grid-cols-2 gap-4"><div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Penempatan"}</label><select value={jobLocation} onChange={e => setJobLocation(e.target.value)} className="input-std">{INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div><div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Sistem"}</label><select value={jobWorkMode} onChange={e => setJobWorkMode(e.target.value)} className="input-std">{WORK_MODES.map(m => <option key={m} value={m}>{m}</option>)}</select></div></div>
-                    <div className="space-y-3"><label className="text-[10px] font-black uppercase text-slate-400">{"Prioritas Disabilitas"}</label><div className="flex flex-wrap gap-2">{DISABILITY_TYPES.map(t => (<button key={t} onClick={() => setTargetDisabilities(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])} className={`px-4 py-2 rounded-xl text-[10px] font-bold border ${targetDisabilities.includes(t) ? "bg-purple-600 text-white border-purple-600" : "bg-slate-50 text-slate-400"}`}>{t}</button>))}</div></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400">{"Deskripsi"}</label><textarea value={jobDesc} onChange={e => setJobDesc(e.target.value)} className="input-std h-60" /></div>
-                    <button onClick={() => setIsPreview(true)} className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"><Eye size={18}/> {"Pratinjau Lowongan"}</button>
-                </div>
+        <section className="grid lg:grid-cols-5 gap-10 animate-in slide-in-from-right-4">
+          <div className="lg:col-span-3 bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm space-y-8">
+            <div className="flex justify-between items-center border-b pb-6">
+              <h2 className="text-xl font-black uppercase italic text-purple-600 flex items-center gap-3"><Plus size={24}/> {"Buat Lowongan"}</h2>
+              <button onClick={useTemplate} className="px-5 py-3 bg-orange-50 text-orange-700 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 shadow-sm"><Sparkles size={16}/> {"Pakai Template"}</button>
             </div>
-            <div className="lg:col-span-2">
-                {isPreview ? (
-                    <div className="bg-white p-8 rounded-[2.5rem] border-4 border-blue-600 shadow-2xl space-y-6 sticky top-8">
-                        <div className="flex justify-between items-center"><span className="text-[10px] font-black text-blue-600 uppercase">{"Tampilan Talenta"}</span><button onClick={() => setIsPreview(false)}><X size={20}/></button></div>
-                        <h3 className="text-2xl font-black uppercase leading-tight">{jobTitle || "Judul Kosong"}</h3>
-                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100"><p className="text-[9px] font-black text-slate-400 uppercase mb-2">{"Fasilitas Instansi"}</p><div className="flex flex-wrap gap-1">{masterAcomodations.map(a => <span key={a} className="text-[8px] font-bold text-slate-600 flex items-center gap-1"><CheckCircle2 size={10} className="text-green-500"/> {a}</span>)}</div></div>
-                        <button onClick={handlePostJob} disabled={saving} className="w-full h-16 bg-blue-600 text-white rounded-2xl font-black text-lg uppercase flex items-center justify-center gap-3">{saving ? "MEMPROSES..." : "PUBLIKASIKAN"}</button>
-                    </div>
-                ) : (
-                    <div className="bg-slate-50 p-10 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center text-slate-300 h-64 italic"><Clipboard size={40} className="mb-4 opacity-20"/><p>{"Pratinjau akan muncul di sini."}</p></div>
-                )}
+            <div className="space-y-5 text-slate-800">
+              <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Judul Pekerjaan" className="input-std font-bold text-lg" />
+              <textarea value={jobDesc} onChange={e => setJobDesc(e.target.value)} placeholder="Tuliskan deskripsi lowongan..." className="input-std h-72 text-sm leading-relaxed" />
+              <button onClick={() => setIsPreview(true)} className="w-full h-16 bg-slate-900 text-white rounded-3xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-3 hover:bg-black transition-all"><Eye size={20}/> {"Review Lowongan"}</button>
             </div>
-        </div>
+          </div>
+          <div className="lg:col-span-2">
+            {isPreview ? (
+              <div className="bg-white p-10 rounded-[3rem] border-4 border-blue-600 shadow-2xl space-y-8 sticky top-10 animate-in zoom-in-95">
+                <div className="flex justify-between items-center"><span className="bg-blue-600 text-white px-4 py-1 rounded-full text-[9px] font-black uppercase">{"Pratinjau"}</span><button onClick={() => setIsPreview(false)} className="text-slate-400 hover:text-slate-900"><X size={24}/></button></div>
+                <h3 className="text-3xl font-black uppercase italic leading-tight">{jobTitle || "Posisi Baru"}</h3>
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-[10px] text-slate-600 whitespace-pre-line line-clamp-[12] italic">{jobDesc}</div>
+                <button onClick={handlePostJob} disabled={saving} className="w-full h-20 bg-blue-600 text-white rounded-[2rem] font-black text-xl uppercase shadow-xl">{saving ? "SEDANG PROSES..." : "TAYANGKAN SEKARANG"}</button>
+              </div>
+            ) : (
+              <div className="bg-slate-50 p-16 rounded-[3rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center text-slate-300 h-[500px] shadow-inner"><Clipboard size={48} className="mb-6 opacity-10"/><p className="text-sm font-bold uppercase tracking-widest">{"Pratinjau Lowongan"}</p></div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* APPLICANTS TAB (MASS MANAGEMENT) */}
+      {activeTab === "applicants" && (
+        <section className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm space-y-8 animate-in fade-in">
+          <div className="flex flex-col md:flex-row justify-between items-center border-b pb-8 gap-4">
+            <h2 className="text-2xl font-black uppercase italic text-blue-600 flex items-center gap-4"><Users size={28}/> {"Kelola Pelamar Kerja"}</h2>
+            {selectedApps.length > 0 && (
+              <div className="flex items-center gap-3 animate-in slide-in-from-right-4">
+                <button onClick={() => handleBulkStatusChange("interview")} className="px-5 py-3 bg-amber-500 text-white rounded-2xl text-[9px] font-black uppercase shadow-lg">{"Interview Massal"}</button>
+                <button onClick={() => handleBulkStatusChange("accepted")} className="px-5 py-3 bg-green-600 text-white rounded-2xl text-[9px] font-black uppercase shadow-lg">{"Hired Massal"}</button>
+                <button onClick={() => setSelectedApps([])} className="p-3 bg-slate-100 text-slate-400 rounded-2xl hover:bg-slate-200"><X size={18}/></button>
+              </div>
+            )}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-separate border-spacing-y-3">
+              <thead>
+                <tr className="text-slate-400">
+                  <th className="px-6 py-2 text-[9px] font-black uppercase tracking-widest">{"Pilih"}</th>
+                  <th className="px-6 py-2 text-[9px] font-black uppercase tracking-widest">{"Nama & Ragam"}</th>
+                  <th className="px-6 py-2 text-[9px] font-black uppercase tracking-widest text-center">{"Dokumen"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applicants.map(app => (
+                  <tr key={app.id} className={`group transition-all ${selectedApps.includes(app.id) ? "bg-blue-50/50" : "hover:bg-slate-50"}`}>
+                    <td className="px-6 py-4 rounded-l-[1.5rem] border-y border-l">
+                      <button onClick={() => toggleSelect(app.id)} className="transition-transform active:scale-90">
+                        {selectedApps.includes(app.id) ? <CheckSquare className="text-blue-600" size={24}/> : <Square className="text-slate-200" size={24}/>}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 border-y">
+                        <p className="font-black text-slate-800 uppercase text-xs tracking-tight">{app.profiles?.full_name}</p>
+                        <p className="text-[9px] font-bold text-blue-600 uppercase mt-0.5">{app.profiles?.disability_type} • {app.jobs?.title}</p>
+                    </td>
+                    <td className="px-6 py-4 rounded-r-[1.5rem] border-y border-r text-center">
+                      <button onClick={() => generateCompanyCV(app)} className="p-3 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><FileDown size={20}/></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </div>
   )
