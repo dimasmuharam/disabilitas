@@ -3,46 +3,74 @@
 import { supabase } from "@/lib/supabase"
 
 /**
- * PUSAT DATA NASIONAL
- * Mengambil statistik demografi dasar & korelasi ragam disabilitas.
+ * PUSAT DATA NASIONAL (RESEARCH AGGREGATOR)
+ * Mengambil statistik demografi dasar & agregasi semua variabel riset.
  */
 export async function getNationalStats() {
   try {
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select("disability_type, career_status, role, city, education_level")
+      .select(`
+        disability_type, career_status, role, education_level, 
+        education_model, scholarship_type, education_barrier,
+        used_assistive_tools, preferred_accommodations,
+        has_laptop, has_smartphone, internet_quality
+      `)
+      .eq("role", "talent")
 
     if (error) throw error
 
-    const talents = profiles.filter(p => p.role === "talent")
-    
-    // Agregasi Ragam Disabilitas (Data Mahal)
-    const disabilityDist = talents.reduce((acc: any, curr) => {
-      const type = curr.disability_type || "Tidak Terisi"
-      acc[type] = (acc[type] || 0) + 1
-      return acc
-    }, {})
+    // 1. Fungsi Helper untuk menghitung distribusi (Single Value)
+    const countDist = (arr: any[], key: string) => {
+      return arr.reduce((acc: any, curr) => {
+        const val = curr[key] || "Tidak Terisi"
+        acc[val] = (acc[val] || 0) + 1
+        return acc
+      }, {})
+    }
 
-    // Agregasi Pendidikan vs Disabilitas (Korelasi)
-    const eduDist = talents.reduce((acc: any, curr) => {
-      const edu = curr.education_level || "N/A"
-      acc[edu] = (acc[edu] || 0) + 1
-      return acc
-    }, {})
+    // 2. Fungsi Helper untuk menghitung distribusi (Array/List Value seperti Alat Bantu)
+    const countArrayDist = (arr: any[], key: string) => {
+      const dist: any = {}
+      arr.forEach(item => {
+        const values = item[key] || []
+        if (Array.isArray(values)) {
+          values.forEach((v: string) => {
+            dist[v] = (dist[v] || 0) + 1
+          })
+        } else if (values) { // Fallback jika data bukan array tapi string
+          dist[values] = (dist[values] || 0) + 1
+        }
+      })
+      return dist
+    }
 
     return {
-      totalTalents: talents.length,
-      totalCompanies: profiles.filter(p => p.role === "company").length,
-      disabilityDistribution: disabilityDist,
-      educationDistribution: eduDist,
+      totalTalents: profiles.length,
+      // Agregasi Karakteristik Utama
+      disabilityDist: countDist(profiles, "disability_type"),
+      careerDist: countDist(profiles, "career_status"),
+      // Agregasi Riset Pendidikan (BRIN Variable)
+      eduModelDist: countDist(profiles, "education_model"),
+      scholarshipDist: countDist(profiles, "scholarship_type"),
+      barrierDist: countDist(profiles, "education_barrier"),
+      // Agregasi Variabel Aksesibilitas (Multi-selection)
+      toolsDist: countArrayDist(profiles, "used_assistive_tools"),
+      accDist: countArrayDist(profiles, "preferred_accommodations"),
+      // Agregasi Infrastruktur Digital
+      digitalAssets: {
+        laptop: profiles.filter(p => p.has_laptop).length,
+        smartphone: profiles.filter(p => p.has_smartphone).length,
+        internet: countDist(profiles, "internet_quality")
+      },
       employmentRate: {
-        employed: talents.filter(t => 
+        employed: profiles.filter(t => 
           t.career_status === "Pegawai Swasta" || 
           t.career_status === "Pegawai BUMN" || 
           t.career_status === "ASN (PNS / PPPK)" ||
           t.career_status === "Wiraswasta / Entrepreneur"
         ).length,
-        seeking: talents.filter(t => t.career_status === "Job Seeker" || t.career_status === "Belum Bekerja").length
+        seeking: profiles.filter(t => t.career_status === "Job Seeker" || t.career_status === "Belum Bekerja").length
       }
     }
   } catch (error) {
@@ -52,44 +80,44 @@ export async function getNationalStats() {
 }
 
 /**
- * ANALISA RISET LONGITUDINAL & TRANSISI
- * Menggunakan view research_transition_analysis & career_status_history.
+ * ANALISA TRANSISI & DATA LONGITUDINAL
+ * Mengambil narasi riset dan tren pergerakan karir dari waktu ke waktu.
  */
 export async function getTransitionInsights() {
   try {
-    // Ambil data transisi dasar
+    // Ambil data view analisis transisi
     const { data: transitionData, error: tError } = await supabase
       .from("research_transition_analysis")
       .select("*")
 
     if (tError) throw tError
 
-    // Ambil data trend waktu (Longitudinal) dari tabel history
+    // Ambil data riwayat karir (Data Longitudinal)
     const { data: historyData, error: hError } = await supabase
       .from("career_status_history")
       .select("*")
-      .order("changed_at", { ascending: true })
+      .order("changed_at", { ascending: false })
 
     if (hError) throw hError
 
-    // Analisis Sederhana: Kecepatan Transisi
+    // Analisis Sederhana untuk Narasi
     const inklusiWork = transitionData.filter(d => d.education_model === "Sekolah Reguler / inklusi" && d.career_status !== "Job Seeker").length
     const slbWork = transitionData.filter(d => d.education_model === "Sekolah Luar Biasa (SLB)" && d.career_status !== "Job Seeker").length
 
     return {
       raw: transitionData,
       historyTrend: historyData,
-      narrative: `Hasil riset menunjukkan ${inklusiWork} lulusan Inklusi dan ${slbWork} lulusan SLB telah terserap kerja. Trend longitudinal mencatat ${historyData.length} pergerakan status karir secara nasional.`
+      narrative: `Dataset riset mencatat ${inklusiWork} lulusan model Inklusi dan ${slbWork} lulusan SLB berhasil terserap kerja. Terdapat ${historyData.length} catatan pergerakan karir longitudinal yang terekam dalam sistem.`
     }
   } catch (error) {
     console.error("Error transition insights:", error)
-    return { raw: [], historyTrend: [], narrative: "Gagal analisis." }
+    return { raw: [], historyTrend: [], narrative: "Gagal memproses data longitudinal." }
   }
 }
 
 /**
- * AUDIT DATA MANUAL (THE CLEANUP)
- * Mengambil log dari tabel manual_input_logs untuk standardisasi.
+ * AUDIT DATA MANUAL
+ * Menarik data dari tabel manual_input_logs yang belum ditinjau (is_reviewed = false).
  */
 export async function getManualInputAudit() {
   try {
@@ -108,37 +136,16 @@ export async function getManualInputAudit() {
 }
 
 /**
- * FITUR MERGE DATA (SUPER ADMIN)
- * Menggabungkan input manual user ke data resmi dan menandai sudah diperiksa.
+ * MANAJEMEN AKUN ADMIN
+ * Aksi global untuk menambah, mengedit, atau menghapus user.
  */
-export async function mergeManualInput(logId: string, officialValue: string, fieldName: string) {
-    try {
-        // 1. Update log audit
-        await supabase
-            .from("manual_input_logs")
-            .update({ is_reviewed: true })
-            .eq("id", logId)
-
-        // 2. Idealnya di sini ada logika update profil user yang bersangkutan 
-        // tapi ini memerlukan list user_ids yang melakukan input tersebut.
-        return { success: true }
-    } catch (e) { return { success: false } }
-}
-
-/**
- * MANAJEMEN AKUN (Pusat Kontrol)
- * Menambah, Mengedit, Menghapus User/Partner/Gov.
- */
-export async function manageAdminUser(action: "ADD" | "EDIT" | "DELETE", table: "profiles" | "companies", payload: any) {
+export async function manageAdminUser(action: "EDIT" | "DELETE", table: "profiles" | "companies", payload: any) {
   try {
     if (action === "DELETE") {
       const { error } = await supabase.from(table).delete().eq("id", payload.id)
       if (error) throw error
     } else if (action === "EDIT") {
       const { error } = await supabase.from(table).update(payload).eq("id", payload.id)
-      if (error) throw error
-    } else if (action === "ADD") {
-      const { error } = await supabase.from(table).insert(payload)
       if (error) throw error
     }
     return { success: true, error: null }
@@ -148,7 +155,8 @@ export async function manageAdminUser(action: "ADD" | "EDIT" | "DELETE", table: 
 }
 
 /**
- * MANAJEMEN LOCK OTORITAS (Gov & Partner)
+ * OTORITAS LOCK (GOV & PARTNER)
+ * Menentukan akses dashboard khusus untuk instansi pemerintah atau mitra kampus.
  */
 export async function setupAdminLock(profileId: string, lockType: "agency" | "partner", lockValue: string) {
   try {
