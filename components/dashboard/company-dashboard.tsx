@@ -61,11 +61,20 @@ export default function CompanyDashboard({ user }: { user: any }) {
   const [ratings, setRatings] = useState({ avg: 0, accessibility: 0, culture: 0, management: 0, onboarding: 0 })
 
   useEffect(() => {
-    console.log('[COMPANY-DASHBOARD] Initializing with user:', { id: user?.id, email: user?.email })
+    if (!user?.id) {
+      console.warn('[COMPANY-DASHBOARD] User not available yet')
+      return
+    }
+    console.log('[COMPANY-DASHBOARD] Initializing with user:', { id: user.id, email: user.email })
     fetchInitialData()
-  }, [])
+  }, [user?.id])
 
   async function fetchInitialData() {
+    if (!user?.id) {
+      console.error('[COMPANY-DASHBOARD] Cannot fetch data: user.id is undefined')
+      return
+    }
+    
     try {
       console.log('[COMPANY-DASHBOARD] Fetching company data for owner:', user.id)
       const { data: comp } = await supabase.from("companies").select("*").eq("owner_id", user.id).single()

@@ -59,11 +59,20 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [ratingScores, setRatingScores] = useState({ accessibility: 5, culture: 5, management: 5, onboarding: 5, comment: "" })
 
   useEffect(() => { 
-    console.log('[TALENT-DASHBOARD] Initializing with user:', { id: user?.id, email: user?.email })
+    if (!user?.id) {
+      console.warn('[TALENT-DASHBOARD] User not available yet')
+      return
+    }
+    console.log('[TALENT-DASHBOARD] Initializing with user:', { id: user.id, email: user.email })
     fetchInitialData() 
-  }, []) 
+  }, [user?.id]) 
 
   async function fetchInitialData() {
+    if (!user?.id) {
+      console.error('[TALENT-DASHBOARD] Cannot fetch data: user.id is undefined')
+      return
+    }
+    
     try {
       console.log('[TALENT-DASHBOARD] Fetching profile data for user:', user.id)
       const { data: pData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
