@@ -25,7 +25,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || "",
     gender: profile?.gender || "",
-    birth_date: profile?.birth_date || "",
+    dob: profile?.dob || "",
     city: profile?.city || "",
     phone_number: profile?.phone_number || "",
     communication_preference: profile?.communication_preference || "WhatsApp",
@@ -111,8 +111,8 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
                 <input id="full_name" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})} aria-required="true" />
               </div>
               <div>
-                <label htmlFor="birth_date" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Tanggal Lahir"}</label>
-                <input id="birth_date" type="date" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.birth_date} onChange={(e) => setFormData({...formData, birth_date: e.target.value})} aria-required="true" />
+                <label htmlFor="dob" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Tanggal Lahir"}</label>
+                <input id="dob" type="date" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.dob} onChange={(e) => setFormData({...formData, dob: e.target.value})} aria-required="true" />
               </div>
               <div>
                 <label htmlFor="city" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Kota Domisili"}</label>
