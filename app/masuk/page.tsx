@@ -59,13 +59,13 @@ export default function LoginPage() {
           const roleFromMetadata = data.user.user_metadata?.role || 'talent'
           const { error: insertError } = await supabase
             .from('profiles')
-            .insert({
+            .upsert({
               id: data.user.id,
               email: normalizedEmail,
               full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || '',
-              role: roleFromMetadata,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              role: roleFromMetadata
+            }, {
+              onConflict: 'id'
             })
           
           if (insertError) {
@@ -83,8 +83,7 @@ export default function LoginPage() {
             await supabase
               .from('profiles')
               .update({ 
-                role: data.user.user_metadata.role,
-                updated_at: new Date().toISOString()
+                role: data.user.user_metadata.role
               })
               .eq('id', data.user.id)
           }

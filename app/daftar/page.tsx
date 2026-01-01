@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { supabase } from "@/lib/supabase"
+import { getAuthErrorMessage, profileNeedsUpdate, retryWithBackoff } from "@/lib/auth-utils"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -49,58 +50,100 @@ export default function RegisterPage() {
         },
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('[REGISTRASI] Error auth signup:', error)
+        throw error
+      }
+
+      if (!data.user) {
+        console.error('[REGISTRASI] Signup berhasil tetapi user tidak dikembalikan')
+        throw new Error('Pendaftaran gagal. Silakan coba lagi.')
+      }
 
       // Log: Auth berhasil
-      console.log('[REGISTRASI] Auth signup berhasil, user ID:', data.user?.id)
+      console.log('[REGISTRASI] Auth signup berhasil, user ID:', data.user.id)
 
       // Pastikan profile tersimpan dengan role yang benar
       if (data.user) {
-        // Cek apakah profile sudah ada (mungkin dibuat oleh trigger database)
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id, role')
-          .eq('id', data.user.id)
-          .maybeSingle()
+        const userId = data.user.id
+        
+        // Check if profile exists (might be created by database trigger)
+        // Use retry with backoff to handle case where trigger takes time to execute
+        // This only retries if profile is not found, avoiding unnecessary retries for existing profiles
+        let existingProfile = null
+        let attempts = 0
+        const maxAttempts = 3
+        
+        while (attempts < maxAttempts && !existingProfile) {
+          if (attempts > 0) {
+            // Only delay on retry attempts (not first attempt)
+            const delay = Math.min(200 * Math.pow(2, attempts - 1), 1000)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+          
+          const { data: profile, error: selectError } = await supabase
+            .from('profiles')
+            .select('id, role, full_name, email')
+            .eq('id', userId)
+            .maybeSingle()
+          
+          if (selectError) {
+            console.error('[REGISTRASI] Error checking profile:', selectError)
+            throw new Error(`Gagal memeriksa profil: ${selectError.message}`)
+          }
+          
+          existingProfile = profile
+          attempts++
+          
+          // If profile found, no need to retry
+          if (existingProfile) break
+        }
 
         if (existingProfile) {
           console.log('[REGISTRASI] Profile sudah ada dengan role:', existingProfile.role)
           
-          // Update role jika belum sesuai
-          if (existingProfile.role !== role) {
-            console.log('[REGISTRASI] Memperbarui role dari', existingProfile.role, 'ke', role)
+          // Update role dan data lainnya jika belum sesuai atau kosong
+          const needsUpdate = profileNeedsUpdate(existingProfile, { role, fullName, email: normalizedEmail })
+
+          if (needsUpdate) {
+            console.log('[REGISTRASI] Memperbarui profile dengan data lengkap')
             const { error: updateError } = await supabase
               .from('profiles')
               .update({ 
                 role: role,
                 full_name: fullName,
-                email: normalizedEmail,
-                updated_at: new Date().toISOString()
+                email: normalizedEmail
               })
               .eq('id', data.user.id)
             
             if (updateError) {
               console.error('[REGISTRASI] Error update profile:', updateError)
+              throw new Error(`Gagal memperbarui profil: ${updateError.message}`)
             } else {
               console.log('[REGISTRASI] Profile berhasil diperbarui')
             }
+          } else {
+            console.log('[REGISTRASI] Profile sudah lengkap, tidak perlu update')
           }
         } else {
           // Buat profile baru jika belum ada
           console.log('[REGISTRASI] Profile belum ada, membuat profile baru')
+          
+          // Gunakan upsert untuk menghindari konflik jika profile dibuat bersamaan
           const { error: insertError } = await supabase
             .from('profiles')
-            .insert({
+            .upsert({
               id: data.user.id,
               email: normalizedEmail,
               full_name: fullName,
-              role: role,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              role: role
+            }, {
+              onConflict: 'id'
             })
           
           if (insertError) {
             console.error('[REGISTRASI] Error insert profile:', insertError)
+            throw new Error(`Gagal membuat profil: ${insertError.message}`)
           } else {
             console.log('[REGISTRASI] Profile berhasil dibuat dengan role:', role)
           }
@@ -121,7 +164,7 @@ export default function RegisterPage() {
     } catch (error: any) {
       console.error('[REGISTRASI] Error:', error)
       setType("error")
-      setMsg(error.message || "Terjadi kesalahan sistem.")
+      setMsg(getAuthErrorMessage(error))
     } finally {
       setLoading(false)
     }

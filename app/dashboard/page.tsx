@@ -97,8 +97,9 @@ export default function DashboardPage() {
                 id: authUser.id,
                 email: targetEmail,
                 role: metadataRole,
-                full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
-                updated_at: new Date().toISOString()
+                full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0]
+              }, {
+                onConflict: 'id'
               })
             
             if (!updateError) {
