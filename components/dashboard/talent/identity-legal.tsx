@@ -131,8 +131,8 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
                 <label htmlFor="gender" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Jenis Kelamin"}</label>
                 <select id="gender" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} aria-required="true">
                   <option value="">{"Pilih"}</option>
-                  <option value="Laki-laki">{"Laki-laki"}</option>
-                  <option value="Perempuan">{"Perempuan"}</option>
+                  <option value="Male">{"Laki-laki"}</option>
+                  <option value="Female">{"Perempuan"}</option>
                 </select>
               </div>
               <div>
