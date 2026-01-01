@@ -32,7 +32,10 @@ export default function RegisterPage() {
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
     try {
-      // Log data yang akan dikirim ke Supabase untuk diagnostic
+      /**
+       * Diagnostic logging untuk membantu troubleshoot masalah registrasi.
+       * TODO: Pertimbangkan untuk mengganti dengan proper error tracking service (e.g., Sentry) di production
+       */
       console.log('[DAFTAR] Mengirim data registrasi:', {
         email: email.toLowerCase().trim(),
         full_name: fullName,

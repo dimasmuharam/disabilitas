@@ -7,6 +7,9 @@ import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
 import AdminDashboard from "@/components/dashboard/admin-dashboard"
 
+// Konstanta untuk default role jika data tidak ditemukan
+const DEFAULT_ROLE = 'talent'
+
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [role, setRole] = useState<string | null>(null)
@@ -57,9 +60,9 @@ export default function DashboardPage() {
           if (retryCount < 2) {
             setTimeout(() => setRetryCount(prev => prev + 1), 2000)
           } else {
-            // Fallback: set default role ke 'talent' jika tidak ditemukan setelah retry
-            console.warn('[DASHBOARD] Role tidak ditemukan setelah retry, menggunakan fallback: talent')
-            setRole('talent')
+            // Fallback: set default role jika tidak ditemukan setelah retry
+            console.warn(`[DASHBOARD] Role tidak ditemukan setelah retry, menggunakan fallback: ${DEFAULT_ROLE}`)
+            setRole(DEFAULT_ROLE)
             setLoading(false)
           }
         }
