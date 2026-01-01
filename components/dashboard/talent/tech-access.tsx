@@ -27,7 +27,8 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
   const [formData, setFormData] = useState({
     has_laptop: profile?.has_laptop || false,
     has_smartphone: profile?.has_smartphone || false,
-    internet_quality: profile?.internet_quality || "Data Seluler", 
+    // KOREKSI: Default value disesuaikan dengan constraint database
+    internet_quality: profile?.internet_quality || "mobile_stable", 
     used_assistive_tools: profile?.used_assistive_tools || [], 
     preferred_accommodations: profile?.preferred_accommodations || []
   });
@@ -46,7 +47,7 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
     setLoading(true);
     setMessage({ type: "", text: "" });
 
-    // Integrasi isian manual ke dalam array sebelum dikirim
+    // Integrasi isian manual ke dalam array
     let finalTools = [...formData.used_assistive_tools];
     if (otherTool) finalTools.push(`Lainnya: ${otherTool}`);
 
@@ -65,8 +66,10 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
 
       if (error) throw error;
       
+      // Pesan untuk Screen Reader
       setMessage({ type: "success", text: "Sarana Kerja Berhasil Disimpan. Mengalihkan ke Overview..." });
       
+      // AUTO-REDIRECT PASTI BEKERJA
       setTimeout(() => {
         onSuccess();
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -86,7 +89,7 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
           {"Sarana Kerja"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 italic">
-          {"Informasi sarana teknologi & akomodasi pendukung."}
+          {"Verifikasi ketersediaan perangkat & akomodasi teknologi pendukung."}
         </p>
       </header>
 
@@ -102,10 +105,10 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10 px-4">
-        {/* SEKSI 1: PERALATAN */}
+        {/* SEKSI 1: PERALATAN (CHECKBOX) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
           <h2 className="text-xs font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2">
-            <Laptop size={16} /> {"Kepemilikan Alat Kerja"}
+            <Laptop size={16} aria-hidden="true" /> {"Kepemilikan Alat Kerja"}
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
             <label className="flex items-center gap-4 p-6 bg-slate-50 rounded-3xl cursor-pointer hover:bg-blue-50 transition-all border-2 border-transparent has-[:checked]:border-blue-600">
@@ -114,71 +117,87 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
             </label>
             <label className="flex items-center gap-4 p-6 bg-slate-50 rounded-3xl cursor-pointer hover:bg-blue-50 transition-all border-2 border-transparent has-[:checked]:border-blue-600">
               <input type="checkbox" className="w-6 h-6 accent-blue-600" checked={formData.has_smartphone} onChange={(e) => setFormData({...formData, has_smartphone: e.target.checked})} />
-              <span className="text-xs font-bold uppercase">{"Smartphone"}</span>
+              <span className="text-xs font-bold uppercase">{"Smartphone / HP"}</span>
             </label>
           </div>
         </section>
 
-        {/* SEKSI 2: INTERNET (LISTBOX TERTUTUP) */}
+        {/* SEKSI 2: INTERNET (SINKRON DENGAN CONSTRAINT DATABASE) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
           <h2 className="text-xs font-black uppercase text-emerald-600 tracking-[0.2em] flex items-center gap-2">
-            <Wifi size={16} /> {"Akses Internet"}
+            <Wifi size={16} aria-hidden="true" /> {"Akses Internet"}
           </h2>
           <div>
-            <label htmlFor="internet_quality" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Ketersediaan Jaringan"}</label>
-            <select id="internet_quality" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-emerald-600 transition-all text-sm" value={formData.internet_quality} onChange={(e) => setFormData({...formData, internet_quality: e.target.value})}>
-              <option value="WiFi-Internet Kabel">{"WiFi / Internet Kabel"}</option>
-              <option value="Data Seluler">{"Hanya Data Seluler (Kuota)"}</option>
-              <option value="Tidak Ada">{"Tidak Ada Akses"}</option>
+            <label htmlFor="internet_quality" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Jenis Jaringan Terkuat Di Rumah"}</label>
+            <select 
+              id="internet_quality" 
+              className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-emerald-600 transition-all text-sm"
+              value={formData.internet_quality}
+              onChange={(e) => setFormData({...formData, internet_quality: e.target.value})}
+            >
+              <option value="fiber">{"WiFi / Fiber Optic (Indihome/Biznet/dsb)"}</option>
+              <option value="mobile_stable">{"Data Seluler Stabil (4G/5G)"}</option>
+              <option value="unstable">{"Jaringan Sering Terputus / Lemah"}</option>
+              <option value="none">{"Tidak Ada Akses Internet"}</option>
             </select>
           </div>
         </section>
 
-        {/* SEKSI 3: ALAT BANTU (MULTI + OTHERS) */}
+        {/* SEKSI 3: ALAT BANTU (CHECKBOX LIST MULTIPLE) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
           <h2 className="text-xs font-black uppercase text-purple-600 tracking-[0.2em] flex items-center gap-2">
-            <Construction size={16} /> {"Alat Bantu Utama"}
+            <Construction size={16} aria-hidden="true" /> {"Alat Bantu Utama"}
           </h2>
           <div className="grid md:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
             {DISABILITY_TOOLS.map((tool) => (
               <label key={tool} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer hover:bg-purple-50 transition-all border border-transparent has-[:checked]:border-purple-600">
-                <input type="checkbox" className="w-5 h-5 accent-purple-600" checked={formData.used_assistive_tools.includes(tool)} onChange={() => handleMultiSelect("used_assistive_tools", tool)} />
+                <input 
+                  type="checkbox" 
+                  className="w-5 h-5 accent-purple-600"
+                  checked={formData.used_assistive_tools.includes(tool)}
+                  onChange={() => handleMultiSelect("used_assistive_tools", tool)}
+                />
                 <span className="text-[11px] font-bold uppercase">{tool}</span>
               </label>
             ))}
           </div>
           <div className="pt-4 border-t border-slate-50">
-            <label htmlFor="other_tool" className="text-[10px] font-bold uppercase ml-2 text-slate-400 flex items-center gap-2">
-              <PlusCircle size={12} /> {"Alat Bantu Lainnya (Isi Manual)"}
+            <label htmlFor="other_tool" className="text-[10px] font-bold uppercase ml-2 text-slate-400 flex items-center gap-2 italic">
+              <PlusCircle size={12} /> {"Lainnya (Sebutkan jika tidak ada di daftar)"}
             </label>
-            <input id="other_tool" type="text" placeholder="Contoh: Aplikasi Navigasi Khusus" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 text-sm mt-2" value={otherTool} onChange={(e) => setOtherTool(e.target.value)} />
+            <input id="other_tool" type="text" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 text-sm mt-2" value={otherTool} onChange={(e) => setOtherTool(e.target.value)} />
           </div>
         </section>
 
-        {/* SEKSI 4: AKOMODASI (MULTI + OTHERS) */}
+        {/* SEKSI 4: AKOMODASI (CHECKBOX LIST MULTIPLE) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
           <h2 className="text-xs font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2">
-            <Monitor size={16} /> {"Akomodasi Kerja"}
+            <Monitor size={16} aria-hidden="true" /> {"Akomodasi Kerja Dibutuhkan"}
           </h2>
           <div className="grid md:grid-cols-2 gap-3">
             {ACCOMMODATION_TYPES.map((acc) => (
               <label key={acc} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer hover:bg-blue-50 transition-all border border-transparent has-[:checked]:border-blue-600">
-                <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.preferred_accommodations.includes(acc)} onChange={() => handleMultiSelect("preferred_accommodations", acc)} />
+                <input 
+                  type="checkbox" 
+                  className="w-5 h-5 accent-blue-600"
+                  checked={formData.preferred_accommodations.includes(acc)}
+                  onChange={() => handleMultiSelect("preferred_accommodations", acc)}
+                />
                 <span className="text-[11px] font-bold uppercase">{acc}</span>
               </label>
             ))}
           </div>
           <div className="pt-4 border-t border-slate-50">
-            <label htmlFor="other_acc" className="text-[10px] font-bold uppercase ml-2 text-slate-400 flex items-center gap-2">
-              <PlusCircle size={12} /> {"Akomodasi Lainnya (Isi Manual)"}
+            <label htmlFor="other_acc" className="text-[10px] font-bold uppercase ml-2 text-slate-400 flex items-center gap-2 italic">
+              <PlusCircle size={12} /> {"Kebutuhan Akomodasi Lainnya"}
             </label>
-            <input id="other_acc" type="text" placeholder="Sebutkan kebutuhan khusus lainnya..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 text-sm mt-2" value={otherAcc} onChange={(e) => setOtherAcc(e.target.value)} />
+            <input id="other_acc" type="text" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 text-sm mt-2" value={otherAcc} onChange={(e) => setOtherAcc(e.target.value)} />
           </div>
         </section>
 
         <div className="flex justify-end pt-4">
           <button type="submit" disabled={loading} className="bg-slate-900 text-white px-12 py-5 rounded-[2rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-blue-600 transition-all shadow-2xl disabled:opacity-50">
-            {loading ? "Sinkronisasi..." : <><Save size={20} /> {"Simpan Sarana"}</>}
+            {loading ? "Menyimpan..." : <><Save size={20} /> {"Simpan Sarana Kerja"}</>}
           </button>
         </div>
       </form>
