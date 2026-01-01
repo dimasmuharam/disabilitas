@@ -148,7 +148,8 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
               className="flex-1 bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all"
             />
             <datalist id="skill-suggestions">
-              {SKILL_CATEGORIES.map((cat: any) => cat.skills.map((s: string) => <option key={s} value={s} />))}
+              {
+            SKILLS_LIST.map((cat: any) => cat.skills.map((s: string) => <option key={s} value={s} />))}
             </datalist>
             <button type="submit" className="bg-purple-600 text-white px-8 rounded-2xl hover:bg-slate-900 transition-all shadow-lg shadow-purple-100">
               <Plus size={24} />
