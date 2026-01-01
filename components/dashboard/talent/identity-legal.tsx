@@ -51,13 +51,12 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
       setDriveWarning(false);
     }
   }, [formData.resume_url]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
 
-   try {
+    try {
       const { error } = await supabase
         .from("profiles")
         .update(formData)
@@ -65,23 +64,24 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
 
       if (error) throw error;
       
-      // Pesan sukses yang akan dibaca screen reader
+      // 1. Set pesan sukses
       setMessage({ type: "success", text: "Data Berhasil Disimpan. Mengalihkan ke Overview..." });
       
-      // Jeda 2 detik agar screen reader selesai membacakan notifikasi
+      // 2. Jeda agar suara screen reader selesai
       setTimeout(() => {
+        // 3. Pindahkan Tab
         onSuccess(); 
+        // 4. Pastikan layar scroll ke atas
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 2000);
 
-    } 
- catch (error: any) {
+    } catch (error: any) {
       setMessage({ type: "error", text: error.message });
-    } finally {
-      setLoading(false);
+      setLoading(false); // Penting: tombol nyala lagi kalau gagal
     }
-  };
+};
 
-  return (
+return (
     <div className="max-w-4xl mx-auto pb-20 animate-in fade-in duration-500 font-sans text-slate-900">
       <header className="mb-10 px-4">
         <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
