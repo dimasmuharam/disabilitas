@@ -58,10 +58,14 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [newCert, setNewCert] = useState({ name: "", organizer_name: "", year: "2025" })
   const [ratingScores, setRatingScores] = useState({ accessibility: 5, culture: 5, management: 5, onboarding: 5, comment: "" })
 
-  useEffect(() => { fetchInitialData() }, []) 
+  useEffect(() => { 
+    console.log('[TALENT-DASHBOARD] Initializing with user:', { id: user?.id, email: user?.email })
+    fetchInitialData() 
+  }, []) 
 
   async function fetchInitialData() {
     try {
+      console.log('[TALENT-DASHBOARD] Fetching profile data for user:', user.id)
       const { data: pData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
       if (pData) {
         setFullName(pData.full_name || ""); setCity(pData.city || ""); setDisabilityType(pData.disability_type || "")

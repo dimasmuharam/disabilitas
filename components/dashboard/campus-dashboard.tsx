@@ -21,9 +21,20 @@ export default function CampusDashboard({ user }: { user: any }) {
   })
   const [pendingCerts, setPendingCerts] = useState<any[]>([])
   
-  const isSuperAdmin = user?.role === "super_admin"
-  const [myCampus, setMyCampus] = useState(user?.partner_institution || "Universitas Indonesia (UI)") 
+  // Validasi dan set partner_institution dengan fallback
+  const isSuperAdmin = user?.role === "super_admin" || user?.role === "admin"
+  const partnerInstitution = user?.partner_institution || user?.user_metadata?.partner_institution || "Universitas Indonesia (UI)"
+  const [myCampus, setMyCampus] = useState(partnerInstitution) 
   const [partnerType, setPartnerType] = useState("University")
+
+  // Log untuk debugging
+  useEffect(() => {
+    console.log('[CAMPUS-DASHBOARD] User data:', { 
+      role: user?.role, 
+      partner_institution: user?.partner_institution,
+      email: user?.email 
+    })
+  }, [user])
 
   const ALL_PARTNERS = [...UNIVERSITIES, ...TRAINING_PARTNERS, ...COMMUNITY_PARTNERS].sort();
 

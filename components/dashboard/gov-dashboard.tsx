@@ -18,6 +18,9 @@ export default function GovDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("statistics") // statistics | simulation | monitoring
   const [nationalStats, setNationalStats] = useState<any>({})
   
+  // Validasi dan set agency_name dengan fallback
+  const agencyName = user?.agency_name || user?.user_metadata?.agency_name || "Kementerian"
+  
   // -- STATE SIMULASI --
   const [targetEducation, setTargetEducation] = useState("S1")
   const [targetDisability, setTargetDisability] = useState("Semua")
@@ -28,6 +31,15 @@ export default function GovDashboard({ user }: { user: any }) {
   // -- STATE MONITORING INTERNAL (HANYA INSTANSI LOGIN) --
   const [internalAsnData, setInternalAsnData] = useState<any[]>([])
 
+  // Log untuk debugging
+  useEffect(() => {
+    console.log('[GOV-DASHBOARD] User data:', { 
+      role: user?.role, 
+      agency_name: user?.agency_name,
+      email: user?.email 
+    })
+  }, [user])
+
   useEffect(() => {
     fetchGlobalData()
   }, [])
@@ -35,6 +47,8 @@ export default function GovDashboard({ user }: { user: any }) {
   async function fetchGlobalData() {
     setLoading(true)
     try {
+      console.log('[GOV-DASHBOARD] Fetching data for agency:', agencyName)
+      
       // 1. Ambil Statistik Nasional untuk Tab "Statistik" & "Simulasi"
       const { data: allProfiles } = await supabase.from("profiles").select("disability_type, education_level, date_of_birth, career_status, current_agency")
       
@@ -47,14 +61,18 @@ export default function GovDashboard({ user }: { user: any }) {
         setNationalStats(counts)
 
         // 2. Filter data Monitoring Karir (Hanya yang satu instansi dengan user login)
-        // User.agency_name diasumsikan didapat dari profil admin pemerintah yang login
         const internal = allProfiles.filter(p => 
           p.career_status === "ASN" && 
-          p.current_agency === user?.agency_name 
+          p.current_agency === agencyName 
         )
         setInternalAsnData(internal)
+        console.log('[GOV-DASHBOARD] Internal ASN data found:', internal.length)
       }
-    } catch (e) { console.error(e) } finally { setLoading(false) }
+    } catch (e) { 
+      console.error('[GOV-DASHBOARD] Error fetching data:', e) 
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   // Fungsi Simulasi (Nasional)
@@ -83,7 +101,7 @@ export default function GovDashboard({ user }: { user: any }) {
           <div className="p-4 bg-slate-900 rounded-2xl text-blue-400"><Building size={32}/></div>
           <div>
             <h2 className="text-xl font-black uppercase italic tracking-tighter">{"Gov Dashboard"}</h2>
-            <p className="text-[10px] font-bold text-slate-500 uppercase">{"Instansi: "}{user?.agency_name || "Pusat Data Nasional"}</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase">{"Instansi: "}{agencyName}</p>
           </div>
         </div>
         <nav className="flex bg-slate-100 p-2 rounded-2xl gap-1">
@@ -146,7 +164,7 @@ export default function GovDashboard({ user }: { user: any }) {
         <div className="space-y-6 animate-in fade-in">
           <div className="bg-blue-600 text-white p-10 rounded-[2.5rem]">
             <h3 className="text-2xl font-black italic uppercase">{"Internal Career Tracker"}</h3>
-            <p className="text-sm opacity-80 mt-2">{"Menampilkan data ASN Disabilitas khusus di lingkungan "}{user?.agency_name || "Instansi Anda"}</p>
+            <p className="text-sm opacity-80 mt-2">{"Menampilkan data ASN Disabilitas khusus di lingkungan "}{agencyName}</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-6">
