@@ -126,7 +126,11 @@ function DashboardContent() {
         {role === 'admin' || role === 'super_admin' ? (
           <AdminDashboard user={{ ...user, ...profile }} />
         ) : role === 'talent' ? (
-          <TalentDashboard user={{ ...user, ...profile }} autoOpenProfile={isJustVerified} />
+<TalentDashboard 
+  user={user} 
+  profile={profile} 
+  autoOpenProfile={isJustVerified} 
+/>
         ) : role === 'company' ? (
           <CompanyDashboard user={{ ...user, ...profile }} />
         ) : role === 'campus_partner' ? (
