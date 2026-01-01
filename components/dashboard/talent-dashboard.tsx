@@ -12,7 +12,7 @@ import { QRCodeSVG } from "qrcode.react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-// Import Modul Anak (Pastikan file-file ini ada di folder components/dashboard/talent/)
+// Import Modul Anak
 import IdentityLegal from "./talent/identity-legal";
 import TechAccess from "./talent/tech-access";
 import CareerExperience from "./talent/career-experience";
@@ -29,37 +29,53 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ jobs: 0, trainings: 0 });
   const [progress, setProgress] = useState(0);
-  const [activeTab, setActiveTab] = useState("dashboard"); // State navigasi
+  const [activeTab, setActiveTab] = useState("overview"); // KOREKSI: Gunakan 'overview'
   const [profile, setProfile] = useState(initialProfile);
 
   useEffect(() => {
     if (user?.id) {
       fetchLatestData();
     }
-  }, [user?.id, profile]);
+  }, [user?.id]);
 
+  // FUNGSI UTAMA: Update data dan kembali ke overview
   async function fetchLatestData() {
     try {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      if (prof) setProfile(prof);
+      if (prof) {
+        setProfile(prof);
+        calculateProgress(prof);
+      }
 
       const { count: jobCount } = await supabase.from("applications").select("*", { count: 'exact', head: true }).eq("profile_id", user.id);
       const { count: trainingCount } = await supabase.from("trainees").select("*", { count: 'exact', head: true }).eq("profile_id", user.id);
 
       setStats({ jobs: jobCount || 0, trainings: trainingCount || 0 });
-      calculateProgress(prof || profile);
     } catch (error) {
-      console.error("Error stats:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   }
 
+  // FUNGSI REDIRECT: Dipanggil oleh modul anak saat sukses simpan
+  const handleModuleSuccess = () => {
+    fetchLatestData(); // Refresh data terbaru
+    setActiveTab("overview"); // Pindah ke Overview
+    window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll ke atas untuk aksesibilitas
+  };
+
   function calculateProgress(profData: any) {
+    // KOREKSI: Menggunakan nama kolom database yang benar
     const fields = [
-      profData?.full_name, profData?.city, profData?.disability_type, 
-      profData?.bio, profData?.education_level, profData?.has_laptop,
-      profData?.resume_url, profData?.has_informed_consent
+      profData?.full_name, 
+      profData?.date_of_birth, // KOREKSI
+      profData?.phone, // KOREKSI
+      profData?.city, 
+      profData?.disability_type, 
+      profData?.bio, 
+      profData?.has_laptop,
+      profData?.has_informed_consent
     ];
     const filled = fields.filter(f => f !== null && f !== undefined && f !== "").length;
     setProgress(Math.round((filled / fields.length) * 100));
@@ -79,24 +95,23 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
 
   const handleShare = (platform: string) => {
     const url = `https://disabilitas.com/talent/${user.id}`;
-    const viralCaption = `Halo Rekan HRD! Saya ${profile?.full_name || 'Talenta Inklusif'}, seorang profesional ${profile?.disability_type || ''}. Cek profil profesional dan kompetensi saya di Disabilitas.com melalui link berikut: ${url} #TalentaInklusif #DisabilitasBekerja #InclusionMatters`;
+    const viralCaption = `Halo Rekan HRD! Saya ${profile?.full_name || 'Talenta Inklusif'}. Cek profil profesional saya di: ${url}`;
     
     switch (platform) {
       case 'wa': window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(viralCaption)}`, '_blank'); break;
       case 'li': window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank'); break;
-      case 'fb': window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank'); break;
     }
   };
 
   const renderContent = () => {
     switch (activeTab) {
-      case "identity": return <IdentityLegal user={user} profile={profile} onSuccess={fetchLatestData} />;
-      case "tech": return <TechAccess user={user} profile={profile} onSuccess={fetchLatestData} />;
-      case "career": return <CareerExperience user={user} profile={profile} onSuccess={fetchLatestData} />;
-      case "academic": return <AcademicBarriers user={user} profile={profile} onSuccess={fetchLatestData} />;
-      case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={fetchLatestData} />;
+      case "identity": return <IdentityLegal user={user} profile={profile} onSuccess={handleModuleSuccess} />;
+      case "tech": return <TechAccess user={user} profile={profile} onSuccess={handleModuleSuccess} />;
+      case "career": return <CareerExperience user={user} profile={profile} onSuccess={handleModuleSuccess} />;
+      case "academic": return <AcademicBarriers user={user} profile={profile} onSuccess={handleModuleSuccess} />;
+      case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       default: return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500">
           <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm">
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black italic shadow-lg shadow-blue-200">
@@ -123,7 +138,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
             )}
           </section>
 
-          {/* NAVIGASI MODUL - PERBAIKAN BROKEN LINKS */}
+          {/* NAVIGASI MODUL */}
           <nav className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
               { label: "Identitas", id: "identity", icon: User, done: !!profile?.full_name },
@@ -139,23 +154,6 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
               </button>
             ))}
           </nav>
-
-          <div className="grid md:grid-cols-2 gap-8 mt-12">
-            <div className="space-y-6">
-              <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 flex items-center gap-3">{"Smart Job"} <span className="text-blue-600">{"Match"}</span></h3>
-              <div className="bg-white border-2 border-slate-100 rounded-[3rem] p-10 text-center space-y-4 shadow-sm">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-600"><Search size={32} /></div>
-                <p className="text-xs font-bold text-slate-400 uppercase">{"Belum ada rekomendasi lowongan yang cocok."}</p>
-              </div>
-            </div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 flex items-center gap-3">{"Training"} <span className="text-emerald-600">{"Match"}</span></h3>
-              <div className="bg-white border-2 border-slate-100 rounded-[3rem] p-10 text-center space-y-4 shadow-sm">
-                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600"><BookOpen size={32} /></div>
-                <p className="text-xs font-bold text-slate-400 uppercase">{"Cek rekomendasi pelatihan untuk upgrade skill."}</p>
-              </div>
-            </div>
-          </div>
         </div>
       );
     }
@@ -167,18 +165,18 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
     <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans">
       <div className="max-w-6xl mx-auto space-y-8 pt-8 px-4">
         
-        {/* BACK TO DASHBOARD OVERVIEW */}
-        {activeTab !== "dashboard" && (
-          <button onClick={() => setActiveTab("dashboard")} className="flex items-center gap-2 text-xs font-black uppercase text-blue-600 hover:text-slate-900 transition-all">
+        {/* BACK BUTTON */}
+        {activeTab !== "overview" && (
+          <button onClick={() => setActiveTab("overview")} className="flex items-center gap-2 text-xs font-black uppercase text-blue-600 hover:text-slate-900 transition-all">
             <ChevronLeft size={16}/> {"Kembali ke Overview"}
           </button>
         )}
 
-        <section role="alert" className="bg-white border-2 border-slate-900 p-8 rounded-[2rem] shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+        <section className="bg-white border-2 border-slate-900 p-8 rounded-[2rem] shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-1">
-              <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{"Kelengkapan Profil Anda"}</h2>
-              <p className="text-xs font-bold text-slate-500 uppercase">{"Lengkapi profil untuk akurasi Smart Match"}</p>
+              <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{"Kelengkapan Profil"}</h2>
+              <p className="text-xs font-bold text-slate-500 uppercase">{"Lengkapi data untuk meningkatkan peluang Smart Match"}</p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
               <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200">
@@ -193,41 +191,20 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
           <div className="lg:col-span-2">
             {renderContent()}
           </div>
-
           <aside className="space-y-6">
-            {/* INCLUSION CARD & MULTI-SHARE TOOLS - DIPERTAHANKAN TOTAL */}
-            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-6 shadow-2xl">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400">{"Professional Tools"}</h3>
-              <div className="space-y-3">
-                <button onClick={exportPDF} className="w-full bg-white text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-blue-600 hover:text-white transition-all shadow-lg">
-                  <FileDown size={18} /> {"Cetak CV (PDF)"}
-                </button>
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => handleShare('wa')} className="bg-emerald-600 p-3 rounded-xl font-black uppercase text-[8px] hover:bg-emerald-700 transition-all">{"WhatsApp"}</button>
-                  <button onClick={() => handleShare('li')} className="bg-blue-700 p-3 rounded-xl font-black uppercase text-[8px] hover:bg-blue-800 transition-all">{"LinkedIn"}</button>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 pt-4 border-t border-slate-800">
-                <div className="bg-white p-2 rounded-xl">
-                  <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={50} />
-                </div>
-                <p className="text-[8px] font-bold text-slate-500 leading-tight uppercase">{"Scan QR untuk Public Profile Talent"}</p>
-              </div>
-            </div>
-
-            <div className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{"Aktivitas Saya"}</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-slate-50 rounded-2xl">
-                    <p className="text-2xl font-black italic text-slate-900">{stats.jobs}</p>
-                    <p className="text-[8px] font-black uppercase text-slate-400">{"Lamaran Kerja"}</p>
-                  </div>
-                  <div className="text-center p-4 bg-slate-50 rounded-2xl">
-                    <p className="text-2xl font-black italic text-slate-900">{stats.trainings}</p>
-                    <p className="text-[8px] font-black uppercase text-slate-400">{"Pelatihan"}</p>
-                  </div>
-                </div>
-            </div>
+             {/* PROFESSINAL TOOLS CARD */}
+             <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-6 shadow-2xl">
+               <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400">{"Aksi Talenta"}</h3>
+               <button onClick={exportPDF} className="w-full bg-white text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-blue-600 hover:text-white transition-all">
+                 <FileDown size={18} /> {"Download Resume (PDF)"}
+               </button>
+               <div className="flex items-center gap-4 pt-4 border-t border-slate-800">
+                 <div className="bg-white p-2 rounded-xl">
+                   <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={50} />
+                 </div>
+                 <p className="text-[8px] font-bold text-slate-500 leading-tight uppercase">{"Scan QR untuk Public Profile"}</p>
+               </div>
+             </div>
           </aside>
         </div>
 
@@ -243,7 +220,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
               </div>
               <div className="mt-12">
                  <h2 className="text-xs font-black uppercase bg-slate-900 text-white px-4 py-1 inline-block italic mb-4">{"Executive Summary"}</h2>
-                 <p className="text-sm italic text-slate-700">{profile?.bio}</p>
+                 <p className="text-sm italic text-slate-700 leading-relaxed">{profile?.bio}</p>
               </div>
            </div>
         </div>
