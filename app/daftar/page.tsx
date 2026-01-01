@@ -32,13 +32,16 @@ export default function RegisterPage() {
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
     try {
+      // Normalisasi role untuk konsistensi
+      const normalizedRole = role.toLowerCase().trim()
+      
       const { data, error } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
         password,
         options: {
           data: {
             full_name: fullName, 
-            role: role 
+            role: normalizedRole 
           },
           captchaToken: turnstileToken, 
           emailRedirectTo: `${siteUrl}/dashboard?verified=true`,

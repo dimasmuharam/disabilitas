@@ -69,21 +69,22 @@ export default function DashboardPage() {
     checkUser()
   }, [router, retryCount])
 
-  // Tampilan Loading (Ramah Screen Reader dengan aria-busy)
+  // Tampilan Loading (Ramah Screen Reader dengan aria-busy dan aria-live)
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-50" aria-busy="true">
-        <div className="text-center">
+      <main className="min-h-screen flex items-center justify-center bg-slate-50" aria-busy="true" role="main">
+        <div className="text-center" aria-live="polite" aria-atomic="true">
           <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">
             {"Menyinkronkan Otoritas Akses..."}
           </p>
+          <span className="sr-only">Sedang memuat dashboard, mohon tunggu</span>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 py-10 px-4">
+    <main className="min-h-screen bg-slate-50 py-10 px-4" role="main">
       <div className="container max-w-7xl mx-auto">
         {role === 'admin' ? (
           <AdminDashboard user={user} />
@@ -93,19 +94,29 @@ export default function DashboardPage() {
           <CompanyDashboard user={user} />
         ) : (
           /* State jika data profil benar-benar tidak ditemukan setelah retry */
-          <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl">
+          <div 
+            className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
             <h1 className="text-red-600 font-black uppercase italic tracking-tight mb-4 text-2xl">
                {"Akses Ditolak: Profil Belum Siap"}
             </h1>
             <div className="text-slate-500 font-bold mb-8 space-y-2">
               <p>{"Sistem mengenali akun: "}<span className="text-slate-900">{user?.email}</span></p>
               <p>{"Namun, status peran (Role) Anda tidak ditemukan di tabel profil."}</p>
+              <p className="sr-only">
+                Role yang diterima: {role || "kosong atau tidak valid"}. 
+                Silakan segarkan halaman atau login ulang untuk memperbaiki masalah ini.
+              </p>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button 
                 onClick={() => window.location.reload()} 
                 className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg"
+                aria-label="Segarkan halaman untuk mencoba memuat ulang data profil"
               >
                 {"Coba Segarkan Halaman"}
               </button>
@@ -116,6 +127,7 @@ export default function DashboardPage() {
                   router.push("/masuk")
                 }} 
                 className="px-8 py-4 bg-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-300 transition-all"
+                aria-label="Keluar dari akun dan masuk kembali"
               >
                 {"Keluar & Login Ulang"}
               </button>

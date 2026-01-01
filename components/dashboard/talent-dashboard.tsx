@@ -28,6 +28,28 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [isEditing, setIsEditing] = useState(false)
   const [msg, setMsg] = useState("")
 
+  // Validasi user dan role
+  if (!user) {
+    return (
+      <div 
+        className="p-20 text-center bg-white rounded-[2.5rem] border-2 border-red-200"
+        role="alert"
+        aria-live="assertive"
+      >
+        <h2 className="text-red-600 font-black uppercase italic text-xl mb-4">
+          {"Error: Data User Tidak Valid"}
+        </h2>
+        <p className="text-slate-600 font-bold">
+          {"Tidak dapat memuat dashboard talenta karena data user tidak tersedia."}
+        </p>
+        <p className="sr-only">
+          Dashboard talenta memerlukan data user yang valid untuk ditampilkan. 
+          Silakan keluar dan masuk kembali.
+        </p>
+      </div>
+    )
+  }
+
   // -- STATE DATA PROFIL --
   const [fullName, setFullName] = useState("")
   const [city, setCity] = useState("")
