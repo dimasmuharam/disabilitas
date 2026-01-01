@@ -37,33 +37,34 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   // EFEEK: Ambil data pelatihan yang LULUS dari tabel 'trainees' secara otomatis
   useEffect(() => {
     const fetchVerifiedCerts = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("trainees")
         .select(`
           status,
           trainings (title, updated_at, profiles (full_name))
         `)
         .eq("profile_id", user.id)
-        .eq("status", "completed");
+        .eq("status", "completed") as any; // Tambahan 'as any' di sini kuncinya
 
       if (data) {
-        const autoCerts = data.map(c => ({
-          name: c.trainings.title,
-          issuer: c.trainings.profiles.full_name,
-          year: new Date(c.trainings.updated_at).getFullYear().toString(),
-          link: "", // Bisa diarahkan ke URL sertifikat digital nanti
+        const autoCerts = data.map((c: any) => ({
+          name: c.trainings?.title || "Sertifikat Pelatihan",
+          issuer: c.trainings?.profiles?.full_name || "Official Partner",
+          year: c.trainings?.updated_at 
+            ? new Date(c.trainings.updated_at).getFullYear().toString() 
+            : new Date().getFullYear().toString(),
+          link: "",
           is_verified: true
         }));
 
-        // Gabungkan dengan yang sudah ada di profil (hindari duplikasi nama)
-        setCertifications(prev => {
+        setCertifications((prev: any[]) => {
           const manualOnly = prev.filter(p => !p.is_verified);
           return [...autoCerts, ...manualOnly];
         });
       }
     };
 
-    fetchVerifiedCerts();
+    if (user?.id) fetchVerifiedCerts();
   }, [user.id]);
 
   const handleAddSkill = (e: React.FormEvent) => {
