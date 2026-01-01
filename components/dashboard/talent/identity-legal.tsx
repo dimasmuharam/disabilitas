@@ -25,14 +25,14 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || "",
     gender: profile?.gender || "",
-    dob: profile?.dob || "",
+    date_of_birth: profile?.date_of_birth || "",
     city: profile?.city || "",
     phone_number: profile?.phone_number || "",
     communication_preference: profile?.communication_preference || "WhatsApp",
     disability_type: profile?.disability_type || "",
     portfolio_url: profile?.portfolio_url || "",
     resume_url: profile?.resume_url || "",
-    disability_proof_url: profile?.disability_proof_url || "",
+    document_disability_url: profile?.document_disability_url || "",
     intro_video_url: profile?.intro_video_url || "",
     bio: profile?.bio || "",
     has_informed_consent: profile?.has_informed_consent || false
@@ -111,8 +111,8 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
                 <input id="full_name" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})} aria-required="true" />
               </div>
               <div>
-                <label htmlFor="dob" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Tanggal Lahir"}</label>
-                <input id="dob" type="date" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.dob} onChange={(e) => setFormData({...formData, dob: e.target.value})} aria-required="true" />
+                <label htmlFor="date_of_birth" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Tanggal Lahir"}</label>
+                <input id="date_of_birth" type="date" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.date_of_birth} onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})} aria-required="true" />
               </div>
               <div>
                 <label htmlFor="city" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Kota Domisili"}</label>
@@ -171,8 +171,8 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
             </div>
             <div className="space-y-6">
               <div>
-                <label htmlFor="disability_proof_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Bukti Disabilitas"}</label>
-                <input id="disability_proof_url" type="url" placeholder="Link KTA / Surat Dokter" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.disability_proof_url} onChange={(e) => setFormData({...formData, disability_proof_url: e.target.value})} />
+                <label htmlFor="document_disability_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Bukti Disabilitas"}</label>
+                <input id="document_disability_url" type="url" placeholder="Link KTA / Surat Dokter" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.document_disability_url} onChange={(e) => setFormData({...formData, document_disability_url: e.target.value})} />
               </div>
               <div>
                 <label htmlFor="intro_video_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Video Intro (YouTube)"}</label>
