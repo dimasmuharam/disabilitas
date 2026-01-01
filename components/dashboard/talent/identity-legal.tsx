@@ -27,7 +27,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
     gender: profile?.gender || "",
     date_of_birth: profile?.date_of_birth || "",
     city: profile?.city || "",
-    phone_number: profile?.phone_number || "",
+    phone: profile?.phone || "",
     communication_preference: profile?.communication_preference || "WhatsApp",
     disability_type: profile?.disability_type || "",
     portfolio_url: profile?.portfolio_url || "",
@@ -124,8 +124,8 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
             </div>
             <div className="space-y-6">
               <div>
-                <label htmlFor="phone_number" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nomor WhatsApp"}</label>
-                <input id="phone_number" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.phone_number} onChange={(e) => setFormData({...formData, phone_number: e.target.value})} aria-required="true" />
+                <label htmlFor="phone" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nomor WhatsApp"}</label>
+                <input id="phone" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} aria-required="true" />
               </div>
               <div>
                 <label htmlFor="gender" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Jenis Kelamin"}</label>
