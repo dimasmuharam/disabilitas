@@ -57,7 +57,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
     setLoading(true);
     setMessage({ type: "", text: "" });
 
-    try {
+   try {
       const { error } = await supabase
         .from("profiles")
         .update(formData)
@@ -65,9 +65,16 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
 
       if (error) throw error;
       
-      setMessage({ type: "success", text: "Data Identitas Berhasil Disimpan!" });
-      onSuccess();
-    } catch (error: any) {
+      // Pesan sukses yang akan dibaca screen reader
+      setMessage({ type: "success", text: "Data Berhasil Disimpan. Mengalihkan ke Overview..." });
+      
+      // Jeda 2 detik agar screen reader selesai membacakan notifikasi
+      setTimeout(() => {
+        onSuccess(); 
+      }, 2000);
+
+    } 
+ catch (error: any) {
       setMessage({ type: "error", text: error.message });
     } finally {
       setLoading(false);
