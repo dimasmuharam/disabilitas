@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { 
   Save, User, Phone, MapPin, Calendar, 
   MessageSquare, ShieldCheck, Link as LinkIcon, 
-  FileText, Youtube, CheckCircle2, AlertCircle, Info
+  FileText, Youtube, CheckCircle2, AlertCircle, Info 
 } from "lucide-react";
 
 interface IdentityLegalProps {
@@ -35,11 +35,9 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
     has_informed_consent: profile?.has_informed_consent || false
   });
 
-  // Fungsi Cek Link Google Drive (Access Checker)
+  // Fitur Cek Akses Google Drive Otomatis
   useEffect(() => {
     if (formData.resume_url.includes("drive.google.com")) {
-      // Peringatan jika link mengandung /view atau /usp=sharing tanpa pengecekan permission backend
-      // Di sini kita edukasi user untuk memastikan akses "Anyone with the link"
       setDriveWarning(true);
     } else {
       setDriveWarning(false);
@@ -80,7 +78,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
         </p>
       </header>
 
-      {/* ARIA-LIVE REGION UNTUK NOTIFIKASI SCREEN READER */}
+      {/* Region Notifikasi Aksesibel */}
       <div aria-live="polite" className="px-4">
         {message.text && (
           <div className={`mb-8 p-6 rounded-[2rem] border-2 flex items-center gap-4 ${
@@ -93,23 +91,23 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10 px-4">
-        {/* SEKSI 1: DATA PERSONAL */}
+        {/* SEKSI 1: WAJIB DIISI */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8" aria-labelledby="personal-data-title">
           <h3 id="personal-data-title" className="text-xs font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2">
-            <User size={16} aria-hidden="true" /> {"Informasi Dasar (Wajib Diisi)"}
+            <User size={16} aria-hidden="true" /> {"Informasi Dasar (Wajib)"}
           </h3>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div>
-                <label htmlFor="full_name" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nama Lengkap (Wajib)"}</label>
+                <label htmlFor="full_name" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nama Lengkap"}</label>
                 <input id="full_name" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600" value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="birth_date" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Tanggal Lahir (Wajib)"}</label>
+                <label htmlFor="birth_date" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Tanggal Lahir"}</label>
                 <input id="birth_date" type="date" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600" value={formData.birth_date} onChange={(e) => setFormData({...formData, birth_date: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="gender" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Jenis Kelamin (Wajib)"}</label>
+                <label htmlFor="gender" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Jenis Kelamin"}</label>
                 <select id="gender" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
                   <option value="">{"Pilih"}</option>
                   <option value="Laki-laki">{"Laki-laki"}</option>
@@ -119,15 +117,15 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
             </div>
             <div className="space-y-6">
               <div>
-                <label htmlFor="phone_number" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nomor HP/WA (Wajib)"}</label>
+                <label htmlFor="phone_number" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nomor HP/WA"}</label>
                 <input id="phone_number" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600" value={formData.phone_number} onChange={(e) => setFormData({...formData, phone_number: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="city" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Kota Domisili (Wajib)"}</label>
+                <label htmlFor="city" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Kota Domisili"}</label>
                 <input id="city" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="comm_pref" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Media Komunikasi (Wajib)"}</label>
+                <label htmlFor="comm_pref" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Media Komunikasi"}</label>
                 <select id="comm_pref" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600" value={formData.communication_preference} onChange={(e) => setFormData({...formData, communication_preference: e.target.value})}>
                   <option value="WhatsApp">{"WhatsApp"}</option>
                   <option value="Email">{"Email"}</option>
@@ -138,7 +136,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
           </div>
         </section>
 
-        {/* SEKSI 2: DOKUMEN & LINK DIGITAL */}
+        {/* SEKSI 2: OPSIONAL */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8" aria-labelledby="digital-docs-title">
           <h3 id="digital-docs-title" className="text-xs font-black uppercase text-purple-600 tracking-[0.2em] flex items-center gap-2">
             <LinkIcon size={16} aria-hidden="true" /> {"Link & Dokumen (Opsional)"}
@@ -146,52 +144,62 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div>
-                <label htmlFor="portfolio" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"URL Portofolio (Opsional)"}</label>
-                <input id="portfolio" type="url" placeholder="https://behance.net/anda" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600" value={formData.portfolio_url} onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})} />
+                <label htmlFor="portfolio" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"URL Portofolio"}</label>
+                <input id="portfolio" type="url" placeholder="https://..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600" value={formData.portfolio_url} onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="resume" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Resume Drive (Opsional)"}</label>
+                <label htmlFor="resume" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Resume (Google Drive)"}</label>
                 <input id="resume" type="url" placeholder="https://drive.google.com/..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600" value={formData.resume_url} onChange={(e) => setFormData({...formData, resume_url: e.target.value})} />
                 {driveWarning && (
-                  <p className="text-[9px] font-bold text-amber-600 mt-2 flex items-center gap-1 animate-pulse">
-                    <Info size={12} /> {"Pastikan akses link Google Drive diset ke 'Anyone with the link'"}
+                  <p className="text-[9px] font-bold text-amber-600 mt-2 flex items-center gap-1 animate-pulse" role="alert">
+                    <Info size={12} /> {"Penting: Pastikan akses Drive sudah 'Anyone with the link'"}
                   </p>
                 )}
               </div>
             </div>
             <div className="space-y-6">
               <div>
-                <label htmlFor="dis_proof" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Bukti Disabilitas (Opsional)"}</label>
-                <input id="dis_proof" type="url" placeholder="Link KTA / Surat Dokter" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600" value={formData.disability_proof_url} onChange={(e) => setFormData({...formData, disability_proof_url: e.target.value})} />
+                <label htmlFor="dis_proof" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Bukti Disabilitas (KTA/Surat)"}</label>
+                <input id="dis_proof" type="url" placeholder="Link dokumen bukti" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600" value={formData.disability_proof_url} onChange={(e) => setFormData({...formData, disability_proof_url: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="youtube" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Video YouTube (Opsional)"}</label>
-                <input id="youtube" type="url" placeholder="https://youtube.com/watch?v=..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600" value={formData.intro_video_url} onChange={(e) => setFormData({...formData, intro_video_url: e.target.value})} />
+                <label htmlFor="youtube" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Video YouTube"}</label>
+                <input id="youtube" type="url" placeholder="https://youtube.com/..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600" value={formData.intro_video_url} onChange={(e) => setFormData({...formData, intro_video_url: e.target.value})} />
               </div>
             </div>
           </div>
-          
-          <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200" role="complementary">
+          <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200">
             <h4 className="text-[10px] font-black uppercase flex items-center gap-2 mb-2 text-slate-500">
               <Youtube size={14} aria-hidden="true" /> {"Panduan Video Intro"}
             </h4>
             <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed italic">
-              {"Buat video 1 menit: Perkenalkan Nama, Ragam Disabilitas, Keahlian, dan kenapa Perusahaan harus merekrut Anda. Upload di YouTube sebagai 'Unlisted'."}
+              {"Buat video 1 menit perkenalan diri dan unggah ke YouTube (Unlisted). Link ini membantu HRD mengenal Anda lebih baik."}
             </p>
           </div>
         </section>
 
         {/* SEKSI 3: BIO & PERSETUJUAN */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="disability_type" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Ragam Disabilitas"}</label>
+            <select id="disability_type" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600" value={formData.disability_type} onChange={(e) => setFormData({...formData, disability_type: e.target.value})}>
+              <option value="">{"Pilih Ragam"}</option>
+              <option value="Netra">{"Netra"}</option>
+              <option value="Rungu">{"Rungu"}</option>
+              <option value="Daksa">{"Daksa"}</option>
+              <option value="Intelektual">{"Intelektual"}</option>
+              <option value="Mental">{"Mental"}</option>
+              <option value="Ganda">{"Ganda"}</option>
+            </select>
+          </div>
           <div>
             <label htmlFor="bio" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Bio Singkat (Wajib)"}</label>
             <textarea id="bio" required className="w-full bg-slate-50 border-2 border-slate-50 p-6 rounded-[2rem] font-bold outline-none focus:border-blue-600 h-32 italic" placeholder="Ceritakan siapa Anda..." value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} />
           </div>
-          
           <label className="flex items-center gap-4 p-5 bg-blue-50 border-2 border-blue-100 rounded-3xl cursor-pointer hover:bg-blue-100 transition-all">
-            <input type="checkbox" required className="w-6 h-6 accent-blue-600" checked={formData.has_informed_consent} onChange={(e) => setFormData({...formData, has_informed_consent: e.target.checked})} aria-required="true" />
+            <input type="checkbox" required className="w-6 h-6 accent-blue-600" checked={formData.has_informed_consent} onChange={(e) => setFormData({...formData, has_informed_consent: e.target.checked})} />
             <span className="text-[10px] font-black uppercase text-blue-900 leading-tight">
-              {"Saya menyetujui Informed Consent untuk bisnis & riset BRIN."}
+              {"Saya menyetujui Informed Consent untuk kepentingan bisnis & riset BRIN."}
             </span>
           </label>
         </section>
@@ -205,7 +213,3 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
     </div>
   );
 }
-
-// Minimal Icons for Build Stability
-function CheckCircle2({ size }: { size: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>; }
-function AlertCircle({ size }: { size: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>; }
