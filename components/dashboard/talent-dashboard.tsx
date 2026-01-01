@@ -22,7 +22,7 @@ import {
   PlusCircle, MapPin, Linkedin, Link, Briefcase
 } from "lucide-react"
 
-export default function TalentDashboard({ user }: { user: any }) {
+export default function TalentDashboard({ user, autoOpenProfile = false }: { user: any, autoOpenProfile?: boolean }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -52,7 +52,12 @@ export default function TalentDashboard({ user }: { user: any }) {
   const [showCertModal, setShowCertModal] = useState(false)
   const [showRatingId, setShowRatingId] = useState<string | null>(null)
   const [targetCompanyId, setTargetCompanyId] = useState<string | null>(null)
-
+useEffect(() => {
+  if (autoOpenProfile) {
+    setIsEditing(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}, [autoOpenProfile]);
   // -- NEW ENTRY STATES --
   const [newWork, setNewWork] = useState({ company_name: "", position: "", start_date: "", end_date: "", is_current_work: false, description: "" })
   const [newCert, setNewCert] = useState({ name: "", organizer_name: "", year: "2025" })
