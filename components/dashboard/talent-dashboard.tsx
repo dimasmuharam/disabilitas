@@ -6,7 +6,7 @@ import {
   User, MapPin, Briefcase, GraduationCap, 
   FileDown, BookOpen, Laptop, Wifi, 
   AlertCircle, CheckCircle2, Linkedin, Search,
-  ChevronLeft, LayoutDashboard, Share2
+  ChevronLeft, LayoutDashboard, Share2, ExternalLink
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import jsPDF from "jspdf";
@@ -29,7 +29,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ jobs: 0, trainings: 0 });
   const [progress, setProgress] = useState(0);
-  const [activeTab, setActiveTab] = useState("overview"); // KOREKSI: Gunakan 'overview'
+  const [activeTab, setActiveTab] = useState("overview"); 
   const [profile, setProfile] = useState(initialProfile);
 
   useEffect(() => {
@@ -38,7 +38,6 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
     }
   }, [user?.id]);
 
-  // FUNGSI UTAMA: Update data dan kembali ke overview
   async function fetchLatestData() {
     try {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
@@ -52,30 +51,25 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
 
       setStats({ jobs: jobCount || 0, trainings: trainingCount || 0 });
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error stats:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  // FUNGSI REDIRECT: Dipanggil oleh modul anak saat sukses simpan
+  // FITUR: KEMBALI KE OVERVIEW OTOMATIS (Berlaku untuk semua modul)
   const handleModuleSuccess = () => {
-    fetchLatestData(); // Refresh data terbaru
-    setActiveTab("overview"); // Pindah ke Overview
-    window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll ke atas untuk aksesibilitas
+    fetchLatestData(); 
+    setActiveTab("overview"); 
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   function calculateProgress(profData: any) {
-    // KOREKSI: Menggunakan nama kolom database yang benar
     const fields = [
-      profData?.full_name, 
-      profData?.date_of_birth, // KOREKSI
-      profData?.phone, // KOREKSI
-      profData?.city, 
-      profData?.disability_type, 
-      profData?.bio, 
-      profData?.has_laptop,
-      profData?.has_informed_consent
+      profData?.full_name, profData?.date_of_birth, profData?.phone, 
+      profData?.city, profData?.disability_type, profData?.bio, 
+      profData?.education_level, profData?.has_laptop,
+      profData?.resume_url, profData?.has_informed_consent
     ];
     const filled = fields.filter(f => f !== null && f !== undefined && f !== "").length;
     setProgress(Math.round((filled / fields.length) * 100));
@@ -96,7 +90,6 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const handleShare = (platform: string) => {
     const url = `https://disabilitas.com/talent/${user.id}`;
     const viralCaption = `Halo Rekan HRD! Saya ${profile?.full_name || 'Talenta Inklusif'}. Cek profil profesional saya di: ${url}`;
-    
     switch (platform) {
       case 'wa': window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(viralCaption)}`, '_blank'); break;
       case 'li': window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank'); break;
@@ -111,15 +104,16 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       case "academic": return <AcademicBarriers user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       default: return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-          <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* HEADER PROFILE CARD */}
+          <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
               <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black italic shadow-lg shadow-blue-200">
                 {profile?.full_name?.charAt(0) || "T"}
               </div>
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">{profile?.full_name}</h1>
+                  <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">{profile?.full_name || "Nama Belum Diisi"}</h1>
                   {progress === 100 && <CheckCircle2 className="text-emerald-500" size={24} />}
                 </div>
                 <p className="text-sm font-bold text-blue-600 uppercase tracking-[0.2em]">{profile?.disability_type || "Ragam Disabilitas Belum Diisi"}</p>
@@ -130,22 +124,34 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
                 </div>
               </div>
             </div>
+            
             {profile?.bio && (
-              <div className="mt-10 p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
-                <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">{"Executive Summary"}</h3>
-                <p className="text-sm font-medium text-slate-600 leading-relaxed italic">{"\""}{profile.bio}{"\""}</p>
+              <div className="mt-10 p-8 bg-slate-50 rounded-[2rem] border border-slate-100 italic text-sm text-slate-600 leading-relaxed">
+                {"\""}{profile.bio}{"\""}
               </div>
             )}
+
+            {/* QR CODE DI BAGIAN BAWAH KARTU (Sesuai Instruksi) */}
+            <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={40} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-slate-900">{"Public Profile ID"}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{"Scan untuk membagikan portofolio"}</p>
+                </div>
+              </div>
+            </div>
           </section>
 
-          {/* NAVIGASI MODUL */}
           <nav className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
               { label: "Identitas", id: "identity", icon: User, done: !!profile?.full_name },
               { label: "Sarana", id: "tech", icon: Laptop, done: !!profile?.has_laptop },
               { label: "Karir", id: "career", icon: Briefcase, done: !!profile?.career_status },
               { label: "Akademik", id: "academic", icon: GraduationCap, done: !!profile?.education_level },
-              { label: "Skill", id: "skills", icon: BookOpen, done: !!profile?.skills?.length }
+              { label: "Skill", id: "skills", icon: BookOpen, done: !!(profile?.skills && profile.skills.length > 0) }
             ].map((m, i) => (
               <button key={i} onClick={() => setActiveTab(m.id)} className="bg-white border-2 border-slate-100 p-6 rounded-[2rem] hover:border-blue-600 transition-all group text-center shadow-sm">
                 <m.icon className="mx-auto mb-3 text-slate-400 group-hover:text-blue-600 transition-colors" size={24} />
@@ -154,21 +160,36 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
               </button>
             ))}
           </nav>
+
+          <div className="grid md:grid-cols-2 gap-8 mt-12">
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 flex items-center gap-3">{"Smart Job"} <span className="text-blue-600">{"Match"}</span></h3>
+              <div className="bg-white border-2 border-slate-100 rounded-[3rem] p-10 text-center space-y-4 shadow-sm">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-600"><Search size={32} /></div>
+                <p className="text-xs font-bold text-slate-400 uppercase">{"Belum ada rekomendasi lowongan yang cocok."}</p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 flex items-center gap-3">{"Training"} <span className="text-emerald-600">{"Match"}</span></h3>
+              <div className="bg-white border-2 border-slate-100 rounded-[3rem] p-10 text-center space-y-4 shadow-sm">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600"><BookOpen size={32} /></div>
+                <p className="text-xs font-bold text-slate-400 uppercase">{"Cek rekomendasi pelatihan untuk upgrade skill."}</p>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
   };
 
-  if (loading) return <div className="p-20 text-center font-black italic tracking-widest text-slate-400">{"SINKRONISASI DATA EKOSISTEM..."}</div>;
+  if (loading) return <div className="p-20 text-center font-black italic tracking-widest text-slate-400">{"SINKRONISASI DATA..."}</div>;
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans">
       <div className="max-w-6xl mx-auto space-y-8 pt-8 px-4">
-        
-        {/* BACK BUTTON */}
         {activeTab !== "overview" && (
-          <button onClick={() => setActiveTab("overview")} className="flex items-center gap-2 text-xs font-black uppercase text-blue-600 hover:text-slate-900 transition-all">
-            <ChevronLeft size={16}/> {"Kembali ke Overview"}
+          <button onClick={() => setActiveTab("overview")} className="flex items-center gap-2 text-xs font-black uppercase text-blue-600 hover:text-slate-900 transition-all group">
+            <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform"/> {"Kembali ke Overview"}
           </button>
         )}
 
@@ -176,7 +197,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-1">
               <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{"Kelengkapan Profil"}</h2>
-              <p className="text-xs font-bold text-slate-500 uppercase">{"Lengkapi data untuk meningkatkan peluang Smart Match"}</p>
+              <p className="text-xs font-bold text-slate-500 uppercase">{"Lengkapi profil untuk akurasi Smart Match"}</p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
               <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200">
@@ -188,39 +209,67 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
         </section>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            {renderContent()}
-          </div>
+          <div className="lg:col-span-2">{renderContent()}</div>
           <aside className="space-y-6">
-             {/* PROFESSINAL TOOLS CARD */}
-             <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-6 shadow-2xl">
-               <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400">{"Aksi Talenta"}</h3>
-               <button onClick={exportPDF} className="w-full bg-white text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-blue-600 hover:text-white transition-all">
-                 <FileDown size={18} /> {"Download Resume (PDF)"}
-               </button>
-               <div className="flex items-center gap-4 pt-4 border-t border-slate-800">
-                 <div className="bg-white p-2 rounded-xl">
-                   <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={50} />
-                 </div>
-                 <p className="text-[8px] font-bold text-slate-500 leading-tight uppercase">{"Scan QR untuk Public Profile"}</p>
-               </div>
-             </div>
+            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-6 shadow-2xl">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400">{"Aksi Talenta"}</h3>
+              <div className="space-y-3">
+                {/* TOMBOL LIHAT PROFIL PUBLIK (BARU) */}
+                <a 
+                  href={`https://disabilitas.com/talent/${user.id}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full bg-blue-600 text-white p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-white hover:text-slate-900 transition-all shadow-lg"
+                >
+                  <ExternalLink size={18} /> {"Lihat Profil Publik"}
+                </a>
+
+                <button onClick={exportPDF} className="w-full bg-white text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-blue-600 hover:text-white transition-all shadow-lg">
+                  <FileDown size={18} /> {"Cetak CV (PDF)"}
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => handleShare('wa')} className="bg-emerald-600 p-3 rounded-xl font-black uppercase text-[8px] hover:bg-emerald-700 transition-all flex items-center justify-center">{"WA"}</button>
+                  <button onClick={() => handleShare('li')} className="bg-blue-700 p-3 rounded-xl font-black uppercase text-[8px] hover:bg-blue-800 transition-all flex items-center justify-center">{"LinkedIn"}</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-6">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{"Statistik Saya"}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-2xl font-black italic text-slate-900">{stats.jobs}</p>
+                    <p className="text-[8px] font-black uppercase text-slate-400">{"Lamaran"}</p>
+                  </div>
+                  <div className="text-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-2xl font-black italic text-slate-900">{stats.trainings}</p>
+                    <p className="text-[8px] font-black uppercase text-slate-400">{"Pelatihan"}</p>
+                  </div>
+                </div>
+            </div>
           </aside>
         </div>
 
         {/* HIDDEN TEMPLATE PDF */}
         <div className="hidden">
-           <div id="cv-content" className="p-20 bg-white w-[210mm] text-slate-900 font-sans">
+           <div id="cv-content" className="p-20 bg-white w-[210mm] min-h-[297mm] text-slate-900 font-sans relative">
               <div className="flex justify-between items-start border-b-8 border-slate-900 pb-10">
                  <div className="space-y-2">
                     <h1 className="text-5xl font-black uppercase tracking-tighter italic">{profile?.full_name}</h1>
                     <p className="text-xl font-bold text-blue-600 uppercase tracking-[0.3em]">{profile?.disability_type}</p>
                  </div>
-                 <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={100} />
               </div>
               <div className="mt-12">
                  <h2 className="text-xs font-black uppercase bg-slate-900 text-white px-4 py-1 inline-block italic mb-4">{"Executive Summary"}</h2>
-                 <p className="text-sm italic text-slate-700 leading-relaxed">{profile?.bio}</p>
+                 <p className="text-sm italic text-slate-700 leading-relaxed text-justify italic">{profile?.bio}</p>
+              </div>
+
+              <div className="absolute bottom-20 left-20 right-20 pt-10 border-t-2 border-slate-100 flex items-center gap-6">
+                 <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={80} />
+                 <div>
+                    <p className="text-xs font-black uppercase">{"Verified Talent Profile"}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{"Disabilitas.com — Portofolio Profesional Inklusif"}</p>
+                 </div>
               </div>
            </div>
         </div>
