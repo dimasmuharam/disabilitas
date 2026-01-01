@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { supabase } from "@/lib/supabase"
-import { getAuthErrorMessage, profileNeedsUpdate } from "@/lib/auth-utils"
+import { getAuthErrorMessage, profileNeedsUpdate, retryWithBackoff } from "@/lib/auth-utils"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -65,33 +65,24 @@ export default function RegisterPage() {
 
       // Pastikan profile tersimpan dengan role yang benar
       if (data.user) {
-        // Retry logic untuk menunggu database trigger (jika ada) dengan exponential backoff
-        let existingProfile = null
-        let selectError = null
-        let attempts = 0
-        const maxAttempts = 3
+        const userId = data.user.id
         
-        while (attempts < maxAttempts && !existingProfile && !selectError) {
-          const delay = attempts > 0 ? Math.min(200 * Math.pow(2, attempts - 1), 1000) : 0
-          if (delay > 0) {
-            await new Promise(resolve => setTimeout(resolve, delay))
-          }
-          
-          const result = await supabase
+        // Retry logic untuk menunggu database trigger (jika ada) dengan exponential backoff
+        const result = await retryWithBackoff(async () => {
+          const res = await supabase
             .from('profiles')
             .select('id, role, full_name, email')
-            .eq('id', data.user.id)
+            .eq('id', userId)
             .maybeSingle()
           
-          existingProfile = result.data
-          selectError = result.error
-          attempts++
-        }
+          if (res.error) {
+            throw new Error(`Gagal memeriksa profil: ${res.error.message}`)
+          }
+          
+          return res.data
+        })
 
-        if (selectError) {
-          console.error('[REGISTRASI] Error checking profile:', selectError)
-          throw new Error(`Gagal memeriksa profil: ${selectError.message}`)
-        }
+        const existingProfile = result
 
         if (existingProfile) {
           console.log('[REGISTRASI] Profile sudah ada dengan role:', existingProfile.role)

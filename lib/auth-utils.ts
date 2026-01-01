@@ -3,11 +3,31 @@
  */
 
 /**
+ * Profile data structure
+ */
+export interface Profile {
+  id: string
+  email?: string
+  full_name?: string
+  role?: string
+  [key: string]: any
+}
+
+/**
+ * Error structure from Supabase
+ */
+export interface AuthError {
+  message?: string
+  code?: string
+  [key: string]: any
+}
+
+/**
  * Map Supabase authentication errors to user-friendly messages
  * @param error - The error object from Supabase
  * @returns User-friendly error message
  */
-export function getAuthErrorMessage(error: any): string {
+export function getAuthErrorMessage(error: AuthError | Error | any): string {
   const errorMessage = error?.message || ''
   
   // Define error patterns and their corresponding messages
@@ -68,7 +88,7 @@ export function getAuthErrorMessage(error: any): string {
  * @returns true if profile needs update
  */
 export function profileNeedsUpdate(
-  profile: any,
+  profile: Partial<Profile>,
   updates: { role?: string, fullName?: string, email?: string }
 ): boolean {
   const roleChanged = updates.role !== undefined && profile.role !== updates.role
