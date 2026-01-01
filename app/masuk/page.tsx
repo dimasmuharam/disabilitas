@@ -28,36 +28,76 @@ export default function LoginPage() {
     setMsg("")
     setIsError(false)
 
+    const normalizedEmail = email.toLowerCase().trim()
+
     try {
+      console.log('[LOGIN] Memulai login untuk:', normalizedEmail)
+      
       // 1. Melakukan SignIn
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(), // Normalisasi email agar case-insensitive
+        email: normalizedEmail,
         password,
         options: { captchaToken: turnstileToken }
       })
 
       if (error) throw error
 
+      console.log('[LOGIN] Login berhasil, user ID:', data?.user?.id)
+
       if (data?.user) {
         // 2. Verifikasi instan apakah data profil sudah ada di tabel profiles
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('*')
           .eq('id', data.user.id)
-          .single()
+          .maybeSingle()
 
         if (!profile) {
-          // Jika login berhasil tapi profil belum ada (kasus sinkronisasi gagal)
-          setMsg("Akun autentikasi aktif, namun profil riset belum tersedia. Menghubungi server...")
-          // Opsional: Di sini bisa ditambahkan fungsi auto-create profile jika diperlukan
+          console.warn('[LOGIN] Profile tidak ditemukan, mencoba membuat profile baru')
+          
+          // Auto-create profile jika belum ada
+          const roleFromMetadata = data.user.user_metadata?.role || 'talent'
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: normalizedEmail,
+              full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || '',
+              role: roleFromMetadata,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+          
+          if (insertError) {
+            console.error('[LOGIN] Error membuat profile:', insertError)
+            setMsg("Login berhasil, namun ada masalah sinkronisasi profil. Silakan refresh halaman dashboard.")
+          } else {
+            console.log('[LOGIN] Profile berhasil dibuat dengan role:', roleFromMetadata)
+          }
+        } else {
+          console.log('[LOGIN] Profile ditemukan dengan role:', profile.role)
+          
+          // Pastikan role ada, jika tidak ada update dari metadata
+          if (!profile.role && data.user.user_metadata?.role) {
+            console.log('[LOGIN] Updating profile dengan role dari metadata')
+            await supabase
+              .from('profiles')
+              .update({ 
+                role: data.user.user_metadata.role,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', data.user.id)
+          }
         }
       }
 
       // 3. Arahkan ke dashboard
+      console.log('[LOGIN] Redirect ke dashboard')
       router.push("/dashboard")
       router.refresh() 
 
     } catch (error: any) {
+      console.error('[LOGIN] Error:', error)
       setIsError(true)
       if (error.message.includes("Invalid login")) {
         setMsg("Email atau password salah.")
