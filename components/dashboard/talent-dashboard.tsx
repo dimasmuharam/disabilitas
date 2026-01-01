@@ -17,8 +17,16 @@ import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-export default function TalentDashboard() {
-  const [user, setUser] = useState<any>(null);
+
+export default function TalentDashboard({ 
+  user, 
+  autoOpenProfile = false 
+}: { 
+  user: any; 
+  autoOpenProfile?: boolean 
+}) {
+  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
