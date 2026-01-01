@@ -30,10 +30,14 @@ export default function RegisterPage() {
     setMsg("")
 
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const normalizedEmail = email.toLowerCase().trim()
 
     try {
+      // Log: Memulai proses registrasi
+      console.log('[REGISTRASI] Memulai registrasi untuk:', normalizedEmail, 'dengan role:', role)
+
       const { data, error } = await supabase.auth.signUp({
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         password,
         options: {
           data: {
@@ -47,6 +51,62 @@ export default function RegisterPage() {
 
       if (error) throw error
 
+      // Log: Auth berhasil
+      console.log('[REGISTRASI] Auth signup berhasil, user ID:', data.user?.id)
+
+      // Pastikan profile tersimpan dengan role yang benar
+      if (data.user) {
+        // Cek apakah profile sudah ada (mungkin dibuat oleh trigger database)
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id, role')
+          .eq('id', data.user.id)
+          .maybeSingle()
+
+        if (existingProfile) {
+          console.log('[REGISTRASI] Profile sudah ada dengan role:', existingProfile.role)
+          
+          // Update role jika belum sesuai
+          if (existingProfile.role !== role) {
+            console.log('[REGISTRASI] Memperbarui role dari', existingProfile.role, 'ke', role)
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                role: role,
+                full_name: fullName,
+                email: normalizedEmail,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', data.user.id)
+            
+            if (updateError) {
+              console.error('[REGISTRASI] Error update profile:', updateError)
+            } else {
+              console.log('[REGISTRASI] Profile berhasil diperbarui')
+            }
+          }
+        } else {
+          // Buat profile baru jika belum ada
+          console.log('[REGISTRASI] Profile belum ada, membuat profile baru')
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: normalizedEmail,
+              full_name: fullName,
+              role: role,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+          
+          if (insertError) {
+            console.error('[REGISTRASI] Error insert profile:', insertError)
+          } else {
+            console.log('[REGISTRASI] Profile berhasil dibuat dengan role:', role)
+          }
+        }
+      }
+
       if (data.user && !data.session) {
         setType("success")
         setMsg("Pendaftaran berhasil! Silakan cek email Anda untuk konfirmasi aktivasi profil.")
@@ -54,10 +114,12 @@ export default function RegisterPage() {
         setPassword("")
         setFullName("")
       } else if (data.session) {
+        console.log('[REGISTRASI] Session aktif, redirect ke dashboard')
         router.push("/dashboard")
       }
 
     } catch (error: any) {
+      console.error('[REGISTRASI] Error:', error)
       setType("error")
       setMsg(error.message || "Terjadi kesalahan sistem.")
     } finally {
