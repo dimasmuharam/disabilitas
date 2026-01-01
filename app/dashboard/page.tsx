@@ -118,7 +118,7 @@ function DashboardContent() {
               {"✓ Konfirmasi Akun Berhasil"}
             </h2>
             <p className="text-blue-100 font-bold text-[10px] uppercase tracking-[0.2em]">
-              {"Selamat datang! Silakan lengkapi profil Anda agar dapat menggunakan fitur riset."}
+              {"Selamat datang! Silakan lengkapi profil Anda agar dapat menggunakan platform Disabilitas.com secara optimal."}
             </p>
           </div>
         )}
