@@ -44,8 +44,8 @@ export default function RegisterPage() {
             role: role 
           },
           captchaToken: turnstileToken, 
-          // Perintah: Langsung ke dashboard dengan parameter verified
-          emailRedirectTo: `${siteUrl}/dashboard?verified=true`,
+          // Perintah: Langsung ke halaman konfirmasi dengan parameter verified
+          emailRedirectTo: `${siteUrl}/konfirmasi?verified=true`,
         },
       })
 
