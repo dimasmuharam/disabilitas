@@ -49,58 +49,85 @@ export default function RegisterPage() {
         },
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('[REGISTRASI] Error auth signup:', error)
+        throw error
+      }
+
+      if (!data.user) {
+        console.error('[REGISTRASI] Signup berhasil tetapi user tidak dikembalikan')
+        throw new Error('Pendaftaran gagal. Silakan coba lagi.')
+      }
 
       // Log: Auth berhasil
-      console.log('[REGISTRASI] Auth signup berhasil, user ID:', data.user?.id)
+      console.log('[REGISTRASI] Auth signup berhasil, user ID:', data.user.id)
 
       // Pastikan profile tersimpan dengan role yang benar
       if (data.user) {
+        // Tunggu sebentar untuk memberi waktu trigger database (jika ada) untuk membuat profile
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
         // Cek apakah profile sudah ada (mungkin dibuat oleh trigger database)
-        const { data: existingProfile } = await supabase
+        const { data: existingProfile, error: selectError } = await supabase
           .from('profiles')
-          .select('id, role')
+          .select('id, role, full_name, email')
           .eq('id', data.user.id)
           .maybeSingle()
+
+        if (selectError) {
+          console.error('[REGISTRASI] Error checking profile:', selectError)
+          throw new Error(`Gagal memeriksa profil: ${selectError.message}`)
+        }
 
         if (existingProfile) {
           console.log('[REGISTRASI] Profile sudah ada dengan role:', existingProfile.role)
           
-          // Update role jika belum sesuai
-          if (existingProfile.role !== role) {
-            console.log('[REGISTRASI] Memperbarui role dari', existingProfile.role, 'ke', role)
+          // Update role dan data lainnya jika belum sesuai atau kosong
+          const needsUpdate = 
+            existingProfile.role !== role || 
+            !existingProfile.full_name || 
+            existingProfile.full_name !== fullName ||
+            !existingProfile.email
+
+          if (needsUpdate) {
+            console.log('[REGISTRASI] Memperbarui profile dengan data lengkap')
             const { error: updateError } = await supabase
               .from('profiles')
               .update({ 
                 role: role,
                 full_name: fullName,
-                email: normalizedEmail,
-                updated_at: new Date().toISOString()
+                email: normalizedEmail
               })
               .eq('id', data.user.id)
             
             if (updateError) {
               console.error('[REGISTRASI] Error update profile:', updateError)
+              throw new Error(`Gagal memperbarui profil: ${updateError.message}`)
             } else {
               console.log('[REGISTRASI] Profile berhasil diperbarui')
             }
+          } else {
+            console.log('[REGISTRASI] Profile sudah lengkap, tidak perlu update')
           }
         } else {
           // Buat profile baru jika belum ada
           console.log('[REGISTRASI] Profile belum ada, membuat profile baru')
+          
+          // Gunakan upsert untuk menghindari konflik jika profile dibuat bersamaan
           const { error: insertError } = await supabase
             .from('profiles')
-            .insert({
+            .upsert({
               id: data.user.id,
               email: normalizedEmail,
               full_name: fullName,
-              role: role,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              role: role
+            }, {
+              onConflict: 'id'
             })
           
           if (insertError) {
             console.error('[REGISTRASI] Error insert profile:', insertError)
+            throw new Error(`Gagal membuat profil: ${insertError.message}`)
           } else {
             console.log('[REGISTRASI] Profile berhasil dibuat dengan role:', role)
           }
@@ -121,7 +148,23 @@ export default function RegisterPage() {
     } catch (error: any) {
       console.error('[REGISTRASI] Error:', error)
       setType("error")
-      setMsg(error.message || "Terjadi kesalahan sistem.")
+      
+      // Provide more specific error messages
+      if (error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
+        setMsg("Email sudah terdaftar. Silakan gunakan email lain atau masuk dengan akun Anda.")
+      } else if (error.message?.includes('Email not confirmed')) {
+        setMsg("Email belum diverifikasi. Silakan cek kotak masuk Anda.")
+      } else if (error.message?.includes('Invalid email')) {
+        setMsg("Format email tidak valid. Silakan periksa kembali.")
+      } else if (error.message?.includes('Password')) {
+        setMsg("Kata sandi harus minimal 6 karakter.")
+      } else if (error.message?.includes('profil')) {
+        setMsg(`Terjadi kesalahan saat menyimpan profil: ${error.message}`)
+      } else if (error.message?.includes('captcha')) {
+        setMsg("Verifikasi keamanan gagal. Silakan coba lagi.")
+      } else {
+        setMsg(error.message || "Terjadi kesalahan sistem. Silakan coba lagi.")
+      }
     } finally {
       setLoading(false)
     }
