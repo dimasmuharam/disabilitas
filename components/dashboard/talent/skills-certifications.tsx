@@ -7,7 +7,7 @@ import {
   Award, Cpu, CheckCircle2, AlertCircle, Save, 
   Plus, X, Star, Zap, ExternalLink, BadgeCheck, ShieldCheck
 } from "lucide-react";
-import { SKILL_CATEGORIES } from "@/lib/data-static";
+import { SKILLS_LIST } from "@/lib/data-static";
 
 interface SkillsCertificationsProps {
   user: any;
