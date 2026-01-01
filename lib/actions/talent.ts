@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabase";
 
 /**
- * Update profil utama talenta (Tabel: profiles)
- * Digunakan oleh Modul 1, 2, 3, dan 5
+ * UPDATE PROFIL UTAMA (Tabel: profiles)
+ * Digunakan oleh Modul 1, 2, 3, 4, dan 5
  */
 export async function updateTalentProfile(userId: string, updates: any) {
   try {
@@ -25,44 +25,32 @@ export async function updateTalentProfile(userId: string, updates: any) {
 }
 
 /**
- * CRUD Riwayat Kerja (Tabel: work_experiences)
- * Digunakan oleh Modul 2
+ * MANAJEMEN RIWAYAT KERJA (Tabel: work_experiences)
+ * Digunakan oleh Modul 3
  */
 export async function upsertWorkExperience(experience: any) {
   try {
+    // Memastikan is_verified default ke false jika input manual
     const { data, error } = await supabase
       .from("work_experiences")
-      .upsert(experience)
+      .upsert({
+        ...experience,
+        is_verified: experience.is_verified || false,
+        updated_at: new Date().toISOString(),
+      })
       .select();
 
     if (error) throw error;
     return { success: true, data };
   } catch (error: any) {
+    console.error("Work Experience Error:", error.message);
     return { success: false, error: error.message };
   }
 }
 
 /**
- * CRUD Sertifikasi & Agregasi Skill (Tabel: certifications)
- * Digunakan oleh Modul 4
- */
-export async function upsertCertification(certification: any) {
-  try {
-    const { data, error } = await supabase
-      .from("certifications")
-      .upsert(certification)
-      .select();
-
-    if (error) throw error;
-    return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Pendaftaran Pelatihan (Tabel: trainees)
- * Digunakan oleh Dashboard Utama (Matching Center)
+ * PENDAFTARAN PELATIHAN (Tabel: trainees)
+ * Digunakan oleh Talent Dashboard (Training Match)
  */
 export async function applyForTraining(trainingId: string, profileId: string) {
   try {
@@ -74,6 +62,66 @@ export async function applyForTraining(trainingId: string, profileId: string) {
         status: "applied"
       })
       .select();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error: any) {
+    console.error("Training Application Error:", error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * FUNGSI SMART: SINKRONISASI SERTIFIKAT OTOMATIS
+ * Mengambil data dari tabel 'trainees' yang statusnya 'completed'
+ * Digunakan oleh Modul 5
+ */
+export async function syncOfficialCertifications(userId: string) {
+  try {
+    const { data: traineeData, error } = await supabase
+      .from("trainees")
+      .select(`
+        status,
+        trainings (
+          title, 
+          updated_at, 
+          profiles (full_name)
+        )
+      `)
+      .eq("profile_id", userId)
+      .eq("status", "completed");
+
+    if (error) throw error;
+
+    // Mapping data dari tabel pelatihan ke format objek sertifikasi
+    const officialCerts = traineeData?.map(item => ({
+      name: item.trainings.title,
+      issuer: item.trainings.profiles.full_name,
+      year: new Date(item.trainings.updated_at).getFullYear().toString(),
+      is_verified: true
+    })) || [];
+
+    return { success: true, data: officialCerts };
+  } catch (error: any) {
+    console.error("Sync Certs Error:", error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * FUNGSI SMART: CEK STATUS PENEMPATAN KERJA OTOMATIS
+ * (Logika ini akan aktif saat Dashboard Perusahaan memindahkan status ke 'Hired')
+ */
+export async function checkVerifiedPlacement(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("applications")
+      .select(`
+        status,
+        jobs (title, company_id, profiles (full_name))
+      `)
+      .eq("profile_id", userId)
+      .eq("status", "hired");
 
     if (error) throw error;
     return { success: true, data };
