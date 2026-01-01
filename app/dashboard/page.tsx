@@ -6,9 +6,12 @@ import { useRouter } from "next/navigation"
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
 import AdminDashboard from "@/components/dashboard/admin-dashboard"
+import CampusDashboard from "@/components/dashboard/campus-dashboard"
+import GovDashboard from "@/components/dashboard/gov-dashboard"
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [retryCount, setRetryCount] = useState(0)
@@ -17,51 +20,116 @@ export default function DashboardPage() {
   useEffect(() => {
     async function checkUser() {
       try {
+        console.log('[DASHBOARD] Memulai verifikasi pengguna...')
+        
         // 1. Ambil data sesi auth
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
         
         if (authError || !authUser) {
+          console.log('[DASHBOARD] Tidak ada sesi aktif, redirect ke login')
           router.push("/masuk")
           return
         }
 
         setUser(authUser)
+        console.log('[DASHBOARD] User terautentikasi:', authUser.email, 'ID:', authUser.id)
 
-        // 2. Normalisasi email (sangat penting untuk email Mas yang banyak titik)
+        // 2. Normalisasi email
         const targetEmail = authUser.email?.toLowerCase().trim()
 
-        // 3. Ambil profil dengan filter yang lebih stabil daripada .or()
-        // Kita cari berdasarkan email dulu karena Mas sudah pastikan datanya ada di SQL lewat email
-        let { data: profile, error: profileError } = await supabase
+        // 3. Ambil profil lengkap dengan semua field yang dibutuhkan untuk validasi role-specific
+        let { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('*')
           .eq('email', targetEmail)
           .maybeSingle()
 
         // 4. Jika tidak ketemu lewat email, coba cari lewat ID (UUID)
-        if (!profile && !profileError) {
+        if (!profileData && !profileError) {
+          console.log('[DASHBOARD] Profile tidak ditemukan via email, mencoba via ID...')
           const { data: profileByID } = await supabase
             .from('profiles')
-            .select('role')
+            .select('*')
             .eq('id', authUser.id)
             .maybeSingle()
-          profile = profileByID
+          profileData = profileByID
         }
 
-        // 5. Logika penentuan Role
-        if (profile && profile.role) {
-          setRole(profile.role.toLowerCase().trim())
+        if (profileError) {
+          console.error('[DASHBOARD] Error mengambil profile:', profileError)
+        }
+
+        // 5. Logika penentuan Role dengan fallback
+        if (profileData && profileData.role) {
+          const normalizedRole = profileData.role.toLowerCase().trim()
+          console.log('[DASHBOARD] Profile ditemukan dengan role:', normalizedRole)
+          
+          // Validasi role-specific properties
+          if (normalizedRole === 'campus_partner') {
+            if (!profileData.partner_institution) {
+              console.warn('[DASHBOARD] Campus partner tanpa partner_institution, menggunakan fallback')
+              // Set default atau ambil dari metadata auth
+              profileData.partner_institution = authUser.user_metadata?.partner_institution || 'Universitas Indonesia (UI)'
+            }
+          } else if (normalizedRole === 'government') {
+            if (!profileData.agency_name) {
+              console.warn('[DASHBOARD] Government user tanpa agency_name, menggunakan fallback')
+              // Set default atau ambil dari metadata auth
+              profileData.agency_name = authUser.user_metadata?.agency_name || 'Kementerian'
+            }
+          }
+          
+          setProfile(profileData)
+          setRole(normalizedRole)
           setLoading(false)
         } else {
-          // Retry mechanism: memberi waktu jika trigger database agak lambat
-          if (retryCount < 2) {
-            setTimeout(() => setRetryCount(prev => prev + 1), 2000)
+          console.warn('[DASHBOARD] Profile tidak memiliki role, mencoba fallback...')
+          
+          // Fallback: coba ambil dari auth metadata
+          const metadataRole = authUser.user_metadata?.role
+          if (metadataRole) {
+            console.log('[DASHBOARD] Role ditemukan di metadata:', metadataRole)
+            
+            // Update profile dengan role dari metadata
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .upsert({
+                id: authUser.id,
+                email: targetEmail,
+                role: metadataRole,
+                full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+                updated_at: new Date().toISOString()
+              })
+            
+            if (!updateError) {
+              console.log('[DASHBOARD] Profile berhasil diperbarui dengan role dari metadata')
+              setRole(metadataRole.toLowerCase().trim())
+              setProfile({ ...profileData, role: metadataRole })
+              setLoading(false)
+            } else {
+              console.error('[DASHBOARD] Error update profile:', updateError)
+              // Retry mechanism: memberi waktu jika trigger database agak lambat
+              if (retryCount < 2) {
+                console.log('[DASHBOARD] Retry attempt', retryCount + 1)
+                setTimeout(() => setRetryCount(prev => prev + 1), 2000)
+              } else {
+                console.error('[DASHBOARD] Maksimal retry tercapai, role tidak ditemukan')
+                setLoading(false)
+              }
+            }
           } else {
-            setLoading(false)
+            // Retry mechanism: memberi waktu jika trigger database agak lambat
+            if (retryCount < 2) {
+              console.log('[DASHBOARD] Retry attempt', retryCount + 1)
+              setTimeout(() => setRetryCount(prev => prev + 1), 2000)
+            } else {
+              console.error('[DASHBOARD] Maksimal retry tercapai, role tidak ditemukan')
+              setLoading(false)
+            }
           }
         }
       } catch (error) {
-        console.error("Dashboard error:", error)
+        console.error("[DASHBOARD] Error:", error)
         setLoading(false)
       }
     }
@@ -85,12 +153,16 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-50 py-10 px-4">
       <div className="container max-w-7xl mx-auto">
-        {role === 'admin' ? (
-          <AdminDashboard user={user} />
+        {role === 'admin' || role === 'super_admin' ? (
+          <AdminDashboard user={{ ...user, ...profile }} />
         ) : role === 'talent' ? (
-          <TalentDashboard user={user} />
+          <TalentDashboard user={{ ...user, ...profile }} />
         ) : role === 'company' ? (
-          <CompanyDashboard user={user} />
+          <CompanyDashboard user={{ ...user, ...profile }} />
+        ) : role === 'campus_partner' ? (
+          <CampusDashboard user={{ ...user, ...profile, partner_institution: profile?.partner_institution }} />
+        ) : role === 'government' ? (
+          <GovDashboard user={{ ...user, ...profile, agency_name: profile?.agency_name }} />
         ) : (
           /* State jika data profil benar-benar tidak ditemukan setelah retry */
           <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl">
