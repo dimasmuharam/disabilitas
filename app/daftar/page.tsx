@@ -33,8 +33,7 @@ export default function RegisterPage() {
     const normalizedEmail = email.toLowerCase().trim()
 
     try {
-      // Log: Memulai proses registrasi
-      console.log('[REGISTRASI] Memulai registrasi untuk:', normalizedEmail, 'dengan role:', role)
+      console.log('[REGISTRASI] Memulai registrasi untuk:', normalizedEmail)
 
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
@@ -45,18 +44,17 @@ export default function RegisterPage() {
             role: role 
           },
           captchaToken: turnstileToken, 
+          // Perintah: Langsung ke dashboard dengan parameter verified
           emailRedirectTo: `${siteUrl}/dashboard?verified=true`,
         },
       })
 
       if (error) throw error
 
-      // Log: Auth berhasil
       console.log('[REGISTRASI] Auth signup berhasil, user ID:', data.user?.id)
 
-      // Pastikan profile tersimpan dengan role yang benar
+      // Bridge Manual: Memastikan data sinkron ke tabel profiles
       if (data.user) {
-        // Cek apakah profile sudah ada (mungkin dibuat oleh trigger database)
         const { data: existingProfile } = await supabase
           .from('profiles')
           .select('id, role')
@@ -64,12 +62,8 @@ export default function RegisterPage() {
           .maybeSingle()
 
         if (existingProfile) {
-          console.log('[REGISTRASI] Profile sudah ada dengan role:', existingProfile.role)
-          
-          // Update role jika belum sesuai
           if (existingProfile.role !== role) {
-            console.log('[REGISTRASI] Memperbarui role dari', existingProfile.role, 'ke', role)
-            const { error: updateError } = await supabase
+            await supabase
               .from('profiles')
               .update({ 
                 role: role,
@@ -78,17 +72,10 @@ export default function RegisterPage() {
                 updated_at: new Date().toISOString()
               })
               .eq('id', data.user.id)
-            
-            if (updateError) {
-              console.error('[REGISTRASI] Error update profile:', updateError)
-            } else {
-              console.log('[REGISTRASI] Profile berhasil diperbarui')
-            }
           }
         } else {
-          // Buat profile baru jika belum ada
-          console.log('[REGISTRASI] Profile belum ada, membuat profile baru')
-          const { error: insertError } = await supabase
+          // Buat profile jika trigger database delay
+          await supabase
             .from('profiles')
             .insert({
               id: data.user.id,
@@ -96,14 +83,9 @@ export default function RegisterPage() {
               full_name: fullName,
               role: role,
               created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
+              has_informed_consent: true // Informed Consent otomatis disetujui saat daftar
             })
-          
-          if (insertError) {
-            console.error('[REGISTRASI] Error insert profile:', insertError)
-          } else {
-            console.log('[REGISTRASI] Profile berhasil dibuat dengan role:', role)
-          }
         }
       }
 
@@ -114,7 +96,6 @@ export default function RegisterPage() {
         setPassword("")
         setFullName("")
       } else if (data.session) {
-        console.log('[REGISTRASI] Session aktif, redirect ke dashboard')
         router.push("/dashboard")
       }
 
@@ -144,7 +125,6 @@ export default function RegisterPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
         <div className="bg-white dark:bg-slate-900 py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
           
-          {/* ARIA Live Region untuk notifikasi error/sukses agar langsung terbaca Screen Reader */}
           <div aria-live="polite" className="mb-4">
             {msg && (
                 <div role="alert" className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border ${type === 'success' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
