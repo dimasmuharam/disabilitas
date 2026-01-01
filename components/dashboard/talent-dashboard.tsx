@@ -141,7 +141,7 @@ export default function TalentDashboard({ user, profile }: TalentDashboardProps)
                 { label: "Akademik", path: "academic", icon: GraduationCap, done: !!profile?.education_level },
                 { label: "Skill", path: "skills", icon: BookOpen, done: !!profile?.skills?.length }
               ].map((m, i) => (
-                <a key={i} href={`/dashboard/talent/profile/${m.path}`} className="bg-white border-2 border-slate-100 p-6 rounded-[2rem] hover:border-blue-600 transition-all group text-center">
+                <a key={i} href={`/dashboard/talent/${m.path}`} className="bg-white border-2 border-slate-100 p-6 rounded-[2rem] hover:border-blue-600 transition-all group text-center">
                   <m.icon className="mx-auto mb-3 text-slate-400 group-hover:text-blue-600 transition-colors" size={24} />
                   <p className="text-[10px] font-black uppercase text-slate-900">{m.label}</p>
                   {m.done ? <CheckCircle2 size={12} className="text-emerald-500 mx-auto mt-2" /> : <div className="h-1 w-4 bg-slate-100 mx-auto mt-2 rounded-full" />}
