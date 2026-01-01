@@ -1,28 +1,31 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { supabase } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
 import AdminDashboard from "@/components/dashboard/admin-dashboard"
 import CampusDashboard from "@/components/dashboard/campus-dashboard"
 import GovDashboard from "@/components/dashboard/gov-dashboard"
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [retryCount, setRetryCount] = useState(0)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Ambil parameter verified dari URL (hasil redirect email konfirmasi)
+  const isJustVerified = searchParams.get('verified') === 'true'
 
   useEffect(() => {
     async function checkUser() {
       try {
         console.log('[DASHBOARD] Memulai verifikasi pengguna...')
         
-        // 1. Ambil data sesi auth
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
         
         if (authError || !authUser) {
@@ -32,19 +35,15 @@ export default function DashboardPage() {
         }
 
         setUser(authUser)
-        console.log('[DASHBOARD] User terautentikasi:', authUser.email, 'ID:', authUser.id)
-
-        // 2. Normalisasi email
         const targetEmail = authUser.email?.toLowerCase().trim()
 
-        // 3. Ambil profil lengkap dengan semua field yang dibutuhkan untuk validasi role-specific
+        // Ambil profil lengkap
         let { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('email', targetEmail)
           .maybeSingle()
 
-        // 4. Jika tidak ketemu lewat email, coba cari lewat ID (UUID)
         if (!profileData && !profileError) {
           console.log('[DASHBOARD] Profile tidak ditemukan via email, mencoba via ID...')
           const { data: profileByID } = await supabase
@@ -55,77 +54,36 @@ export default function DashboardPage() {
           profileData = profileByID
         }
 
-        if (profileError) {
-          console.error('[DASHBOARD] Error mengambil profile:', profileError)
-        }
-
-        // 5. Logika penentuan Role dengan fallback
         if (profileData && profileData.role) {
           const normalizedRole = profileData.role.toLowerCase().trim()
-          console.log('[DASHBOARD] Profile ditemukan dengan role:', normalizedRole)
           
-          // Validasi role-specific properties
-          if (normalizedRole === 'campus_partner') {
-            if (!profileData.partner_institution) {
-              console.warn('[DASHBOARD] Campus partner tanpa partner_institution, menggunakan fallback')
-              // Set default atau ambil dari metadata auth
-              profileData.partner_institution = authUser.user_metadata?.partner_institution || 'Universitas Indonesia (UI)'
-            }
-          } else if (normalizedRole === 'government') {
-            if (!profileData.agency_name) {
-              console.warn('[DASHBOARD] Government user tanpa agency_name, menggunakan fallback')
-              // Set default atau ambil dari metadata auth
-              profileData.agency_name = authUser.user_metadata?.agency_name || 'Kementerian'
-            }
+          // Fallback data untuk role spesifik
+          if (normalizedRole === 'campus_partner' && !profileData.partner_institution) {
+            profileData.partner_institution = authUser.user_metadata?.partner_institution || 'Universitas Indonesia (UI)'
+          } else if (normalizedRole === 'government' && !profileData.agency_name) {
+            profileData.agency_name = authUser.user_metadata?.agency_name || 'Kementerian'
           }
           
           setProfile(profileData)
           setRole(normalizedRole)
           setLoading(false)
         } else {
-          console.warn('[DASHBOARD] Profile tidak memiliki role, mencoba fallback...')
-          
-          // Fallback: coba ambil dari auth metadata
+          // Fallback: ambil dari metadata jika trigger DB belum selesai
           const metadataRole = authUser.user_metadata?.role
-          if (metadataRole) {
-            console.log('[DASHBOARD] Role ditemukan di metadata:', metadataRole)
-            
-            // Update profile dengan role dari metadata
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .upsert({
+          if (metadataRole && retryCount < 2) {
+             // Lakukan upsert jika data di tabel profiles benar-benar belum ada
+             await supabase.from('profiles').upsert({
                 id: authUser.id,
                 email: targetEmail,
                 role: metadataRole,
                 full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
                 updated_at: new Date().toISOString()
-              })
-            
-            if (!updateError) {
-              console.log('[DASHBOARD] Profile berhasil diperbarui dengan role dari metadata')
-              setRole(metadataRole.toLowerCase().trim())
-              setProfile({ ...profileData, role: metadataRole })
-              setLoading(false)
-            } else {
-              console.error('[DASHBOARD] Error update profile:', updateError)
-              // Retry mechanism: memberi waktu jika trigger database agak lambat
-              if (retryCount < 2) {
-                console.log('[DASHBOARD] Retry attempt', retryCount + 1)
-                setTimeout(() => setRetryCount(prev => prev + 1), 2000)
-              } else {
-                console.error('[DASHBOARD] Maksimal retry tercapai, role tidak ditemukan')
-                setLoading(false)
-              }
-            }
+             })
+             setTimeout(() => setRetryCount(prev => prev + 1), 2000)
+          } else if (retryCount < 2) {
+            setTimeout(() => setRetryCount(prev => prev + 1), 2000)
           } else {
-            // Retry mechanism: memberi waktu jika trigger database agak lambat
-            if (retryCount < 2) {
-              console.log('[DASHBOARD] Retry attempt', retryCount + 1)
-              setTimeout(() => setRetryCount(prev => prev + 1), 2000)
-            } else {
-              console.error('[DASHBOARD] Maksimal retry tercapai, role tidak ditemukan')
-              setLoading(false)
-            }
+            setLoading(false)
           }
         }
       } catch (error) {
@@ -137,7 +95,6 @@ export default function DashboardPage() {
     checkUser()
   }, [router, retryCount])
 
-  // Tampilan Loading (Ramah Screen Reader dengan aria-busy)
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-slate-50" aria-busy="true">
@@ -153,10 +110,23 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-50 py-10 px-4">
       <div className="container max-w-7xl mx-auto">
+        
+        {/* Banner Selamat Datang khusus untuk yang baru verifikasi email */}
+        {isJustVerified && (
+          <div role="alert" className="mb-8 p-6 bg-blue-600 rounded-[2rem] shadow-xl animate-in fade-in slide-in-from-top-4 duration-700">
+            <h2 className="text-white font-black uppercase italic tracking-tighter text-lg mb-1">
+              {"✓ Konfirmasi Akun Berhasil"}
+            </h2>
+            <p className="text-blue-100 font-bold text-[10px] uppercase tracking-[0.2em]">
+              {"Selamat datang! Silakan lengkapi profil Anda agar dapat menggunakan fitur riset."}
+            </p>
+          </div>
+        )}
+
         {role === 'admin' || role === 'super_admin' ? (
           <AdminDashboard user={{ ...user, ...profile }} />
         ) : role === 'talent' ? (
-          <TalentDashboard user={{ ...user, ...profile }} />
+          <TalentDashboard user={{ ...user, ...profile }} autoOpenProfile={isJustVerified} />
         ) : role === 'company' ? (
           <CompanyDashboard user={{ ...user, ...profile }} />
         ) : role === 'campus_partner' ? (
@@ -164,7 +134,6 @@ export default function DashboardPage() {
         ) : role === 'government' ? (
           <GovDashboard user={{ ...user, ...profile, agency_name: profile?.agency_name }} />
         ) : (
-          /* State jika data profil benar-benar tidak ditemukan setelah retry */
           <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl">
             <h1 className="text-red-600 font-black uppercase italic tracking-tight mb-4 text-2xl">
                {"Akses Ditolak: Profil Belum Siap"}
@@ -175,20 +144,10 @@ export default function DashboardPage() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
-                onClick={() => window.location.reload()} 
-                className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg"
-              >
+              <button onClick={() => window.location.reload()} className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg">
                 {"Coba Segarkan Halaman"}
               </button>
-              
-              <button 
-                onClick={async () => {
-                  await supabase.auth.signOut()
-                  router.push("/masuk")
-                }} 
-                className="px-8 py-4 bg-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-300 transition-all"
-              >
+              <button onClick={async () => { await supabase.auth.signOut(); router.push("/masuk") }} className="px-8 py-4 bg-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-300 transition-all">
                 {"Keluar & Login Ulang"}
               </button>
             </div>
@@ -196,5 +155,18 @@ export default function DashboardPage() {
         )}
       </div>
     </main>
+  )
+}
+
+// Export default dengan Suspense agar useSearchParams tidak error saat build
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">{"Memuat Dashboard..."}</p>
+      </main>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }
