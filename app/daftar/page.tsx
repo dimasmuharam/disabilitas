@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { supabase } from "@/lib/supabase"
+import { getAuthErrorMessage, profileNeedsUpdate } from "@/lib/auth-utils"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -64,15 +65,28 @@ export default function RegisterPage() {
 
       // Pastikan profile tersimpan dengan role yang benar
       if (data.user) {
-        // Tunggu sebentar untuk memberi waktu trigger database (jika ada) untuk membuat profile
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // Retry logic untuk menunggu database trigger (jika ada) dengan exponential backoff
+        let existingProfile = null
+        let selectError = null
+        let attempts = 0
+        const maxAttempts = 3
         
-        // Cek apakah profile sudah ada (mungkin dibuat oleh trigger database)
-        const { data: existingProfile, error: selectError } = await supabase
-          .from('profiles')
-          .select('id, role, full_name, email')
-          .eq('id', data.user.id)
-          .maybeSingle()
+        while (attempts < maxAttempts && !existingProfile && !selectError) {
+          const delay = attempts > 0 ? Math.min(200 * Math.pow(2, attempts - 1), 1000) : 0
+          if (delay > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+          
+          const result = await supabase
+            .from('profiles')
+            .select('id, role, full_name, email')
+            .eq('id', data.user.id)
+            .maybeSingle()
+          
+          existingProfile = result.data
+          selectError = result.error
+          attempts++
+        }
 
         if (selectError) {
           console.error('[REGISTRASI] Error checking profile:', selectError)
@@ -83,11 +97,7 @@ export default function RegisterPage() {
           console.log('[REGISTRASI] Profile sudah ada dengan role:', existingProfile.role)
           
           // Update role dan data lainnya jika belum sesuai atau kosong
-          const needsUpdate = 
-            existingProfile.role !== role || 
-            !existingProfile.full_name || 
-            existingProfile.full_name !== fullName ||
-            !existingProfile.email
+          const needsUpdate = profileNeedsUpdate(existingProfile, { role, fullName, email: normalizedEmail })
 
           if (needsUpdate) {
             console.log('[REGISTRASI] Memperbarui profile dengan data lengkap')
@@ -148,23 +158,7 @@ export default function RegisterPage() {
     } catch (error: any) {
       console.error('[REGISTRASI] Error:', error)
       setType("error")
-      
-      // Provide more specific error messages
-      if (error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
-        setMsg("Email sudah terdaftar. Silakan gunakan email lain atau masuk dengan akun Anda.")
-      } else if (error.message?.includes('Email not confirmed')) {
-        setMsg("Email belum diverifikasi. Silakan cek kotak masuk Anda.")
-      } else if (error.message?.includes('Invalid email')) {
-        setMsg("Format email tidak valid. Silakan periksa kembali.")
-      } else if (error.message?.includes('Password')) {
-        setMsg("Kata sandi harus minimal 6 karakter.")
-      } else if (error.message?.includes('profil')) {
-        setMsg(`Terjadi kesalahan saat menyimpan profil: ${error.message}`)
-      } else if (error.message?.includes('captcha')) {
-        setMsg("Verifikasi keamanan gagal. Silakan coba lagi.")
-      } else {
-        setMsg(error.message || "Terjadi kesalahan sistem. Silakan coba lagi.")
-      }
+      setMsg(getAuthErrorMessage(error))
     } finally {
       setLoading(false)
     }
