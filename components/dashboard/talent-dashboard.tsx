@@ -184,7 +184,7 @@ export default function TalentDashboard({ user, autoOpenProfile = false }: { use
 {autoOpenProfile && (
   <div className="p-4 bg-blue-50 border-2 border-blue-100 rounded-2xl mb-4 animate-bounce text-center">
     <p className="text-[10px] font-black uppercase tracking-widest text-blue-700">
-      {"🎉 Konfirmasi Berhasil! Silakan Lengkapi Profil Riset Anda."}
+      {"🎉 Konfirmasi Berhasil! Silakan Lengkapi Profil Talenta Anda."}
     </p>
   </div>
 )}
