@@ -52,16 +52,19 @@ export default function TalentDashboard({ user, autoOpenProfile = false }: { use
   const [showCertModal, setShowCertModal] = useState(false)
   const [showRatingId, setShowRatingId] = useState<string | null>(null)
   const [targetCompanyId, setTargetCompanyId] = useState<string | null>(null)
-useEffect(() => {
-  if (autoOpenProfile) {
-    setIsEditing(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-}, [autoOpenProfile]);
+
   // -- NEW ENTRY STATES --
   const [newWork, setNewWork] = useState({ company_name: "", position: "", start_date: "", end_date: "", is_current_work: false, description: "" })
   const [newCert, setNewCert] = useState({ name: "", organizer_name: "", year: "2025" })
   const [ratingScores, setRatingScores] = useState({ accessibility: 5, culture: 5, management: 5, onboarding: 5, comment: "" })
+
+  useEffect(() => {
+    if (autoOpenProfile) {
+      setIsEditing(true);
+      window.scrollTo({ top: 150, behavior: 'smooth' });
+    }
+  }, [autoOpenProfile]);
+
 
   useEffect(() => { 
     if (!user?.id) {
@@ -178,6 +181,13 @@ useEffect(() => {
           {isEditing ? (
             <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-xl space-y-8 animate-in slide-in-from-bottom-4">
                 <h3 className="font-black text-xs uppercase text-blue-600 italic border-b pb-4">{"Data Personal & Akademik"}</h3>
+{autoOpenProfile && (
+  <div className="p-4 bg-blue-50 border-2 border-blue-100 rounded-2xl mb-4 animate-bounce text-center">
+    <p className="text-[10px] font-black uppercase tracking-widest text-blue-700">
+      {"🎉 Konfirmasi Berhasil! Silakan Lengkapi Profil Riset Anda."}
+    </p>
+  </div>
+)}
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400">{"Nama Lengkap"}</label><input value={fullName} onChange={e => setFullName(e.target.value)} className="input-std font-bold" /></div>
                     <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400">{"Status Karir"}</label>
@@ -193,8 +203,29 @@ useEffect(() => {
                     <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400">{"Almamater"}</label>
                         <input list="uni-list" value={institutionName} onChange={e => setInstitutionName(e.target.value)} className="input-std uppercase text-[10px]" />
                         <datalist id="uni-list">{UNIVERSITIES.map(u => <option key={u} value={u} />)}</datalist>
-                    </div>
+<div className="space-y-2">
+  <label className="text-[10px] font-black uppercase text-slate-400">{"Model Pendidikan"}</label>
+  <select 
+    value={educationModel} 
+    onChange={e => setEducationModel(e.target.value)} 
+    className="input-std text-[10px] font-bold"
+  >
+    <option value="">{"Pilih Model"}</option>
+    {EDUCATION_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
+  </select>
+</div>
+</div>
                 </div>
+<div className="space-y-2">
+  <label className="text-[10px] font-black uppercase text-slate-400">{"LinkedIn Profile URL"}</label>
+  <input 
+    type="url"
+    value={linkedinUrl} 
+    onChange={e => setLinkedinUrl(e.target.value)} 
+    placeholder="https://linkedin.com/in/username"
+    className="input-std font-bold text-xs text-blue-600" 
+  />
+</div>
                 <div className="space-y-2"><label className="text-[10px] font-black uppercase text-slate-400">{"Executive Bio"}</label><textarea value={bio} onChange={e => setBio(e.target.value)} className="input-std min-h-[120px] text-xs" placeholder="Tulis ringkasan profesional untuk CV anda..." /></div>
                 <button onClick={handleProfileSave} disabled={saving} className="w-full h-16 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest flex items-center justify-center gap-3">
                     {saving ? "Menyimpan..." : <><Save size={20}/> {"Update Seluruh Data"}</>}
