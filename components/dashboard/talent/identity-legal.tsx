@@ -82,7 +82,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
           {"Identitas & Legal"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 italic">
-          {"Verifikasi data untuk kepentingan bisnis & riset BRIN."}
+          {"Verifikasi data untuk mengunakan platform Disabilitas.com secara optimal."}
         </p>
       </header>
 
@@ -206,7 +206,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
           <label className="flex items-center gap-4 p-5 bg-blue-50 border-2 border-blue-100 rounded-3xl cursor-pointer hover:bg-blue-100 transition-all">
             <input type="checkbox" required className="w-6 h-6 accent-blue-600" checked={formData.has_informed_consent} onChange={(e) => setFormData({...formData, has_informed_consent: e.target.checked})} aria-required="true" />
             <span className="text-[10px] font-black uppercase text-blue-900 leading-tight">
-              {"Saya menyetujui Informed Consent untuk bisnis & riset BRIN."}
+              {"Saya menyetujui Informed Consent untuk pengembangan platform dan riset."}
             </span>
           </label>
         </section>
