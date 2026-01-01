@@ -70,15 +70,12 @@ export async function applyForTraining(trainingId: string, profileId: string) {
     return { success: false, error: error.message };
   }
 }
-
 /**
  * FUNGSI SMART: SINKRONISASI SERTIFIKAT OTOMATIS
- * Mengambil data dari tabel 'trainees' yang statusnya 'completed'
- * Digunakan oleh Modul 5
  */
 export async function syncOfficialCertifications(userId: string) {
   try {
-    const { data: traineeData, error } = await supabase
+    const { data: traineeData, error } = await (supabase
       .from("trainees")
       .select(`
         status,
@@ -89,15 +86,16 @@ export async function syncOfficialCertifications(userId: string) {
         )
       `)
       .eq("profile_id", userId)
-      .eq("status", "completed");
+      .eq("status", "completed") as any);
 
     if (error) throw error;
 
-    // Mapping data dari tabel pelatihan ke format objek sertifikasi
-    const officialCerts = traineeData?.map(item => ({
-      name: item.trainings.title,
-      issuer: item.trainings.profiles.full_name,
-      year: new Date(item.trainings.updated_at).getFullYear().toString(),
+    const officialCerts = traineeData?.map((item: any) => ({
+      name: item.trainings?.title || "Sertifikat Pelatihan",
+      issuer: item.trainings?.profiles?.full_name || "Official Partner",
+      year: item.trainings?.updated_at 
+        ? new Date(item.trainings.updated_at).getFullYear().toString() 
+        : new Date().getFullYear().toString(),
       is_verified: true
     })) || [];
 
@@ -110,18 +108,17 @@ export async function syncOfficialCertifications(userId: string) {
 
 /**
  * FUNGSI SMART: CEK STATUS PENEMPATAN KERJA OTOMATIS
- * (Logika ini akan aktif saat Dashboard Perusahaan memindahkan status ke 'Hired')
  */
 export async function checkVerifiedPlacement(userId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from("applications")
       .select(`
         status,
         jobs (title, company_id, profiles (full_name))
       `)
       .eq("profile_id", userId)
-      .eq("status", "hired");
+      .eq("status", "hired") as any);
 
     if (error) throw error;
     return { success: true, data };
