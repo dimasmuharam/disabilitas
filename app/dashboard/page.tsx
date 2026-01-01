@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [retryCount, setRetryCount] = useState(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -19,49 +20,55 @@ export default function DashboardPage() {
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
         
         if (authError || !authUser) {
-          router.push("/login")
+          router.push("/masuk")
           return
         }
 
         setUser(authUser)
 
-        // Normalisasi Email ke huruf kecil agar cocok dengan database
-        const cleanEmail = authUser.email?.toLowerCase().trim()
+        // Normalisasi email untuk pencarian: Huruf kecil dan tanpa spasi
+        const targetEmail = authUser.email?.toLowerCase().trim()
 
-        // Ambil profil berdasarkan ID atau Email (Lower Case)
+        // Ambil profil: Cek ID asli atau Email (Case-Insensitive)
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
-          .or(`id.eq.${authUser.id},email.eq.${cleanEmail}`)
-          .single()
+          .or(`id.eq.${authUser.id},email.ilike.${targetEmail}`)
+          .maybeSingle() // Gunakan maybeSingle agar tidak throw error jika kosong
 
         if (profile && profile.role) {
           setRole(profile.role.toLowerCase().trim())
+          setLoading(false)
+        } else {
+          // Jika tidak ketemu, coba lagi hingga 3 kali (memberi waktu trigger database bekerja)
+          if (retryCount < 3) {
+            setTimeout(() => setRetryCount(prev => prev + 1), 1500)
+          } else {
+            setLoading(false)
+          }
         }
       } catch (error) {
-        console.error("Dashboard router error:", error)
-      } finally {
+        console.error("Dashboard error:", error)
         setLoading(false)
       }
     }
 
     checkUser()
-  }, [router])
+  }, [router, retryCount])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <main className="min-h-screen flex items-center justify-center bg-slate-50" aria-busy="true">
         <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">
-          {"Menyelaraskan Otoritas Riset..."}
+          {"Menyinkronkan Otoritas Akses..."}
         </p>
-      </div>
+      </main>
     )
   }
 
   return (
     <main className="min-h-screen bg-slate-50 py-10 px-4">
       <div className="container max-w-7xl mx-auto">
-        {/* LOGIKA TAMPILAN */}
         {role === 'admin' ? (
           <AdminDashboard user={user} />
         ) : role === 'talent' ? (
@@ -69,15 +76,20 @@ export default function DashboardPage() {
         ) : role === 'company' ? (
           <CompanyDashboard user={user} />
         ) : (
-          <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl animate-in zoom-in-95">
-            <p className="text-slate-500 font-black uppercase italic tracking-tight">
-              {"Akses Ditolak: Role '"}{role || "Tidak Ada"}{"' Tidak Valid Untuk Email: "}{user?.email}
+          <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl">
+            <h2 className="text-red-600 font-black uppercase italic tracking-tight mb-4">
+               {"Akses Ditolak: Profil Belum Siap"}
+            </h2>
+            <p className="text-slate-500 font-bold mb-6">
+              {"Sistem mendeteksi akun: "}{user?.email?.toLowerCase()}
+              <br/>
+              {"Namun data 'Role' Masih Kosong di Database."}
             </p>
             <button 
               onClick={() => window.location.reload()} 
-              className="mt-6 px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase"
+              className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all"
             >
-              {"Coba Sinkron Ulang"}
+              {"Segarkan Halaman & Coba Lagi"}
             </button>
           </div>
         )}
