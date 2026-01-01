@@ -33,7 +33,7 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
     portfolio_url: profile?.portfolio_url || "",
     resume_url: profile?.resume_url || "",
     document_disability_url: profile?.document_disability_url || "",
-    intro_video_url: profile?.intro_video_url || "",
+    video_intro_url: profile?.video_intro_url || "",
     bio: profile?.bio || "",
     has_informed_consent: profile?.has_informed_consent || false
   });
@@ -175,8 +175,8 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
                 <input id="document_disability_url" type="url" placeholder="Link KTA / Surat Dokter" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.document_disability_url} onChange={(e) => setFormData({...formData, document_disability_url: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="intro_video_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Video Intro (YouTube)"}</label>
-                <input id="intro_video_url" type="url" placeholder="https://youtube.com/..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.intro_video_url} onChange={(e) => setFormData({...formData, intro_video_url: e.target.value})} />
+                <label htmlFor="video_intro_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Video Intro (YouTube)"}</label>
+                <input id="video_intro_url" type="url" placeholder="https://youtube.com/..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.video_intro_url} onChange={(e) => setFormData({...formData, video_intro_url: e.target.value})} />
               </div>
             </div>
           </div>
