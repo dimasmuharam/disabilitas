@@ -14,6 +14,7 @@ import html2canvas from "html2canvas";
 interface TalentDashboardProps {
   user: any;
   profile: any;
+  autoOpenProfile?: boolean; // Tambahkan baris ini agar tidak error
 }
 
 export default function TalentDashboard({ user, profile }: TalentDashboardProps) {
