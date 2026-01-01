@@ -67,22 +67,37 @@ export default function RegisterPage() {
       if (data.user) {
         const userId = data.user.id
         
-        // Retry logic untuk menunggu database trigger (jika ada) dengan exponential backoff
-        const result = await retryWithBackoff(async () => {
-          const res = await supabase
+        // Check if profile exists (might be created by database trigger)
+        // Use retry with backoff to handle case where trigger takes time to execute
+        // This only retries if profile is not found, avoiding unnecessary retries for existing profiles
+        let existingProfile = null
+        let attempts = 0
+        const maxAttempts = 3
+        
+        while (attempts < maxAttempts && !existingProfile) {
+          if (attempts > 0) {
+            // Only delay on retry attempts (not first attempt)
+            const delay = Math.min(200 * Math.pow(2, attempts - 1), 1000)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+          
+          const { data: profile, error: selectError } = await supabase
             .from('profiles')
             .select('id, role, full_name, email')
             .eq('id', userId)
             .maybeSingle()
           
-          if (res.error) {
-            throw new Error(`Gagal memeriksa profil: ${res.error.message}`)
+          if (selectError) {
+            console.error('[REGISTRASI] Error checking profile:', selectError)
+            throw new Error(`Gagal memeriksa profil: ${selectError.message}`)
           }
           
-          return res.data
-        })
-
-        const existingProfile = result
+          existingProfile = profile
+          attempts++
+          
+          // If profile found, no need to retry
+          if (existingProfile) break
+        }
 
         if (existingProfile) {
           console.log('[REGISTRASI] Profile sudah ada dengan role:', existingProfile.role)

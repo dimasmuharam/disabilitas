@@ -109,7 +109,7 @@ export async function retryWithBackoff<T>(
   operation: () => Promise<T>,
   maxAttempts: number = 3
 ): Promise<T> {
-  let lastError: any
+  let lastError: Error | unknown
   
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
