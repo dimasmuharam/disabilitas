@@ -65,13 +65,13 @@ export default function DashboardPage() {
           console.log('[DASHBOARD] Profile ditemukan dengan role:', normalizedRole)
           
           // Validasi role-specific properties
-          if (normalizedRole === 'campus_partner' || normalizedRole === 'campus') {
+          if (normalizedRole === 'campus_partner') {
             if (!profileData.partner_institution) {
               console.warn('[DASHBOARD] Campus partner tanpa partner_institution, menggunakan fallback')
               // Set default atau ambil dari metadata auth
               profileData.partner_institution = authUser.user_metadata?.partner_institution || 'Universitas Indonesia (UI)'
             }
-          } else if (normalizedRole === 'government' || normalizedRole === 'gov') {
+          } else if (normalizedRole === 'government') {
             if (!profileData.agency_name) {
               console.warn('[DASHBOARD] Government user tanpa agency_name, menggunakan fallback')
               // Set default atau ambil dari metadata auth
@@ -159,9 +159,9 @@ export default function DashboardPage() {
           <TalentDashboard user={{ ...user, ...profile }} />
         ) : role === 'company' ? (
           <CompanyDashboard user={{ ...user, ...profile }} />
-        ) : role === 'campus_partner' || role === 'campus' ? (
+        ) : role === 'campus_partner' ? (
           <CampusDashboard user={{ ...user, ...profile, partner_institution: profile?.partner_institution }} />
-        ) : role === 'government' || role === 'gov' ? (
+        ) : role === 'government' ? (
           <GovDashboard user={{ ...user, ...profile, agency_name: profile?.agency_name }} />
         ) : (
           /* State jika data profil benar-benar tidak ditemukan setelah retry */
