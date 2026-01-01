@@ -17,6 +17,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function checkUser() {
       try {
+        // 1. Ambil data sesi auth
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
         
         if (authError || !authUser) {
@@ -26,23 +27,35 @@ export default function DashboardPage() {
 
         setUser(authUser)
 
-        // Normalisasi email untuk pencarian: Huruf kecil dan tanpa spasi
+        // 2. Normalisasi email (sangat penting untuk email Mas yang banyak titik)
         const targetEmail = authUser.email?.toLowerCase().trim()
 
-        // Ambil profil: Cek ID asli atau Email (Case-Insensitive)
-        const { data: profile, error: profileError } = await supabase
+        // 3. Ambil profil dengan filter yang lebih stabil daripada .or()
+        // Kita cari berdasarkan email dulu karena Mas sudah pastikan datanya ada di SQL lewat email
+        let { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
-          .or(`id.eq.${authUser.id},email.ilike.${targetEmail}`)
-          .maybeSingle() // Gunakan maybeSingle agar tidak throw error jika kosong
+          .eq('email', targetEmail)
+          .maybeSingle()
 
+        // 4. Jika tidak ketemu lewat email, coba cari lewat ID (UUID)
+        if (!profile && !profileError) {
+          const { data: profileByID } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', authUser.id)
+            .maybeSingle()
+          profile = profileByID
+        }
+
+        // 5. Logika penentuan Role
         if (profile && profile.role) {
           setRole(profile.role.toLowerCase().trim())
           setLoading(false)
         } else {
-          // Jika tidak ketemu, coba lagi hingga 3 kali (memberi waktu trigger database bekerja)
-          if (retryCount < 3) {
-            setTimeout(() => setRetryCount(prev => prev + 1), 1500)
+          // Retry mechanism: memberi waktu jika trigger database agak lambat
+          if (retryCount < 2) {
+            setTimeout(() => setRetryCount(prev => prev + 1), 2000)
           } else {
             setLoading(false)
           }
@@ -56,12 +69,15 @@ export default function DashboardPage() {
     checkUser()
   }, [router, retryCount])
 
+  // Tampilan Loading (Ramah Screen Reader dengan aria-busy)
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-slate-50" aria-busy="true">
-        <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">
-          {"Menyinkronkan Otoritas Akses..."}
-        </p>
+        <div className="text-center">
+          <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">
+            {"Menyinkronkan Otoritas Akses..."}
+          </p>
+        </div>
       </main>
     )
   }
@@ -76,21 +92,34 @@ export default function DashboardPage() {
         ) : role === 'company' ? (
           <CompanyDashboard user={user} />
         ) : (
+          /* State jika data profil benar-benar tidak ditemukan setelah retry */
           <div className="text-center p-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl">
-            <h2 className="text-red-600 font-black uppercase italic tracking-tight mb-4">
+            <h1 className="text-red-600 font-black uppercase italic tracking-tight mb-4 text-2xl">
                {"Akses Ditolak: Profil Belum Siap"}
-            </h2>
-            <p className="text-slate-500 font-bold mb-6">
-              {"Sistem mendeteksi akun: "}{user?.email?.toLowerCase()}
-              <br/>
-              {"Namun data 'Role' Masih Kosong di Database."}
-            </p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all"
-            >
-              {"Segarkan Halaman & Coba Lagi"}
-            </button>
+            </h1>
+            <div className="text-slate-500 font-bold mb-8 space-y-2">
+              <p>{"Sistem mengenali akun: "}<span className="text-slate-900">{user?.email}</span></p>
+              <p>{"Namun, status peran (Role) Anda tidak ditemukan di tabel profil."}</p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg"
+              >
+                {"Coba Segarkan Halaman"}
+              </button>
+              
+              <button 
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                  router.push("/masuk")
+                }} 
+                className="px-8 py-4 bg-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-300 transition-all"
+              >
+                {"Keluar & Login Ulang"}
+              </button>
+            </div>
           </div>
         )}
       </div>
