@@ -32,6 +32,13 @@ export default function RegisterPage() {
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
     try {
+      // Log data yang akan dikirim ke Supabase untuk diagnostic
+      console.log('[DAFTAR] Mengirim data registrasi:', {
+        email: email.toLowerCase().trim(),
+        full_name: fullName,
+        role: role
+      })
+
       const { data, error } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
         password,
@@ -46,6 +53,14 @@ export default function RegisterPage() {
       })
 
       if (error) throw error
+
+      // Log hasil registrasi untuk diagnostic
+      console.log('[DAFTAR] Hasil registrasi:', {
+        userId: data.user?.id,
+        email: data.user?.email,
+        userMetadata: data.user?.user_metadata,
+        hasSession: !!data.session
+      })
 
       if (data.user && !data.session) {
         setType("success")

@@ -57,6 +57,9 @@ export default function DashboardPage() {
           if (retryCount < 2) {
             setTimeout(() => setRetryCount(prev => prev + 1), 2000)
           } else {
+            // Fallback: set default role ke 'talent' jika tidak ditemukan setelah retry
+            console.warn('[DASHBOARD] Role tidak ditemukan setelah retry, menggunakan fallback: talent')
+            setRole('talent')
             setLoading(false)
           }
         }
