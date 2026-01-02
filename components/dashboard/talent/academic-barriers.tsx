@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { updateTalentProfile } from "@/lib/actions/talent";
 import { 
-  GraduationCap, BookOpen, School, Calendar, 
+  GraduationCap, School, Calendar, 
   AlertTriangle, Save, CheckCircle2, AlertCircle,
-  Building, MapPin, Award, Cpu, HandHelping, Workflow
+  Building, Award, Cpu, Handshake, Workflow, BookOpen
 } from "lucide-react";
 
-// SINKRONISASI TOTAL DENGAN DATA-STATIC MAS DIMAS
+// SINKRONISASI DATA-STATIC (Hanya yang relevan dengan Pendidikan)
 import { 
   EDUCATION_LEVELS, 
   EDUCATION_MODELS, 
@@ -43,8 +43,8 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     study_relevance: profile?.study_relevance || "",
   });
 
-  // Logika Smart: Cek apakah jenjang pendidikan adalah Perguruan Tinggi
-  const isHigherEducation = ["D3", "D4", "S1", "S2", "S3"].includes(formData.education_level);
+  // Logika Smart: Deteksi apakah Pendidikan Tinggi (Kuliah)
+  const isCollege = ["D3", "D4", "S1", "S2", "S3"].includes(formData.education_level);
 
   const handleMultiToggle = (field: string, value: string) => {
     setFormData((prev: any) => {
@@ -65,18 +65,18 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     setLoading(false);
 
     if (result.success) {
-      setMessage({ type: "success", text: "Data Akademik & Hambatan Berhasil Disimpan!" });
+      setMessage({ type: "success", text: "Data Akademik Berhasil Disimpan!" });
       if (onSuccess) {
         setTimeout(() => onSuccess(), 2000);
       }
     } else {
-      setMessage({ type: "error", text: `Kesalahan: ${result.error}` });
+      setMessage({ type: "error", text: `Gagal menyimpan: ${result.error}` });
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto pb-20 font-sans text-slate-900">
-      {/* DATALIST UNIVERSITAS (Hanya muncul jika jenjang pendidikan sesuai) */}
+      {/* DATALIST UNIVERSITAS DARI DATA-STATIC */}
       <datalist id="uni-list">
         {UNIVERSITIES.map((u, i) => <option key={i} value={u} />)}
       </datalist>
@@ -87,7 +87,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           {"Riwayat Akademik"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
-          {"Informasi pendidikan terakhir untuk pemetaan aksesibilitas pendidikan."}
+          {"Informasi pendidikan terakhir dan data dukungan untuk riset kebijakan inklusif."}
         </p>
       </header>
 
@@ -105,10 +105,10 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
         
-        {/* SEKSI 1: DETAIL INSTITUSI */}
+        {/* SEKSI 1: DETAIL INSTITUSI (SMART UI) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
           <h2 className="text-xs font-black uppercase text-emerald-600 tracking-[0.2em] flex items-center gap-2">
-            <School size={16} aria-hidden="true" /> {"Detail Pendidikan Terakhir"}
+            <School size={16} aria-hidden="true" /> {"Data Pendidikan Terakhir"}
           </h2>
           <div className="grid md:grid-cols-2 gap-8 text-sm font-bold">
             <div className="space-y-2">
@@ -120,13 +120,13 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
             </div>
             <div className="space-y-2">
               <label htmlFor="uni" className="text-[10px] font-black uppercase text-slate-400 px-2 flex items-center gap-2">
-                <Building size={12} /> {isHigherEducation ? "Nama Institusi / Universitas" : "Nama Sekolah"}
+                <Building size={12} aria-hidden="true" /> {isCollege ? "Nama Perguruan Tinggi" : "Nama Sekolah"}
               </label>
               <input 
                 id="uni" 
-                list={isHigherEducation ? "uni-list" : ""} 
+                list={isCollege ? "uni-list" : ""} 
                 required 
-                placeholder={isHigherEducation ? "Cari universitas..." : "Ketik nama sekolah..."} 
+                placeholder={isCollege ? "Cari universitas..." : "Ketik nama sekolah..."} 
                 value={formData.university} 
                 onChange={(e) => setFormData({...formData, university: e.target.value})} 
                 className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl outline-none focus:border-emerald-600" 
@@ -134,13 +134,13 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
             </div>
             <div className="space-y-2">
               <label htmlFor="major" className="text-[10px] font-black uppercase text-slate-400 px-2">
-                {isHigherEducation ? "Jurusan / Program Studi" : "Keminatan / Penjurusan"}
+                {isCollege ? "Bidang Studi / Jurusan" : "Keminatan / Penjurusan"}
               </label>
               <input id="major" required type="text" value={formData.major} onChange={(e) => setFormData({...formData, major: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl outline-none focus:border-emerald-600" />
             </div>
             <div className="space-y-2">
               <label htmlFor="grad_year" className="text-[10px] font-black uppercase text-slate-400 px-2 flex items-center gap-2">{"Tahun Lulus"}</label>
-              <input id="grad_year" required type="number" placeholder="Contoh: 2024" value={formData.graduation_year} onChange={(e) => setFormData({...formData, graduation_year: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl outline-none focus:border-emerald-600" />
+              <input id="grad_year" required type="number" placeholder="YYYY" value={formData.graduation_year} onChange={(e) => setFormData({...formData, graduation_year: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl outline-none focus:border-emerald-600" />
             </div>
             <div className="space-y-2">
               <label htmlFor="edu_model" className="text-[10px] font-black uppercase text-slate-400 px-2">{"Model Pendidikan"}</label>
@@ -159,11 +159,11 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           </div>
         </section>
 
-        {/* SEKSI 2: RELEVANSI (RADIO BUTTON) */}
+        {/* SEKSI 2: LINEARITAS (RADIO BUTTON) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
           <fieldset className="space-y-6 border-none">
             <legend className="flex items-center gap-4 text-slate-900 mb-2 font-black italic uppercase tracking-tighter">
-              <Workflow className="text-blue-600" size={24} />
+              <Workflow className="text-blue-600" size={24} aria-hidden="true" />
               {"Linearitas & Relevansi Pekerjaan"}
             </legend>
             <div className="grid grid-cols-1 gap-3">
@@ -183,7 +183,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
             <fieldset className="space-y-6 border-none">
               <legend className="flex items-center gap-4 text-emerald-700 font-black italic uppercase tracking-tighter">
-                <HandHelping size={24} />
+                <Handshake size={24} aria-hidden="true" />
                 {"Dukungan Institusi"}
               </legend>
               <div className="space-y-4">
@@ -201,7 +201,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
             <fieldset className="space-y-6 border-none">
               <legend className="flex items-center gap-4 text-purple-700 font-black italic uppercase tracking-tighter">
-                <Cpu size={24} />
+                <Cpu size={24} aria-hidden="true" />
                 {"Teknologi Asistif"}
               </legend>
               <div className="space-y-4">
@@ -216,25 +216,22 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           </section>
         </div>
 
-        {/* SEKSI 4: HAMBATAN (MULTIPLE BUTTONS) */}
+        {/* SEKSI 4: HAMBATAN PENDIDIKAN (RISET) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
-          <div className="flex items-center gap-4 text-amber-600 mb-2 font-black italic uppercase tracking-tighter">
-            <AlertTriangle size={24} aria-hidden="true" />
-            {"Hambatan Selama Pendidikan"}
-          </div>
-          <div className="flex flex-wrap gap-3 pt-2">
-            {EDUCATION_BARRIERS.map((barrier, i) => (
-              <button key={i} type="button" onClick={() => handleMultiToggle('education_barrier', barrier)}
-                className={`px-6 py-4 rounded-2xl text-[10px] font-black uppercase transition-all border-2 ${
-                  formData.education_barrier.includes(barrier)
-                    ? "bg-amber-600 border-amber-600 text-white shadow-lg"
-                    : "bg-white border-slate-100 text-slate-400 hover:border-amber-200"
-                }`}
-              >
-                {barrier}
-              </button>
-            ))}
-          </div>
+          <fieldset className="space-y-6 border-none">
+            <legend className="flex items-center gap-4 text-amber-600 mb-2 font-black italic uppercase tracking-tighter">
+              <AlertTriangle size={24} aria-hidden="true" />
+              {"Hambatan Selama Pendidikan"}
+            </legend>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {EDUCATION_BARRIERS.map((barrier, i) => (
+                <label key={i} className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer ${formData.education_barrier.includes(barrier) ? 'border-amber-600 bg-amber-50' : 'border-slate-100 hover:border-amber-200'}`}>
+                  <input type="checkbox" checked={formData.education_barrier.includes(barrier)} onChange={() => handleMultiToggle('education_barrier', barrier)} className="w-6 h-6 accent-amber-600" />
+                  <span className="text-[10px] font-black uppercase text-slate-600">{barrier}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </section>
 
         {/* SUBMIT */}
