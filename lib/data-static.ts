@@ -40,6 +40,89 @@ export const CAREER_STATUSES = [
     "Belum Bekerja"
 ];
 
+// KATEGORI PEMBERI KERJA (Ringkas & Strategis)
+export const EMPLOYER_CATEGORIES = [
+  "Instansi Pemerintah (ASN)",
+  "Perusahaan Swasta",
+  "BUMN dan BUMD",
+  "Lembaga Nonprofit",
+  "Lainnya"
+];
+
+// LIST INSTANSI PEMERINTAH (ASN)
+export const GOVERNMENT_AGENCIES_LIST = [
+  "Kementerian Keuangan",
+  "Kementerian Sosial",
+  "Kementerian Ketenagakerjaan",
+  "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
+  "Kementerian Hukum dan HAM",
+  "Kementerian Kesehatan",
+  "Kementerian PAN-RB",
+  "Kementerian Komunikasi dan Digital",
+  "Badan Kepegawaian Negara (BKN)",
+  "Badan Riset dan Inovasi Nasional (BRIN)",
+  "Pemerintah Provinsi Jakarta",
+  "Pemerintah Provinsi Jawa Tengah",
+  "Pemerintah Provinsi Jawa Timur",
+  "Pemerintah Provinsi Jawa Barat"
+].sort();
+
+// LIST BUMN & BUMD
+export const STATE_ENTERPRISES_LIST = [
+  "Bank Rakyat Indonesia (BRI)",
+  "Bank Mandiri",
+  "Bank Negara Indonesia (BNI)",
+  "Telkom Indonesia",
+  "Pertamina",
+  "PLN (Persero)",
+  "Kereta Api Indonesia (KAI)",
+  "Garuda Indonesia",
+  "Angkasa Pura",
+  "Pos Indonesia",
+  "Bank DKI",
+  "Bank Jateng",
+  "Bank Jatim",
+  "Transjakarta"
+].sort();
+
+// LIST PERUSAHAAN SWASTA (Inklusif)
+export const PRIVATE_COMPANIES_LIST = [
+  "Alfamat (Sumber Alfaria Trijaya)",
+  "Bank Permata",
+  "Indomaret (Indomarco Prismatama)",
+  "Grab Indonesia",
+  "Gojek (Goto Group)",
+  "Unilever Indonesia",
+  "Standard Chartered",
+  "L'Oreal Indonesia",
+  "IBM Indonesia",
+  "Accenture Indonesia",
+  "Siloam Hospitals",
+  "Burgreens",
+  "Thisable Enterprise",
+  "Bank Danamon",
+  "Maybank Indonesia",
+  "Microsoft Indonesia",
+  "Google Indonesia"
+].sort();
+
+// LIST LEMBAGA NONPROFIT (NGO/Organisasi Internasional)
+export const NONPROFIT_ORG_LIST = [
+  "PBB (United Nations)",
+  "Yayasan Pembinaan Anak Cacat (YPAC)",
+  "Persatuan Tuna Netra Indonesia (PERTUNI)",
+  "Yayasan Mitra Netra",
+  "Karya Tunanetra (Kartunet)",
+  "Gerakan Kesejahteraan Tuna Rungu Indonesia (GERKATIN)",
+  "Himpunan Wanita Disabilitas Indonesia (HWDI)",
+  "Sigab Indonesia",
+  "Pusat Rehabilitasi YAKKUM",
+  "Save the Children Indonesia",
+  "Wahana Visi Indonesia",
+  "Dompet Dhuafa",
+  "Rumah Zakat"
+].sort();
+
 export const EDUCATION_LEVELS = [
   "Tidak Sekolah",
   "SD / Sederajat",
