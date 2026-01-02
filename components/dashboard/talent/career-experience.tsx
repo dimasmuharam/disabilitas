@@ -8,8 +8,7 @@ import {
 } from "lucide-react";
 
 // MENGAMBIL DATA DARI STANDAR DATA-STATIC
-import { CAREER_STATUS_OPTIONS, EMPLOYMENT_TYPES } from "@/lib/data-static";
-
+import { CAREER_STATUSES } from "@/lib/data-static";
 interface CareerExperienceProps {
   user: any;
   profile: any;
