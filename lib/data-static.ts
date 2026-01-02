@@ -137,6 +137,7 @@ export const EDUCATION_LEVELS = [
 export const EDUCATION_MODELS = [
   "Sekolah Luar Biasa (SLB)",
   "Sekolah Reguler / inklusi",
+  "universitas",
   "Home Schooling",
   "Pendidikan Informal / BLK"
 ];
