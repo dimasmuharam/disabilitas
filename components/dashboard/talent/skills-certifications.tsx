@@ -131,7 +131,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           {"Keahlian & Pelatihan"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
-          {"Penyelarasan kompetensi teknis dan data riset pelatihan inklusif."}
+          {"Lengkapi informasi mengenai pelatihan dan keterampilan Anda untuk rekomendasi  lowongan yang sesuai. Biar pekerjaan yang mencari Anda!"}
         </p>
       </header>
 
@@ -198,7 +198,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
         <section className="bg-emerald-50/50 p-10 rounded-[3rem] border-2 border-emerald-100 space-y-8">
           <div className="flex items-center gap-3 text-emerald-700">
             <Microscope size={20} aria-hidden="true" />
-            <h2 className="text-xs font-black uppercase tracking-[0.2em]">{"Variabel Riset Keahlian"}</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em]">{"Jawab tiga pertanyaan singkat ini untuk kami dapat lebih memahami keterampilan Anda"}</h2>
           </div>
 
           {/* PEROLEHAN SKILL */}
@@ -216,7 +216,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
           {/* RATING AKSESIBILITAS */}
           <fieldset className="space-y-4">
-            <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"2. Secara umum, bagaimana tingkat aksesibilitas pelatihan yang Anda ikuti?"}</legend>
+            <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"2. Secara umum, bagaimana tingkat aksesibilitas dari seluruh pelatihan yang Anda ikuti?"}</legend>
             <div className="grid grid-cols-1 gap-2">
               {TRAINING_ACCESSIBILITY_SCORES?.map(score => (
                 <label key={score.value} className={`flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${Number(researchData.training_accessibility_rating) === score.value ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-white text-slate-600 hover:border-emerald-200"}`}>
@@ -229,7 +229,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
           {/* DAMPAK SKILL */}
           <fieldset className="space-y-4">
-            <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"3. Sejauh mana keahlian/pelatihan ini berdampak pada pekerjaan Anda?"}</legend>
+            <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"3. Sejauh mana keahlian/pelatihan yang pernah diikuti berdampak pada pekerjaan Anda?"}</legend>
             <div className="space-y-2">
               {SKILL_IMPACT_LEVELS?.map(level => (
                 <label key={level} className={`flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${researchData.skill_impact_rating === level ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-white text-slate-600 hover:border-emerald-200"}`}>
