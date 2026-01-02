@@ -18,17 +18,26 @@ export const WORK_MODES = [
   "Remote (WFH Penuh)", 
   "Hybrid (Kombinasi)"
 ];
+export const EMPLOYMENT_TYPES = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Freelance",
+  "Internship",
+  "Self-employed"
+];
 
 // BARU: KATEGORI KARIR UNTUK MONITORING ASN & INDUSTRI
 export const CAREER_STATUSES = [
   "Job Seeker",
   "Fresh Graduate",
   "Pegawai Swasta",
-  "Pegawai BUMN",
+  "Pegawai BUMN / BUMD",
   "ASN (PNS / PPPK)",
   "Wiraswasta / Entrepreneur",
   "Freelancer / Tenaga Lepas",
-  "Belum Bekerja"
+  "Pelajar / Mahasiswa",
+    "Belum Bekerja"
 ];
 
 export const EDUCATION_LEVELS = [
