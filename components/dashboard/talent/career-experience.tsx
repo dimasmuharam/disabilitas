@@ -165,7 +165,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
             <div className="space-y-2">
               <label htmlFor="career_status" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Status Pekerjaan Saat Ini"}</label>
               <select id="career_status" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none transition-all text-sm" value={profileData.career_status} onChange={(e) => setProfileData({...profileData, career_status: e.target.value})}>
-                {CAREER_STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {CAREER_STATUSES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
             <div className="space-y-2">
