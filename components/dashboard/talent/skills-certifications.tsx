@@ -5,9 +5,16 @@ import { supabase } from "@/lib/supabase";
 import { updateTalentProfile } from "@/lib/actions/talent";
 import { 
   Award, Cpu, CheckCircle2, AlertCircle, Save, 
-  Plus, X, Star, Zap, ExternalLink, BadgeCheck, ShieldCheck
+  Plus, X, Zap, Trash2, BookOpen, ChevronLeft
 } from "lucide-react";
-import { SKILLS_LIST } from "@/lib/data-static";
+
+// SINKRONISASI DATA-STATIC
+import { 
+  SKILLS_LIST, 
+  GOVERNMENT_AGENCIES, 
+  TRAINING_PARTNERS, 
+  COMMUNITY_PARTNERS 
+} from "@/lib/data-static";
 
 interface SkillsCertificationsProps {
   user: any;
@@ -19,216 +26,304 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // State Keahlian
-  const [skills, setSkills] = useState<string[]>(profile?.skills || []);
-  const [newSkill, setNewSkill] = useState("");
+  // 1. STATE KEAHLIAN UTAMA (Profiles Table)
+  const [globalSkills, setGlobalSkills] = useState<string[]>(profile?.skills || []);
+  const [newGlobalSkill, setNewGlobalSkill] = useState("");
 
-  // State Sertifikasi (Gabungan Manual + Otomatis)
-  const [certifications, setCertifications] = useState<any[]>(profile?.certifications || []);
-  const [showCertForm, setShowCertForm] = useState(false);
-  const [newCert, setNewCert] = useState({
-    name: "",
-    issuer: "",
-    year: "",
-    link: "",
-    is_verified: false // Flag untuk input manual
-  });
+  // 2. STATE RIWAYAT PELATIHAN (Certifications Table)
+  const [certs, setCerts] = useState<any[]>([]);
 
-  // EFEEK: Ambil data pelatihan yang LULUS dari tabel 'trainees' secara otomatis
+  // Mengambil data sertifikasi dari database saat mount
   useEffect(() => {
-    const fetchVerifiedCerts = async () => {
+    const fetchCerts = async () => {
       const { data } = await supabase
-        .from("trainees")
-        .select(`
-          status,
-          trainings (title, updated_at, profiles (full_name))
-        `)
+        .from("certifications")
+        .select("*")
         .eq("profile_id", user.id)
-        .eq("status", "completed") as any; // Tambahan 'as any' di sini kuncinya
+        .order("year", { ascending: false });
 
-      if (data) {
-        const autoCerts = data.map((c: any) => ({
-          name: c.trainings?.title || "Sertifikat Pelatihan",
-          issuer: c.trainings?.profiles?.full_name || "Official Partner",
-          year: c.trainings?.updated_at 
-            ? new Date(c.trainings.updated_at).getFullYear().toString() 
-            : new Date().getFullYear().toString(),
-          link: "",
-          is_verified: true
-        }));
-
-        setCertifications((prev: any[]) => {
-          const manualOnly = prev.filter(p => !p.is_verified);
-          return [...autoCerts, ...manualOnly];
-        });
-      }
+      if (data) setCerts(data);
     };
-
-    if (user?.id) fetchVerifiedCerts();
+    if (user?.id) fetchCerts();
   }, [user.id]);
 
-  const handleAddSkill = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newSkill && !skills.includes(newSkill)) {
-      setSkills([...skills, newSkill]);
-      setNewSkill("");
-    }
+  const addCertsItem = () => {
+    const newItem = {
+      id: `temp-${Date.now()}`,
+      name: "",
+      organizer_category: "",
+      organizer_name: "",
+      year: new Date().getFullYear().toString(),
+      certificate_url: "",
+      skills_acquired: [],
+      is_verified: false
+    };
+    setCerts([newItem, ...certs]);
   };
 
-  const removeSkill = (skillToRemove: string) => {
-    setSkills(skills.filter(s => s !== skillToRemove));
+  const updateCertField = (id: string, field: string, value: any) => {
+    setCerts(certs.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
-  const handleAddCert = () => {
-    if (newCert.name && newCert.issuer) {
-      setCertifications([...certifications, { ...newCert, is_verified: false }]);
-      setNewCert({ name: "", issuer: "", year: "", link: "", is_verified: false });
-      setShowCertForm(false);
-    }
+  const handleToggleCertSkill = (certId: string, skill: string) => {
+    setCerts(certs.map(c => {
+      if (c.id === certId) {
+        const currentSkills = c.skills_acquired || [];
+        const updatedSkills = currentSkills.includes(skill)
+          ? currentSkills.filter((s: string) => s !== skill)
+          : [...currentSkills, skill];
+        return { ...c, skills_acquired: updatedSkills };
+      }
+      return c;
+    }));
   };
 
-  const removeCert = (index: number) => {
-    // Hanya boleh hapus yang tidak terverifikasi
-    if (certifications[index].is_verified) {
-      alert("Sertifikat resmi sistem tidak dapat dihapus manual.");
+  const removeCert = async (id: string) => {
+    if (id.toString().startsWith("temp-")) {
+      setCerts(certs.filter(c => c.id !== id));
       return;
     }
-    setCertifications(certifications.filter((_, i) => i !== index));
+    const { error } = await supabase.from("certifications").delete().eq("id", id);
+    if (!error) setCerts(certs.filter(c => c.id !== id));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    const result = await updateTalentProfile(user.id, {
-      skills,
-      certifications
-    });
-    setLoading(false);
+    setMessage({ type: "", text: "" });
 
-    if (result.success) {
-      setMessage({ type: "success", text: "Data Kompetensi & Sertifikasi Berhasil Disinkronkan!" });
-      if (onSuccess) onSuccess();
-    } else {
-      setMessage({ type: "error", text: `Gagal: ${result.error}` });
+    try {
+      // A. Update Skills Global ke Profil
+      await updateTalentProfile(user.id, { skills: globalSkills });
+
+      // B. Update/Insert Riwayat Pelatihan
+      for (const cert of certs) {
+        const isTemp = cert.id.toString().startsWith("temp-");
+        const { id, ...certData } = cert;
+        const payload = { ...certData, profile_id: user.id };
+
+        if (isTemp) {
+          await supabase.from("certifications").insert([payload]);
+        } else {
+          await supabase.from("certifications").update(payload).eq("id", id);
+        }
+      }
+
+      // FEEDBACK UNTUK SCREEN READER
+      setMessage({ type: "success", text: "Data Keahlian Berhasil Disimpan. Kembali ke Overview..." });
+      
+      // AUTO CLOSE SETELAH 2 DETIK
+      setTimeout(() => {
+        if (onSuccess) onSuccess();
+      }, 2000);
+
+    } catch (error: any) {
+      setMessage({ type: "error", text: `{"Gagal menyimpan: ${error.message}"}` });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
+    <div className="max-w-4xl mx-auto pb-20 font-sans text-slate-900">
       <header className="mb-10 px-4">
-        <h1 className="text-4xl font-black italic uppercase tracking-tighter text-slate-900 flex items-center gap-4">
-          <Award className="text-purple-600" size={36} />
-          {"Keahlian & Sertifikat"}
+        <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
+          <Zap className="text-purple-600" size={36} aria-hidden="true" />
+          {"Keahlian & Pelatihan"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
-          {"Verifikasi kompetensi otomatis dari pelatihan disabilitas.com dan input mandiri."}
+          {"Manajemen kompetensi dan sertifikasi untuk memperkuat profil profesional Anda."}
         </p>
       </header>
 
-      {/* NOTIFIKASI */}
-      {message.text && (
-        <div role="status" aria-live="polite" className={`mb-8 mx-4 p-6 rounded-[2rem] flex items-center gap-4 border-2 ${message.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800"}`}>
-          {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-          <p className="text-sm font-black uppercase italic tracking-tight">{message.text}</p>
-        </div>
-      )}
+      {/* STATUS ARIA-LIVE (Dibaca Screen Reader saat simpan sukses) */}
+      <div aria-live="polite" aria-atomic="true" className="px-4">
+        {message.text && (
+          <div className={`mb-8 p-6 rounded-[2rem] flex items-center gap-4 border-2 ${
+            message.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800"
+          }`}>
+            {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+            <p className="text-sm font-black uppercase italic tracking-tight">{message.text}</p>
+          </div>
+        )}
+      </div>
 
-      <div className="space-y-12">
-        {/* SEKSI 1: SKILLS */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-12 px-4">
+        
+        {/* SEKSI 1: KEAHLIAN UTAMA */}
+        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
           <div className="flex items-center gap-3">
-            <Cpu className="text-purple-600" size={20} />
-            <h3 className="text-xs font-black uppercase tracking-[0.2em]">{"Manajemen Keahlian"}</h3>
+            <Cpu className="text-purple-600" size={20} aria-hidden="true" />
+            <h2 className="text-xs font-black uppercase tracking-[0.2em]">{"Daftar Keahlian Utama"}</h2>
           </div>
-          <form onSubmit={handleAddSkill} className="flex gap-4">
-            <input 
-              type="text" list="skill-suggestions"
-              placeholder="Ketik keahlian Anda..."
-              value={newSkill}
-              onChange={(e) => setNewSkill(e.target.value)}
-              className="flex-1 bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all"
-            />
-            <datalist id="skill-suggestions">
-              {
-            SKILLS_LIST.map((cat: any) => cat.skills.map((s: string) => <option key={s} value={s} />))}
-            </datalist>
-            <button type="submit" className="bg-purple-600 text-white px-8 rounded-2xl hover:bg-slate-900 transition-all shadow-lg shadow-purple-100">
-              <Plus size={24} />
-            </button>
-          </form>
-          <div className="flex flex-wrap gap-3">
-            {skills.map((skill) => (
-              <div key={skill} className="bg-slate-900 border-2 border-slate-800 px-5 py-2 rounded-xl flex items-center gap-3 group">
-                <span className="text-[10px] font-black uppercase text-white tracking-wider">{skill}</span>
-                <button onClick={() => removeSkill(skill)} className="text-slate-500 hover:text-red-400"><X size={14} /></button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* SEKSI 2: SERTIFIKASI (OFFICIAL VS MANUAL) */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3 text-amber-600">
-              <Star size={20} fill="currentColor" />
-              <h3 className="text-xs font-black uppercase tracking-[0.2em]">{"Daftar Sertifikasi"}</h3>
+          
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-2">
+              <label htmlFor="global_skill_input" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Tambah Keahlian"}</label>
+              <input 
+                id="global_skill_input"
+                type="text"
+                placeholder="Misal: Desain Grafis, Akuntansi..."
+                value={newGlobalSkill}
+                onChange={(e) => setNewGlobalSkill(e.target.value)}
+                className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600"
+              />
             </div>
             <button 
-              onClick={() => setShowCertForm(!showCertForm)}
-              className="text-[10px] font-black uppercase bg-slate-50 text-slate-600 px-4 py-2 rounded-xl border-2 border-slate-100 hover:bg-blue-600 hover:text-white transition-all"
+              type="button"
+              onClick={() => { if(newGlobalSkill) { setGlobalSkills([...globalSkills, newGlobalSkill]); setNewGlobalSkill(""); } }}
+              className="mt-6 bg-purple-600 text-white px-8 rounded-2xl hover:bg-slate-900 transition-all flex items-center"
+              aria-label="Klik untuk menambah keahlian ke daftar"
             >
-              {showCertForm ? "Batal" : "Input Mandiri"}
+              <Plus size={24} />
             </button>
           </div>
 
-          {showCertForm && (
-            <div className="bg-blue-50/50 p-8 rounded-[2rem] border-2 border-dashed border-blue-200 space-y-6 animate-in fade-in zoom-in-95">
-              <div className="grid md:grid-cols-2 gap-6">
-                <input placeholder="Nama Sertifikat" value={newCert.name} onChange={(e) => setNewCert({...newCert, name: e.target.value})} className="p-4 rounded-xl border-2 border-white focus:border-blue-500 outline-none font-bold" />
-                <input placeholder="Penerbit" value={newCert.issuer} onChange={(e) => setNewCert({...newCert, issuer: e.target.value})} className="p-4 rounded-xl border-2 border-white focus:border-blue-500 outline-none font-bold" />
-                <input placeholder="Tahun" value={newCert.year} onChange={(e) => setNewCert({...newCert, year: e.target.value})} className="p-4 rounded-xl border-2 border-white focus:border-blue-500 outline-none font-bold" />
-                <input placeholder="Link (Opsional)" value={newCert.link} onChange={(e) => setNewCert({...newCert, link: e.target.value})} className="p-4 rounded-xl border-2 border-white focus:border-blue-500 outline-none font-bold" />
-              </div>
-              <button onClick={handleAddCert} className="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest">{"Simpan Draft Sertifikat"}</button>
-            </div>
-          )}
-
-          <div className="grid gap-4">
-            {certifications.map((cert, i) => (
-              <div key={i} className={`flex items-center justify-between p-6 rounded-[2.5rem] border-2 transition-all ${
-                cert.is_verified ? "bg-emerald-50/50 border-emerald-100 shadow-sm" : "bg-slate-50 border-slate-100"
-              }`}>
-                <div className="flex items-center gap-6">
-                  <div className={`p-4 rounded-2xl ${cert.is_verified ? "bg-emerald-600 text-white" : "bg-white text-slate-400 shadow-sm"}`}>
-                    {cert.is_verified ? <ShieldCheck size={24} /> : <Award size={24} />}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-black uppercase text-slate-900 text-sm leading-tight">{cert.name}</h4>
-                      {cert.is_verified && <BadgeCheck size={16} className="text-emerald-600" />}
-                    </div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">
-                      {cert.issuer} • {cert.year} {cert.is_verified && <span className="text-emerald-600 ml-1">{"(Official Partner)"}</span>}
-                    </p>
-                  </div>
-                </div>
-                {!cert.is_verified && (
-                  <button onClick={() => removeCert(i)} className="p-3 text-slate-300 hover:text-red-500"><X size={18} /></button>
-                )}
-              </div>
+          <div className="flex flex-wrap gap-2" role="list">
+            {globalSkills.map(s => (
+              <span key={s} role="listitem" className="bg-slate-900 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl flex items-center gap-2">
+                {s} 
+                <button 
+                  type="button"
+                  onClick={() => setGlobalSkills(globalSkills.filter(x => x !== s))}
+                  aria-label={`{"Hapus keahlian ${s}"}`}
+                >
+                  <X size={12}/>
+                </button>
+              </span>
             ))}
           </div>
         </section>
 
-        {/* FINAL SAVE */}
-        <div className="flex justify-end pt-6 px-4">
+        {/* SEKSI 2: RIWAYAT PELATIHAN */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-center px-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-3">
+              <Award className="text-amber-500" size={20} /> {"Riwayat Pelatihan & Sertifikasi"}
+            </h2>
+            <button 
+              type="button"
+              onClick={addCertsItem}
+              className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-slate-900 transition-all"
+            >
+              <Plus size={16} /> {"Tambah Riwayat"}
+            </button>
+          </div>
+
+          <div className="space-y-8">
+            {certs.map((cert, index) => (
+              <section 
+                key={cert.id} 
+                aria-labelledby={`cert-title-${cert.id}`}
+                className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8 relative animate-in slide-in-from-bottom-4"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 id={`cert-title-${cert.id}`} className="text-sm font-black uppercase italic tracking-tight text-slate-400">
+                    {"Item Pelatihan #"} {certs.length - index}
+                  </h3>
+                  <button 
+                    type="button"
+                    onClick={() => removeCert(cert.id)} 
+                    className="text-slate-300 hover:text-red-600 transition-colors"
+                    aria-label={`{"Hapus riwayat pelatihan ${cert.name || 'ini'}"}`}
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8 font-bold text-sm">
+                  <div className="space-y-2">
+                    <label htmlFor={`name-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Nama Pelatihan"}</label>
+                    <input 
+                      id={`name-${cert.id}`}
+                      value={cert.name} 
+                      onChange={(e) => updateCertField(cert.id, "name", e.target.value)}
+                      placeholder="Nama program pelatihan..."
+                      className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor={`year-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Tahun Lulus"}</label>
+                    <input 
+                      id={`year-${cert.id}`}
+                      type="number" 
+                      value={cert.year} 
+                      onChange={(e) => updateCertField(cert.id, "year", e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor={`cat-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Kategori Penyelenggara"}</label>
+                    <select 
+                      id={`cat-${cert.id}`}
+                      value={cert.organizer_category} 
+                      onChange={(e) => updateCertField(cert.id, "organizer_category", e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none"
+                    >
+                      <option value="">{"Pilih Kategori"}</option>
+                      <option value="Pemerintah">{"Instansi Pemerintah"}</option>
+                      <option value="Mitra Pelatihan">{"Mitra Pelatihan (LKP/LPK)"}</option>
+                      <option value="Komunitas">{"Mitra Komunitas / NGO"}</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor={`org-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Nama Institusi"}</label>
+                    <input 
+                      id={`org-${cert.id}`}
+                      list={`list-${cert.id}`}
+                      value={cert.organizer_name} 
+                      onChange={(e) => updateCertField(cert.id, "organizer_name", e.target.value)}
+                      placeholder="Cari atau ketik penyelenggara..."
+                      className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none"
+                    />
+                    <datalist id={`list-${cert.id}`}>
+                      {cert.organizer_category === "Pemerintah" && GOVERNMENT_AGENCIES.map(g => <option key={g} value={g}/>)}
+                      {cert.organizer_category === "Mitra Pelatihan" && TRAINING_PARTNERS.map(t => <option key={t} value={t}/>)}
+                      {cert.organizer_category === "Komunitas" && COMMUNITY_PARTNERS.map(c => <option key={c} value={c}/>)}
+                    </datalist>
+                  </div>
+                </div>
+
+                {/* SKILLS ACQUIRED (Multi Checkbox Aksesibel) */}
+                <fieldset className="pt-6 border-t-2 border-slate-50 space-y-4">
+                  <legend className="flex items-center gap-3 text-blue-600 mb-4 font-black uppercase tracking-widest text-[10px]">
+                    <BookOpen size={18} aria-hidden="true" />
+                    {"Keahlian yang didapat dari pelatihan ini"}
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {SKILLS_LIST.map((cat: any) => cat.skills.map((skill: string) => (
+                      <label key={`${cert.id}-${skill}`} className={`px-4 py-2 rounded-xl border-2 text-[10px] font-black uppercase cursor-pointer transition-all ${
+                        cert.skills_acquired?.includes(skill) 
+                        ? "bg-blue-600 border-blue-600 text-white shadow-md" 
+                        : "bg-white border-slate-50 text-slate-400 hover:border-blue-200"
+                      }`}>
+                        <input 
+                          type="checkbox" 
+                          className="sr-only" 
+                          checked={cert.skills_acquired?.includes(skill)} 
+                          onChange={() => handleToggleCertSkill(cert.id, skill)} 
+                        />
+                        {skill}
+                      </label>
+                    )))}
+                  </div>
+                </fieldset>
+              </section>
+            ))}
+          </div>
+        </div>
+
+        {/* SIMPAN SEMUA DATA */}
+        <div className="flex justify-end pt-10 border-t border-slate-100">
           <button 
-            onClick={handleSubmit} disabled={loading}
-            className="bg-slate-900 text-white px-12 py-5 rounded-[2rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-purple-600 transition-all shadow-2xl"
+            type="submit" 
+            disabled={loading}
+            className="bg-slate-900 text-white px-16 py-6 rounded-[2.5rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-purple-600 transition-all shadow-2xl disabled:opacity-50"
           >
-            {loading ? "Sinkronisasi..." : <><Zap size={20} /> {"Simpan Perubahan"}</>}
+            {loading ? "Menyimpan..." : <><Save size={20} /> {"Simpan & Selesai"}</>}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
