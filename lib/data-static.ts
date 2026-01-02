@@ -340,6 +340,28 @@ export const COMMUNITY_PARTNERS = [
   "Pusat Layanan Disabilitas (PLD) Kampus"
 ].sort();
 
+// VARIABEL RISET KEAHLIAN & PELATIHAN
+export const SKILL_ACQUISITION_METHODS = [
+  "Pendidikan Formal (Sekolah/Kuliah)",
+  "Pelatihan Khusus Disabilitas (NGO/Komunitas)",
+  "Pelatihan Umum (LKP/LPK/Kursus)",
+  "Autodidak / Belajar Mandiri",
+  "Pengalaman Kerja Langsung"
+];
+
+export const TRAINING_ACCESSIBILITY_SCORES = [
+  { value: 1, label: "1 - Sangat Tidak Aksesibel" },
+  { value: 2, label: "2 - Kurang Aksesibel" },
+  { value: 3, label: "3 - Cukup" },
+  { value: 4, label: "4 - Aksesibel" },
+  { value: 5, label: "5 - Sangat Aksesibel (Materi Inklusif & Instruktur Paham)" }
+];
+
+export const SKILL_IMPACT_LEVELS = [
+  "Sangat Berdampak (Membantu mendapat kerja/kenaikan posisi)",
+  "Cukup Berdampak (Membantu pengerjaan tugas harian)",
+  "Belum Berdampak (Hanya sekadar menambah wawasan)"
+];
 export const INCLUSIVE_JOB_TEMPLATE = `[STANDAR INKLUSIVITAS KERJA]
 
 Kami percaya pada kesetaraan peluang bagi semua talenta. Instansi kami membuka pintu bagi rekan-rekan disabilitas untuk berkarya di posisi ini.
