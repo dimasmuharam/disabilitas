@@ -7,7 +7,7 @@ import {
   MapPin, DollarSign, CheckCircle2, AlertCircle, Info
 } from "lucide-react";
 
-// SINKRONISASI TOTAL DENGAN VARIABEL ASLI MAS DIMAS
+// SINKRONISASI TOTAL DENGAN DATA-STATIC MAS DIMAS
 import { CAREER_STATUSES, WORK_MODES, EMPLOYMENT_TYPES } from "@/lib/data-static";
 
 interface CareerExperienceProps {
@@ -38,14 +38,32 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
     fetchExperiences();
   }, [user.id]);
 
+  // FUNGSI KONVERSI: Date String -> Object (Bulan & Tahun)
+  const parseDate = (dateStr: string | null) => {
+    if (!dateStr) return { month: "Januari", year: "" };
+    const date = new Date(dateStr);
+    return { 
+      month: months[date.getMonth()], 
+      year: date.getFullYear().toString() 
+    };
+  };
+
   async function fetchExperiences() {
     const { data } = await supabase
       .from("work_experiences")
       .select("*")
       .eq("profile_id", user.id)
-      .order("start_year", { ascending: false });
+      .order("start_date", { ascending: false });
     
-    if (data) setExperiences(data);
+    if (data) {
+      // Pecah start_date & end_date menjadi bulan/tahun untuk UI
+      const formatted = data.map(exp => ({
+        ...exp,
+        ui_start: parseDate(exp.start_date),
+        ui_end: parseDate(exp.end_date)
+      }));
+      setExperiences(formatted);
+    }
   }
 
   const handleAddExperience = async () => {
@@ -53,15 +71,12 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
       profile_id: user.id,
       company_name: "",
       position: "",
-      start_month: "Januari",
-      start_year: new Date().getFullYear().toString(),
-      end_month: "Januari",
-      end_year: "",
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: null,
       is_current_work: false,
       description: "",
       company_location: "",
-      employment_type: "Full-time",
-      is_verified: false
+      employment_type: "Full-time"
     };
 
     const { data, error } = await supabase
@@ -69,12 +84,25 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
       .insert([newExp])
       .select();
 
-    if (data) setExperiences([...data, ...experiences]);
-    if (error) setMessage({ type: "error", text: error.message });
+    if (data) {
+      const withUI = { ...data[0], ui_start: parseDate(data[0].start_date), ui_end: parseDate(null) };
+      setExperiences([withUI, ...experiences]);
+    }
   };
 
   const updateExpField = (id: string, field: string, value: any) => {
     setExperiences(experiences.map(exp => exp.id === id ? { ...exp, [field]: value } : exp));
+  };
+
+  // Helper Update UI Date
+  const updateUIDate = (id: string, type: 'start' | 'end', part: 'month' | 'year', value: string) => {
+    setExperiences(experiences.map(exp => {
+      if (exp.id === id) {
+        const key = type === 'start' ? 'ui_start' : 'ui_end';
+        return { ...exp, [key]: { ...exp[key], [part]: value } };
+      }
+      return exp;
+    }));
   };
 
   const handleDeleteExp = async (id: string) => {
@@ -88,39 +116,33 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
     setMessage({ type: "", text: "" });
 
     try {
-      const { error: profError } = await supabase
-        .from("profiles")
-        .update(profileData)
-        .eq("id", user.id);
-
-      if (profError) throw profError;
+      await supabase.from("profiles").update(profileData).eq("id", user.id);
 
       for (const exp of experiences) {
-        const { error: expError } = await supabase
-          .from("work_experiences")
-          .update({
-            company_name: exp.company_name,
-            position: exp.position,
-            start_month: exp.start_month,
-            start_year: exp.start_year,
-            end_month: exp.is_current_work ? null : exp.end_month,
-            end_year: exp.is_current_work ? null : exp.end_year,
-            is_current_work: exp.is_current_work,
-            description: exp.description,
-            company_location: exp.company_location,
-            employment_type: exp.employment_type
-          })
-          .eq("id", exp.id);
-        if (expError) throw expError;
+        // KONVERSI BALIK: UI (Bulan/Tahun) -> DATE (YYYY-MM-DD)
+        const startIdx = months.indexOf(exp.ui_start.month) + 1;
+        const s_date = `${exp.ui_start.year}-${startIdx.toString().padStart(2, '0')}-01`;
+        
+        let e_date = null;
+        if (!exp.is_current_work && exp.ui_end.year) {
+          const endIdx = months.indexOf(exp.ui_end.month) + 1;
+          e_date = `${exp.ui_end.year}-${endIdx.toString().padStart(2, '0')}-01`;
+        }
+
+        await supabase.from("work_experiences").update({
+          company_name: exp.company_name,
+          position: exp.position,
+          start_date: s_date,
+          end_date: e_date,
+          is_current_work: exp.is_current_work,
+          description: exp.description,
+          company_location: exp.company_location,
+          employment_type: exp.employment_type
+        }).eq("id", exp.id);
       }
 
       setMessage({ type: "success", text: "Data Karir Berhasil Disimpan. Mengalihkan ke Overview..." });
-      
-      setTimeout(() => {
-        onSuccess();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 2000);
-
+      setTimeout(() => onSuccess(), 2000);
     } catch (error: any) {
       setMessage({ type: "error", text: error.message });
       setLoading(false);
@@ -128,14 +150,14 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 animate-in fade-in duration-500 font-sans text-slate-900 text-sm">
+    <div className="max-w-4xl mx-auto pb-20 animate-in fade-in duration-500 font-sans text-slate-900">
       <header className="mb-10 px-4">
-        <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4 text-slate-900">
-          <Briefcase className="text-blue-600" size={36} aria-hidden="true" />
+        <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
+          <Briefcase className="text-blue-600" size={36} />
           {"Karir & Pengalaman"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 italic">
-          {"Data profesional untuk riset & pengembangan karir inklusif."}
+          {"Sinkronisasi data profesional talenta disabilitas.com"}
         </p>
       </header>
 
@@ -150,75 +172,47 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-10 px-4">
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8 text-sm">
-          <h2 className="text-xs font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2">
-            <Info size={16} /> {"Status & Preferensi"}
-          </h2>
+      <form onSubmit={handleSubmit} className="space-y-10 px-4 text-sm">
+        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
+          <h2 className="text-xs font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2"><Info size={16} /> {"Preferensi Karir"}</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label htmlFor="career_status" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Status Karir"}</label>
-              <select id="career_status" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.career_status} onChange={(e) => setProfileData({...profileData, career_status: e.target.value})}>
+              <label className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Status Karir"}</label>
+              <select className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.career_status} onChange={(e) => setProfileData({...profileData, career_status: e.target.value})}>
                 {CAREER_STATUSES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
             <div className="space-y-2">
-              <label htmlFor="work_pref" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Preferensi Model Kerja"}</label>
-              <select id="work_pref" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.work_preference} onChange={(e) => setProfileData({...profileData, work_preference: e.target.value})}>
+              <label className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Preferensi Model Kerja"}</label>
+              <select className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.work_preference} onChange={(e) => setProfileData({...profileData, work_preference: e.target.value})}>
                 {WORK_MODES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="expected_salary" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Ekspektasi Gaji (Rp)"}</label>
-              <div className="relative"><DollarSign className="absolute left-4 top-4 text-slate-400" size={18} />
-                <input id="expected_salary" type="number" className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.expected_salary} onChange={(e) => setProfileData({...profileData, expected_salary: parseInt(e.target.value) || 0})} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="linkedin" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"LinkedIn Profile URL"}</label>
-              <div className="relative"><Linkedin className="absolute left-4 top-4 text-slate-400" size={18} />
-                <input id="linkedin" type="url" placeholder="https://..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.linkedin_url} onChange={(e) => setProfileData({...profileData, linkedin_url: e.target.value})} />
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="bio" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Bio Profesional"}</label>
-            <textarea id="bio" rows={4} className="w-full bg-slate-50 border-2 border-slate-100 p-6 rounded-[2rem] font-bold focus:border-blue-600 outline-none italic" value={profileData.bio} onChange={(e) => setProfileData({...profileData, bio: e.target.value})} />
           </div>
         </section>
 
         <section className="space-y-6">
           <div className="flex justify-between items-center px-4">
             <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{"Pengalaman Kerja"}</h2>
-            <button type="button" onClick={handleAddExperience} className="bg-blue-600 text-white px-6 py-4 rounded-2xl hover:bg-slate-900 transition-all flex items-center gap-3 text-[10px] font-black uppercase shadow-xl tracking-widest">
-              <Plus size={20} /> {"Tambah Riwayat"}
-            </button>
+            <button type="button" onClick={handleAddExperience} className="bg-blue-600 text-white px-6 py-4 rounded-2xl hover:bg-slate-900 transition-all flex items-center gap-3 text-[10px] font-black uppercase shadow-xl tracking-widest"><Plus size={20} /> {"Tambah Riwayat"}</button>
           </div>
 
           <div className="space-y-8">
             {experiences.map((exp, index) => (
-              <div key={exp.id} className="bg-white border-2 border-slate-100 p-10 rounded-[3rem] shadow-sm space-y-8 relative group animate-in slide-in-from-right-4 duration-500">
-                <button type="button" onClick={() => handleDeleteExp(exp.id)} className="absolute top-8 right-8 text-slate-300 hover:text-red-600 transition-colors" aria-label={`Hapus pengalaman ${index + 1}`}>
-                  <Trash2 size={24} />
-                </button>
+              <div key={exp.id} className="bg-white border-2 border-slate-100 p-10 rounded-[3rem] shadow-sm space-y-8 relative group animate-in slide-in-from-bottom-4">
+                <button type="button" onClick={() => handleDeleteExp(exp.id)} className="absolute top-8 right-8 text-slate-300 hover:text-red-600 transition-colors"><Trash2 size={24} /></button>
 
                 <div className="grid md:grid-cols-2 gap-8 text-sm">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase text-slate-400">{"Nama Instansi / Perusahaan"}</label>
+                    <label className="text-[10px] font-bold uppercase text-slate-400">{"Perusahaan"}</label>
                     <input type="text" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold focus:border-blue-600 outline-none" value={exp.company_name} onChange={(e) => updateExpField(exp.id, "company_name", e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase text-slate-400">{"Jabatan / Posisi"}</label>
+                    <label className="text-[10px] font-bold uppercase text-slate-400">{"Jabatan"}</label>
                     <input type="text" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold focus:border-blue-600 outline-none" value={exp.position} onChange={(e) => updateExpField(exp.id, "position", e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase text-slate-400">{"Lokasi Kerja"}</label>
-                    <div className="relative"><MapPin className="absolute left-4 top-4 text-slate-400" size={16} />
-                      <input type="text" placeholder="Kota" className="w-full bg-slate-50 border-2 border-transparent p-4 pl-12 rounded-xl font-bold focus:border-blue-600 outline-none" value={exp.company_location} onChange={(e) => updateExpField(exp.id, "company_location", e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase text-slate-400">{"Tipe Ikatan Kerja"}</label>
+                    <label className="text-[10px] font-bold uppercase text-slate-400">{"Tipe Pekerjaan"}</label>
                     <select className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold focus:border-blue-600 outline-none" value={exp.employment_type} onChange={(e) => updateExpField(exp.id, "employment_type", e.target.value)}>
                       {EMPLOYMENT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
                     </select>
@@ -227,49 +221,40 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase text-slate-400">{"Bulan Mulai"}</label>
-                      <select className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold" value={exp.start_month} onChange={(e) => updateExpField(exp.id, "start_month", e.target.value)}>
+                      <select className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold" value={exp.ui_start.month} onChange={(e) => updateUIDate(exp.id, 'start', 'month', e.target.value)}>
                         {months.map(m => <option key={m} value={m}>{m}</option>)}
                       </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase text-slate-400">{"Tahun Mulai"}</label>
-                      <input type="number" placeholder="YYYY" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold" value={exp.start_year} onChange={(e) => updateExpField(exp.id, "start_year", e.target.value)} />
+                      <input type="number" placeholder="YYYY" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold" value={exp.ui_start.year} onChange={(e) => updateUIDate(exp.id, 'start', 'year', e.target.value)} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase text-slate-400">{"Bulan Selesai"}</label>
-                      <select disabled={exp.is_current_work} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-30" value={exp.end_month || ""} onChange={(e) => updateExpField(exp.id, "end_month", e.target.value)}>
+                      <select disabled={exp.is_current_work} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-30" value={exp.ui_end.month} onChange={(e) => updateUIDate(exp.id, 'end', 'month', e.target.value)}>
                         {months.map(m => <option key={m} value={m}>{m}</option>)}
                       </select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase text-slate-400">{"Tahun Selesai"}</label>
-                      <input type="number" placeholder="YYYY" disabled={exp.is_current_work} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-30" value={exp.end_year || ""} onChange={(e) => updateExpField(exp.id, "end_year", e.target.value)} />
+                      <input type="number" placeholder="YYYY" disabled={exp.is_current_work} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-30" value={exp.ui_end.year} onChange={(e) => updateUIDate(exp.id, 'end', 'year', e.target.value)} />
                     </div>
                   </div>
                 </div>
 
                 <label className="flex items-center gap-3 mt-4 cursor-pointer">
                   <input type="checkbox" checked={exp.is_current_work} onChange={(e) => updateExpField(exp.id, "is_current_work", e.target.checked)} className="w-5 h-5 accent-blue-600" />
-                  <span className="text-[11px] font-black uppercase text-blue-600 italic">{"Masih aktif bekerja di sini"}</span>
+                  <span className="text-[11px] font-black uppercase text-blue-600 italic">{"Masih aktif bekerja di posisi ini"}</span>
                 </label>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-slate-400">{"Deskripsi & Pencapaian"}</label>
-                  <textarea rows={3} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold focus:border-blue-600 outline-none" value={exp.description} onChange={(e) => updateExpField(exp.id, "description", e.target.value)} />
-                </div>
               </div>
             ))}
           </div>
         </section>
 
-        <div className="flex justify-end pt-4">
-          <button type="submit" disabled={loading} className="bg-slate-900 text-white px-12 py-5 rounded-[2rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-blue-600 transition-all shadow-2xl disabled:opacity-50">
-            {loading ? "Menyimpan..." : <><Save size={20} aria-hidden="true" /> {"Simpan Riwayat Karir"}</>}
-          </button>
-        </div>
+        <div className="flex justify-end pt-4"><button type="submit" disabled={loading} className="bg-slate-900 text-white px-12 py-5 rounded-[2rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-blue-600 transition-all shadow-2xl disabled:opacity-50">{loading ? "Menyimpan..." : <Save size={20} />} {"Simpan Karir"}</button></div>
       </form>
     </div>
   );
