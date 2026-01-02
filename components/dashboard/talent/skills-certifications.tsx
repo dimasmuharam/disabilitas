@@ -121,11 +121,10 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     <div className="max-w-4xl mx-auto pb-20 font-sans text-slate-900">
       {/* DATALIST UNTUK COMBOBOX SKILLS */}
       <datalist id="skills-list">
-        {SKILLS_LIST?.map((cat: any) => cat.skills?.map((s: string) => (
-          <option key={s} value={s} />
-        )))}
-      </datalist>
-
+  {SKILLS_LIST.map((skill) => (
+    <option key={skill} value={skill} />
+  ))}
+</datalist>
       <header className="mb-10 px-4">
         <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4 text-slate-900">
           <Zap className="text-purple-600" size={36} aria-hidden="true" />
