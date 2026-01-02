@@ -11,6 +11,7 @@ import {
   CAREER_STATUSES, 
   WORK_MODES, 
   EMPLOYMENT_TYPES, 
+  INDONESIA_CITIES,
   EMPLOYER_CATEGORIES,
   GOVERNMENT_AGENCIES_LIST,
   STATE_ENTERPRISES_LIST,
@@ -157,13 +158,14 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
       <datalist id="gov-list">{GOVERNMENT_AGENCIES_LIST.map(a => <option key={a} value={a} />)}</datalist>
       <datalist id="state-list">{STATE_ENTERPRISES_LIST.map(b => <option key={b} value={b} />)}</datalist>
       <datalist id="private-list">{PRIVATE_COMPANIES_LIST.map(s => <option key={s} value={s} />)}</datalist>
+      <datalist id="city-list">{INDONESIA_CITIES.map(city => <option key={city} value={city} />)}</datalist>
       <datalist id="nonprofit-list">{NONPROFIT_ORG_LIST.map(n => <option key={n} value={n} />)}</datalist>
 
       <header className="mb-10 px-4">
         <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
           <Briefcase className="text-blue-600" size={36} /> {"Karir & Pengalaman"}
         </h1>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">{"Verifikasi data kerja Anda untuk riset disabilitas.com."}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">{"Lengkapi data kerja Anda untuk tampil makin meyakinkan di hadapan recruter."}</p>
       </header>
 
       <div aria-live="polite" className="px-4">
@@ -189,7 +191,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
               </select>
             </div>
             <div className="space-y-2">
-              <label htmlFor="work_pref" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Model Kerja"}</label>
+              <label htmlFor="work_pref" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Preferensi Model Kerja"}</label>
               <select id="work_pref" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.work_preference} onChange={(e) => setProfileData({...profileData, work_preference: e.target.value})}>
                 {WORK_MODES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
@@ -249,10 +251,21 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`loc-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2">{"Lokasi (Kota)"}</label>
-                    <input disabled={isFromSystem} id={`loc-${exp.id}`} type="text" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-60" value={exp.company_location} onChange={(e) => updateExpField(exp.id, "company_location", e.target.value)} />
-                  </div>
-
+  <label htmlFor={`loc-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2">{"Lokasi (Kota/Kabupaten)"}</label>
+  <div className="relative">
+    <MapPin className="absolute left-4 top-4 text-slate-400" size={16} aria-hidden="true" />
+    <input 
+      disabled={isFromSystem}
+      id={`loc-${exp.id}`} 
+      type="text" 
+      list="city-list" // <--- Ini kunci penghubungnya
+      placeholder="Cari Kota/Kabupaten..."
+      className="w-full bg-slate-50 border-2 border-transparent p-4 pl-12 rounded-xl font-bold focus:border-blue-600 outline-none disabled:opacity-60" 
+      value={exp.company_location} 
+      onChange={(e) => updateExpField(exp.id, "company_location", e.target.value)} 
+    />
+  </div>
+</div>
                   <div className="space-y-2">
                     <label htmlFor={`type-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2">{"Ikatan Kerja"}</label>
                     <select disabled={isFromSystem} id={`type-${exp.id}`} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-60" value={exp.employment_type} onChange={(e) => updateExpField(exp.id, "employment_type", e.target.value)}>
