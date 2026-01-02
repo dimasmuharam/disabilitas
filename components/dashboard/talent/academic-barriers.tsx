@@ -36,7 +36,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     education_model: profile?.education_model || "",
     university: profile?.university || "",
     major: profile?.major || "",
-    graduation_year: profile?.graduation_year || "", // Menggunakan tahun saja
+    graduation_date: profile?.graduation_date || "", // Menggunakan tahun saja
     scholarship_type: profile?.scholarship_type || "",
     education_barrier: profile?.education_barrier || [], 
     academic_support_received: profile?.academic_support_received || [], // Baru
@@ -135,7 +135,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
             </div>
             <div className="space-y-2">
               <label htmlFor="grad_year" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Tahun Lulus"}</label>
-              <input id="grad_year" required type="number" placeholder="Contoh: 2024" value={formData.graduation_year} onChange={(e) => setFormData({...formData, graduation_year: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-emerald-600 outline-none" />
+              <input id="grad_year" required type="number" placeholder="Contoh: 2024" value={formData.graduation_date} onChange={(e) => setFormData({...formData, graduation_date: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-emerald-600 outline-none" />
             </div>
             <div className="space-y-2">
               <label htmlFor="edu_model" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Model Pendidikan"}</label>
