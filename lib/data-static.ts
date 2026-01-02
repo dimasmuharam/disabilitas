@@ -152,10 +152,10 @@ export const SCHOLARSHIP_TYPES = [
 
 export const EDUCATION_BARRIERS = [
   "Kendala Biaya / Ekonomi",
-  "Jarak Sekolah Terlalu Jauh",
-  "Ditolak oleh Pihak Sekolah",
-  "Fasilitas Sekolah Tidak Aksesibel",
-  "Kurangnya Tenaga Pendidik Khusus",
+  "Jarak Sekolah atau Kampus Terlalu Jauh",
+  "Ditolak oleh Pihak Sekolah atau Kampus",
+  "Fasilitas Fisik Sekolah atau Kampus Tidak Aksesibel",
+  "Kurangnya Tenaga Pendidik Khusus atau Disability Advisor",
   "Masalah Kesehatan",
   "Fokus Bekerja",
   "Faktor Lingkungan / Bullying"
@@ -163,7 +163,7 @@ export const EDUCATION_BARRIERS = [
 
 // 1. AKOMODASI YANG DITERIMA DARI INSTITUSI (Pendidikan)
 export const ACADEMIC_SUPPORT_RECEIVED = [
-  "Penyediaan Juru Bahasa Isyarat oleh Kampus",
+  "Penyediaan Juru Bahasa Isyarat oleh institusi pendidikan",
   "Pendampingan Khusus dari Unit Layanan Disabilitas (ULD)",
   "Modifikasi Materi Ujian (Braille/Audio/Large Print)",
   "Aksesibilitas Fisik Gedung (Ramp/Lift/Toilet)",
@@ -171,9 +171,9 @@ export const ACADEMIC_SUPPORT_RECEIVED = [
   "Penyediaan Jasa Notetaker (Pencatat Kuliah)",
   "Tidak Ada Dukungan dari Pihak Institusi",
   "Lainnya"
-].sort();
+];
 
-// 2. TEKNOLOGI BANTU YANG DIGUNAKAN UNTUK BELAJAR (Mandiri)
+// TEKNOLOGI BANTU YANG DIGUNAKAN UNTUK BELAJAR (Mandiri)
 export const ACADEMIC_ASSISTIVE_TOOLS = [
   "Software Pembaca Layar (Screen Reader)",
   "Aplikasi Perekam & Transkrip Kuliah",
@@ -183,7 +183,7 @@ export const ACADEMIC_ASSISTIVE_TOOLS = [
   "Laptop/Tablet dengan Fitur Aksesibilitas Khusus",
   "Aplikasi Pengubah Teks ke Suara (Text-to-Speech)",
   "Lainnya"
-].sort();
+];
 
 // KESESUAIAN BIDANG STUDI
 export const STUDY_RELEVANCE_LEVELS = [
