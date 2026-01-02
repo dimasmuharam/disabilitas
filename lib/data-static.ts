@@ -161,6 +161,39 @@ export const EDUCATION_BARRIERS = [
   "Faktor Lingkungan / Bullying"
 ].sort();
 
+// 1. AKOMODASI YANG DITERIMA DARI INSTITUSI (Pendidikan)
+export const ACADEMIC_SUPPORT_RECEIVED = [
+  "Penyediaan Juru Bahasa Isyarat oleh Kampus",
+  "Pendampingan Khusus dari Unit Layanan Disabilitas (ULD)",
+  "Modifikasi Materi Ujian (Braille/Audio/Large Print)",
+  "Aksesibilitas Fisik Gedung (Ramp/Lift/Toilet)",
+  "Fleksibilitas Waktu Pengerjaan Tugas & Ujian",
+  "Penyediaan Jasa Notetaker (Pencatat Kuliah)",
+  "Tidak Ada Dukungan dari Pihak Institusi",
+  "Lainnya"
+].sort();
+
+// 2. TEKNOLOGI BANTU YANG DIGUNAKAN UNTUK BELAJAR (Mandiri)
+export const ACADEMIC_ASSISTIVE_TOOLS = [
+  "Software Pembaca Layar (Screen Reader)",
+  "Aplikasi Perekam & Transkrip Kuliah",
+  "Alat Bantu Dengar / Cochlear Implant",
+  "Mesin Ketik Braille / Slate & Stylus",
+  "Perangkat Magnifier (Pembesar Teks)",
+  "Laptop/Tablet dengan Fitur Aksesibilitas Khusus",
+  "Aplikasi Pengubah Teks ke Suara (Text-to-Speech)",
+  "Lainnya"
+].sort();
+
+// KESESUAIAN BIDANG STUDI
+export const STUDY_RELEVANCE_LEVELS = [
+  "Sangat Relevan (Bekerja sesuai jurusan)",
+  "Cukup Relevan (Bekerja di bidang terkait)",
+  "Kurang Relevan (Hanya sebagian kecil ilmu terpakai)",
+  "Tidak Relevan (Bekerja di bidang berbeda total)",
+  "Belum Bekerja"
+];
+
 export const ACCOMMODATION_TYPES = [
   "Materi Format Braille / Audio",
   "Pendampingan Juru Bahasa Isyarat",
