@@ -6,7 +6,7 @@ import {
   User, MapPin, Briefcase, GraduationCap, 
   FileDown, BookOpen, Laptop, Wifi, 
   AlertCircle, CheckCircle2, Search,
-  ChevronLeft, Share2, ExternalLink, Clock
+  ChevronLeft, LayoutDashboard, Share2, ExternalLink, Clock
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import jsPDF from "jspdf";
@@ -31,6 +31,8 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const [stats, setStats] = useState({ jobs: 0, trainings: 0 });
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const [appliedTrainings, setAppliedTrainings] = useState<any[]>([]);
+  const [workExps, setWorkExps] = useState<any[]>([]);
+  const [certifications, setCertifications] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview"); 
@@ -44,27 +46,44 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
 
   async function fetchLatestData() {
     try {
+      // 1. Ambil Profil Dasar
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (prof) {
         setProfile(prof);
         calculateProgress(prof);
       }
 
-      // 1. Tracking Lamaran Kerja (Tabel: applications)
-      const { data: applications, count: jobCount } = await supabase
-        .from("applications")
+      // 2. Ambil Riwayat Pengalaman Kerja (work_experiences)
+      const { data: works } = await supabase.from("work_experiences")
+        .select("*")
+        .eq("profile_id", user.id)
+        .order('start_date', { ascending: false });
+      setWorkExps(works || []);
+
+      // 3. Ambil Sertifikasi/Pelatihan Selesai (certifications)
+      const { data: certs } = await supabase.from("certifications")
+        .select("*")
+        .eq("profile_id", user.id)
+        .order('issued_date', { ascending: false });
+      setCertifications(certs || []);
+
+      // 4. Tracking Lamaran Kerja (applications)
+      const { data: apps } = await supabase.from("applications")
         .select("id, status, created_at, jobs(title, company_name)")
         .eq("profile_id", user.id);
-      setAppliedJobs(applications || []);
+      setAppliedJobs(apps || []);
 
-      // 2. Tracking Pendaftaran Pelatihan (Tabel: trainees)
-      const { data: traineeReg, count: trainingCount } = await supabase
-        .from("trainees")
+      // 5. Tracking Pendaftaran Pelatihan (trainees)
+      const { data: trains } = await supabase.from("trainees")
         .select("id, status, created_at, trainings(title, organizer_name)")
         .eq("profile_id", user.id);
-      setAppliedTrainings(traineeReg || []);
+      setAppliedTrainings(trains || []);
 
-      setStats({ jobs: jobCount || 0, trainings: trainingCount || 0 });
+      setStats({ 
+        jobs: apps?.length || 0, 
+        trainings: trains?.length || 0 
+      });
+
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -121,50 +140,99 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
     setIsProcessing(true);
     try {
       const doc = new jsPDF();
-      const name = profile?.full_name || "Talenta Inklusif";
+      const name = profile?.full_name || "NAMA LENGKAP";
       const disability = profile?.disability_type || "Profesional Inklusif";
-      const url = `https://disabilitas.com/talent/${user.id}`;
+      const contact = `${profile?.city || '-'} | ${profile?.phone || '-'} | ${user?.email}`;
 
-      // Header Branding
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(24);
-      doc.text(name.toUpperCase(), 20, 30);
+      doc.setFontSize(22);
+      doc.text(name.toUpperCase(), 20, 25);
       
-      doc.setFontSize(14);
-      doc.setTextColor(37, 99, 235);
-      doc.text(disability.toUpperCase(), 20, 40);
-      
-      doc.setDrawColor(15, 23, 42);
-      doc.setLineWidth(0.5);
-      doc.line(20, 45, 190, 45);
-
-      // Section: Executive Summary
-      doc.setTextColor(0, 0, 0);
       doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("EXECUTIVE SUMMARY", 20, 55);
+      doc.setTextColor(37, 99, 235);
+      doc.text(disability.toUpperCase(), 20, 32);
       
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("helvetica", "normal");
+      doc.text(contact, 20, 38);
+      doc.line(20, 42, 190, 42);
+
+      let yPos = 55;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.text("RINGKASAN PROFESIONAL", 20, yPos);
+      yPos += 7;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       const splitBio = doc.splitTextToSize(getDisplayBio(), 170);
-      doc.text(splitBio, 20, 62);
+      doc.text(splitBio, 20, yPos);
+      yPos += (splitBio.length * 5) + 10;
 
-      // Section: Skill & Tech
       doc.setFont("helvetica", "bold");
-      doc.text("KOMPETENSI & TEKNOLOGI", 20, 90);
+      doc.text("PENDIDIKAN TERAKHIR", 20, yPos);
+      yPos += 7;
       doc.setFont("helvetica", "normal");
-      doc.text(`Keahlian: ${profile?.skills?.join(", ") || "-"}`, 20, 97);
-      doc.text(`Alat Bantu: ${profile?.used_assistive_tools?.join(", ") || "-"}`, 20, 104);
+      doc.text(`${profile?.university || "-"}`, 20, yPos);
+      doc.text(`${profile?.major || "-"} | Lulus: ${profile?.graduation_date || "-"}`, 20, yPos + 5);
+      yPos += 15;
 
-      // Footer Validasi
+      doc.setFont("helvetica", "bold");
+      doc.text("RIWAYAT PEKERJAAN", 20, yPos);
+      yPos += 7;
+      if (workExps.length > 0) {
+        workExps.forEach((exp) => {
+          doc.setFont("helvetica", "bold");
+          doc.text(exp.job_title, 20, yPos);
+          doc.setFont("helvetica", "normal");
+          doc.text(`${exp.company_name} (${exp.start_date} - ${exp.end_date || 'Sekarang'})`, 20, yPos + 5);
+          yPos += 12;
+        });
+      } else {
+        doc.setFont("helvetica", "italic");
+        doc.text("Belum ada riwayat kerja.", 20, yPos);
+        yPos += 10;
+      }
+
+      yPos += 5;
+      doc.setFont("helvetica", "bold");
+      doc.text("SERTIFIKASI & PELATIHAN", 20, yPos);
+      yPos += 7;
+      if (certifications.length > 0) {
+        certifications.forEach((cert) => {
+          doc.setFont("helvetica", "bold");
+          doc.text(cert.name, 20, yPos);
+          doc.setFont("helvetica", "normal");
+          doc.text(`${cert.organization} | Terbit: ${cert.issued_date}`, 20, yPos + 5);
+          yPos += 12;
+        });
+      } else {
+        doc.setFont("helvetica", "italic");
+        doc.text("-", 20, yPos);
+        yPos += 10;
+      }
+
+      yPos += 5;
+      doc.setFont("helvetica", "bold");
+      doc.text("ALAT BANTU & TEKNOLOGI ASISTIF", 20, yPos);
+      yPos += 7;
+      doc.setFont("helvetica", "normal");
+      const tools = Array.isArray(profile?.used_assistive_tools) ? profile.used_assistive_tools.join(", ") : "-";
+      doc.text(`Aksesibilitas: ${tools}`, 20, yPos);
+
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setDrawColor(226, 232, 240);
+      doc.line(20, pageHeight - 35, 190, pageHeight - 35);
       doc.setFontSize(8);
-      doc.setTextColor(148, 163, 184);
-      doc.text("Dokumen ini dihasilkan secara otomatis oleh sistem disabilitas.com", 20, 275);
-      doc.text(`Profil Digital: ${url}`, 20, 280);
+      doc.setTextColor(150);
+      doc.text("Dokumen ini dihasilkan secara otomatis oleh disabilitas.com", 20, pageHeight - 25);
+      doc.text(`Tautan Verifikasi: https://disabilitas.com/talent/${user.id}`, 20, pageHeight - 20);
 
       doc.save(`CV_${name.replace(/\s+/g, '_')}.pdf`);
     } catch (err) {
-      console.error("Gagal generate PDF aksesibel:", err);
+      console.error("Gagal cetak CV:", err);
     } finally {
       setIsProcessing(false);
     }
@@ -173,11 +241,10 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const handleShare = async () => {
     const url = `https://disabilitas.com/talent/${user.id}`;
     const name = profile?.full_name || "Talenta Inklusif";
-    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Mari bersama membangun ekosistem kerja inklusif di Indonesia. Cek profil profesional saya di sini: ${url}`;
+    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Yu gabung dan dapatkan lowongan terbaik. Mari Bersama membangun ekosistem kerja inklusif di Indonesia. Cek profil profesional saya di sini: ${url}`;
 
     const openWhatsApp = () => {
-      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-      window.open(waUrl, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
     };
 
     if (isProcessing) return;
@@ -187,20 +254,12 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       try {
         const element = document.getElementById("inclusion-card");
         if (element) {
-          const canvas = await html2canvas(element, { 
-            scale: 2, useCORS: true, backgroundColor: "#ffffff" 
-          });
-          
+          const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
           canvas.toBlob(async (blob) => {
             if (blob) {
               const file = new File([blob], `Inclusion_Card_${name}.png`, { type: "image/png" });
               try {
-                await navigator.share({
-                  title: "Inclusion Identity Card",
-                  text: shareText,
-                  url: url,
-                  files: [file]
-                });
+                await navigator.share({ title: "Inclusion Identity Card", text: shareText, url: url, files: [file] });
               } catch (err) { openWhatsApp(); }
             } else { openWhatsApp(); }
             setIsProcessing(false);
@@ -222,7 +281,6 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       default: return (
         <div className="space-y-10 animate-in fade-in duration-500">
-          {/* HEADER PROFILE CARD */}
           <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm relative overflow-hidden">
             <div className="flex flex-col md:flex-row gap-8 items-start">
               <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black italic shadow-lg shadow-blue-200 shrink-0">
@@ -246,13 +304,9 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
             </div>
           </section>
 
-          {/* COMBO TRACKING */}
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Tracking Lowongan */}
             <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
-                <Briefcase size={16} className="text-blue-600" /> {"Tracking Lamaran"}
-              </h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2"><Briefcase size={16} className="text-blue-600" /> {"Tracking Lamaran"}</h3>
               <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden min-h-[200px]">
                 {appliedJobs.length > 0 ? (
                   <div className="divide-y divide-slate-50">
@@ -266,17 +320,12 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada lamaran"}</div>
-                )}
+                ) : <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada lamaran"}</div>}
               </div>
             </div>
 
-            {/* Tracking Pelatihan */}
             <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
-                <BookOpen size={16} className="text-emerald-600" /> {"Tracking Pelatihan"}
-              </h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2"><BookOpen size={16} className="text-emerald-600" /> {"Tracking Pelatihan"}</h3>
               <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden min-h-[200px]">
                 {appliedTrainings.length > 0 ? (
                   <div className="divide-y divide-slate-50">
@@ -290,14 +339,11 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada pendaftaran"}</div>
-                )}
+                ) : <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada pendaftaran"}</div>}
               </div>
             </div>
           </div>
 
-          {/* SMART RECOMMENDATIONS */}
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl hover:scale-[1.02] transition-transform">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto text-white shadow-lg shadow-blue-500/20"><Search size={32} /></div>
@@ -320,15 +366,11 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans">
       <div className="max-w-6xl mx-auto space-y-8 pt-8 px-4">
-        
-        {/* TOP PROGRESS CARD */}
         <section className="bg-white border-2 border-slate-900 p-8 rounded-[3rem] shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-1">
-              <h1 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">
-                {progress === 100 ? "Profil Siap Kerja!" : "Kelengkapan Profil Talenta"}
-              </h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{"Lengkapi data untuk riset & ekosistem bisnis inklusif"}</p>
+              <h1 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{progress === 100 ? "Profil Siap Kerja!" : "Kelengkapan Profil Talenta"}</h1>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{"Lengkapi Profil dan Raih Karir Impianmu"}</p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
               <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`Pencapaian profil ${progress} persen`}>
@@ -388,23 +430,19 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
                   <FileDown size={18} /> {isProcessing ? "Menyusun Dokumen..." : "Cetak CV Aksesibel"}
                 </button>
                 <button onClick={handleShare} disabled={isProcessing} className="w-full bg-emerald-600 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all disabled:opacity-50 shadow-lg shadow-emerald-900/20">
-                  <Share2 size={18} /> {isProcessing ? "Memotret Kartu..." : "Share Kartu Identitas"}
+                  <Share2 size={18} /> {isProcessing ? "Memotret Kartu..." : "Share Kartu Talenta Inklusif"}
                 </button>
               </div>
             </div>
           </aside>
         </div>
 
-        {/* TEMPLATE TERSEMBUNYI UNTUK INCLUSION CARD (IMAGE ONLY) */}
         <div className="opacity-0 pointer-events-none absolute -z-50 overflow-hidden h-0 w-0" aria-hidden="true">
            <div id="inclusion-card" className="p-10 bg-white w-[600px] h-[350px] text-slate-900 flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem] font-sans">
               <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
-                </div>
+                <h2 className="text-2xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
                 <span className="text-[10px] font-black bg-blue-600 text-white px-4 py-1 rounded-full uppercase">{"Verified Talent"}</span>
               </div>
-              
               <div className="flex-1 py-6">
                 <p className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Nama Lengkap"}</p>
                 <p className="text-lg font-bold text-blue-600 uppercase tracking-widest mt-1">{profile?.disability_type || "Ragam Disabilitas"}</p>
@@ -414,19 +452,15 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
                   <span>{profile?.education_level || "Pendidikan"}</span>
                 </div>
               </div>
-
               <div className="flex justify-between items-end pt-4 border-t-2 border-slate-100">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase text-slate-900">{"Inclusion Identity Card"}</p>
                   <p className="text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em]">{"Scan to view professional portfolio"}</p>
                 </div>
-                <div className="bg-slate-50 p-2 rounded-2xl border-2 border-slate-100">
-                  <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} />
-                </div>
+                <div className="bg-slate-50 p-2 rounded-2xl border-2 border-slate-100"><QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} /></div>
               </div>
            </div>
         </div>
-
       </div>
     </div>
   );
