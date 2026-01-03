@@ -134,6 +134,7 @@ function calculateProgress(profData: any) {
   const exportPDF = async () => {
     const element = document.getElementById("cv-content");
     if (!element) return;
+}
 const canvas = await html2canvas(element, { 
   scale: 2,
   useCORS: true, 
