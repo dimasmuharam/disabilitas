@@ -122,7 +122,7 @@ export default function LoginPage() {
           {"Masuk ke Akun"}
         </h1>
         <p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">
-          {"Akses Pusat Riset & Karir Disabilitas"}
+          {"Akses Dashboard Disabilitas.com Anda sebagai Talenta Inklusif, Perusahaan, Rekanan, atau Pemerintah"}
         </p>
       </div>
 
