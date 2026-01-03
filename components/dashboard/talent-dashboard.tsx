@@ -134,7 +134,7 @@ function calculateProgress(profData: any) {
   const exportPDF = async () => {
     const element = document.getElementById("cv-content");
     if (!element) return;
-}
+
 const canvas = await html2canvas(element, { 
   scale: 2,
   useCORS: true, 
@@ -279,7 +279,7 @@ const canvas = await html2canvas(element, {
   aria-valuenow={progress}
   aria-valuemin={0}
   aria-valuemax={100}
-  aria-label={`{"Tingkat keterisian profil talenta  Anda saat ini adalah ${progress} persen"}`}
+  aria-label={`{"Tingkat keterisian profil talenta Anda saat ini adalah ${progress} persen"}`}
 >
   <div 
     className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} 
