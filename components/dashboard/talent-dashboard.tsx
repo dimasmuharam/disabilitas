@@ -46,44 +46,29 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
 
   async function fetchLatestData() {
     try {
-      // 1. Ambil Profil Dasar
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (prof) {
         setProfile(prof);
         calculateProgress(prof);
       }
 
-      // 2. Ambil Riwayat Pengalaman Kerja (work_experiences)
-      const { data: works } = await supabase.from("work_experiences")
-        .select("*")
-        .eq("profile_id", user.id)
-        .order('start_date', { ascending: false });
+      // Ambil Riwayat Kerja
+      const { data: works } = await supabase.from("work_experiences").select("*").eq("profile_id", user.id).order('start_date', { ascending: false });
       setWorkExps(works || []);
 
-      // 3. Ambil Sertifikasi/Pelatihan Selesai (certifications)
-      const { data: certs } = await supabase.from("certifications")
-        .select("*")
-        .eq("profile_id", user.id)
-        .order('issued_date', { ascending: false });
+      // Ambil Sertifikasi
+      const { data: certs } = await supabase.from("certifications").select("*").eq("profile_id", user.id).order('issued_date', { ascending: false });
       setCertifications(certs || []);
 
-      // 4. Tracking Lamaran Kerja (applications)
-      const { data: apps } = await supabase.from("applications")
-        .select("id, status, created_at, jobs(title, company_name)")
-        .eq("profile_id", user.id);
+      // Tracking Lamaran
+      const { data: apps } = await supabase.from("applications").select("id, status, created_at, jobs(title, company_name)").eq("profile_id", user.id);
       setAppliedJobs(apps || []);
 
-      // 5. Tracking Pendaftaran Pelatihan (trainees)
-      const { data: trains } = await supabase.from("trainees")
-        .select("id, status, created_at, trainings(title, organizer_name)")
-        .eq("profile_id", user.id);
+      // Tracking Pelatihan
+      const { data: trains } = await supabase.from("trainees").select("id, status, created_at, trainings(title, organizer_name)").eq("profile_id", user.id);
       setAppliedTrainings(trains || []);
 
-      setStats({ 
-        jobs: apps?.length || 0, 
-        trainings: trains?.length || 0 
-      });
-
+      setStats({ jobs: apps?.length || 0, trainings: trains?.length || 0 });
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -117,10 +102,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       { value: profData?.skills?.length > 0 ? "filled" : null, label: "Daftar Keahlian", module: "Skill" }
     ];
 
-    const missing = checklist
-      .filter(item => !item.value)
-      .map(item => `${item.module}: ${item.label}`);
-
+    const missing = checklist.filter(item => !item.value).map(item => `${item.module}: ${item.label}`);
     setMissingFields(missing);
     const total = checklist.length;
     const filledCount = total - missing.length;
@@ -130,9 +112,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const getDisplayBio = () => {
     if (profile?.bio) return profile.bio;
     const name = profile?.full_name || "Talenta Inklusif";
-    const disability = profile?.disability_type ? `dengan ragam ${profile.disability_type}` : "";
-    const city = profile?.city ? `berdomisili di ${profile.city}` : "";
-    return `Saya adalah ${name} ${disability}, ${city}. Saya berkomitmen untuk berkontribusi secara profesional di lingkungan kerja yang inklusif.`;
+    return `Saya adalah ${name}, profesional yang berkomitmen untuk berkontribusi di lingkungan kerja inklusif.`;
   };
 
   const exportPDF = async () => {
@@ -159,7 +139,6 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       doc.line(20, 42, 190, 42);
 
       let yPos = 55;
-
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(0);
@@ -185,7 +164,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       if (workExps.length > 0) {
         workExps.forEach((exp) => {
           doc.setFont("helvetica", "bold");
-          doc.text(exp.job_title, 20, yPos);
+          doc.text(exp.job_title || "Posisi", 20, yPos);
           doc.setFont("helvetica", "normal");
           doc.text(`${exp.company_name} (${exp.start_date} - ${exp.end_date || 'Sekarang'})`, 20, yPos + 5);
           yPos += 12;
@@ -203,7 +182,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       if (certifications.length > 0) {
         certifications.forEach((cert) => {
           doc.setFont("helvetica", "bold");
-          doc.text(cert.name, 20, yPos);
+          doc.text(cert.name || "Sertifikasi", 20, yPos);
           doc.setFont("helvetica", "normal");
           doc.text(`${cert.organization} | Terbit: ${cert.issued_date}`, 20, yPos + 5);
           yPos += 12;
@@ -239,16 +218,15 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   };
 
   const handleShare = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     const url = `https://disabilitas.com/talent/${user.id}`;
     const name = profile?.full_name || "Talenta Inklusif";
-    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Yu gabung dan dapatkan lowongan terbaik. Mari Bersama membangun ekosistem kerja inklusif di Indonesia. Cek profil profesional saya di sini: ${url}`;
+    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Yu gabung dan dapatkan lowongan terbaik. Cek profil profesional saya di sini: ${url}`;
 
     const openWhatsApp = () => {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
     };
-
-    if (isProcessing) return;
-    setIsProcessing(true);
 
     if (navigator.share) {
       try {
@@ -345,13 +323,13 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl hover:scale-[1.02] transition-transform">
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto text-white shadow-lg shadow-blue-500/20"><Search size={32} /></div>
+            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto text-white"><Search size={32} /></div>
               <h4 className="text-lg font-black text-white italic uppercase tracking-tighter">{"Smart Job Match"}</h4>
               <p className="text-[10px] font-bold text-slate-400 uppercase">{"Rekomendasi lowongan yang sesuai profil Anda."}</p>
             </div>
-            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl hover:scale-[1.02] transition-transform">
-              <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto text-white shadow-lg shadow-emerald-500/20"><BookOpen size={32} /></div>
+            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl">
+              <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto text-white"><BookOpen size={32} /></div>
               <h4 className="text-lg font-black text-white italic uppercase tracking-tighter">{"Training Match"}</h4>
               <p className="text-[10px] font-bold text-slate-400 uppercase">{"Tingkatkan keahlian dengan kursus pilihan."}</p>
             </div>
@@ -373,7 +351,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{"Lengkapi Profil dan Raih Karir Impianmu"}</p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
-              <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`Pencapaian profil ${progress} persen`}>
+              <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
                 <div className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${progress}%` }}></div>
               </div>
               <span className="font-black italic text-2xl text-slate-900 min-w-[60px]">{`${progress}%`}</span>
@@ -394,7 +372,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
           )}
 
           {activeTab === "overview" && (
-            <nav className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 border-t border-slate-100 pt-8" aria-label="Menu Modul Profil">
+            <nav className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 border-t border-slate-100 pt-8">
               {[
                 { label: "Identitas", id: "identity", icon: User },
                 { label: "Sarana", id: "tech", icon: Laptop },
