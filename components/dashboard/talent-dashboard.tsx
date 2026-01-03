@@ -6,7 +6,7 @@ import {
   User, MapPin, Briefcase, GraduationCap, 
   FileDown, BookOpen, Laptop, Wifi, 
   AlertCircle, CheckCircle2, Search,
-  ChevronLeft, LayoutDashboard, Share2, ExternalLink, Clock
+  ChevronLeft, LayoutDashboard, Share2, ExternalLink, ShieldCheck, Clock
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import jsPDF from "jspdf";
