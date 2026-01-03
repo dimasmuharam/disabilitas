@@ -33,8 +33,6 @@ export default function LoginPage() {
     const normalizedEmail = email.toLowerCase().trim()
 
     try {
-      console.log('[LOGIN] Memulai login untuk:', normalizedEmail)
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
@@ -44,26 +42,28 @@ export default function LoginPage() {
       if (error) throw error
 
       if (data?.user) {
-        // --- LOGIKA AKSESIBILITAS KHUSUS ---
-        // 1. Paksa kursor keluar dari kotak password (agar SR keluar dari kotak edit)
+        // --- LOGIKA AKSESIBILITAS TINGKAT LANJUT ---
+        
+        // 1. Lepaskan kursor dari kotak input agar mode isi form (Focus Mode) berhenti
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
 
-        // 2. Set pesan sukses
-        setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Mengalihkan Anda sekarang...")
-        setIsError(false)
+        // 2. Set pesan sukses (akan dibaca instan oleh aria-live)
+        setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Anda akan diarahkan ke judul halaman utama sebentar lagi...");
+        setIsError(false);
 
-        // 3. Pindahkan fokus kursor ke pesan sukses (agar dibaca instan & keluar dari form)
-        // Kita beri sedikit jeda agar elemen pesan muncul di DOM terlebih dahulu
+        // 3. Pasang 'ranjau' fokus: simpan penanda di storage browser
+        // Dashboard akan mengecek ini dan mengarahkan kursor ke H1 secara otomatis
+        sessionStorage.setItem("pindahkan_fokus_ke_h1", "true");
+
+        // 4. Fokuskan sementara ke pesan sukses agar Mas tahu prosesnya jalan
         setTimeout(() => {
           const alertElement = document.getElementById("login-announcement");
-          if (alertElement) {
-            alertElement.focus();
-          }
+          if (alertElement) alertElement.focus();
         }, 100);
 
-        // --- SINKRONISASI DATA PROFIL ---
+        // --- SINKRONISASI DATA PROFIL (Logika internal Supabase) ---
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -73,8 +73,7 @@ export default function LoginPage() {
         if (!profile) {
           const roleFromMetadata = data.user.user_metadata?.role || 'talent'
           await supabase
-            .from('profiles')
-            .insert({
+            .from('profiles').insert({
               id: data.user.id,
               email: normalizedEmail,
               full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || '',
@@ -82,35 +81,22 @@ export default function LoginPage() {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
-        } else {
-          if (!profile.role && data.user.user_metadata?.role) {
-            await supabase
-              .from('profiles')
-              .update({ 
-                role: data.user.user_metadata.role,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', data.user.id)
-          }
         }
 
-        // Jeda 1.5 detik agar Screen Reader selesai membacakan pengumuman sukses sepenuhnya
+        // 5. JEDA LEBIH LAMA (3 detik) agar pengumuman suara tidak terpotong
         setTimeout(() => {
           router.push("/dashboard")
           router.refresh()
-        }, 1500)
+        }, 3000);
       }
 
     } catch (error: any) {
-      console.error('[LOGIN] Error:', error)
       setIsError(true)
       setLoading(false)
       if (error.message.includes("Invalid login")) {
-        setMsg("Email atau password salah.")
-      } else if (error.message.includes("Email not confirmed")) {
-        setMsg("Email belum diverifikasi. Silakan cek kotak masuk Anda.")
+        setMsg("Email atau password salah.");
       } else {
-        setMsg(error.message)
+        setMsg(error.message);
       }
     }
   }
@@ -155,7 +141,7 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500">
                   {"Kata Sandi"}
                 </label>
-                <Link href="/lupa-password" title="Klik untuk mengatur ulang kata sandi" className="text-[9px] font-black uppercase text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-4">
+                <Link href="/lupa-password" intermediate-title="Reset Kata Sandi" className="text-[9px] font-black uppercase text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-4">
                   {"Lupa Sandi?"}
                 </Link>
               </div>
@@ -173,7 +159,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 transition-colors"
+                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600"
                   aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -189,7 +175,6 @@ export default function LoginPage() {
                 />
             </div>
 
-            {/* ANNOUNCEMENT REGION: Diberi ID dan tabIndex agar bisa menerima fokus */}
             {msg && (
               <div 
                 id="login-announcement"
@@ -208,7 +193,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !turnstileToken}
-              className="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+              className="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98]"
             >
               {loading ? "MENSINKRONISASI..." : (
                 <>
@@ -231,9 +216,6 @@ export default function LoginPage() {
                 className="w-full flex justify-center py-4 px-4 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
               >
                 {"Daftar Akun Baru"}
-              </Link>
-              <Link href="/" className="text-center text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] mt-2 group">
-                <span className="group-hover:mr-2 transition-all">{"←"}</span> {"Kembali ke Beranda"}
               </Link>
             </div>
           </div>
