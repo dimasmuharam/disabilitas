@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Key, Mail, Eye, EyeOff, Save, 
-  CheckCircle2, AlertCircle, ShieldLock, 
+  CheckCircle2, AlertCircle, ShieldCheck, 
   ArrowLeft, LogOut
 } from "lucide-react";
 
@@ -86,7 +86,7 @@ export default function AccountSettings({ user, onSuccess }: AccountSettingsProp
     <div className="max-w-4xl mx-auto pb-20 animate-in fade-in duration-500 font-sans text-slate-900">
       <header className="mb-10 px-4">
         <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
-          <ShieldLock className="text-blue-600" size={36} aria-hidden="true" />
+          <ShieldCheck className="text-blue-600" size={36} aria-hidden="true" />
           {"Keamanan Akun"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 italic">
