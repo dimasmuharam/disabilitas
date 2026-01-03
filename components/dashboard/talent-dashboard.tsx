@@ -244,7 +244,7 @@ function calculateProgress(profData: any) {
   aria-valuenow={progress}
   aria-valuemin={0}
   aria-valuemax={100}
-  aria-label={`{"Tingkat keterisian profil riset Anda saat ini adalah ${progress} persen"}`}
+  aria-label={`{"Tingkat keterisian profil talenta Anda saat ini adalah ${progress} persen"}`}
 >
   <div 
     className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} 
