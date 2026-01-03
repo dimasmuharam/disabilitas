@@ -371,9 +371,9 @@ const canvas = await html2canvas(element, {
             </div>
           </aside>
         </div>
-
-        {/* HIDDEN TEMPLATE PDF */}
+{/* HIDDEN TEMPLATE PDF & SHARE CARD */}
         <div className="hidden">
+           {/* 1. TEMPLATE CV */}
            <div id="cv-content" className="p-20 bg-white w-[210mm] min-h-[297mm] text-slate-900 font-sans relative">
               <div className="flex justify-between items-start border-b-8 border-slate-900 pb-10">
                  <div className="space-y-2">
@@ -392,11 +392,13 @@ const canvas = await html2canvas(element, {
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{"Disabilitas.com — Portofolio Profesional Inklusif"}</p>
                  </div>
               </div>
-{/* TEMPLATE INCLUSION CARD UNTUK SHARE GAMBAR */}
+           </div> {/* <--- PENUTUP CV-CONTENT YANG TADI HILANG */}
+
+           {/* 2. TEMPLATE INCLUSION CARD UNTUK SHARE GAMBAR */}
            <div id="inclusion-card" className="p-10 bg-white w-[600px] h-[350px] text-slate-900 font-sans relative flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem]">
               <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
                 <div className="flex items-center gap-3">
-<img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+                  <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{"disabilitas.com"}</h2>
                 </div>
                 <span className="text-[10px] font-black bg-blue-600 text-white px-4 py-1 rounded-full uppercase">{"Verified Talent"}</span>
@@ -421,10 +423,9 @@ const canvas = await html2canvas(element, {
                 </div>
               </div>
            </div>
-           </div>
-        </div>
+        </div> {/* <--- PENUTUP DIV HIDDEN */}
 
-      </div>
-    </div>
+      </div> {/* <--- PENUTUP MAX-W-6XL */}
+    </div> {/* <--- PENUTUP MIN-H-SCREEN */}
   );
 }
