@@ -40,6 +40,16 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const [profile, setProfile] = useState(initialProfile);
 
   useEffect(() => {
+        if (sessionStorage.getItem("pindahkan_fokus_ke_h1") === "true") {
+      const heading = document.querySelector("h1");
+      if (heading) {
+        heading.setAttribute("tabIndex", "-1");
+        heading.focus();
+      }
+      // Hapus penanda agar tidak terjadi fokus otomatis saat refresh halaman biasa
+      sessionStorage.removeItem("pindahkan_fokus_ke_h1");
+    }
+
     if (user?.id) {
       fetchLatestData();
     }
