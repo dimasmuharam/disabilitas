@@ -424,9 +424,9 @@ const canvas = await html2canvas(element, {
                 </div>
               </div>
            </div>
-        </div> {/* <--- PENUTUP DIV HIDDEN */}
+</div> {/* PENUTUP DIV HIDDEN */}
 
-      </div> {/* <--- PENUTUP MAX-W-6XL */}
-    </div> {/* <--- PENUTUP MIN-H-SCREEN */}
+      </div> {/* PENUTUP MAX-W-6XL */}
+    </div> {/* PENUTUP MIN-H-SCREEN */}
   );
 }
