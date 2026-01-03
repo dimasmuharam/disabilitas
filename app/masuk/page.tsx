@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
-import { Eye, EyeOff, LogIn } from "lucide-react"
+import { Eye, EyeOff, LogIn, CheckCircle2, AlertCircle } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -44,10 +44,26 @@ export default function LoginPage() {
       if (error) throw error
 
       if (data?.user) {
-        // PENGUMUMAN UNTUK SCREEN READER
+        // --- LOGIKA AKSESIBILITAS KHUSUS ---
+        // 1. Paksa kursor keluar dari kotak password (agar SR keluar dari kotak edit)
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+
+        // 2. Set pesan sukses
         setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Mengalihkan Anda sekarang...")
         setIsError(false)
 
+        // 3. Pindahkan fokus kursor ke pesan sukses (agar dibaca instan & keluar dari form)
+        // Kita beri sedikit jeda agar elemen pesan muncul di DOM terlebih dahulu
+        setTimeout(() => {
+          const alertElement = document.getElementById("login-announcement");
+          if (alertElement) {
+            alertElement.focus();
+          }
+        }, 100);
+
+        // --- SINKRONISASI DATA PROFIL ---
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -78,17 +94,17 @@ export default function LoginPage() {
           }
         }
 
-        // Jeda 1 detik agar Screen Reader selesai membacakan pengumuman sukses
+        // Jeda 1.5 detik agar Screen Reader selesai membacakan pengumuman sukses sepenuhnya
         setTimeout(() => {
           router.push("/dashboard")
           router.refresh()
-        }, 1000)
+        }, 1500)
       }
 
     } catch (error: any) {
       console.error('[LOGIN] Error:', error)
       setIsError(true)
-      setLoading(false) // Tombol menyala kembali jika gagal
+      setLoading(false)
       if (error.message.includes("Invalid login")) {
         setMsg("Email atau password salah.")
       } else if (error.message.includes("Email not confirmed")) {
@@ -100,17 +116,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans text-slate-900">
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
         <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-            <span className="text-white font-black text-2xl">{"D"}</span>
+            <span className="text-white font-black text-2xl italic">{"D"}</span>
         </div>
-        <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50">
+        <h1 className="text-3xl font-black uppercase italic tracking-tighter dark:text-slate-50">
           {"Masuk ke Akun"}
         </h1>
         <p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">
-          {"Akses Dashboard Disabilitas.com Anda"}
+          {"Akses Dashboard Disabilitas.com"}
         </p>
       </div>
 
@@ -130,7 +146,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
-                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               />
             </div>
 
@@ -152,7 +168,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 />
                 <button
                   type="button"
@@ -173,13 +189,19 @@ export default function LoginPage() {
                 />
             </div>
 
+            {/* ANNOUNCEMENT REGION: Diberi ID dan tabIndex agar bisa menerima fokus */}
             {msg && (
               <div 
+                id="login-announcement"
                 role="alert" 
                 aria-live="assertive" 
-                className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border ${isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'} animate-in zoom-in-95`}
+                tabIndex={-1}
+                className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border outline-none ${isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'} animate-in zoom-in-95`}
               >
-                {msg}
+                <div className="flex items-center justify-center gap-2">
+                  {isError ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
+                  {msg}
+                </div>
               </div>
             )}
 
@@ -210,8 +232,8 @@ export default function LoginPage() {
               >
                 {"Daftar Akun Baru"}
               </Link>
-              <Link href="/" className="text-center text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] mt-2">
-                {"← Kembali ke Beranda"}
+              <Link href="/" className="text-center text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] mt-2 group">
+                <span className="group-hover:mr-2 transition-all">{"←"}</span> {"Kembali ke Beranda"}
               </Link>
             </div>
           </div>
