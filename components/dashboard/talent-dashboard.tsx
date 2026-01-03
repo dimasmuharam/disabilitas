@@ -394,38 +394,36 @@ const canvas = await html2canvas(element, {
                  </div>
               </div>
            </div> {/* <--- PENUTUP CV-CONTENT YANG TADI HILANG */}
-
-           {/* 2. TEMPLATE INCLUSION CARD UNTUK SHARE GAMBAR */}
-           <div id="inclusion-card" className="p-10 bg-white w-[600px] h-[350px] text-slate-900 font-sans relative flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem]">
-              <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
-                <div className="flex items-center gap-3">
-                  <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
-                  <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{"disabilitas.com"}</h2>
-                </div>
-                <span className="text-[10px] font-black bg-blue-600 text-white px-4 py-1 rounded-full uppercase">{"Verified Talent"}</span>
+{/* 2. TEMPLATE INCLUSION CARD UNTUK SHARE GAMBAR */}
+          <div id="inclusion-card" className="p-10 bg-white w-[600px] h-[350px] text-slate-900 font-sans relative flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem]">
+            <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
+              <div className="flex items-center gap-3">
+                <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+                <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{"disabilitas.com"}</h2>
               </div>
-              
-              <div className="flex-1 py-6">
-                <p className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Nama Lengkap"}</p>
-                <p className="text-lg font-bold text-blue-600 uppercase tracking-widest mt-1">{profile?.disability_type || "Ragam Disabilitas"}</p>
-                <div className="text-[10px] font-bold text-slate-400 uppercase mt-4 flex items-center gap-4">
-                  <span className="flex items-center gap-1"><MapPin size={12} /> {profile?.city || "Lokasi"}</span>
-                  <span className="flex items-center gap-1"><GraduationCap size={12}/> {profile?.education_level || "Pendidikan"}</span>
-                </div>
+              <span className="text-[10px] font-black bg-blue-600 text-white px-4 py-1 rounded-full uppercase">{"Verified Talent"}</span>
+            </div>
+            
+            <div className="flex-1 py-6">
+              <p className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Nama Lengkap"}</p>
+              <p className="text-lg font-bold text-blue-600 uppercase tracking-widest mt-1">{profile?.disability_type || "Ragam Disabilitas"}</p>
+              <div className="text-[10px] font-bold text-slate-400 uppercase mt-4 flex items-center gap-4">
+                <span className="flex items-center gap-1"><MapPin size={12} /> {profile?.city || "Lokasi"}</span>
+                <span className="flex items-center gap-1"><GraduationCap size={12}/> {profile?.education_level || "Pendidikan"}</span>
               </div>
+            </div>
 
-              <div className="flex justify-between items-end pt-4 border-t-2 border-slate-100">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase text-slate-900">{"Inclusion Identity Card"}</p>
-                  <p className="text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em]">{"Scan to view professional portfolio"}</p>
-                </div>
-                <div className="bg-slate-50 p-2 rounded-2xl border-2 border-slate-100">
-                  <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} />
-                </div>
+            <div className="flex justify-between items-end pt-4 border-t-2 border-slate-100">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase text-slate-900">{"Inclusion Identity Card"}</p>
+                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em]">{"Scan to view professional portfolio"}</p>
               </div>
-           </div>
-</div> {/* PENUTUP DIV HIDDEN */}
-
+              <div className="bg-slate-50 p-2 rounded-2xl border-2 border-slate-100">
+                <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} />
+              </div>
+            </div>
+          </div>
+        </div> {/* PENUTUP DIV HIDDEN */}
       </div> {/* PENUTUP MAX-W-6XL */}
     </div> {/* PENUTUP MIN-H-SCREEN */}
   );
