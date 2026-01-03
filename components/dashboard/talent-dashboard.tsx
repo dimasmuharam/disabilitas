@@ -257,7 +257,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
     setIsProcessing(true);
     const url = `https://disabilitas.com/talent/${user.id}`;
     const name = profile?.full_name || "Talenta Inklusif";
-    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Cek profil profesional saya di sini: ${url}`;
+    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Yuk gabung untuk dapat lowongan terbaik, dan Cek profil profesional saya di sini: ${url}`;
 
     const openWhatsApp = () => {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
