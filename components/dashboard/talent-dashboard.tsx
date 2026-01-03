@@ -416,7 +416,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
                 { label: "Karir", id: "career", icon: Briefcase },
                 { label: "Akademik", id: "academic", icon: GraduationCap },
                 { label: "Skill", id: "skills", icon: BookOpen },
-                { label: "Akun", id: "settings", icon: ShieldLock }
+                { label: "Akun", id: "settings", icon: ShieldCheck }
               ].map((m) => (
                 <button key={m.id} onClick={() => setActiveTab(m.id)} className="bg-slate-50 border-2 border-transparent p-4 rounded-2xl hover:border-blue-600 transition-all text-center group">
                   <m.icon className="mx-auto mb-2 text-slate-400 group-hover:text-blue-600 transition-colors" size={20} />
