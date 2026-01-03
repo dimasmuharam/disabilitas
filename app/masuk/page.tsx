@@ -43,22 +43,18 @@ export default function LoginPage() {
 
       if (error) throw error
 
-      console.log('[LOGIN] Login berhasil, user ID:', data?.user?.id)
-
       if (data?.user) {
         // PENGUMUMAN UNTUK SCREEN READER
-        // Menggunakan aria-live="assertive" di elemen msg akan langsung membacakan ini
         setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Mengalihkan Anda sekarang...")
         setIsError(false)
 
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .maybeSingle()
 
         if (!profile) {
-          console.warn('[LOGIN] Profile tidak ditemukan, mencoba membuat profile baru')
           const roleFromMetadata = data.user.user_metadata?.role || 'talent'
           await supabase
             .from('profiles')
@@ -92,6 +88,7 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error('[LOGIN] Error:', error)
       setIsError(true)
+      setLoading(false) // Tombol menyala kembali jika gagal
       if (error.message.includes("Invalid login")) {
         setMsg("Email atau password salah.")
       } else if (error.message.includes("Email not confirmed")) {
@@ -99,13 +96,11 @@ export default function LoginPage() {
       } else {
         setMsg(error.message)
       }
-    } finally {
-      if (!data?.user) setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
         <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
@@ -115,7 +110,7 @@ export default function LoginPage() {
           {"Masuk ke Akun"}
         </h1>
         <p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">
-          {"Akses Dashboard Disabilitas.com Anda sebagai Talenta Inklusif, Perusahaan, Rekanan, atau Pemerintah"}
+          {"Akses Dashboard Disabilitas.com Anda"}
         </p>
       </div>
 
@@ -178,7 +173,6 @@ export default function LoginPage() {
                 />
             </div>
 
-            {/* ANNOUNCEMENT REGION: Dibaca assertive agar kursor seolah langsung keluar dari password */}
             {msg && (
               <div 
                 role="alert" 
