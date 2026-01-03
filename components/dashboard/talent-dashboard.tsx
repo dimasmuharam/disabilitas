@@ -18,6 +18,7 @@ import TechAccess from "./talent/tech-access";
 import CareerExperience from "./talent/career-experience";
 import AcademicBarriers from "./talent/academic-barriers";
 import SkillsCertifications from "./talent/skills-certifications";
+import AccountSettings from "./talent/account-settings";
 
 interface TalentDashboardProps {
   user: any;
@@ -292,6 +293,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       case "career": return <CareerExperience user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       case "academic": return <AcademicBarriers user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={handleModuleSuccess} />;
+        case "settings": return <AccountSettings user={user} onSuccess={handleModuleSuccess} />;
       default: return (
         <div className="space-y-10 animate-in fade-in duration-500">
           <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm relative overflow-hidden">
@@ -413,7 +415,8 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
                 { label: "Sarana", id: "tech", icon: Laptop },
                 { label: "Karir", id: "career", icon: Briefcase },
                 { label: "Akademik", id: "academic", icon: GraduationCap },
-                { label: "Skill", id: "skills", icon: BookOpen }
+                { label: "Skill", id: "skills", icon: BookOpen },
+                { label: "Akun", id: "settings", icon: ShieldLock }
               ].map((m) => (
                 <button key={m.id} onClick={() => setActiveTab(m.id)} className="bg-slate-50 border-2 border-transparent p-4 rounded-2xl hover:border-blue-600 transition-all text-center group">
                   <m.icon className="mx-auto mb-2 text-slate-400 group-hover:text-blue-600 transition-colors" size={20} />
