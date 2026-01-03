@@ -34,7 +34,6 @@ export default function IdentityLegal({ user, profile, onSuccess }: IdentityLega
     resume_url: profile?.resume_url || "",
     document_disability_url: profile?.document_disability_url || "",
     video_intro_url: profile?.video_intro_url || "",
-    bio: profile?.bio || "",
     has_informed_consent: profile?.has_informed_consent || false
   });
 
@@ -206,14 +205,11 @@ return (
               {DISABILITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          <div>
-            <label htmlFor="bio" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Bio Singkat"}</label>
-            <textarea id="bio" required className="w-full bg-slate-50 border-2 border-slate-50 p-6 rounded-[2rem] font-bold outline-none focus:border-blue-600 h-32 italic transition-all text-sm" value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} aria-required="true" />
-          </div>
+          
           <label className="flex items-center gap-4 p-5 bg-blue-50 border-2 border-blue-100 rounded-3xl cursor-pointer hover:bg-blue-100 transition-all">
             <input type="checkbox" required className="w-6 h-6 accent-blue-600" checked={formData.has_informed_consent} onChange={(e) => setFormData({...formData, has_informed_consent: e.target.checked})} aria-required="true" />
             <span className="text-[10px] font-black uppercase text-blue-900 leading-tight">
-              {"Saya menyetujui Informed Consent untuk pengembangan platform dan riset."}
+              {"Saya menyetujui Informed Consent bahwa data yang saya input dapat dipergunakan untuk pengembangan platform dan riset karir inklusif."}
             </span>
           </label>
         </section>
