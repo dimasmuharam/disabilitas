@@ -288,7 +288,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
             <div className="text-center px-6">
               <p className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">{"DISABILITAS.COM PROFESSIONAL ID"}</p>
               <p className="text-[6px] text-slate-400 italic leading-tight">
-                {"Data ini bersifat rahasia dan ditampilkan berdasarkan Informed Consent talenta untuk tujuan pengembangan karir profesional."}
+                {"Data ditampilkan berdasarkan Informed Consent talenta untuk tujuan pengembangan karir inklusif."}
               </p>
             </div>
           </div>
