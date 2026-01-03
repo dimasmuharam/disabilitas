@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
+import { Eye, EyeOff, LogIn } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [msg, setMsg] = useState("")
   const [isError, setIsError] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +35,6 @@ export default function LoginPage() {
     try {
       console.log('[LOGIN] Memulai login untuk:', normalizedEmail)
       
-      // 1. Melakukan SignIn
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
@@ -45,7 +46,11 @@ export default function LoginPage() {
       console.log('[LOGIN] Login berhasil, user ID:', data?.user?.id)
 
       if (data?.user) {
-        // 2. Verifikasi instan apakah data profil sudah ada di tabel profiles
+        // PENGUMUMAN UNTUK SCREEN READER
+        // Menggunakan aria-live="assertive" di elemen msg akan langsung membacakan ini
+        setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Mengalihkan Anda sekarang...")
+        setIsError(false)
+
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -54,10 +59,8 @@ export default function LoginPage() {
 
         if (!profile) {
           console.warn('[LOGIN] Profile tidak ditemukan, mencoba membuat profile baru')
-          
-          // Auto-create profile jika belum ada
           const roleFromMetadata = data.user.user_metadata?.role || 'talent'
-          const { error: insertError } = await supabase
+          await supabase
             .from('profiles')
             .insert({
               id: data.user.id,
@@ -67,19 +70,8 @@ export default function LoginPage() {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
-          
-          if (insertError) {
-            console.error('[LOGIN] Error membuat profile:', insertError)
-            setMsg("Login berhasil, namun ada masalah sinkronisasi profil. Silakan refresh halaman dashboard.")
-          } else {
-            console.log('[LOGIN] Profile berhasil dibuat dengan role:', roleFromMetadata)
-          }
         } else {
-          console.log('[LOGIN] Profile ditemukan dengan role:', profile.role)
-          
-          // Pastikan role ada, jika tidak ada update dari metadata
           if (!profile.role && data.user.user_metadata?.role) {
-            console.log('[LOGIN] Updating profile dengan role dari metadata')
             await supabase
               .from('profiles')
               .update({ 
@@ -89,12 +81,13 @@ export default function LoginPage() {
               .eq('id', data.user.id)
           }
         }
-      }
 
-      // 3. Arahkan ke dashboard
-      console.log('[LOGIN] Redirect ke dashboard')
-      router.push("/dashboard")
-      router.refresh() 
+        // Jeda 1 detik agar Screen Reader selesai membacakan pengumuman sukses
+        setTimeout(() => {
+          router.push("/dashboard")
+          router.refresh()
+        }, 1000)
+      }
 
     } catch (error: any) {
       console.error('[LOGIN] Error:', error)
@@ -107,7 +100,7 @@ export default function LoginPage() {
         setMsg(error.message)
       }
     } finally {
-      setLoading(false)
+      if (!data?.user) setLoading(false)
     }
   }
 
@@ -137,6 +130,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -146,21 +140,36 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
-                {"Kata Sandi"}
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              />
+              <div className="flex justify-between items-center mb-2 px-1">
+                <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  {"Kata Sandi"}
+                </label>
+                <Link href="/lupa-password" title="Klik untuk mengatur ulang kata sandi" className="text-[9px] font-black uppercase text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-4">
+                  {"Lupa Sandi?"}
+                </Link>
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 transition-colors"
+                  aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
-            {/* Turnstile Verification */}
             <div className="flex justify-center py-2">
                 <Turnstile 
                     siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
@@ -169,8 +178,13 @@ export default function LoginPage() {
                 />
             </div>
 
+            {/* ANNOUNCEMENT REGION: Dibaca assertive agar kursor seolah langsung keluar dari password */}
             {msg && (
-              <div role="alert" className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border ${isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-blue-50 text-blue-700 border-blue-100'} animate-in zoom-in-95`}>
+              <div 
+                role="alert" 
+                aria-live="assertive" 
+                className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border ${isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'} animate-in zoom-in-95`}
+              >
                 {msg}
               </div>
             )}
@@ -178,9 +192,14 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !turnstileToken}
-              className="w-full flex justify-center py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+              className="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
             >
-              {loading ? "MENSINKRONISASI..." : "MASUK KE DASHBOARD"}
+              {loading ? "MENSINKRONISASI..." : (
+                <>
+                  {"MASUK KE DASHBOARD"}
+                  <LogIn size={18} />
+                </>
+              )}
             </button>
           </form>
 
