@@ -62,6 +62,8 @@ const [missingFields, setMissingFields] = useState<string[]>([]);
     fetchLatestData(); 
     setActiveTab("overview"); 
     window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
 function calculateProgress(profData: any) {
     // Mapping dengan pengelompokan Modul untuk navigasi kognitif yang lebih baik
     const checklist = [
@@ -116,8 +118,8 @@ function calculateProgress(profData: any) {
     const total = checklist.length;
     const filledCount = total - missing.length;
     setProgress(Math.round((filledCount / total) * 100));
-  }  };
-  // FITUR: GENERATE BIO OTOMATIS JIKA KOSONG (UNTUK CV & DASHBOARD)
+  }
+    // FITUR: GENERATE BIO OTOMATIS JIKA KOSONG (UNTUK CV & DASHBOARD)
   const getDisplayBio = () => {
     if (profile?.bio) return profile.bio;
     
@@ -132,7 +134,12 @@ function calculateProgress(profData: any) {
   const exportPDF = async () => {
     const element = document.getElementById("cv-content");
     if (!element) return;
-    const canvas = await html2canvas(element, { scale: 2 });
+const canvas = await html2canvas(element, { 
+  scale: 2,
+  useCORS: true, 
+  allowTaint: true,
+  backgroundColor: "#ffffff" 
+});
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -140,15 +147,42 @@ function calculateProgress(profData: any) {
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
     pdf.save(`CV_${profile?.full_name?.replace(/\s+/g, '_')}.pdf`);
   };
-
-  const handleShare = (platform: string) => {
+const handleShare = async () => {
     const url = `https://disabilitas.com/talent/${user.id}`;
-    const viralCaption = `Halo Rekan HRD! Saya ${profile?.full_name || 'Talenta Inklusif'}. Cek profil profesional saya di: ${url}`;
-    switch (platform) {
-      case 'wa': window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(viralCaption)}`, '_blank'); break;
-      case 'li': window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank'); break;
+    const name = profile?.full_name || "Talenta Inklusif";
+    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Cari lowongan dan bersama membangun ekosistem kerja inklusif dan Aksesibilitas Digital di Indonesia. Cek profil profesional saya di sini: ${url} #DisabilitasBisa #KerjaInklusif #AksesibilitasDigital`;
+
+    if (navigator.share) {
+      try {
+        const element = document.getElementById("inclusion-card");
+        if (element) {
+const canvas = await html2canvas(element, { 
+  scale: 2,
+  useCORS: true, 
+  allowTaint: true,
+  backgroundColor: "#ffffff" 
+});
+          canvas.toBlob(async (blob) => {
+            if (blob) {
+              const file = new File([blob], `Inclusion_Card_${name}.png`, { type: "image/png" });
+              await navigator.share({
+                title: "Inclusion Talent Card",
+                text: shareText,
+                url: url,
+                files: [file]
+              });
+            }
+          });
+        }
+      } catch (err) { console.log("Share canceled", err); }
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
     }
   };
+  
+
+
+ 
 
   const renderContent = () => {
     switch (activeTab) {
@@ -244,7 +278,7 @@ function calculateProgress(profData: any) {
   aria-valuenow={progress}
   aria-valuemin={0}
   aria-valuemax={100}
-  aria-label={`{"Tingkat keterisian profil talenta Anda saat ini adalah ${progress} persen"}`}
+  aria-label={`{"Tingkat keterisian profil talenta  Anda saat ini adalah ${progress} persen"}`}
 >
   <div 
     className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} 
@@ -312,10 +346,12 @@ function calculateProgress(profData: any) {
                 <button onClick={exportPDF} className="w-full bg-white text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-blue-600 hover:text-white transition-all shadow-lg">
                   <FileDown size={18} /> {"Cetak CV (PDF)"}
                 </button>
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => handleShare('wa')} className="bg-emerald-600 p-3 rounded-xl font-black uppercase text-[8px] hover:bg-emerald-700 transition-all flex items-center justify-center">{"WhatsApp"}</button>
-                  <button onClick={() => handleShare('li')} className="bg-blue-700 p-3 rounded-xl font-black uppercase text-[8px] hover:bg-blue-800 transition-all flex items-center justify-center">{"LinkedIn"}</button>
-                </div>
+<button 
+                  onClick={handleShare} 
+                  className="w-full bg-emerald-600 text-white p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20"
+                >
+                  <Share2 size={18} /> {"Tunjukkan Kartu Profil Profesional Anda ke Dunia!"}
+                </button>
               </div>
             </div>
 
@@ -356,6 +392,35 @@ function calculateProgress(profData: any) {
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{"Disabilitas.com — Portofolio Profesional Inklusif"}</p>
                  </div>
               </div>
+{/* TEMPLATE INCLUSION CARD UNTUK SHARE GAMBAR */}
+           <div id="inclusion-card" className="p-10 bg-white w-[600px] h-[350px] text-slate-900 font-sans relative flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem]">
+              <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
+                <div className="flex items-center gap-3">
+<img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+                  <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{"disabilitas.com"}</h2>
+                </div>
+                <span className="text-[10px] font-black bg-blue-600 text-white px-4 py-1 rounded-full uppercase">{"Verified Talent"}</span>
+              </div>
+              
+              <div className="flex-1 py-6">
+                <p className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Nama Lengkap"}</p>
+                <p className="text-lg font-bold text-blue-600 uppercase tracking-widest mt-1">{profile?.disability_type || "Ragam Disabilitas"}</p>
+                <div className="text-[10px] font-bold text-slate-400 uppercase mt-4 flex items-center gap-4">
+                  <span className="flex items-center gap-1"><MapPin size={12} /> {profile?.city || "Lokasi"}</span>
+                  <span className="flex items-center gap-1"><GraduationCap size={12}/> {profile?.education_level || "Pendidikan"}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-end pt-4 border-t-2 border-slate-100">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase text-slate-900">{"Inclusion Identity Card"}</p>
+                  <p className="text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em]">{"Scan to view professional portfolio"}</p>
+                </div>
+                <div className="bg-slate-50 p-2 rounded-2xl border-2 border-slate-100">
+                  <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} />
+                </div>
+              </div>
+           </div>
            </div>
         </div>
 
