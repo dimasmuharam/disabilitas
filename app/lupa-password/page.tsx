@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
       }
 
       // 2. Pengumuman sukses (aria-live akan membacakan ini)
-      setMsg("Instruksi Berhasil Dikirim! Silakan periksa kotak masuk email Anda untuk melakukan reset kata sandi. Anda akan diarahkan kembali ke halaman masuk...");
+      setMsg("Instruksi Berhasil Dikirim! Silakan periksa kotak masuk email Anda untuk melakukan reset kata sandi. Anda akan diarahkan kembali ke halaman masuk dalam 5 detik...");
       setIsError(false);
 
       // 3. Pindahkan fokus ke pesan sukses agar Screen Reader keluar dari kotak edit
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
         if (alertElement) alertElement.focus();
       }, 100);
 
-      // 4. JEDA 5 DETIK agar pengumuman instruksi terbaca tuntas
+      // 4. JEDA 5 DETIK agar pengumuman instruksi terbaca tuntas sebelum pindah halaman
       setTimeout(() => {
         router.push("/masuk");
       }, 5000);
@@ -71,7 +71,8 @@ export default function ForgotPasswordPage() {
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
         <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6 text-white">
-            <KeyRound size={32} italic="true" />
+            {/* Properti italic sudah dihapus agar tidak error lagi */}
+            <KeyRound size={32} />
         </div>
         <h1 className="text-3xl font-black uppercase italic tracking-tighter dark:text-slate-50">
           {"Lupa Sandi"}
@@ -87,7 +88,7 @@ export default function ForgotPasswordPage() {
           <form className="space-y-6" onSubmit={handleResetPassword}>
             <div>
               <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
-                {"Masukkan Alamat Email Akun Anda"}
+                {"Alamat Email Akun"}
               </label>
               <input
                 id="email"
