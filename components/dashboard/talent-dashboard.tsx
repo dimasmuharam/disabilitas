@@ -46,26 +46,36 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
 
   async function fetchLatestData() {
     try {
+      // 1. Profil Dasar
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (prof) {
         setProfile(prof);
         calculateProgress(prof);
       }
 
-      // Ambil Riwayat Kerja
-      const { data: works } = await supabase.from("work_experiences").select("*").eq("profile_id", user.id).order('start_date', { ascending: false });
+      // 2. Ambil Riwayat Pengalaman Kerja Lengkap
+      const { data: works } = await supabase.from("work_experiences")
+        .select("position, description, company_name, company_location, employment_type, start_date, end_date")
+        .eq("profile_id", user.id)
+        .order('start_date', { ascending: false });
       setWorkExps(works || []);
 
-      // Ambil Sertifikasi
-      const { data: certs } = await supabase.from("certifications").select("*").eq("profile_id", user.id).order('issued_date', { ascending: false });
+      // 3. Ambil Sertifikasi/Pelatihan Lengkap
+      const { data: certs } = await supabase.from("certifications")
+        .select("name, organizer_name, year, certificate_url")
+        .eq("profile_id", user.id)
+        .order('year', { ascending: false });
       setCertifications(certs || []);
 
-      // Tracking Lamaran
-      const { data: apps } = await supabase.from("applications").select("id, status, created_at, jobs(title, company_name)").eq("profile_id", user.id);
+      // 4. Tracking Dashboard (Lamaran & Pelatihan)
+      const { data: apps } = await supabase.from("applications")
+        .select("id, status, created_at, jobs(title, company_name)")
+        .eq("profile_id", user.id);
       setAppliedJobs(apps || []);
 
-      // Tracking Pelatihan
-      const { data: trains } = await supabase.from("trainees").select("id, status, created_at, trainings(title, organizer_name)").eq("profile_id", user.id);
+      const { data: trains } = await supabase.from("trainees")
+        .select("id, status, created_at, trainings(title, organizer_name)")
+        .eq("profile_id", user.id);
       setAppliedTrainings(trains || []);
 
       setStats({ jobs: apps?.length || 0, trainings: trains?.length || 0 });
@@ -124,6 +134,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       const disability = profile?.disability_type || "Profesional Inklusif";
       const contact = `${profile?.city || '-'} | ${profile?.phone || '-'} | ${user?.email}`;
 
+      // --- HEADER ---
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
       doc.text(name.toUpperCase(), 20, 25);
@@ -139,6 +150,8 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       doc.line(20, 42, 190, 42);
 
       let yPos = 55;
+
+      // --- RINGKASAN ---
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(0);
@@ -150,6 +163,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       doc.text(splitBio, 20, yPos);
       yPos += (splitBio.length * 5) + 10;
 
+      // --- PENDIDIKAN (Data Profiles) ---
       doc.setFont("helvetica", "bold");
       doc.text("PENDIDIKAN TERAKHIR", 20, yPos);
       yPos += 7;
@@ -158,41 +172,61 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       doc.text(`${profile?.major || "-"} | Lulus: ${profile?.graduation_date || "-"}`, 20, yPos + 5);
       yPos += 15;
 
+      // --- PENGALAMAN KERJA ---
       doc.setFont("helvetica", "bold");
       doc.text("RIWAYAT PEKERJAAN", 20, yPos);
       yPos += 7;
       if (workExps.length > 0) {
         workExps.forEach((exp) => {
           doc.setFont("helvetica", "bold");
-          doc.text(exp.job_title || "Posisi", 20, yPos);
+          doc.setFontSize(10);
+          doc.text(`${exp.position} (${exp.employment_type || 'N/A'})`, 20, yPos);
           doc.setFont("helvetica", "normal");
-          doc.text(`${exp.company_name} (${exp.start_date} - ${exp.end_date || 'Sekarang'})`, 20, yPos + 5);
-          yPos += 12;
+          doc.setTextColor(71, 85, 105);
+          doc.text(`${exp.company_name} - ${exp.company_location || ''}`, 20, yPos + 5);
+          doc.setFontSize(9);
+          doc.text(`${exp.start_date} - ${exp.end_date || 'Sekarang'}`, 20, yPos + 10);
+          
+          if (exp.description) {
+            doc.setTextColor(0);
+            const splitDesc = doc.splitTextToSize(exp.description, 165);
+            doc.text(splitDesc, 25, yPos + 15);
+            yPos += (splitDesc.length * 5) + 18;
+          } else {
+            yPos += 18;
+          }
+          doc.setTextColor(0);
+          if (yPos > 270) { doc.addPage(); yPos = 20; }
         });
       } else {
         doc.setFont("helvetica", "italic");
         doc.text("Belum ada riwayat kerja.", 20, yPos);
-        yPos += 10;
+        yPos += 12;
       }
 
+      // --- SERTIFIKASI ---
       yPos += 5;
       doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
       doc.text("SERTIFIKASI & PELATIHAN", 20, yPos);
       yPos += 7;
       if (certifications.length > 0) {
         certifications.forEach((cert) => {
           doc.setFont("helvetica", "bold");
-          doc.text(cert.name || "Sertifikasi", 20, yPos);
+          doc.setFontSize(10);
+          doc.text(cert.name, 20, yPos);
           doc.setFont("helvetica", "normal");
-          doc.text(`${cert.organization} | Terbit: ${cert.issued_date}`, 20, yPos + 5);
+          doc.text(`${cert.organizer_name} | Tahun: ${cert.year}`, 20, yPos + 5);
           yPos += 12;
+          if (yPos > 270) { doc.addPage(); yPos = 20; }
         });
       } else {
         doc.setFont("helvetica", "italic");
         doc.text("-", 20, yPos);
-        yPos += 10;
+        yPos += 12;
       }
 
+      // --- TEKNOLOGI ASISTIF ---
       yPos += 5;
       doc.setFont("helvetica", "bold");
       doc.text("ALAT BANTU & TEKNOLOGI ASISTIF", 20, yPos);
@@ -201,13 +235,14 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       const tools = Array.isArray(profile?.used_assistive_tools) ? profile.used_assistive_tools.join(", ") : "-";
       doc.text(`Aksesibilitas: ${tools}`, 20, yPos);
 
+      // --- FOOTER ---
       const pageHeight = doc.internal.pageSize.height;
       doc.setDrawColor(226, 232, 240);
       doc.line(20, pageHeight - 35, 190, pageHeight - 35);
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text("Dokumen ini dihasilkan secara otomatis oleh disabilitas.com", 20, pageHeight - 25);
-      doc.text(`Tautan Verifikasi: https://disabilitas.com/talent/${user.id}`, 20, pageHeight - 20);
+      doc.text(`Tautan Profil: https://disabilitas.com/talent/${user.id}`, 20, pageHeight - 20);
 
       doc.save(`CV_${name.replace(/\s+/g, '_')}.pdf`);
     } catch (err) {
@@ -222,7 +257,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
     setIsProcessing(true);
     const url = `https://disabilitas.com/talent/${user.id}`;
     const name = profile?.full_name || "Talenta Inklusif";
-    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Yu gabung dan dapatkan lowongan terbaik. Cek profil profesional saya di sini: ${url}`;
+    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Cek profil profesional saya di sini: ${url}`;
 
     const openWhatsApp = () => {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
