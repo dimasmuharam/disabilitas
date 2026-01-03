@@ -29,6 +29,7 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ jobs: 0, trainings: 0 });
   const [progress, setProgress] = useState(0);
+const [missingFields, setMissingFields] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview"); 
   const [profile, setProfile] = useState(initialProfile);
 
@@ -61,16 +62,61 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
     fetchLatestData(); 
     setActiveTab("overview"); 
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+function calculateProgress(profData: any) {
+    // Mapping dengan pengelompokan Modul untuk navigasi kognitif yang lebih baik
+    const checklist = [
+      // 1. MODUL IDENTITAS
+      { value: profData?.full_name, label: "Nama Lengkap", module: "Identitas" },
+      { value: profData?.date_of_birth, label: "Tanggal Lahir", module: "Identitas" },
+      { value: profData?.phone, label: "Nomor Telepon", module: "Identitas" },
+      { value: profData?.gender, label: "Jenis Kelamin", module: "Identitas" },
+      { value: profData?.city, label: "Kota Domisili", module: "Identitas" },
+      { value: profData?.disability_type, label: "Ragam Disabilitas", module: "Identitas" },
+      { value: profData?.document_disability_url, label: "Unggahan Dokumen Disabilitas", module: "Identitas" },
+      { value: profData?.communication_preference, label: "Preferensi Komunikasi", module: "Identitas" },
+      { value: profData?.has_informed_consent, label: "Persetujuan Data (Informed Consent)", module: "Identitas" },
 
-  function calculateProgress(profData: any) {
-    const fields = [
-      profData?.full_name, profData?.date_of_birth, profData?.phone, profData?.gender, profData?.work_preference, profData?.city, profData?.disability_type, profData?.major, profData?.education_level, profData?.internet_quality, profData?.resume_url, profData?.skills?.length > 0 ? "filled" : null, profData?.linkedin_url, profData?.used_assistive_tools, profData?.preferred_accommodations, profData?.education_model, profData?.scholarship_type, profData?.education_barrier, profData?.university, profData?.document_disability_url, profData?.communication_preference, profData?.career_status, profData?.expected_salary, profData?.graduation_date, profData?.academic_support_received, profData?.academic_assistive_tools, profData?.study_relevance, profData?.skill_acquisition_method, profData?.training_accessibility_rating, profData?.has_informed_consent
+      // 2. MODUL SARANA
+      { value: profData?.internet_quality, label: "Akses Internet di Rumah", module: "Sarana" },
+      { value: profData?.used_assistive_tools?.length > 0 ? "filled" : null, label: "Alat Bantu Yang Digunakan Bekerja dan Sehari-hari", module: "Sarana" },
+      { value: profData?.preferred_accommodations?.length > 0 ? "filled" : null, label: "Akomodasi Yang Diinginkan", module: "Sarana" },
+
+      // 3. MODUL KARIR
+      { value: profData?.career_status, label: "Status Karir Saat Ini", module: "Karir" },
+      { value: profData?.work_preference, label: "Preferensi Lingkungan Kerja", module: "Karir" },
+      { value: profData?.expected_salary, label: "Ekspektasi Gaji", module: "Karir" },
+      { value: profData?.linkedin_url, label: "Tautan LinkedIn", module: "Karir" },
+      { value: profData?.resume_url, label: "Unggahan CV/Resume", module: "Karir" },
+
+      // 4. MODUL AKADEMIK
+      { value: profData?.education_level, label: "Jenjang Pendidikan", module: "Akademik" },
+      { value: profData?.university, label: "Nama Kampus/Sekolah", module: "Akademik" },
+      { value: profData?.major, label: "Program Studi/Jurusan", module: "Akademik" },
+      { value: profData?.graduation_date, label: "Tahun Kelulusan", module: "Akademik" },
+      { value: profData?.education_model, label: "Model Pendidikan", module: "Akademik" },
+      { value: profData?.scholarship_type, label: "Tipe pembiayaan pendidikan", module: "Akademik" },
+      { value: profData?.education_barrier?.length > 0 ? "filled" : null, label: "Hambatan Pendidikan", module: "Akademik" },
+      { value: profData?.academic_support_received?.length > 0 ? "filled" : null, label: "Dukungan Akademik", module: "Akademik" },
+      { value: profData?.academic_assistive_tools?.length > 0 ? "filled" : null, label: "Alat Bantu Belajar", module: "Akademik" },
+      { value: profData?.study_relevance, label: "Linearitas Pendidikan", module: "Akademik" },
+
+      // 5. MODUL SKILL 
+      { value: profData?.skills?.length > 0 ? "filled" : null, label: "Daftar Keahlian Utama", module: "Skill" },
+      { value: profData?.skill_acquisition_method, label: "Metode Perolehan Skill", module: "Skill" },
+      { value: profData?.training_accessibility_rating, label: "Rating Aksesibilitas Pelatihan", module: "Skill" }
     ];
-    const filled = fields.filter(f => f !== null && f !== undefined && f !== "").length;
-    setProgress(Math.round((filled / fields.length) * 100));
-  }
 
+    // Kita simpan string yang sudah mengandung nama modul: "Modul: Field"
+    const missing = checklist
+      .filter(item => item.value === null || item.value === undefined || item.value === "" || item.value === false)
+      .map(item => `${item.module}: ${item.label}`);
+
+    setMissingFields(missing);
+    
+    const total = checklist.length;
+    const filledCount = total - missing.length;
+    setProgress(Math.round((filledCount / total) * 100));
+  }  };
   // FITUR: GENERATE BIO OTOMATIS JIKA KOSONG (UNTUK CV & DASHBOARD)
   const getDisplayBio = () => {
     if (profile?.bio) return profile.bio;
@@ -188,16 +234,41 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                 {progress === 100 
                   ? "Data Anda siap dipromosikan ke mitra perusahaan inklusif." 
-                  : "Lengkapi data di bawah untuk meningkatkan akurasi Smart Job Match."}
+                  : "Lengkapi data di bawah untuk meningkatkan akurasi Smart Job and training Match."}
               </p>
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto">
-              <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200">
-                <div className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${progress}%` }}></div>
-              </div>
+<div 
+  className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200"
+  role="progressbar"
+  aria-valuenow={progress}
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-label={`{"Tingkat keterisian profil riset Anda saat ini adalah ${progress} persen"}`}
+>
+  <div 
+    className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} 
+    style={{ width: `${progress}%` }}
+  ></div>
+</div>
               <span className="font-black italic text-2xl text-slate-900">{`${progress}%`}</span>
             </div>
           </div>
+        {/* --- TEMPELKAN KODE DAFTAR MISSING FIELDS DI SINI --- */}
+        {progress < 100 && missingFields.length > 0 && (
+          <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100" role="complementary">
+            <h3 className="text-[10px] font-black uppercase text-amber-700 tracking-widest mb-4 flex items-center gap-2">
+              <AlertCircle size={14} /> {"Data Yang Perlu Dilengkapi:"}
+            </h3>
+            <ul className="grid md:grid-cols-2 gap-x-8 gap-y-2 list-disc list-inside">
+              {missingFields.map((field, idx) => (
+<li key={idx} className="text-[10px] font-bold text-slate-500 uppercase tracking-tight list-none border-b border-amber-100/50 pb-1">
+  <span className="text-amber-700 font-black">{field.split(': ')[0]}:</span> {field.split(': ')[1]}
+</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
           {/* TOMBOL MODUL PINDAH KE SINI (DI BAWAH JUDUL/PROGRESS) */}
           {activeTab === "overview" && (
