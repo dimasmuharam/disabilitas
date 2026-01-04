@@ -42,61 +42,48 @@ export default function LoginPage() {
       if (error) throw error
 
       if (data?.user) {
-        // --- LOGIKA AKSESIBILITAS TINGKAT LANJUT ---
-        
-        // 1. Lepaskan kursor dari kotak input agar mode isi form (Focus Mode) berhenti
+        // --- LOGIKA AKSESIBILITAS KHUSUS ---
+        // 1. Paksa kursor keluar dari kotak edit agar mode formulir berhenti
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
 
-        // 2. Set pesan sukses (akan dibaca instan oleh aria-live)
-        setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Anda akan diarahkan ke judul halaman utama sebentar lagi...");
-        setIsError(false);
+        // 2. Set pesan sukses
+        setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Anda akan diarahkan ke judul halaman utama...");
+        setIsError(false)
 
-        // 3. Pasang 'ranjau' fokus: simpan penanda di storage browser
-        // Dashboard akan mengecek ini dan mengarahkan kursor ke H1 secara otomatis
+        // 3. Pasang 'ranjau' fokus untuk halaman Dashboard
         sessionStorage.setItem("pindahkan_fokus_ke_h1", "true");
 
-        // 4. Fokuskan sementara ke pesan sukses agar Mas tahu prosesnya jalan
+        // 4. Pindahkan fokus kursor ke pesan sukses sementara (agar dibaca instan)
         setTimeout(() => {
           const alertElement = document.getElementById("login-announcement");
           if (alertElement) alertElement.focus();
         }, 100);
 
-        // --- SINKRONISASI DATA PROFIL (Logika internal Supabase) ---
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .maybeSingle()
+        /**
+         * CATATAN UNTUK MAS DIMAS:
+         * Logika sinkronisasi profil manual yang sebelumnya ada di sini (INSERT ke profiles) 
+         * SUDAH DIHAPUS. Sekarang kita sepenuhnya mengandalkan SQL Trigger 
+         * handle_new_user() untuk menjaga kerapihan data riset Mas.
+         */
 
-        if (!profile) {
-          const roleFromMetadata = data.user.user_metadata?.role || 'talent'
-          await supabase
-            .from('profiles').insert({
-              id: data.user.id,
-              email: normalizedEmail,
-              full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || '',
-              role: roleFromMetadata,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-        }
-
-        // 5. JEDA LEBIH LAMA (3 detik) agar pengumuman suara tidak terpotong
+        // 5. JEDA 3 DETIK agar pengumuman suara terbaca tuntas oleh Screen Reader
         setTimeout(() => {
           router.push("/dashboard")
           router.refresh()
-        }, 3000);
+        }, 3000)
       }
 
     } catch (error: any) {
       setIsError(true)
       setLoading(false)
       if (error.message.includes("Invalid login")) {
-        setMsg("Email atau password salah.");
+        setMsg("Email atau password salah.")
+      } else if (error.message.includes("Email not confirmed")) {
+        setMsg("Email belum diverifikasi. Silakan cek kotak masuk Anda.")
       } else {
-        setMsg(error.message);
+        setMsg(error.message)
       }
     }
   }
@@ -105,8 +92,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans text-slate-900">
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
-        <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-            <span className="text-white font-black text-2xl italic">{"D"}</span>
+        <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6 text-white">
+            <span className="font-black text-2xl italic">{"D"}</span>
         </div>
         <h1 className="text-3xl font-black uppercase italic tracking-tighter dark:text-slate-50">
           {"Masuk ke Akun"}
@@ -141,7 +128,7 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500">
                   {"Kata Sandi"}
                 </label>
-                <Link href="/lupa-password" intermediate-title="Reset Kata Sandi" className="text-[9px] font-black uppercase text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-4">
+                <Link href="/lupa-password" intermediate-title="Reset Kata Sandi" className="text-[9px] font-black uppercase text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-4 rounded p-1 focus:ring-2 focus:ring-blue-500">
                   {"Lupa Sandi?"}
                 </Link>
               </div>
@@ -159,7 +146,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600"
+                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 transition-colors"
                   aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
