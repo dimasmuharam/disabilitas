@@ -8,15 +8,16 @@ import {
   Plus, X, Zap, Trash2, Microscope, Link as LinkIcon
 } from "lucide-react";
 
-// SINKRONISASI DATA-STATIC
+// SINKRONISASI DATA-STATIC TERBARU
 import { 
   SKILLS_LIST, 
-  GOVERNMENT_AGENCIES, 
+  GOVERNMENT_AGENCIES_LIST, 
   TRAINING_PARTNERS, 
-  COMMUNITY_PARTNERS,
+  NONPROFIT_ORG_LIST,
   SKILL_ACQUISITION_METHODS,
   TRAINING_ACCESSIBILITY_SCORES,
-  SKILL_IMPACT_LEVELS
+  SKILL_IMPACT_LEVELS,
+  TRAINING_ORGANIZER_CATEGORIES
 } from "@/lib/data-static";
 
 interface SkillsCertificationsProps {
@@ -121,21 +122,21 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     <div className="max-w-4xl mx-auto pb-20 font-sans text-slate-900">
       {/* DATALIST UNTUK COMBOBOX SKILLS */}
       <datalist id="skills-list">
-  {SKILLS_LIST.map((skill) => (
-    <option key={skill} value={skill} />
-  ))}
-</datalist>
+        {SKILLS_LIST.map((skill) => (
+          <option key={skill} value={skill} />
+        ))}
+      </datalist>
+
       <header className="mb-10 px-4">
         <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4 text-slate-900">
           <Zap className="text-purple-600" size={36} aria-hidden="true" />
           {"Keahlian & Pelatihan"}
         </h1>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
-          {"Lengkapi informasi mengenai pelatihan dan keterampilan Anda untuk rekomendasi  lowongan yang sesuai. Biar pekerjaan yang mencari Anda!"}
+          {"Lengkapi informasi mengenai pelatihan dan keterampilan Anda untuk rekomendasi lowongan yang sesuai. Biar pekerjaan yang mencari Anda!"}
         </p>
       </header>
 
-      {/* ARIA-LIVE NOTIFIKASI */}
       <div aria-live="polite" className="px-4">
         {message.text && (
           <div className={`mb-8 p-6 rounded-[2rem] flex items-center gap-4 border-2 ${
@@ -194,14 +195,13 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </div>
         </section>
 
-        {/* SEKSI 2: VARIABEL RISET (RADIO BUTTONS) */}
+        {/* SEKSI 2: VARIABEL RISET */}
         <section className="bg-emerald-50/50 p-10 rounded-[3rem] border-2 border-emerald-100 space-y-8">
           <div className="flex items-center gap-3 text-emerald-700">
             <Microscope size={20} aria-hidden="true" />
             <h2 className="text-xs font-black uppercase tracking-[0.2em]">{"Jawab tiga pertanyaan singkat ini untuk kami dapat lebih memahami keterampilan Anda"}</h2>
           </div>
 
-          {/* PEROLEHAN SKILL */}
           <fieldset className="space-y-4">
             <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"1. Bagaimana Anda paling dominan menguasai keahlian di atas?"}</legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -214,7 +214,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
             </div>
           </fieldset>
 
-          {/* RATING AKSESIBILITAS */}
           <fieldset className="space-y-4">
             <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"2. Secara umum, bagaimana tingkat aksesibilitas dari seluruh pelatihan yang Anda ikuti?"}</legend>
             <div className="grid grid-cols-1 gap-2">
@@ -227,7 +226,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
             </div>
           </fieldset>
 
-          {/* DAMPAK SKILL */}
           <fieldset className="space-y-4">
             <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"3. Sejauh mana keahlian/pelatihan yang pernah diikuti berdampak pada pekerjaan Anda?"}</legend>
             <div className="space-y-2">
@@ -275,12 +273,16 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                   </div>
                   <div className="space-y-2">
                     <label htmlFor={`cat-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Kategori Penyelenggara"}</label>
-                    <select id={`cat-${cert.id}`} value={cert.organizer_category} onChange={(e) => updateCertField(cert.id, "organizer_category", e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none">
+                    <select 
+                      id={`cat-${cert.id}`} 
+                      value={cert.organizer_category} 
+                      onChange={(e) => updateCertField(cert.id, "organizer_category", e.target.value)} 
+                      className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none"
+                    >
                       <option value="">{"Pilih Kategori"}</option>
-                      <option value="Pemerintah">{"Instansi Pemerintah"}</option>
-                      <option value="Mitra Pelatihan">{"Mitra Pelatihan (LKP/LPK)"}</option>
-                      <option value="Komunitas">{"Mitra Komunitas / NGO"}</option>
-                      <option value="Lainnya">{"Lainnya"}</option>
+                      {TRAINING_ORGANIZER_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -294,12 +296,11 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                       className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none" 
                     />
                     <datalist id={`list-${cert.id}`}>
-                      {cert.organizer_category === "Pemerintah" && GOVERNMENT_AGENCIES?.map(g => <option key={g} value={g}/>)}
-                      {cert.organizer_category === "Mitra Pelatihan" && TRAINING_PARTNERS?.map(t => <option key={t} value={t}/>)}
-                      {cert.organizer_category === "Komunitas" && COMMUNITY_PARTNERS?.map(c => <option key={c} value={c}/>)}
+                      {cert.organizer_category === "Pemerintah" && GOVERNMENT_AGENCIES_LIST?.map(g => <option key={g} value={g}/>)}
+                      {cert.organizer_category === "Mitra Pelatihan (LKP/LPK)" && TRAINING_PARTNERS?.map(t => <option key={t} value={t}/>)}
+                      {cert.organizer_category === "Organisasi / Komunitas Disabilitas" && NONPROFIT_ORG_LIST?.map(c => <option key={c} value={c}/>)}
                     </datalist>
                   </div>
-                  {/* KOLOM BARU: URL SERTIFIKAT */}
                   <div className="md:col-span-2 space-y-2">
                     <label htmlFor={`url-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2">
                       <LinkIcon size={12} /> {"Tautan Sertifikat / Portofolio (Opsional)"}
