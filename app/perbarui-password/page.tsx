@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react" // useEffect dihapus karena tidak digunakan
+import React, { useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { Lock, Eye, EyeOff, Save, CheckCircle2, AlertCircle } from "lucide-react"
@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       }
 
       // Memberikan penanda agar Dashboard memfokuskan H1 saat mendarat
-      sessionStorage.setItem("pindahkan_fokus_ke_h1", "true"); [cite: 2025-06-05]
+      sessionStorage.setItem("pindahkan_fokus_ke_h1", "true");
 
       setMsg("Kata Sandi Berhasil Diperbarui! Mengalihkan Anda ke Dashboard...")
       setIsError(false)
@@ -51,9 +51,9 @@ export default function ResetPasswordPage() {
         if (alertElement) alertElement.focus();
       }, 100);
 
-      // JEDA 3 DETIK (Disesuaikan agar tidak terlalu lama namun cukup untuk Screen Reader)
+      // JEDA 3 DETIK
       setTimeout(() => {
-        router.push("/dashboard") // Langsung ke dashboard karena sesi sudah aktif [cite: 2025-12-30]
+        router.push("/dashboard")
       }, 3000)
 
     } catch (error: any) {
@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
           
           <form className="space-y-6" onSubmit={handleUpdatePassword} aria-label="Formulir Atur Ulang Kata Sandi">
             <div>
-              <label htmlFor="new_password" disable-quotation-marks className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+              <label htmlFor="new_password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 {"Kata Sandi Baru"}
               </label>
               <div className="relative">
@@ -108,7 +108,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm_password" disable-quotation-marks className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+              <label htmlFor="confirm_password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 {"Konfirmasi Kata Sandi Baru"}
               </label>
               <input
