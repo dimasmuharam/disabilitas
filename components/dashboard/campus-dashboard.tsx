@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { 
-  UNIVERSITIES, TRAINING_PARTNERS, COMMUNITY_PARTNERS 
+  UNIVERSITIES, TRAINING_PARTNERS, NONPROFIT_ORG_LIST 
 } from "@/lib/data-static"
 import { 
   Users, CheckCircle, Globe, Building2, PieChart, MapPin, 
@@ -36,7 +36,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     })
   }, [user])
 
-  const ALL_PARTNERS = [...UNIVERSITIES, ...TRAINING_PARTNERS, ...COMMUNITY_PARTNERS].sort();
+  const ALL_PARTNERS = [...UNIVERSITIES, ...TRAINING_PARTNERS, ...NONPROFIT_ORG_LIST].sort();
 
   useEffect(() => {
     fetchPartnerData()
