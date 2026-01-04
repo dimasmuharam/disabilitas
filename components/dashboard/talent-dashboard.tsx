@@ -27,7 +27,7 @@ interface TalentDashboardProps {
 }
 
 export default function TalentDashboard({ user, profile: initialProfile }: TalentDashboardProps) {
-  const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(!initialProfile);
   const [isProcessing, setIsProcessing] = useState(false);
   const [stats, setStats] = useState({ jobs: 0, trainings: 0 });
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
@@ -49,6 +49,10 @@ export default function TalentDashboard({ user, profile: initialProfile }: Talen
       // Hapus penanda agar tidak terjadi fokus otomatis saat refresh halaman biasa
       sessionStorage.removeItem("pindahkan_fokus_ke_h1");
     }
+// Jika autoOpenProfile aktif (dari email konfirmasi), langsung arahkan ke tab identitas
+if (autoOpenProfile) {
+  setActiveTab("identity");
+}
 
     if (user?.id) {
       fetchLatestData();
