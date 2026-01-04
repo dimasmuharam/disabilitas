@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react" // useEffect dihapus karena tidak digunakan
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { Lock, Eye, EyeOff, Save, CheckCircle2, AlertCircle } from "lucide-react"
@@ -39,7 +39,10 @@ export default function ResetPasswordPage() {
         document.activeElement.blur();
       }
 
-      setMsg("Kata Sandi Berhasil Diperbarui! Anda sekarang dapat masuk menggunakan kata sandi baru. Mengalihkan ke halaman masuk...")
+      // Memberikan penanda agar Dashboard memfokuskan H1 saat mendarat
+      sessionStorage.setItem("pindahkan_fokus_ke_h1", "true"); [cite: 2025-06-05]
+
+      setMsg("Kata Sandi Berhasil Diperbarui! Mengalihkan Anda ke Dashboard...")
       setIsError(false)
 
       // Pindahkan fokus kursor ke pesan sukses
@@ -48,10 +51,10 @@ export default function ResetPasswordPage() {
         if (alertElement) alertElement.focus();
       }, 100);
 
-      // JEDA 5 DETIK agar pengumuman sukses terdengar tuntas
+      // JEDA 3 DETIK (Disesuaikan agar tidak terlalu lama namun cukup untuk Screen Reader)
       setTimeout(() => {
-        router.push("/masuk")
-      }, 5000)
+        router.push("/dashboard") // Langsung ke dashboard karena sesi sudah aktif [cite: 2025-12-30]
+      }, 3000)
 
     } catch (error: any) {
       setIsError(true)
@@ -63,7 +66,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans text-slate-900">
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
-        <div className="mx-auto w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg mb-6 text-white">
+        <div className="mx-auto w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg mb-6 text-white" aria-hidden="true">
             <Lock size={32} />
         </div>
         <h1 className="text-3xl font-black uppercase italic tracking-tighter dark:text-slate-50">
@@ -77,9 +80,9 @@ export default function ResetPasswordPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
         <div className="bg-white dark:bg-slate-900 py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
           
-          <form className="space-y-6" onSubmit={handleUpdatePassword}>
+          <form className="space-y-6" onSubmit={handleUpdatePassword} aria-label="Formulir Atur Ulang Kata Sandi">
             <div>
-              <label htmlFor="new_password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+              <label htmlFor="new_password" disable-quotation-marks className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 {"Kata Sandi Baru"}
               </label>
               <div className="relative">
@@ -87,6 +90,7 @@ export default function ResetPasswordPage() {
                   id="new_password"
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimal 6 karakter"
@@ -95,7 +99,7 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600"
+                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
                   aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -104,13 +108,14 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm_password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+              <label htmlFor="confirm_password" disable-quotation-marks className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 {"Konfirmasi Kata Sandi Baru"}
               </label>
               <input
                 id="confirm_password"
                 type={showPassword ? "text" : "password"}
                 required
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Ulangi kata sandi"
@@ -136,7 +141,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-slate-900 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98]"
+              className="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-slate-900 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? "MEMPROSES..." : (
                 <>
