@@ -2,6 +2,20 @@
 // Deskripsi: Basis data statis komprehensif untuk sinkronisasi riset disabilitas.com
 // Aturan: Menggunakan format string bersih, menghindari tanda kutip ganda dalam teks narasi.
 
+export const USER_ROLES = {
+  TALENT: "talent",
+  COMPANY: "company",
+  PARTNER: "partner",
+  GOVERNMENT: "government",
+} as const;
+
+export const USER_ROLE_LABELS = [
+  { id: USER_ROLES.TALENT, label: "Talenta Disabilitas" },
+  { id: USER_ROLES.COMPANY, label: "Perusahaan / Pemberi Kerja" },
+  { id: USER_ROLES.PARTNER, label: "Kampus / Mitra Pelatihan" },
+  { id: USER_ROLES.GOVERNMENT, label: "Instansi Pemerintah" },
+];
+
 export const DISABILITY_TYPES = [
   "Netra / Low Vision",
   "Tuli / Wicara",
