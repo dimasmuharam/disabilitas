@@ -26,7 +26,7 @@ interface TalentDashboardProps {
   autoOpenProfile?: boolean;
 }
 
-export default function TalentDashboard({ user, profile: initialProfile }: TalentDashboardProps) {
+export default function TalentDashboard({ user, profile: initialProfile, autoOpenProfile }: TalentDashboardProps) {
 const [loading, setLoading] = useState(!initialProfile);
   const [isProcessing, setIsProcessing] = useState(false);
   const [stats, setStats] = useState({ jobs: 0, trainings: 0 });
@@ -49,7 +49,7 @@ const [loading, setLoading] = useState(!initialProfile);
       // Hapus penanda agar tidak terjadi fokus otomatis saat refresh halaman biasa
       sessionStorage.removeItem("pindahkan_fokus_ke_h1");
     }
-// Jika autoOpenProfile aktif (dari email konfirmasi), langsung arahkan ke tab identitas
+
 if (autoOpenProfile) {
   setActiveTab("identity");
 }
