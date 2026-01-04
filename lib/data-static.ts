@@ -7,6 +7,7 @@ export const USER_ROLES = {
   COMPANY: "company",
   PARTNER: "partner",
   GOVERNMENT: "government",
+  ADMIN: "admin", // Tetap tambahkan di sini untuk pengenalan sistem
 } as const;
 
 export const USER_ROLE_LABELS = [
@@ -14,6 +15,8 @@ export const USER_ROLE_LABELS = [
   { id: USER_ROLES.COMPANY, label: "Perusahaan / Pemberi Kerja" },
   { id: USER_ROLES.PARTNER, label: "Kampus / Mitra Pelatihan" },
   { id: USER_ROLES.GOVERNMENT, label: "Instansi Pemerintah" },
+  { id: USER_ROLES.ADMIN, label: "Super Admin" },
+ 
 ];
 
 export const DISABILITY_TYPES = [
@@ -41,7 +44,6 @@ export const EMPLOYMENT_TYPES = [
   "Self-employed"
 ];
 
-// BARU: KATEGORI KARIR UNTUK MONITORING ASN & INDUSTRI
 export const CAREER_STATUSES = [
   "Job Seeker",
   "Fresh Graduate",
@@ -53,14 +55,45 @@ export const CAREER_STATUSES = [
   "Pelajar / Mahasiswa",
     "Belum Bekerja"
 ];
+export const AGE_RANGES = [
+  "18-24 Tahun",
+  "25-34 Tahun",
+  "35-44 Tahun",
+  "Di atas 45 Tahun"
+];
 
-// KATEGORI PEMBERI KERJA (Ringkas & Strategis)
 export const EMPLOYER_CATEGORIES = [
   "Instansi Pemerintah (ASN)",
   "Perusahaan Swasta",
   "BUMN dan BUMD",
   "Lembaga Nonprofit",
   "Lainnya"
+];
+
+export const TRAINING_ORGANIZER_CATEGORIES = [
+  "Pemerintah",
+  "Perguruan Tinggi",
+  "Mitra Pelatihan (LKP/LPK)",
+  "Organisasi / Komunitas Disabilitas",
+  "Lainnya"
+];
+export const COMPANY_SIZE_CATEGORIES = [
+  "Mikro (1-10 Karyawan)",
+  "Kecil (11-50 Karyawan)",
+  "Menengah (51-250 Karyawan)",
+  "Besar (Lebih dari 250 Karyawan)"
+];
+export const INDUSTRY_CATEGORIES = [
+  "Perbankan & Keuangan", "Teknologi & IT", "Manufaktur", "Retail & Perdagangan",
+  "Pendidikan", "Kesehatan", "Perhotelan & Pariwisata", "Konstruksi", "Logistik",
+  "Media & Kreatif", "Pemerintahan", "LSM / Nonprofit"
+].sort();
+
+export const INCLUSION_RATING_QUESTIONS = [
+  { id: "recruitment_access", label: "Aksesibilitas Proses Rekrutmen" },
+  { id: "communication_quality", label: "Kualitas Komunikasi HRD" },
+  { id: "accommodation_match", label: "Kesesuaian Penyediaan Akomodasi" },
+  { id: "inclusion_culture", label: "Budaya Inklusi di Tempat Kerja" }
 ];
 
 // LIST INSTANSI PEMERINTAH (ASN)
@@ -134,7 +167,48 @@ export const NONPROFIT_ORG_LIST = [
   "Save the Children Indonesia",
   "Wahana Visi Indonesia",
   "Dompet Dhuafa",
+  "Kerjabilitas",
   "Rumah Zakat"
+].sort();
+
+// PERGURUAN TINGGI
+export const UNIVERSITIES = [
+  "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
+  "Institut Pertanian Bogor (IPB)", "Universitas Brawijaya (UB)", "Universitas Airlangga (UNAIR)", 
+  "Universitas Padjadjaran (UNPAD)", "Universitas Diponegoro (UNDIP)", "Institut Teknologi Sepuluh Nopember (ITS)", 
+  "Universitas Sebelas Maret (UNS)", "Universitas Hasanuddin (UNHAS)", "Universitas Sumatera Utara (USU)", 
+  "Universitas Andalas (UNAND)", "Universitas Sriwijaya (UNSRI)", "Universitas Lampung (UNILA)",
+  "Universitas Syiah Kuala (USK)", "Universitas Riau (UNRI)", "Universitas Jambi (UNJA)", 
+  "Universitas Bengkulu (UNIB)", "Universitas Tanjungpura (UNTAN)", "Universitas Lambung Makurat (ULM)",
+  "Universitas Mulawarman (UNMUL)", "Universitas Sam Ratulangi (UNSRAT)", "Universitas Tadulako (UNTAD)",
+  "Universitas Halu Oleo (UHO)", "Universitas Negeri Gorontalo (UNG)", "Universitas Negeri Jakarta (UNJ)",
+  "Universitas Pendidikan Indonesia (UPI)", "Universitas Negeri Yogyakarta (UNY)", "Universitas Negeri Semarang (UNNES)",
+  "Universitas Negeri Malang (UM)", "Universitas Negeri Surabaya (UNESA)", "Universitas Negeri Makassar (UNM)",
+  "Universitas Negeri Medan (UNIMED)", "Universitas Negeri Padang (UNP)", "Universitas Udayana (UNUD)",
+  "Universitas Mataram (UNRAM)", "Universitas Nusa Cendana (UNDANA)", "Universitas Pattimura (UNPATTI)",
+  "Universitas Cendrawasih (UNCEN)", "Universitas Terbuka (UT)",
+  "UIN Syarif Hidayatullah Jakarta", "UIN Sunan Kalijaga Yogyakarta", "UIN Sunan Ampel Surabaya", 
+  "UIN Maulana Malik Ibrahim Malang", "UIN Alauddin Makassar", "UIN Raden Fatah Palembang", "UIN Ar-Raniry Banda Aceh",
+  "Universitas Telkom (Tel-U)", "Universitas Bina Nusantara (Binus)", "Universitas Muhammadiyah Yogyakarta (UMY)",
+  "Universitas Muhammadiyah Malang (UMM)", "Universitas Muhammadiyah Surakarta (UMS)", "Universitas Islam Indonesia (UII)",
+  "Universitas Katolik Parahyangan (Unpar)", "Universitas Katolik Indonesia Atma Jaya", "Universitas Trisakti",
+  "Universitas Tarumanagara (Untar)", "Universitas Pelita Harapan (UPH)", "Universitas Mercu Buana",
+  "Universitas Gunadarma", "Universitas Kristen Satya Wacana (UKSW)", "Universitas Pasundan (Unpas)"
+].sort();
+
+// LEMBAGA PELATIHAN & PEMERINTAH (TRAINING PARTNERS)
+export const TRAINING_PARTNERS = [
+  "Kementerian Komunikasi dan Digital (Komdigi)",
+  "BBPVP Bekasi (Cevest)",
+  "BBPVP Semarang",
+  "BBPVP Bandung",
+  "BBPVP Medan",
+  "Pusat Pelatihan Kerja Daerah (PPKD) Jakarta",
+  "Digitalent Scholarship",
+  "Ruangguru (Lembaga Kursus Swasta)",
+  "Binar Academy",
+  "Hacktiv8",
+  "Mitra Lembaga Latihan Kerja (LLK) Daerah"
 ].sort();
 
 export const EDUCATION_LEVELS = [
@@ -198,6 +272,23 @@ export const ACADEMIC_ASSISTIVE_TOOLS = [
   "Aplikasi Pengubah Teks ke Suara (Text-to-Speech)",
   "Lainnya"
 ];
+
+export const UNIVERSITY_MAJORS = [
+  // EKONOMI & BISNIS
+  "Akuntansi", "Manajemen", "Ekonomi Pembangunan", "Perbankan & Keuangan", "Administrasi Bisnis",
+  // TEKNOLOGI & KOMPUTER
+  "Teknik Informatika", "Sistem Informasi", "Teknologi Informasi", "Ilmu Komputer", "Rekayasa Perangkat Lunak",
+  // SOSIAL & HUMANIORA
+  "Ilmu Komunikasi", "Psikologi", "Hukum", "Hubungan Internasional", "Sosiologi", "Ilmu Administrasi Negara",
+  // PENDIDIKAN
+  "Pendidikan Guru (PGSD)", "Pendidikan Luar Biasa (PLB)", "Pendidikan Bahasa Inggris", "Pendidikan Matematika",
+  // TEKNIK & DESAIN
+  "Teknik Sipil", "Teknik Elektro", "Teknik Mesin", "Arsitektur", "Desain Komunikasi Visual (DKV)", "Desain Interior",
+  // KESEHATAN
+  "Kesehatan Masyarakat", "Keperawatan", "Farmasi", "Gizi",
+  // LAINNYA
+  "Sastra Inggris", "Sastra Indonesia", "Ilmu Perpustakaan", "Pertanian / Peternakan", "Lainnya"
+].sort();
 
 // KESESUAIAN BIDANG STUDI
 export const STUDY_RELEVANCE_LEVELS = [
@@ -279,79 +370,6 @@ export const INDONESIA_CITIES = [
   "Makassar", "Parepare", "Palopo", "Manado", "Bitung", "Tomohon", "Palu", "Kendari", "Gorontalo", "Mamuju",
   "Denpasar", "Badung", "Gianyar", "Mataram", "Kupang",
   "Ambon", "Tual", "Ternate", "Tidore", "Jayapura", "Kota Jayapura", "Merauke", "Mimika", "Sorong", "Manokwari"
-].sort();
-
-// BARU: LIST INSTANSI PEMERINTAH (UNTUK TARGET LOCK GOV DASHBOARD)
-export const GOVERNMENT_AGENCIES = [
-  "Kementerian Keuangan",
-  "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
-  "Kementerian Sosial",
-  "Kementerian Ketenagakerjaan",
-  "Badan Kepegawaian Negara (BKN)",
-  "Kementerian PAN-RB",
-  "BRIN",
-  "Pemerintah Provinsi Jakarta",
-  "Pemerintah Provinsi Jawa Tengah",
-  "Kementerian Kesehatan",
-  "Kementerian Hukum dan HAM"
-].sort();
-
-// KATEGORI 1: PERGURUAN TINGGI
-export const UNIVERSITIES = [
-  "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
-  "Institut Pertanian Bogor (IPB)", "Universitas Brawijaya (UB)", "Universitas Airlangga (UNAIR)", 
-  "Universitas Padjadjaran (UNPAD)", "Universitas Diponegoro (UNDIP)", "Institut Teknologi Sepuluh Nopember (ITS)", 
-  "Universitas Sebelas Maret (UNS)", "Universitas Hasanuddin (UNHAS)", "Universitas Sumatera Utara (USU)", 
-  "Universitas Andalas (UNAND)", "Universitas Sriwijaya (UNSRI)", "Universitas Lampung (UNILA)",
-  "Universitas Syiah Kuala (USK)", "Universitas Riau (UNRI)", "Universitas Jambi (UNJA)", 
-  "Universitas Bengkulu (UNIB)", "Universitas Tanjungpura (UNTAN)", "Universitas Lambung Makurat (ULM)",
-  "Universitas Mulawarman (UNMUL)", "Universitas Sam Ratulangi (UNSRAT)", "Universitas Tadulako (UNTAD)",
-  "Universitas Halu Oleo (UHO)", "Universitas Negeri Gorontalo (UNG)", "Universitas Negeri Jakarta (UNJ)",
-  "Universitas Pendidikan Indonesia (UPI)", "Universitas Negeri Yogyakarta (UNY)", "Universitas Negeri Semarang (UNNES)",
-  "Universitas Negeri Malang (UM)", "Universitas Negeri Surabaya (UNESA)", "Universitas Negeri Makassar (UNM)",
-  "Universitas Negeri Medan (UNIMED)", "Universitas Negeri Padang (UNP)", "Universitas Udayana (UNUD)",
-  "Universitas Mataram (UNRAM)", "Universitas Nusa Cendana (UNDANA)", "Universitas Pattimura (UNPATTI)",
-  "Universitas Cendrawasih (UNCEN)", "Universitas Terbuka (UT)",
-  "UIN Syarif Hidayatullah Jakarta", "UIN Sunan Kalijaga Yogyakarta", "UIN Sunan Ampel Surabaya", 
-  "UIN Maulana Malik Ibrahim Malang", "UIN Alauddin Makassar", "UIN Raden Fatah Palembang", "UIN Ar-Raniry Banda Aceh",
-  "Universitas Telkom (Tel-U)", "Universitas Bina Nusantara (Binus)", "Universitas Muhammadiyah Yogyakarta (UMY)",
-  "Universitas Muhammadiyah Malang (UMM)", "Universitas Muhammadiyah Surakarta (UMS)", "Universitas Islam Indonesia (UII)",
-  "Universitas Katolik Parahyangan (Unpar)", "Universitas Katolik Indonesia Atma Jaya", "Universitas Trisakti",
-  "Universitas Tarumanagara (Untar)", "Universitas Pelita Harapan (UPH)", "Universitas Mercu Buana",
-  "Universitas Gunadarma", "Universitas Kristen Satya Wacana (UKSW)", "Universitas Pasundan (Unpas)"
-].sort();
-
-// KATEGORI 2: LEMBAGA PELATIHAN & PEMERINTAH (TRAINING PARTNERS)
-export const TRAINING_PARTNERS = [
-  "Kementerian Komunikasi dan Digital (Komdigi)",
-  "BBPVP Bekasi (Cevest)",
-  "BBPVP Semarang",
-  "BBPVP Bandung",
-  "BBPVP Medan",
-  "Pusat Pelatihan Kerja Daerah (PPKD) Jakarta",
-  "Digitalent Scholarship",
-  "Ruangguru (Lembaga Kursus Swasta)",
-  "Binar Academy",
-  "Hacktiv8",
-  "Mitra Lembaga Latihan Kerja (LLK) Daerah"
-].sort();
-
-// KATEGORI 3: ORGANISASI & KOMUNITAS DISABILITAS (COMMUNITY PARTNERS)
-export const COMMUNITY_PARTNERS = [
-  "Forum ASN Inklusif",
-  "Konekin (Koneksi Inklusi)",
-  "Kartunet (Karya Tunanetra)",
-  "Persatuan Tuna Netra Indonesia (PERTUNI)",
-  "Gerakan Kesejahteraan Tuna Rungu Indonesia (GERKATIN)",
-  "Himpunan Wanita Disabilitas Indonesia (HWDI)",
-  "Persatuan Penyandang Disabilitas Indonesia (PPDI)",
-  "Yayasan Pembinaan Anak Cacat (YPAC)",
-  "Diffalink",
-  "Dnetwork",
-  "Kerjabilitas",
-  "Paradifa",
-  "Sigab Indonesia",
-  "Pusat Layanan Disabilitas (PLD) Kampus"
 ].sort();
 
 // VARIABEL RISET KEAHLIAN & PELATIHAN
