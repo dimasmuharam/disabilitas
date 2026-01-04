@@ -1,26 +1,52 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import React, { useEffect, useState, Suspense } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { CheckCircle, ArrowRight, Building2, User, Landmark, GraduationCap } from "lucide-react"
+import { USER_ROLES } from "@/lib/data-static"
 
 function ConfirmContent() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [role, setRole] = useState<string>("talent")
   const router = useRouter()
 
   useEffect(() => {
     async function getProfile() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
+        
         if (user) {
-          const { data } = await supabase
-            .from("profiles")
-            .select("full_name, role")
-            .eq("id", user.id)
-            .single()
+          const userRole = user.user_metadata?.role || USER_ROLES.TALENT
+          setRole(userRole)
+
+          // --- LOGIKA PENCARIAN DATA LINEAR (Sesuai Rumah Masing-masing) ---
+          let data = null
+          if (userRole === USER_ROLES.COMPANY) {
+            const { data: companyData } = await supabase.from("companies").select("name").eq("id", user.id).maybeSingle()
+            data = { full_name: companyData?.name, role: userRole }
+          } else if (userRole === USER_ROLES.PARTNER) {
+            const { data: partnerData } = await supabase.from("partners").select("name").eq("id", user.id).maybeSingle()
+            data = { full_name: partnerData?.name, role: userRole }
+          } else if (userRole === USER_ROLES.GOVERNMENT) {
+            const { data: govData } = await supabase.from("government").select("name").eq("id", user.id).maybeSingle()
+            data = { full_name: govData?.name, role: userRole }
+          } else {
+            const { data: talentData } = await supabase.from("profiles").select("full_name, role").eq("id", user.id).maybeSingle()
+            data = talentData
+          }
+
           setProfile(data)
+
+          // --- MANAJEMEN FOKUS UNTUK SCREEN READER ---
+          setTimeout(() => {
+            const heading = document.querySelector("h1")
+            if (heading) {
+              heading.setAttribute("tabIndex", "-1")
+              heading.focus()
+            }
+          }, 500)
         }
       } catch (error) {
         console.error("Error fetching profile:", error)
@@ -31,36 +57,35 @@ function ConfirmContent() {
     getProfile()
   }, [])
 
-  // Fungsi untuk membedakan konten berdasarkan ROLE [cite: 2026-01-01]
   const getDisplayData = () => {
     const name = profile?.full_name || "Pengguna"
-    const role = profile?.role?.toLowerCase() || "talent"
+    const currentRole = role.toLowerCase()
 
-    switch (role) {
-      case "company":
+    switch (currentRole) {
+      case USER_ROLES.COMPANY:
         return {
-          icon: <Building2 size={48} className="text-blue-600" />,
+          icon: <Building2 size={48} />,
           title: "Akses Bisnis Aktif",
           desc: `Halo, ${name}! Akun perusahaan Anda telah diverifikasi. Mari temukan talenta terbaik untuk memperkuat inklusivitas bisnis Anda.`,
           btnText: "Masuk ke Dashboard Bisnis"
         }
-      case "government":
+      case USER_ROLES.GOVERNMENT:
         return {
-          icon: <Landmark size={48} className="text-indigo-600" />,
+          icon: <Landmark size={48} />,
           title: "Otoritas Diverifikasi",
           desc: `Halo, ${name}! Akun instansi pemerintah Anda telah aktif. Akses data monitoring dan kebijakan inklusi sekarang.`,
           btnText: "Buka Panel Monitoring"
         }
-      case "campus_partner":
+      case USER_ROLES.PARTNER:
         return {
-          icon: <GraduationCap size={48} className="text-emerald-600" />,
+          icon: <GraduationCap size={48} />,
           title: "Kemitraan Aktif",
           desc: `Halo, ${name}! Akun mitra pendidikan Anda telah diverifikasi. Mari mulai sinkronisasi data lulusan dan peluang karir.`,
           btnText: "Masuk ke Portal Mitra"
         }
       default: // Talent
         return {
-          icon: <User size={48} className="text-blue-600" />,
+          icon: <User size={48} />,
           title: "Konfirmasi Berhasil",
           desc: `Halo, ${name}! Akun talenta Anda telah aktif. Mari lengkapi profil profesional Anda untuk menarik perhatian perekrut.`,
           btnText: "Lengkapi Profil Sekarang"
@@ -71,7 +96,7 @@ function ConfirmContent() {
   const content = getDisplayData()
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950" aria-busy="true">
       <p className="font-black animate-pulse text-slate-400 uppercase italic tracking-widest">
         {"Menyinkronkan Akun..."}
       </p>
@@ -79,30 +104,32 @@ function ConfirmContent() {
   )
 
   return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl p-10 text-center border border-slate-100 animate-in zoom-in-95 duration-500">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 font-sans">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl p-10 text-center border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-500">
         <div className="flex justify-center mb-6">
-          <div className="bg-slate-50 p-6 rounded-[2rem] shadow-inner">
+          <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-[2rem] shadow-inner text-blue-600 dark:text-blue-400">
             {content.icon}
           </div>
         </div>
 
-        <div className="inline-flex items-center gap-2 bg-green-100 px-4 py-1 rounded-full mb-4">
-          <CheckCircle size={14} className="text-green-600" />
-          <span className="text-[10px] font-black uppercase text-green-700 tracking-wider">{"Email Terverifikasi"}</span>
+        <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-4 py-1 rounded-full mb-4">
+          <CheckCircle size={14} className="text-green-600 dark:text-green-400" />
+          <span className="text-[10px] font-black uppercase text-green-700 dark:text-green-400 tracking-wider">
+            {"Email Terverifikasi"}
+          </span>
         </div>
 
-        <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 mb-2">
+        <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50 mb-2 outline-none">
           {content.title}
         </h1>
         
-        <p className="text-slate-500 font-bold text-sm mb-10 leading-relaxed px-2">
+        <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-10 leading-relaxed px-2">
           {content.desc}
         </p>
 
         <button 
           onClick={() => router.push("/dashboard?verified=true")}
-          className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-xl shadow-slate-200 active:scale-95"
+          className="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-xl active:scale-95"
         >
           {content.btnText}
           <ArrowRight size={16} />
