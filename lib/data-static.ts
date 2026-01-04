@@ -90,12 +90,11 @@ export const INDUSTRY_CATEGORIES = [
 ].sort();
 
 export const INCLUSION_RATING_QUESTIONS = [
-  { id: "recruitment_access", label: "Aksesibilitas Proses Rekrutmen" },
-  { id: "communication_quality", label: "Kualitas Komunikasi HRD" },
-  { id: "accommodation_match", label: "Kesesuaian Penyediaan Akomodasi" },
-  { id: "inclusion_culture", label: "Budaya Inklusi di Tempat Kerja" }
+  { id: "score_accessibility", label: "Aksesibilitas Fasilitas & Digital" },
+  { id: "score_culture", label: "Budaya Inklusi di Tempat Kerja" },
+  { id: "score_management", label: "Kebijakan & Dukungan Manajemen" },
+  { id: "score_onboarding", label: "Kualitas Komunikasi & Onboarding" }
 ];
-
 // LIST INSTANSI PEMERINTAH (ASN)
 export const GOVERNMENT_AGENCIES_LIST = [
   "Kementerian Keuangan",
