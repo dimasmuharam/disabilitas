@@ -2,7 +2,6 @@ import { supabase } from "@/lib/supabase";
 
 /**
  * UPDATE PROFIL UTAMA (Tabel: profiles)
- * Digunakan oleh Modul 1, 2, 3, 4, dan 5
  */
 export async function updateTalentProfile(userId: string, updates: any) {
   try {
@@ -26,11 +25,9 @@ export async function updateTalentProfile(userId: string, updates: any) {
 
 /**
  * MANAJEMEN RIWAYAT KERJA (Tabel: work_experiences)
- * Digunakan oleh Modul 3
  */
 export async function upsertWorkExperience(experience: any) {
   try {
-    // Memastikan is_verified default ke false jika input manual
     const { data, error } = await supabase
       .from("work_experiences")
       .upsert({
@@ -49,29 +46,7 @@ export async function upsertWorkExperience(experience: any) {
 }
 
 /**
- * PENDAFTARAN PELATIHAN (Tabel: trainees)
- * Digunakan oleh Talent Dashboard (Training Match)
- */
-export async function applyForTraining(trainingId: string, profileId: string) {
-  try {
-    const { data, error } = await supabase
-      .from("trainees")
-      .insert({
-        training_id: trainingId,
-        profile_id: profileId,
-        status: "applied"
-      })
-      .select();
-
-    if (error) throw error;
-    return { success: true, data };
-  } catch (error: any) {
-    console.error("Training Application Error:", error.message);
-    return { success: false, error: error.message };
-  }
-}
-/**
- * FUNGSI SMART: SINKRONISASI SERTIFIKAT OTOMATIS
+ * SINKRONISASI SERTIFIKAT OTOMATIS DARI PELATIHAN
  */
 export async function syncOfficialCertifications(userId: string) {
   try {
@@ -82,7 +57,7 @@ export async function syncOfficialCertifications(userId: string) {
         trainings (
           title, 
           updated_at, 
-          profiles (full_name)
+          organizer_name
         )
       `)
       .eq("profile_id", userId)
@@ -92,7 +67,7 @@ export async function syncOfficialCertifications(userId: string) {
 
     const officialCerts = traineeData?.map((item: any) => ({
       name: item.trainings?.title || "Sertifikat Pelatihan",
-      issuer: item.trainings?.profiles?.full_name || "Official Partner",
+      issuer: item.trainings?.organizer_name || "Official Partner",
       year: item.trainings?.updated_at 
         ? new Date(item.trainings.updated_at).getFullYear().toString() 
         : new Date().getFullYear().toString(),
@@ -107,7 +82,8 @@ export async function syncOfficialCertifications(userId: string) {
 }
 
 /**
- * FUNGSI SMART: CEK STATUS PENEMPATAN KERJA OTOMATIS
+ * CEK STATUS PENEMPATAN KERJA (Status: accepted)
+ * Sinkron dengan label 'accepted' di DB
  */
 export async function checkVerifiedPlacement(userId: string) {
   try {
@@ -115,10 +91,10 @@ export async function checkVerifiedPlacement(userId: string) {
       .from("applications")
       .select(`
         status,
-        jobs (title, company_id, profiles (full_name))
+        jobs (title, company_id, companies (name))
       `)
       .eq("profile_id", userId)
-      .eq("status", "hired") as any);
+      .eq("status", "accepted") as any); // Diubah dari 'hired' ke 'accepted'
 
     if (error) throw error;
     return { success: true, data };
