@@ -33,7 +33,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // ARIA Announcement & Fokus untuk Screen Reader
+  // ARIA Announcement & Fokus Aksesibel
   const [announcement, setAnnouncement] = useState("");
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLHeadingElement>(null);
@@ -100,7 +100,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
     await fetchDashboardData();
     setActiveTab("overview");
     
-    // AKSESIBILITAS: Scroll ke atas dan pindahkan fokus
+    // AKESIBILITAS: Scroll ke atas dan pindahkan fokus ke judul
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       headerRef.current?.focus();
@@ -122,7 +122,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       });
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       
-      // PERBAIKAN: Gunakan rute /perusahaan/
+      // SINKRONISASI LINK PERUSAHAAN
       const url = `https://disabilitas.com/perusahaan/${company?.id}`;
       const score = ratings?.totalAvg ? ratings.totalAvg.toFixed(1) : "0.0";
       const caption = `{"Bangga! Instansi kami memiliki Indeks Inklusi "}${score}{"/5.0. Cek profil kami: "}${url}{" #InklusiBisa #DisabilitasBisaWork"}`;
@@ -135,12 +135,12 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       }
     } catch (err) {
       console.error("Share failed", err);
-      setAnnouncement(`{"Gagal memproses gambar. Silakan coba lagi."}`);
+      setAnnouncement(`{"Gagal memproses gambar."}`);
     } finally {
       setIsProcessing(false);
     }
   };
-  // --- KODE BARU: LOGIKA PROGRESS KELENGKAPAN (SINKRON DATA-STATIC) ---
+  // --- LOGIKA PROGRESS KELENGKAPAN (SINKRON DATA-STATIC) ---
   const calculateCompletion = () => {
     if (!company || company.is_placeholder) return { score: 0, missing: ["Profil Belum Dibuat"] };
     
@@ -185,7 +185,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
       
-      {/* WIDGET PROGRESS KELENGKAPAN */}
+      {/* 1. PROGRESS WIDGET */}
       {completionScore < 100 && (
         <section className="bg-amber-50 border-2 border-amber-900/10 rounded-[2.5rem] p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
@@ -198,28 +198,60 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
             </div>
             <div className="flex-1 space-y-3">
               <h3 className="text-sm font-black uppercase text-amber-900 tracking-tight">{"Lengkapi Profil Inklusi Instansi"}</h3>
+              <p className="text-[10px] font-bold text-amber-800/60 uppercase tracking-wide">{"Data lengkap membantu talenta disabilitas menemukan instansi Anda secara akurat."}</p>
               <div className="flex flex-wrap gap-2">
                 {missingItems.map((item, idx) => (
                   <span key={idx} className="px-3 py-1 bg-white border border-amber-200 rounded-full text-[8px] font-black uppercase text-amber-700">{"✕ "}{item}</span>
                 ))}
               </div>
             </div>
-            <button onClick={() => setActiveTab("profile")} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] shadow-xl hover:scale-105 transition-all">{"Lengkapi Sekarang"}</button>
+            <button onClick={() => setActiveTab("profile")} className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] shadow-xl hover:scale-105 transition-all">{"Lengkapi Sekarang"}</button>
           </div>
         </section>
       )}
 
-      {/* ACTION BUTTONS (FIXED ROUTE) */}
+      {/* 2. ACTION BUTTONS */}
       <div className="flex flex-wrap gap-4">
         <a href={`/perusahaan/${company?.id}`} target="_blank" className="flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-900 rounded-2xl font-black uppercase text-[10px] shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:bg-slate-50 transition-all">
           <ExternalLink size={18} /> {"Lihat Profil Publik"}
         </a>
-        <button onClick={handleShareCard} disabled={isProcessing || !company?.id} className="flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[10px] shadow-[4px_4px_0px_0px_rgba(5,150,105,0.3)] hover:bg-emerald-700 transition-all disabled:opacity-50">
+        <button onClick={handleShareCard} disabled={isProcessing || !company?.id} className="flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[10px] shadow-[4px_4px_0px_0px_rgba(5,150,105,0.3)] hover:bg-emerald-700 transition-all">
           <Share2 size={18} /> {isProcessing ? "Memproses..." : "Share Inclusion Card"}
         </button>
       </div>
 
-      {/* STATS GRID */}
+      {/* 3. TRENDING INSIGHT & INDEX */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        <section className="lg:col-span-2 bg-slate-900 rounded-[3rem] p-10 text-white border-2 border-slate-800 shadow-xl relative overflow-hidden">
+          <div className="relative z-10 space-y-6">
+            <div className="flex items-center gap-2 bg-blue-600/20 text-blue-400 w-fit px-4 py-1 rounded-full border border-blue-600/30">
+              <Zap size={14} fill="currentColor" />
+              <p className="text-[9px] font-black uppercase tracking-widest">{"Trending Talent Insight"}</p>
+            </div>
+            <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">{"Talenta di Lokasi Anda"}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {trendingSkills.length > 0 ? trendingSkills.map((s, i) => (
+                <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
+                  <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{s.skill}</p>
+                  <p className="text-xl font-black text-blue-400">{s.count}</p>
+                </div>
+              )) : (
+                <p className="text-[10px] text-slate-500 italic">{"Mencari data talenta sekitar..."}</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] flex flex-col justify-center text-center">
+          <p className="text-[10px] font-black uppercase text-slate-400 mb-2">{"Inclusion Index"}</p>
+          <h3 className="text-6xl font-black text-slate-900">{ratings ? ratings.totalAvg.toFixed(1) : "0.0"}</h3>
+          <div className="flex justify-center gap-1 mt-4">
+            {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} className={ratings?.totalAvg >= s ? "text-amber-500 fill-amber-500" : "text-slate-100"} />)}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. QUICK STATS GRID */}
       <div className="grid md:grid-cols-4 gap-6">
         {[
           { label: "Lowongan", val: stats.jobCount, icon: Briefcase, color: "text-blue-600" },
@@ -237,7 +269,25 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         ))}
       </div>
 
-      {/* FEEDBACK & CARD RENDERING (HIDDEN) */}
+      {/* 5. FEEDBACK ANONIM */}
+      <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm">
+        <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-3 mb-8">
+          <MessageSquare className="text-blue-600" size={20} /> {"Feedback Anonim Talenta"}
+        </h3>
+        <div className="grid md:grid-cols-3 gap-6">
+          {anonReviews.length > 0 ? anonReviews.map((rev, i) => (
+            <div key={i} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 relative">
+              <Quote className="absolute top-4 right-4 text-slate-200" size={32} />
+              <p className="text-xs italic text-slate-600 leading-relaxed mb-6">{"\""}{rev.comment_anonymous}{"\""}</p>
+              <p className="text-[9px] font-black uppercase text-slate-400">{new Date(rev.created_at).toLocaleDateString()}</p>
+            </div>
+          )) : (
+            <p className="col-span-3 text-[10px] font-bold text-slate-300 uppercase tracking-widest text-center py-10 italic">{"Belum ada review dari talenta."}</p>
+          )}
+        </div>
+      </section>
+
+      {/* HIDDEN INCLUSION CARD FOR SHARE */}
       <div className="absolute -left-[9999px] top-0">
         <div ref={cardRef} className="w-[600px] h-[350px] bg-white p-10 flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem] font-sans">
           <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
@@ -245,17 +295,25 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
               <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black italic">{"D"}</div>
               <h2 className="text-xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
             </div>
+            <span className="text-[9px] font-black bg-emerald-500 text-white px-4 py-1 rounded-full uppercase">{"Verified Partner"}</span>
           </div>
           <div className="flex-1 py-6 flex justify-between items-center">
             <div className="space-y-1">
               <p className="text-2xl font-black uppercase text-slate-900">{company?.name || "Instansi"}</p>
-              <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">{company?.industry || "Inklusi"}</p>
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">{company?.industry || "Sektor Industri"}</p>
+              <div className="mt-4 flex gap-6">
+                <div><p className="text-[8px] font-black text-slate-400 uppercase">{"Inclusion Index"}</p><p className="text-xl font-black">{ratings?.totalAvg.toFixed(1) || "0.0"}</p></div>
+                <div><p className="text-[8px] font-black text-slate-400 uppercase">{"Quota Progress"}</p><p className="text-xl font-black">{gap.percent}{"%"}</p></div>
+              </div>
             </div>
             <div className="bg-slate-50 p-3 rounded-2xl border-2 border-slate-100">
               {company?.id && <QRCodeSVG value={`https://disabilitas.com/perusahaan/${company.id}`} size={80} />}
             </div>
           </div>
-          <p className="text-[8px] font-black uppercase text-slate-400">{"Inclusion Identity Card — © 2026 Powered by disabilitas.com"}</p>
+          <div className="border-t-2 border-slate-100 pt-4 flex justify-between items-center">
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{"Inclusion Identity Card — © 2026"}</p>
+            <p className="text-[8px] font-bold italic text-blue-600">{"Powered by disabilitas.com"}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -277,9 +335,12 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white shrink-0"><Building2 size={36} /></div>
             <div>
-              <h1 ref={headerRef} tabIndex={-1} className="text-2xl font-black italic uppercase tracking-tighter focus:outline-none">
-                {company?.name || "Lengkapi Profil Anda"}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 ref={headerRef} tabIndex={-1} className="text-2xl font-black italic uppercase tracking-tighter focus:outline-none">
+                  {company?.name || "Lengkapi Profil Anda"}
+                </h1>
+                {company?.is_verified && <CheckCircle2 className="text-blue-600" size={20} />}
+              </div>
               <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{company?.industry || "Instansi Baru"}</p>
             </div>
           </div>
