@@ -297,16 +297,21 @@ export const STUDY_RELEVANCE_LEVELS = [
   "Tidak Relevan (Bekerja di bidang berbeda total)",
   "Belum Bekerja"
 ];
-
 export const ACCOMMODATION_TYPES = [
-  "Materi Format Braille / Audio",
-  "Pendampingan Juru Bahasa Isyarat",
-  "Waktu Ujian / Kerja Tambahan",
-  "Aksesibilitas Fisik (Ramp/Lift)",
-  "Modifikasi Kurikulum / Tugas",
-  "Software Alat Bantu (Screen Reader)",
-  "Ruang Kerja / Belajar Tenang (Sensory)",
-  "Lampu Penerangan Tinggi (Low Vision)"
+  "Aksesibilitas Fisik (Ramp, Lift, Selasar Luas)",
+  "Toilet Aksesibel & Parkir Prioritas Disabilitas",
+  "Jalur Pemandu (Guiding Block) & Penanda Tekstur",
+  "Dokumen Digital Aksesibel (Screen Reader Friendly)",
+  "Software Alat Bantu (Screen Reader, Magnifier, STT)",
+  "Materi Format Braille, Audio, atau Cetak Besar",
+  "Layanan Juru Bahasa Isyarat (JBI) atau Notulensi Real-time",
+  "Sistem Pengumuman Visual & Audio (Prosedur Darurat/HSE)",
+  "Jam Kerja Fleksibel (Untuk Terapi atau Kondisi Kesehatan)",
+  "Waktu Kerja atau Pengerjaan Tugas Tambahan",
+  "Modifikasi Deskripsi Tugas (Job Carving) atau Kurikulum",
+  "Pendampingan Kerja (Job Coach, Buddy, atau Mentoring)",
+  "Ruang Kerja/Belajar Tenang (Sensory-friendly Room)",
+  "Lampu Penerangan Tinggi & Kontras (Dukungan Low Vision)"
 ].sort();
 
 export const DISABILITY_TOOLS = [
