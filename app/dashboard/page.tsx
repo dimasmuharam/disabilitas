@@ -18,7 +18,6 @@ function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Ambil parameter verified dari URL (hasil pendaftaran baru)
   const isJustVerified = searchParams.get('verified') === 'true'
 
   useEffect(() => {
@@ -35,47 +34,58 @@ function DashboardContent() {
         const userRole = authUser.user_metadata?.role || USER_ROLES.TALENT
         setRole(userRole)
 
-        // --- LOGIKA PENCARIAN DATA LINEAR BERDASARKAN TABEL MASING-MASING ---
         let profileData = null
 
+        // --- LOGIKA PENGAMBILAN DATA DENGAN FALLBACK (PENCEGAH STUCK) ---
         if (userRole === USER_ROLES.COMPANY) {
           const { data } = await supabase.from('companies').select('*').eq('owner_id', authUser.id).maybeSingle()
-          profileData = data
+          // Fallback: Jika profil instansi belum dibuat
+          profileData = data || { 
+            owner_id: authUser.id, 
+            name: authUser.user_metadata?.full_name || "Instansi Baru",
+            is_placeholder: true 
+          }
         } else if (userRole === USER_ROLES.PARTNER) {
           const { data } = await supabase.from('partners').select('*').eq('id', authUser.id).maybeSingle()
-          profileData = data
+          // Fallback: Jika profil mitra kampus belum dibuat
+          profileData = data || { 
+            id: authUser.id, 
+            name: authUser.user_metadata?.full_name || "Mitra Kampus Baru",
+            is_placeholder: true 
+          }
         } else if (userRole === USER_ROLES.GOVERNMENT) {
           const { data } = await supabase.from('government').select('*').eq('id', authUser.id).maybeSingle()
-          profileData = data
+          // Fallback: Jika profil instansi pemerintah belum dibuat
+          profileData = data || { 
+            id: authUser.id, 
+            institution_name: authUser.user_metadata?.full_name || "Instansi Pemerintah",
+            is_placeholder: true 
+          }
         } else {
-          // Default ke tabel profiles untuk talent atau admin
+          // Role Talent atau Admin
           const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle()
-          profileData = data
+          profileData = data || { 
+            id: authUser.id, 
+            full_name: authUser.user_metadata?.full_name || "Pengguna Baru",
+            is_placeholder: true 
+          }
         }
 
         setProfile(profileData)
 
-        // --- MANAJEMEN FOKUS UNTUK SCREEN READER ---
-        if (isJustVerified) {
-          // Jika baru verifikasi, fokuskan ke banner sukses
-          setTimeout(() => {
-            const banner = document.getElementById("welcome-banner");
-            if (banner) banner.focus();
-          }, 500);
-        } else {
-          // Jika login biasa, fokus ke judul H1 dashboard utama
-          setTimeout(() => {
-            const h1 = document.querySelector("h1");
-            if (h1) {
-              h1.setAttribute("tabIndex", "-1");
-              h1.focus();
-            }
-          }, 500);
-        }
+        // --- MANAJEMEN FOKUS ---
+        setTimeout(() => {
+          const targetId = isJustVerified ? "welcome-banner" : "dashboard-title";
+          const element = document.getElementById(targetId);
+          if (element) {
+            element.setAttribute("tabIndex", "-1");
+            element.focus();
+          }
+        }, 500);
 
         setLoading(false)
       } catch (error) {
-        console.error("[DASHBOARD] Error:", error)
+        console.error("[DASHBOARD] Critical Error:", error)
         setLoading(false)
       }
     }
@@ -86,8 +96,9 @@ function DashboardContent() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950" aria-busy="true">
-        <div className="text-center">
-          <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="font-black text-slate-400 tracking-widest uppercase italic text-[10px]">
             {"Menyinkronkan Otoritas Akses..."}
           </p>
         </div>
@@ -99,25 +110,25 @@ function DashboardContent() {
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10 px-4 font-sans">
       <div className="container max-w-7xl mx-auto">
         
-        {/* Banner Selamat Datang - Aksesibel untuk yang baru verifikasi */}
         {isJustVerified && (
           <div 
             id="welcome-banner"
             role="alert" 
             aria-live="assertive"
-            tabIndex={-1}
             className="mb-8 p-8 bg-blue-600 rounded-[2.5rem] shadow-xl animate-in fade-in slide-in-from-top-4 duration-700 outline-none"
           >
             <h2 className="text-white font-black uppercase italic tracking-tighter text-xl mb-1">
               {"✓ Verifikasi Email Berhasil"}
             </h2>
             <p className="text-blue-100 font-bold text-[10px] uppercase tracking-widest leading-relaxed">
-              {"Selamat bergabung! Silakan mulai dengan melengkapi profil instansi atau pribadi Anda di menu pengaturan."}
+              {"Selamat bergabung! Silakan mulai dengan melengkapi profil Anda pada menu yang tersedia."}
             </p>
           </div>
         )}
 
-        {/* Dashboard Switcher Berdasarkan Role Linear */}
+        <h1 id="dashboard-title" className="sr-only">{"Dashboard Utama Disabilitas.com"}</h1>
+
+        {/* Dashboard Switcher dengan Proteksi Null */}
         {role === 'admin' || role === 'super_admin' ? (
           <AdminDashboard user={{ ...user, ...profile }} />
         ) : role === USER_ROLES.TALENT ? (
@@ -129,31 +140,24 @@ function DashboardContent() {
         ) : role === USER_ROLES.COMPANY ? (
           <CompanyDashboard 
             user={{ ...user, ...profile }} 
-            company={profile} // profile di sini adalah hasil fetch tabel companies
+            company={profile} 
           />
         ) : role === USER_ROLES.PARTNER ? (
           <CampusDashboard user={{ ...user, ...profile }} />
         ) : role === USER_ROLES.GOVERNMENT ? (
           <GovDashboard user={{ ...user, ...profile }} />
         ) : (
-          <div className="text-center p-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 shadow-2xl">
-            <h1 className="text-red-600 font-black uppercase italic tracking-tight mb-4 text-2xl">
-                {"Akses Ditolak: Profil Tidak Dikenali"}
-            </h1>
-            <div className="text-slate-500 font-bold mb-8 space-y-2 text-[10px] uppercase tracking-widest">
-              <p>{"Akun: "}<span className="text-blue-600">{user?.email}</span></p>
-              <p>{"Role: "}{role || "Tidak terdefinisi"}</p>
-              <p>{"Hubungi admin jika ini adalah kesalahan."}</p>
+          <div className="text-center p-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl">
+            <h2 className="text-red-600 font-black uppercase italic tracking-tight mb-4 text-2xl">
+                {"Profil Tidak Dikenali"}
+            </h2>
+            <div className="text-slate-500 font-bold mb-8 text-[10px] uppercase tracking-widest space-y-2">
+              <p>{"Akun: "}{user?.email}</p>
+              <p>{"Role: "}{role || "NULL"}</p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button onClick={() => window.location.reload()} className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95">
-                {"Segarkan Sinkronisasi"}
-              </button>
-              <button onClick={async () => { await supabase.auth.signOut(); router.push("/masuk") }} className="px-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
-                {"Keluar"}
-              </button>
-            </div>
+            <button onClick={() => router.push("/masuk")} className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">
+              {"Kembali ke Login"}
+            </button>
           </div>
         )}
       </div>
@@ -163,11 +167,7 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={
-      <main className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <p className="font-black animate-pulse text-slate-400 tracking-widest uppercase italic">{"Memuat Dashboard..."}</p>
-      </main>
-    }>
+    <Suspense fallback={null}>
       <DashboardContent />
     </Suspense>
   )
