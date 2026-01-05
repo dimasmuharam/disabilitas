@@ -39,7 +39,7 @@ function DashboardContent() {
         let profileData = null
 
         if (userRole === USER_ROLES.COMPANY) {
-          const { data } = await supabase.from('companies').select('*').eq('id', authUser.id).maybeSingle()
+          const { data } = await supabase.from('companies').select('*').eq('owner_id', authUser.id).maybeSingle()
           profileData = data
         } else if (userRole === USER_ROLES.PARTNER) {
           const { data } = await supabase.from('partners').select('*').eq('id', authUser.id).maybeSingle()
@@ -62,15 +62,14 @@ function DashboardContent() {
             const banner = document.getElementById("welcome-banner");
             if (banner) banner.focus();
           }, 500);
-        } else if (sessionStorage.getItem("pindahkan_fokus_ke_h1") === "true") {
-          // Jika login biasa, fokus ke judul H1 (Ranjau Fokus yang kita buat tadi)
+        } else {
+          // Jika login biasa, fokus ke judul H1 dashboard utama
           setTimeout(() => {
             const h1 = document.querySelector("h1");
             if (h1) {
               h1.setAttribute("tabIndex", "-1");
               h1.focus();
             }
-            sessionStorage.removeItem("pindahkan_fokus_ke_h1");
           }, 500);
         }
 
@@ -97,7 +96,7 @@ function DashboardContent() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10 px-4">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10 px-4 font-sans">
       <div className="container max-w-7xl mx-auto">
         
         {/* Banner Selamat Datang - Aksesibel untuk yang baru verifikasi */}
@@ -107,13 +106,13 @@ function DashboardContent() {
             role="alert" 
             aria-live="assertive"
             tabIndex={-1}
-            className="mb-8 p-8 bg-blue-600 rounded-[2rem] shadow-xl animate-in fade-in slide-in-from-top-4 duration-700 outline-none"
+            className="mb-8 p-8 bg-blue-600 rounded-[2.5rem] shadow-xl animate-in fade-in slide-in-from-top-4 duration-700 outline-none"
           >
             <h2 className="text-white font-black uppercase italic tracking-tighter text-xl mb-1">
               {"✓ Verifikasi Email Berhasil"}
             </h2>
-            <p className="text-blue-100 font-bold text-xs uppercase tracking-widest">
-              {"Selamat bergabung! Silakan mulai dengan melengkapi profil instansi atau pribadi Anda."}
+            <p className="text-blue-100 font-bold text-[10px] uppercase tracking-widest leading-relaxed">
+              {"Selamat bergabung! Silakan mulai dengan melengkapi profil instansi atau pribadi Anda di menu pengaturan."}
             </p>
           </div>
         )}
@@ -128,7 +127,10 @@ function DashboardContent() {
             autoOpenProfile={isJustVerified} 
           />
         ) : role === USER_ROLES.COMPANY ? (
-          <CompanyDashboard user={{ ...user, ...profile }} />
+          <CompanyDashboard 
+            user={{ ...user, ...profile }} 
+            company={profile} // profile di sini adalah hasil fetch tabel companies
+          />
         ) : role === USER_ROLES.PARTNER ? (
           <CampusDashboard user={{ ...user, ...profile }} />
         ) : role === USER_ROLES.GOVERNMENT ? (
@@ -136,19 +138,19 @@ function DashboardContent() {
         ) : (
           <div className="text-center p-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 shadow-2xl">
             <h1 className="text-red-600 font-black uppercase italic tracking-tight mb-4 text-2xl">
-               {"Akses Ditolak: Profil Tidak Dikenali"}
+                {"Akses Ditolak: Profil Tidak Dikenali"}
             </h1>
-            <div className="text-slate-500 font-bold mb-8 space-y-2 text-sm uppercase tracking-widest">
-              <p>{"Sistem mengenali akun: "}<span className="text-blue-600">{user?.email}</span></p>
+            <div className="text-slate-500 font-bold mb-8 space-y-2 text-[10px] uppercase tracking-widest">
+              <p>{"Akun: "}<span className="text-blue-600">{user?.email}</span></p>
               <p>{"Role: "}{role || "Tidak terdefinisi"}</p>
-              <p>{"Data Anda tidak ditemukan di tabel otoritas kami."}</p>
+              <p>{"Hubungi admin jika ini adalah kesalahan."}</p>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button onClick={() => window.location.reload()} className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95">
                 {"Segarkan Sinkronisasi"}
               </button>
-              <button onClick={async () => { await supabase.auth.signOut(); router.push("/masuk") }} className="px-8 py-4 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-300 transition-all">
+              <button onClick={async () => { await supabase.auth.signOut(); router.push("/masuk") }} className="px-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
                 {"Keluar"}
               </button>
             </div>
