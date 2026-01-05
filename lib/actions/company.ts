@@ -2,22 +2,30 @@ import { supabase } from "@/lib/supabase"
 
 /**
  * Memperbarui atau mendaftarkan profil master perusahaan
- * Digunakan oleh Swasta & BUMN untuk manajemen identitas inklusif
+ * Sinkron dengan kolom tabel 'companies' terbaru untuk data riset
  */
 export async function updateCompanyMaster(userId: string, companyData: any) {
   try {
+    // Audit mapping data agar persis dengan kolom tabel Supabase
     const { data, error } = await supabase
       .from("companies")
       .upsert({
         owner_id: userId,
         name: companyData.name,
+        email: companyData.email,            // Baru: Sesuai tabel
+        website: companyData.website,        // Baru: Sesuai tabel
         industry: companyData.industry,
+        category: companyData.category,      // Baru: Sesuai tabel
+        size: companyData.size,              // Perbaikan: dari business_scale ke size
+        nib_number: companyData.nib_number,  // Baru: Sesuai tabel
         description: companyData.description,
-        vision_statement: companyData.vision,
         location: companyData.location,
-        total_employees_with_disability: companyData.totalDisabilityEmp,
-        master_accommodations_provided: companyData.masterAcomodations,
+        total_employees: companyData.total_employees, // Baru: Sesuai tabel
+        total_employees_with_disability: companyData.total_employees_with_disability,
+        master_accommodations_provided: companyData.master_accommodations_provided,
         updated_at: new Date()
+      }, {
+        onConflict: 'owner_id' // Pastikan melakukan update jika owner_id sudah ada
       })
       .select()
       .single()
@@ -64,7 +72,6 @@ export async function getCompanyStats(companyId: string) {
 
 /**
  * FUNGSI ADMIN: Verifikasi Perusahaan (Centang Biru)
- * Digunakan di Super Admin Dashboard untuk memvalidasi kredibilitas perusahaan/BUMN
  */
 export async function verifyCompanyStatus(companyId: string, status: boolean) {
   try {
