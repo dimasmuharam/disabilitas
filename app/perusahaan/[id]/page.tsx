@@ -224,50 +224,46 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
           {/* KOLOM KANAN: DETAIL AKOMODASI & STATS */}
           <div className="space-y-8">
             
-            {/* WIDGET AKOMODASI BERDASARKAN MASTER (14 INDIKATOR) */}
-            <section className="bg-white border-2 border-slate-900 rounded-[3rem] p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-6">
-              <div className="space-y-1">
-                <h3 className="text-sm font-black uppercase tracking-tighter flex items-center gap-2">
-                  <ShieldCheck className="text-blue-600" size={20} /> {"Fasilitas & Akomodasi"}
-                </h3>
-                <p className="text-[9px] font-bold text-slate-400 uppercase italic">
-                  {"Diverifikasi Berdasarkan Indikator Riset disabilitas.com"}
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                {ACCOMMODATION_TYPES.map((type, idx) => {
-                  const isProvided = providedAccommodations.includes(type);
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
-                        isProvided 
-                          ? 'bg-emerald-50 border-emerald-100 opacity-100 shadow-sm' 
-                          : 'bg-slate-50 border-slate-100 opacity-40 grayscale'
-                      }`}
-                    >
-                      <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-                        isProvided ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'
-                      }`}>
-                        {isProvided ? <CheckCircle2 size={12} /> : <div className="w-1.5 h-1.5 bg-slate-300 rounded-full" />}
-                      </div>
-                      <span className={`text-[9px] font-black uppercase tracking-tight ${
-                        isProvided ? 'text-emerald-900' : 'text-slate-400'
-                      }`}>
-                        {type}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+{/* WIDGET AKOMODASI BERDASARKAN MASTER (14 INDIKATOR) */}
+<section className="bg-white border-2 border-slate-900 rounded-[3rem] p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-6">
+  <div className="space-y-1">
+    <h3 className="text-sm font-black uppercase tracking-tighter flex items-center gap-2">
+      <ShieldCheck className="text-blue-600" size={20} /> {"Fasilitas & Akomodasi"}
+    </h3>
+    <p className="text-[9px] font-bold text-slate-400 uppercase italic">
+      {"Menampilkan fasilitas yang telah divalidasi oleh instansi."}
+    </p>
+  </div>
+  
+  <div className="space-y-3" role="list" aria-label="Daftar akomodasi yang tersedia">
+    {providedAccommodations.length > 0 ? (
+      providedAccommodations.map((type: string, idx: number) => (
+        <div 
+          key={idx} 
+          role="listitem"
+          className="flex items-center gap-3 p-4 rounded-2xl border-2 border-emerald-100 bg-emerald-50 shadow-sm"
+        >
+          <div className="shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+            <CheckCircle2 size={14} />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-tight text-emerald-900">
+            {type}
+          </span>
+        </div>
+      ))
+    ) : (
+      <div className="p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-center">
+        <p className="text-[10px] font-bold text-slate-400 uppercase">{"Belum ada data akomodasi yang dipublikasikan."}</p>
+      </div>
+    )}
+  </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-[8px] font-bold text-slate-400 leading-relaxed italic">
-                  {"* Data ini divalidasi secara mandiri oleh instansi dan diawasi melalui mekanisme feedback talenta di disabilitas.com."}
-                </p>
-              </div>
-            </section>
+  <div className="pt-4 border-t border-slate-100">
+    <p className="text-[8px] font-bold text-slate-400 leading-relaxed italic">
+      {"* Data ini divalidasi secara mandiri oleh instansi mengacu pada 14 indikator inklusi disabilitas.com."}
+    </p>
+  </div>
+</section>
 
             {/* STATISTIK & KOMITMEN */}
             <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
