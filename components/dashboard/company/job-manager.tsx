@@ -44,6 +44,16 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     setAnnouncement(`{"Template deskripsi inklusif telah diterapkan ke form."}`);
   };
 
+  const handleDelete = async (id: string) => {
+    if (confirm(`{"Hapus lowongan ini secara permanen?"}`)) {
+      const { error } = await supabase.from("jobs").delete().eq("id", id);
+      if (!error) {
+        setAnnouncement(`{"Lowongan berhasil dihapus."}`);
+        fetchJobs();
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -73,7 +83,7 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
         </h2>
         <button 
           onClick={() => setShowForm(!showForm)}
-          className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] flex items-center gap-3 hover:bg-blue-600 transition-all shadow-xl"
+          className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-xl"
         >
           {showForm ? <><X size={18}/> {"Batal"}</> : <><Plus size={18}/> {"Buat Lowongan"}</>}
         </button>
@@ -162,7 +172,6 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
           </button>
         </form>
       ) : (
-        /* DAFTAR LOWONGAN */
         <div className="grid gap-4">
           {myJobs.length > 0 ? myJobs.map((job) => (
             <div key={job.id} className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 flex justify-between items-center group hover:border-slate-900 transition-all">
@@ -179,7 +188,11 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
                   </div>
                 </div>
               </div>
-              <button onClick={() => handleDelete(job.id)} className="p-3 text-red-200 hover:text-red-600 transition-colors">
+              <button 
+                onClick={() => handleDelete(job.id)} 
+                className="p-3 text-red-200 hover:text-red-600 transition-colors"
+                aria-label={`{"Hapus lowongan "}${job.title}`}
+              >
                 <Trash2 size={20} />
               </button>
             </div>
