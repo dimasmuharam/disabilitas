@@ -194,7 +194,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
             <div className="flex-1 space-y-3">
               <div>
                 <h3 className="text-sm font-black uppercase text-amber-900 tracking-tight">{"Lengkapi Profil Inklusi Instansi"}</h3>
-                <p className="text-[10px] font-bold text-amber-800/60 uppercase tracking-wide">{"Data yang lengkap diperlukan untuk sinkronisasi riset indeks inklusi."}</p>
+                <p className="text-[10px] font-bold text-amber-800/60 uppercase tracking-wide">{"Data yang lengkap diperlukan untuk memudahkan mendapat talenta inklusif yang tepat an berkualitas!."}</p>
               </div>
               
               {/* LIST ITEM YANG BELUM DIISI */}
