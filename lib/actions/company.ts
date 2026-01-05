@@ -12,8 +12,7 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
       .upsert({
         owner_id: userId,
         name: companyData.name,
-        email: companyData.email,            // Baru: Sesuai tabel
-        website: companyData.website,        // Baru: Sesuai tabel
+                website: companyData.website,        // Baru: Sesuai tabel
         industry: companyData.industry,
         category: companyData.category,      // Baru: Sesuai tabel
         size: companyData.size,              // Perbaikan: dari business_scale ke size
