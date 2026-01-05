@@ -6,30 +6,35 @@ import { supabase } from "@/lib/supabase"
  */
 export async function updateCompanyMaster(userId: string, companyData: any) {
   try {
-    // Audit mapping data agar persis dengan kolom tabel Supabase
     const { data, error } = await supabase
       .from("companies")
       .upsert({
         owner_id: userId,
         name: companyData.name,
-                website: companyData.website,        // Baru: Sesuai tabel
+        website: companyData.website,
         industry: companyData.industry,
-        category: companyData.category,      // Baru: Sesuai tabel
-        size: companyData.size,              // Perbaikan: dari business_scale ke size
-        nib_number: companyData.nib_number,  // Baru: Sesuai tabel
+        category: companyData.category,
+        size: companyData.size,
+        nib_number: companyData.nib_number,
         description: companyData.description,
         location: companyData.location,
-        total_employees: companyData.total_employees, // Baru: Sesuai tabel
-        total_employees_with_disability: companyData.total_employees_with_disability,
+        // Pastikan konversi ke Number agar tidak ditolak kolom integer database
+        total_employees: Number(companyData.total_employees) || 0,
+        total_employees_with_disability: Number(companyData.total_employees_with_disability) || 0,
         master_accommodations_provided: companyData.master_accommodations_provided,
-        updated_at: new Date()
+        // Gunakan format ISO String untuk keamanan PostgreSQL
+        updated_at: new Date().toISOString()
       }, {
-        onConflict: 'owner_id' // Pastikan melakukan update jika owner_id sudah ada
+        onConflict: 'owner_id'
       })
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error("Supabase Error:", error.message);
+      throw error;
+    }
+    
     return { data, error: null }
   } catch (error: any) {
     console.error("Error updating company:", error.message)
@@ -42,7 +47,6 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
  */
 export async function getCompanyStats(companyId: string) {
   try {
-    // Hitung jumlah lowongan aktif
     const { count: jobCount, error: jobError } = await supabase
       .from("jobs")
       .select("*", { count: "exact", head: true })
@@ -50,7 +54,6 @@ export async function getCompanyStats(companyId: string) {
 
     if (jobError) throw jobError
 
-    // Hitung jumlah pelamar masuk melalui join table jobs
     const { count: appCount, error: appError } = await supabase
       .from("applications")
       .select("*, jobs!inner(*)", { count: "exact", head: true })
