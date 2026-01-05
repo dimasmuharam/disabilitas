@@ -19,11 +19,15 @@ export default function RegisterPage() {
   const [isError, setIsError] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState("")
 
+  // WHITE-LIST ROLE: Hanya izinkan role publik yang muncul di pendaftaran
+  const PUBLIC_ROLES = [USER_ROLES.TALENT, USER_ROLES.COMPANY, USER_ROLES.PARTNER];
+  const filteredRoles = USER_ROLE_LABELS.filter(r => PUBLIC_ROLES.includes(r.id as any));
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!turnstileToken) {
-        setMsg("Mohon selesaikan verifikasi keamanan Turnstile terlebih dahulu.")
+        setMsg(`{"Mohon selesaikan verifikasi keamanan Turnstile terlebih dahulu."}`)
         setIsError(true)
         return
     }
@@ -37,7 +41,6 @@ export default function RegisterPage() {
 
     try {
       // 1. Proses Sign Up ke Supabase Auth
-      // Data role dan full_name dikirim sebagai metadata agar ditangkap oleh Trigger SQL
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
@@ -54,22 +57,18 @@ export default function RegisterPage() {
       if (error) throw error
 
       if (data.user) {
-        // --- LOGIKA AKSESIBILITAS ---
-        // Paksa kursor keluar dari kotak edit
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
 
-        setMsg("Pendaftaran Berhasil! Instruksi aktivasi telah dikirim ke email Anda. Silakan periksa kotak masuk.")
+        setMsg(`{"Pendaftaran Berhasil! Instruksi aktivasi telah dikirim ke email Anda. Silakan periksa kotak masuk."}`)
         setIsError(false)
 
-        // Pindahkan fokus ke pesan sukses agar Screen Reader membacakan status
         setTimeout(() => {
           const alertElement = document.getElementById("register-announcement");
           if (alertElement) alertElement.focus();
         }, 100);
 
-        // Reset Form
         setEmail("")
         setPassword("")
         setFullName("")
@@ -78,7 +77,8 @@ export default function RegisterPage() {
     } catch (error: any) {
       console.error('[REGISTRASI] Error:', error)
       setIsError(true)
-      setMsg(error.message || "Terjadi kesalahan sistem saat mendaftar.")
+      setMsg(error.message || `{"Terjadi kesalahan sistem saat mendaftar."}`)
+    } finally {
       setLoading(false)
     }
   }
@@ -103,7 +103,7 @@ export default function RegisterPage() {
           
           <form className="space-y-6" onSubmit={handleRegister}>
             
-            {/* Pilihan Role dengan Ikon Statis agar tidak error build */}
+            {/* Pilihan Role Terfilter */}
             <div>
               <label htmlFor="role-select" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
                 {"Daftar Sebagai"}
@@ -115,7 +115,7 @@ export default function RegisterPage() {
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer transition-all"
                 >
-                  {USER_ROLE_LABELS.filter(r => r.id !== 'government').map((r) => (
+                  {filteredRoles.map((r) => (
                     <option key={r.id} value={r.id}>{r.label}</option>
                   ))}
                 </select>
