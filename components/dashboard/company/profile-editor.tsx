@@ -13,13 +13,13 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
   const [formData, setFormData] = useState({
     name: company?.name || "",
     industry: company?.industry || "",
-    category: company?.category || "Swasta", // Variabel Riset BRIN
+    category: company?.category || "Swasta",
     description: company?.description || "",
     vision: company?.vision_statement || "",
     location: company?.location || "",
-    totalEmployees: company?.total_employees || 0, // Variabel Riset BRIN
+    totalEmployees: company?.total_employees || 0,
     totalDisabilityEmp: company?.total_employees_with_disability || 0,
-    accessibilityFeatures: company?.accessibility_features || []
+    accessibilityFeatures: (company?.accessibility_features as string[]) || []
   });
 
   const [announcement, setAnnouncement] = useState("");
@@ -28,7 +28,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
     setFormData(prev => ({
       ...prev,
       accessibilityFeatures: prev.accessibilityFeatures.includes(feature)
-        ? prev.accessibilityFeatures.filter(f => f !== feature)
+        ? prev.accessibilityFeatures.filter((f: string) => f !== feature) // Menambahkan tipe : string di sini
         : [...prev.accessibilityFeatures, feature]
     }));
   };
@@ -42,16 +42,15 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
 
     if (result.data) {
       setAnnouncement(`{"Profil berhasil diperbarui. Kembali ke Overview."}`);
-      onSuccess(); // Ini akan memicu redirect ke Overview di file induk
+      onSuccess();
     } else {
-      setAnnouncement(`{"Gagal memperbarui profil: "}${result.error}`);
+      setAnnouncement(`{"Gagal memperbarui profil."}`);
     }
     setLoading(false);
   };
 
   return (
     <div className="max-w-5xl mx-auto pb-20 animate-in slide-in-from-bottom-4">
-      {/* Live Region untuk Screen Reader */}
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -72,7 +71,6 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
           </div>
 
           <div className="grid md:grid-cols-2 gap-10">
-            {/* Kolom Kiri */}
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Nama Resmi Instansi"}</label>
@@ -105,12 +103,12 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                   onChange={e => setFormData({...formData, location: e.target.value})}
                   className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-600 bg-white"
                 >
+                  <option value="">{"Pilih Kota"}</option>
                   {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* Kolom Kanan: Data Pegawai (Gap Analysis) */}
             <div className="space-y-6 bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
               <div className="flex items-center gap-2 mb-4 text-blue-600">
                 <Users size={20} />
@@ -146,7 +144,6 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
           </div>
         </section>
 
-        {/* SECTION: MASTER AKOMODASI (UI CHECKLIST) */}
         <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl"><Accessibility size={24} /></div>
