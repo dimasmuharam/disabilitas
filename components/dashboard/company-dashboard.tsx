@@ -143,7 +143,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       { key: 'category', label: 'Kategori Instansi', weight: 15 },
       { key: 'location', label: 'Lokasi/Kota', weight: 15 },
       { key: 'description', label: 'Deskripsi/Visi Inklusi', weight: 15 },
-      { key: 'accessibility_features', label: 'Fitur Aksesibilitas', weight: 20 }
+      { key: 'master_accommodations_provided', label: 'Akomodasi yang Layak', weight: 20 }
     ];
 
     let score = 0;
