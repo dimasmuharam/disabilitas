@@ -133,6 +133,38 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       setIsProcessing(false);
     }
   };
+  // --- KODE BARU: LOGIKA PROGRESS KELENGKAPAN ---
+  const calculateCompletion = () => {
+    if (!company || company.is_placeholder) return { score: 0, missing: ["Profil Belum Dibuat"] };
+    
+    const checklist = [
+      { key: 'name', label: 'Nama Instansi', weight: 20 },
+      { key: 'industry', label: 'Sektor Industri', weight: 15 },
+      { key: 'category', label: 'Kategori Instansi', weight: 15 },
+      { key: 'location', label: 'Lokasi/Kota', weight: 15 },
+      { key: 'description', label: 'Deskripsi/Visi Inklusi', weight: 15 },
+      { key: 'accessibility_features', label: 'Fitur Aksesibilitas', weight: 20 }
+    ];
+
+    let score = 0;
+    let missing: string[] = [];
+
+    checklist.forEach(item => {
+      const value = company[item.key];
+      const isEmpty = !value || (Array.isArray(value) && value.length === 0) || value === "";
+      
+      if (!isEmpty) {
+        score += item.weight;
+      } else {
+        missing.push(item.label);
+      }
+    });
+
+    return { score, missing };
+  };
+
+  const { score: completionScore, missing: missingItems } = calculateCompletion();
+  // --- END KODE BARU ---
   const gap = (() => {
     const total = company?.total_employees || 0;
     const dis = company?.total_employees_with_disability || 0;
@@ -147,6 +179,41 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* 1. BRANDING ACTIONS */}
+      {/* WIDGET PROGRESS KELENGKAPAN PROFIL */}
+      {completionScore < 100 && (
+        <section className="bg-amber-50 border-2 border-amber-900/10 rounded-[2.5rem] p-8 mb-8 animate-in fade-in slide-in-from-top-4">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-amber-100" />
+                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={251.2} strokeDashoffset={251.2 - (251.2 * completionScore) / 100} className="text-amber-600 transition-all duration-1000" />
+              </svg>
+              <span className="absolute font-black text-amber-900 text-lg">{completionScore}%</span>
+            </div>
+
+            <div className="flex-1 space-y-3">
+              <div>
+                <h3 className="text-sm font-black uppercase text-amber-900 tracking-tight">{"Lengkapi Profil Inklusi Instansi"}</h3>
+                <p className="text-[10px] font-bold text-amber-800/60 uppercase tracking-wide">{"Data yang lengkap diperlukan untuk sinkronisasi riset indeks inklusi."}</p>
+              </div>
+              
+              {/* LIST ITEM YANG BELUM DIISI */}
+              <div className="flex flex-wrap gap-2">
+                <p className="text-[9px] font-black text-amber-900/40 uppercase py-1">{"Belum diisi:"}</p>
+                {missingItems.map((item, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-white border border-amber-200 rounded-full text-[8px] font-black uppercase text-amber-700">
+                    {"✕ "}{item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={() => setActiveTab("profile")} className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] shadow-xl hover:scale-105 transition-all">
+              {"Lengkapi Sekarang"}
+            </button>
+          </div>
+        </section>
+      )}
       <div className="flex flex-wrap gap-4">
         <a href={`/company/${company?.id}`} target="_blank" className="flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 bg-white border-2 border-slate-900 rounded-2xl font-black uppercase text-[10px] shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:bg-slate-50 transition-all">
           <ExternalLink size={18} /> {"Lihat Profil Publik"}
