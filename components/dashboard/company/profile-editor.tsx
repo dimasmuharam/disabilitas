@@ -21,8 +21,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
 
   const [formData, setFormData] = useState({
     name: company?.name || "",
-    email: company?.email || "",
-    website: company?.website || "",
+        website: company?.website || "",
     industry: company?.industry || "",
     category: company?.category || EMPLOYER_CATEGORIES[0],
     size: company?.size || "",
@@ -51,8 +50,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
     // Mapping sinkron total dengan kolom tabel companies di database
     const payload = {
       name: formData.name,
-      email: formData.email,
-      website: formData.website,
+            website: formData.website,
       industry: formData.industry,
       category: formData.category,
       size: formData.size,
@@ -126,8 +124,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><label htmlFor="comp-email" className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2"><Mail size={12}/> {"Email"}</label><input type="email" id="comp-email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold focus:border-blue-600 outline-none" /></div>
-                <div className="space-y-2"><label htmlFor="comp-web" className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2"><Globe size={12}/> {"Website"}</label><input id="comp-web" placeholder="https://..." value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold focus:border-blue-600 outline-none" /></div>
+                                <div className="space-y-2"><label htmlFor="comp-web" className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2"><Globe size={12}/> {"Website"}</label><input id="comp-web" placeholder="https://..." value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold focus:border-blue-600 outline-none" /></div>
               </div>
 
               <div className="space-y-2">
