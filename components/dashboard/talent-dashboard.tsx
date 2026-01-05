@@ -19,6 +19,8 @@ import CareerExperience from "./talent/career-experience";
 import AcademicBarriers from "./talent/academic-barriers";
 import SkillsCertifications from "./talent/skills-certifications";
 import AccountSettings from "./talent/account-settings";
+import InclusionRatingModal from "./talent/inclusion-rating-modal";
+import { checkIfAlreadyRated } from "@/lib/actions/ratings";
 
 interface TalentDashboardProps {
   user: any;
@@ -36,7 +38,9 @@ const [loading, setLoading] = useState(!initialProfile);
   const [certifications, setCertifications] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("overview"); 
+  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedJobRating, setSelectedJobRating] = useState<any>(null);
+const [ratedJobs, setRatedJobs] = useState<string[]>([]); // Menyimpan list ID yang sudah dirating
   const [profile, setProfile] = useState(initialProfile);
 
   useEffect(() => {
@@ -94,6 +98,20 @@ if (autoOpenProfile) {
       setAppliedTrainings(trains || []);
 
       setStats({ jobs: apps?.length || 0, trainings: trains?.length || 0 });
+    setStats({ jobs: apps?.length || 0, trainings: trains?.length || 0 });
+
+      // --- TAMBAHAN LANGKAH C ---
+      if (apps && apps.length > 0) {
+        const ratedStatuses = await Promise.all(
+          apps.map(async (app) => {
+            const isRated = await checkIfAlreadyRated(user.id, app.id);
+            return isRated ? app.id : null;
+          })
+        );
+        setRatedJobs(ratedStatuses.filter(id => id !== null) as string[]);
+      }
+      // --------------------------
+
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -340,13 +358,36 @@ if (autoOpenProfile) {
                 {appliedJobs.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
-                      <div key={app.id} className="p-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                        <div>
-                          <p className="font-black text-slate-900 text-xs uppercase">{(app.jobs as any)?.title}</p>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase">{(app.jobs as any)?.company_name}</p>
-                        </div>
-                        <span className="text-[8px] font-black uppercase px-3 py-1 bg-blue-50 text-blue-600 rounded-full">{app.status}</span>
-                      </div>
+<div key={app.id} className="p-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
+  <div className="flex-1">
+    <p className="font-black text-slate-900 text-xs uppercase">{(app.jobs as any)?.title}</p>
+    <p className="text-[9px] font-bold text-slate-400 uppercase">{(app.jobs as any)?.company_name}</p>
+  </div>
+  
+  {/* --- TAMBAHAN LANGKAH D --- */}
+  <div className="flex items-center gap-3">
+    {(app.status === "accepted" || app.status === "rejected") && (
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedJobRating(app);
+        }}
+        disabled={ratedJobs.includes(app.id)}
+        className={`text-[8px] font-black uppercase px-3 py-1 rounded-full transition-all ${
+          ratedJobs.includes(app.id) 
+          ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+          : "bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white shadow-sm"
+        }`}
+      >
+        {ratedJobs.includes(app.id) ? "Sudah Diaudit" : "Audit Inklusi"}
+      </button>
+    )}
+    <span className="text-[8px] font-black uppercase px-3 py-1 bg-blue-50 text-blue-600 rounded-full">
+      {app.status}
+    </span>
+  </div>
+  {/* -------------------------- */}
+</div>
                     ))}
                   </div>
                 ) : <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada lamaran"}</div>}
@@ -492,6 +533,21 @@ if (autoOpenProfile) {
            </div>
         </div>
       </div>
+      
+      {/* --- TAMBAHAN LANGKAH E --- */}
+      {selectedJobRating && (
+        <InclusionRatingModal 
+          job={selectedJobRating}
+          userId={user.id}
+          onClose={() => setSelectedJobRating(null)}
+          onSuccess={() => {
+            setSelectedJobRating(null);
+            fetchLatestData(); 
+          }}
+        />
+      )}
+      {/* -------------------------- */}
+
     </div>
   );
 }
