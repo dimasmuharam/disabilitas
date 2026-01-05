@@ -9,6 +9,7 @@ import {
 import { Metadata } from "next";
 import Link from "next/link";
 
+export const runtime = "edge"; 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { data: company } = await supabase
     .from("companies")
