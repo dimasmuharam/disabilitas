@@ -50,10 +50,12 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
     const result = await updateCompanyMaster(user.id, formData);
 
     if (result.data) {
-      setAnnouncement(`{"Data profil diperbarui secara permanen. Kembali ke Dashboard."}`);
+      setAnnouncement(`{"Berhasil memperbarui profil. Kembali ke Overview."}`);
       onSuccess(); 
     } else {
-      setAnnouncement(`{"Gagal menyimpan data ke database. Silakan cek koneksi Anda."}`);
+      // Kita panggil result.error yang dikirim dari file company.ts
+      const errorMessage = typeof result.error === 'string' ? result.error : "Terjadi kesalahan database";
+      setAnnouncement(`{"Gagal menyimpan. Pesan error adalah: "}${errorMessage}`);
     }
     setLoading(false);
   };
