@@ -370,7 +370,8 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           </nav>
         </header>
 
-        <main className="min-h-[60vh]">
+{/* Konten Utama Berdasarkan Tab */}
+        <main className="min-h-[70vh]">
           {activeTab === "overview" && renderOverview()}
           {activeTab === "simulator" && <RecruitmentSimulator company={company} />}
           {activeTab === "jobs" && <JobManager company={company} onSuccess={() => handleActionSuccess(`{"Lowongan diperbarui!"}`)} />}
@@ -379,10 +380,8 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           {activeTab === "settings" && <AccountSettings user={user} onSuccess={() => handleActionSuccess(`{"Akun diperbarui!"}`)} />}
         </main>
 
-        <footer className="pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center opacity-40">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{"© 2026 disabilitas.com — BRIN Research Complementary"}</p>
-          <button onClick={() => supabase.auth.signOut()} className="flex items-center gap-2 text-[10px] font-black uppercase text-red-600 hover:underline"><LogOut size={14} /> {"Keluar"}</button>
-        </footer>
+        {/* Space tambahan untuk estetika sebelum menyentuh SiteFooter bawaan layout */}
+        <div className="h-20" aria-hidden="true" />
       </div>
     </div>
   );
