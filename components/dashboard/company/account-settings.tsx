@@ -33,19 +33,21 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
     setLoading(true);
     setMessage({ text: "", type: null });
 
-    const { error } = await supabase.auth.updateUser({ email: email });
+    try {
+      const { error } = await supabase.auth.updateUser({ email: email });
+      if (error) throw error;
 
-    if (error) {
-      announce(`{"Gagal memperbarui email: "}${error.message}`);
-      setMessage({ text: error.message, type: "error" });
-    } else {
       announce(`{"Permintaan ganti email terkirim. Silakan cek email baru Anda untuk konfirmasi."}`);
       setMessage({ 
         text: `{"Permintaan terkirim! Cek kotak masuk email baru Anda untuk verifikasi."}`, 
         type: "success" 
       });
+    } catch (error: any) {
+      announce(`{"Gagal memperbarui email: "}${error.message}`);
+      setMessage({ text: error.message, type: "error" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -59,37 +61,41 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
     setLoading(true);
     setMessage({ text: "", type: null });
 
-    const { error } = await supabase.auth.updateUser({ password: password });
+    try {
+      const { error } = await supabase.auth.updateUser({ password: password });
+      if (error) throw error;
 
-    if (error) {
-      announce(`{"Gagal memperbarui kata sandi: "}${error.message}`);
-      setMessage({ text: error.message, type: "error" });
-    } else {
       announce(`{"Kata sandi berhasil diperbarui."}`);
       setMessage({ text: `{"Kata sandi berhasil diperbarui!"}`, type: "success" });
       setPassword("");
       setConfirmPassword("");
+    } catch (error: any) {
+      announce(`{"Gagal memperbarui kata sandi: "}${error.message}`);
+      setMessage({ text: error.message, type: "error" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleLogoutAll = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signOut({ scope: 'global' });
-    if (error) {
-      announce(`{"Gagal keluar: "}${error.message}`);
-    } else {
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) throw error;
       announce(`{"Berhasil keluar dari semua perangkat."}`);
       window.location.href = "/login";
+    } catch (error: any) {
+      announce(`{"Gagal keluar: "}${error.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDeleteAccount = async () => {
-    const confirm = window.confirm(`{"PERINGATAN: Menghapus akun akan menghapus seluruh data perusahaan dan lowongan Anda secara permanen. Tindakan ini tidak dapat dibatalkan. Lanjutkan?"}`);
+    const confirm = window.confirm(`{"PERINGATAN: Menghapus akun akan menghapus seluruh data instansi secara permanen. Lanjutkan?"}`);
     if (confirm) {
-      announce(`{"Fitur penghapusan akun memerlukan konfirmasi admin via email."}`);
-      alert(`{"Silakan hubungi admin disabilitas.com untuk proses penghapusan data riset instansi Anda."}`);
+      announce(`{"Fitur penghapusan akun memerlukan konfirmasi admin."}`);
+      alert(`{"Silakan hubungi admin disabilitas.com untuk proses penghapusan data instansi Anda."}`);
     }
   };
   return (
@@ -126,8 +132,8 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
                 aria-label="Email Address"
               />
             </div>
-            <div className="flex justify-between items-center">
-              <p className="text-[9px] font-bold text-amber-600 uppercase italic">{"* Memerlukan konfirmasi pada email baru."}</p>
+            <div className="flex justify-between items-center text-right">
+              <p className="text-[9px] font-bold text-amber-600 uppercase italic">{"* Memerlukan verifikasi pada email baru."}</p>
               <button 
                 type="submit" 
                 disabled={loading || email === user?.email}
@@ -145,7 +151,7 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
         <form onSubmit={handleUpdatePassword} className="grid md:grid-cols-3 gap-8 items-start">
           <div className="space-y-1">
             <h3 className="text-sm font-black uppercase tracking-tight">{"Ubah Kata Sandi"}</h3>
-            <p className="text-[10px] text-slate-400">{"Pastikan kata sandi kuat dan rahasia."}</p>
+            <p className="text-[10px] text-slate-400">{"Gunakan kombinasi yang kuat dan rahasia."}</p>
           </div>
           <div className="md:col-span-2 space-y-4">
             <div className="relative">
@@ -161,7 +167,7 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-4 text-slate-400"
+                className="absolute right-4 top-4 text-slate-400 p-1"
                 aria-label={showPassword ? "{"Sembunyikan Kata Sandi"}" : "{"Tampilkan Kata Sandi"}"}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -182,7 +188,7 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
               <button 
                 type="submit" 
                 disabled={loading || !password}
-                className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase hover:bg-blue-600 disabled:opacity-30 transition-all"
+                className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase hover:bg-blue-600 disabled:opacity-30 transition-all shadow-lg"
               >
                 {loading ? <Loader2 className="animate-spin" size={14} /> : "{"Update Kata Sandi"}"}
               </button>
