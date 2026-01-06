@@ -27,7 +27,6 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
     if (email === user?.email) return;
     setLoading(true);
     setMessage({ text: "", type: null });
-
     try {
       const { error } = await supabase.auth.updateUser({ email: email });
       if (error) throw error;
@@ -67,7 +66,7 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
   async function handleLogoutAll() {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      const { error } = await supabase.auth.signOut({ scope: "global" });
       if (error) throw error;
       window.location.href = "/login";
     } catch (error: any) {
@@ -80,7 +79,7 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
   function handleDeleteAccount() {
     const confirm = window.confirm(`{"Hapus akun instansi secara permanen?"}`);
     if (confirm) {
-      alert(`{"Hubungi admin untuk penghapusan data instansi."}`);
+      alert(`{"Silakan hubungi admin untuk proses penghapusan akun."}`);
     }
   }
 
@@ -97,18 +96,17 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
           </div>
         </div>
 
-        {/* Form Ganti Email */}
+        {/* EMAIL */}
         <form onSubmit={handleUpdateEmail} className="grid md:grid-cols-3 gap-8">
           <div className="space-y-1">
-            <h3 className="text-sm font-black uppercase">{"Email"}</h3>
-            <p className="text-[10px] text-slate-400">{"Email login resmi."}</p>
+            <h3 className="text-sm font-black uppercase tracking-tight">{"Email Akses"}</h3>
           </div>
           <div className="md:col-span-2 space-y-4">
             <div className="relative">
               <Mail className="absolute left-4 top-4 text-slate-300" size={20} />
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none" placeholder={`{"Email Baru"}`} />
             </div>
-            <button type="submit" disabled={loading || email === user?.email} className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase disabled:opacity-50">
+            <button type="submit" disabled={loading || email === user?.email} className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase">
               {loading ? <Loader2 className="animate-spin" size={14} /> : "{"Simpan Email"}"}
             </button>
           </div>
@@ -116,23 +114,22 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
 
         <hr className="border-slate-100" />
 
-        {/* Form Ganti Password */}
+        {/* PASSWORD */}
         <form onSubmit={handleUpdatePassword} className="grid md:grid-cols-3 gap-8">
           <div className="space-y-1">
-            <h3 className="text-sm font-black uppercase">{"Sandi"}</h3>
-            <p className="text-[10px] text-slate-400">{"Gunakan sandi kuat."}</p>
+            <h3 className="text-sm font-black uppercase tracking-tight">{"Kata Sandi"}</h3>
           </div>
           <div className="md:col-span-2 space-y-4">
             <div className="relative">
               <Lock className="absolute left-4 top-4 text-slate-300" size={20} />
-              <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-12 py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none" placeholder={`{"Sandi Baru"}`} />
+              <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-12 py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none" placeholder={`{"Sandi Baru"}`} required />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4 text-slate-400">
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
             <div className="relative">
               <Lock className="absolute left-4 top-4 text-slate-300" size={20} />
-              <input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none" placeholder={`{"Konfirmasi Sandi"}`} />
+              <input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none" placeholder={`{"Konfirmasi Sandi"}`} required />
             </div>
             <div className="flex justify-end">
               <button type="submit" disabled={loading || !password} className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase">
@@ -144,12 +141,9 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
 
         <hr className="border-slate-100" />
 
-        {/* Logout Global */}
+        {/* LOGOUT */}
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="space-y-1">
-            <h3 className="text-sm font-black uppercase">{"Sesi"}</h3>
-            <p className="text-[10px] text-slate-400">{"Logout dari semua perangkat."}</p>
-          </div>
+          <h3 className="text-sm font-black uppercase">{"Sesi Aktif"}</h3>
           <div className="md:col-span-2">
             <button type="button" onClick={handleLogoutAll} disabled={loading} className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase flex items-center gap-2">
               <LogOut size={16} /> {"Logout Semua Perangkat"}
@@ -159,12 +153,9 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
 
         <hr className="border-slate-100" />
 
-        {/* Danger Zone */}
+        {/* DELETE */}
         <div className="p-8 bg-red-50 rounded-[2rem] border-2 border-red-100 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="space-y-1">
-            <h3 className="text-sm font-black uppercase text-red-600">{"Zona Berbahaya"}</h3>
-            <p className="text-[10px] font-bold text-red-700/70 uppercase">{"Hapus akun instansi secara permanen."}</p>
-          </div>
+          <p className="text-[10px] font-bold text-red-700 uppercase">{"Hapus akun instansi secara permanen."}</p>
           <button type="button" onClick={handleDeleteAccount} className="px-8 py-4 bg-red-600 text-white rounded-2xl font-black uppercase text-[10px]">
             {"Hapus Akun"}
           </button>
@@ -172,9 +163,9 @@ export default function AccountSettings({ user, onSuccess }: { user: any, onSucc
       </section>
 
       {message.text && (
-        <div className={`p-4 rounded-2xl flex items-center gap-3 border-2 ${message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`} role="alert">
-          {message.type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
-          <p className="text-[10px] font-black uppercase text-xs">{message.text}</p>
+        <div className={`p-4 rounded-2xl flex items-center gap-3 border-2 ${message.type === "success" ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-red-50 border-red-100 text-red-700"}`} role="alert">
+          {message.type === "success" ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+          <p className="text-[10px] font-black uppercase">{message.text}</p>
         </div>
       )}
     </div>
