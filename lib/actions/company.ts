@@ -2,14 +2,14 @@ import { supabase } from "@/lib/supabase"
 
 /**
  * Memperbarui atau mendaftarkan profil master perusahaan
- * Sinkron dengan kolom tabel 'companies' terbaru untuk data riset
+ * Menggunakan ID Tunggal (id = userId)
  */
 export async function updateCompanyMaster(userId: string, companyData: any) {
   try {
     const { data, error } = await supabase
       .from("companies")
       .upsert({
-        owner_id: userId,
+        id: userId,
         name: companyData.name,
         website: companyData.website,
         industry: companyData.industry,
@@ -18,14 +18,12 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
         nib_number: companyData.nib_number,
         description: companyData.description,
         location: companyData.location,
-        // Pastikan konversi ke Number agar tidak ditolak kolom integer database
         total_employees: Number(companyData.total_employees) || 0,
         total_employees_with_disability: Number(companyData.total_employees_with_disability) || 0,
         master_accommodations_provided: companyData.master_accommodations_provided,
-        // Gunakan format ISO String untuk keamanan PostgreSQL
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'owner_id'
+        onConflict: 'id'
       })
       .select()
       .single()
@@ -44,9 +42,11 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
 
 /**
  * Mengambil data statistik perusahaan untuk dashboard (Job & Pelamar)
+ * Filter pelamar dilakukan melalui relasi tabel 'jobs'
  */
 export async function getCompanyStats(companyId: string) {
   try {
+    // 1. Ambil jumlah lowongan perusahaan
     const { count: jobCount, error: jobError } = await supabase
       .from("jobs")
       .select("*", { count: "exact", head: true })
@@ -54,9 +54,11 @@ export async function getCompanyStats(companyId: string) {
 
     if (jobError) throw jobError
 
+    // 2. Ambil jumlah pelamar
+    // Karena tabel applications tidak punya company_id, kita filter lewat jobs!inner
     const { count: appCount, error: appError } = await supabase
       .from("applications")
-      .select("*, jobs!inner(*)", { count: "exact", head: true })
+      .select("id, jobs!inner(company_id)", { count: "exact", head: true })
       .eq("jobs.company_id", companyId)
 
     if (appError) throw appError
