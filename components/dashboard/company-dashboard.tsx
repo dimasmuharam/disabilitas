@@ -38,38 +38,58 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLHeadingElement>(null);
 
+  // TRIGGER: Jalankan fetch saat ID User tersedia
   useEffect(() => {
-    fetchDashboardData();
-  }, [company?.id]);
+    if (user?.id) {
+      fetchDashboardData();
+    }
+  }, [user?.id]);
 
   async function fetchDashboardData() {
     setLoading(true);
     try {
-      if (!company?.id || company?.is_placeholder) {
+      // SINKRONISASI ID TUNGGAL: Gunakan user.id sebagai anchor utama
+      const targetId = user?.id;
+      
+      if (!targetId) {
         setLoading(false);
         return;
       }
 
+      // 1. TARIK PROFIL TERBARU (Memastikan UI tidak tertinggal data DB)
+      const { data: latestComp } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("id", targetId)
+        .single();
+
+      if (latestComp) {
+        setCompany(latestComp); // Mengupdate nama instansi di header & overview
+      }
+
+      // 2. TARIK STATISTIK & RATING
       const [statsData, ratingData] = await Promise.all([
-        getCompanyStats(company.id),
-        getCompanyRatingAggregate(company.id)
+        getCompanyStats(targetId),
+        getCompanyRatingAggregate(targetId)
       ]);
       setStats(statsData || { jobCount: 0, applicantCount: 0 });
       setRatings(ratingData);
 
+      // 3. TARIK REVIEW ANONIM
       const { data: reviews } = await supabase
         .from("inclusion_ratings")
         .select("comment_anonymous, created_at")
-        .eq("company_id", company.id)
+        .eq("company_id", targetId)
         .not("comment_anonymous", "is", null)
         .order("created_at", { ascending: false })
         .limit(3);
       setAnonReviews(reviews || []);
 
+      // 4. INSIGHT TALENTA BERDASARKAN LOKASI TERBARU
       const { data: talentSkills } = await supabase
         .from("profiles")
         .select("skills")
-        .eq("city", company.location || "Jakarta Selatan");
+        .eq("city", latestComp?.location || company?.location || "Jakarta Selatan");
       
       if (talentSkills) {
         const skillCounts: Record<string, number> = {};
@@ -85,9 +105,6 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         setTrendingSkills(sorted);
       }
 
-      const { data: comp } = await supabase.from("companies").select("*").eq("id", company.id).single();
-      if (comp) setCompany(comp);
-
     } catch (error) {
       console.error("Dashboard Fetch Error:", error);
     } finally {
@@ -97,15 +114,18 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
   const handleActionSuccess = async (msg: string) => {
     setAnnouncement(msg);
-    await fetchDashboardData();
-    setActiveTab("overview");
     
-    // AKESIBILITAS: Scroll ke atas dan pindahkan fokus ke judul
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => {
-      headerRef.current?.focus();
-      setAnnouncement("");
-    }, 500);
+    // Beri jeda 300ms agar database selesai proses sebelum di-fetch ulang
+    setTimeout(async () => {
+      await fetchDashboardData();
+      setActiveTab("overview");
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+        headerRef.current?.focus();
+        setAnnouncement("");
+      }, 500);
+    }, 300);
   };
 
   const handleShareCard = async () => {
@@ -122,7 +142,6 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       });
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       
-      // SINKRONISASI LINK PERUSAHAAN
       const url = `https://disabilitas.com/perusahaan/${company?.id}`;
       const score = ratings?.totalAvg ? ratings.totalAvg.toFixed(1) : "0.0";
       const caption = `{"Bangga! Instansi kami memiliki Indeks Inklusi "}${score}{"/5.0. Cek profil kami: "}${url}{" #InklusiBisa #DisabilitasBisaWork"}`;
