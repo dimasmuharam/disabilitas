@@ -7,7 +7,7 @@ import {
   TrendingUp, AlertCircle, CheckCircle2, 
   LayoutDashboard, FileText, Settings, Search,
   ShieldCheck, LogOut, MapPin, Zap, ExternalLink, Share2,
-  MessageSquare, Quote
+  MessageSquare, Quote, Accessibility
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
@@ -33,41 +33,30 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // ARIA Announcement & Fokus Aksesibel
   const [announcement, setAnnouncement] = useState("");
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLHeadingElement>(null);
 
-  // TRIGGER: Jalankan fetch saat ID User tersedia
   useEffect(() => {
-    if (user?.id) {
-      fetchDashboardData();
-    }
+    if (user?.id) fetchDashboardData();
   }, [user?.id]);
 
   async function fetchDashboardData() {
     setLoading(true);
     try {
-      // SINKRONISASI ID TUNGGAL: Gunakan user.id sebagai anchor utama
       const targetId = user?.id;
-      
-      if (!targetId) {
-        setLoading(false);
-        return;
-      }
+      if (!targetId) return;
 
-      // 1. TARIK PROFIL TERBARU (Memastikan UI tidak tertinggal data DB)
+      // 1. Ambil Profil Terbaru (Sinkronisasi Database)
       const { data: latestComp } = await supabase
         .from("companies")
         .select("*")
         .eq("id", targetId)
         .single();
 
-      if (latestComp) {
-        setCompany(latestComp); // Mengupdate nama instansi di header & overview
-      }
+      if (latestComp) setCompany(latestComp);
 
-      // 2. TARIK STATISTIK & RATING
+      // 2. Ambil Statistik & Rating
       const [statsData, ratingData] = await Promise.all([
         getCompanyStats(targetId),
         getCompanyRatingAggregate(targetId)
@@ -75,7 +64,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       setStats(statsData || { jobCount: 0, applicantCount: 0 });
       setRatings(ratingData);
 
-      // 3. TARIK REVIEW ANONIM
+      // 3. Feedback Anonim
       const { data: reviews } = await supabase
         .from("inclusion_ratings")
         .select("comment_anonymous, created_at")
@@ -85,11 +74,11 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         .limit(3);
       setAnonReviews(reviews || []);
 
-      // 4. INSIGHT TALENTA BERDASARKAN LOKASI TERBARU
+      // 4. Insight Talenta Sekitar
       const { data: talentSkills } = await supabase
         .from("profiles")
         .select("skills")
-        .eq("city", latestComp?.location || company?.location || "Jakarta Selatan");
+        .eq("city", latestComp?.location || "Jakarta Selatan");
       
       if (talentSkills) {
         const skillCounts: Record<string, number> = {};
@@ -104,7 +93,6 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           .slice(0, 3);
         setTrendingSkills(sorted);
       }
-
     } catch (error) {
       console.error("Dashboard Fetch Error:", error);
     } finally {
@@ -114,52 +102,13 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
   const handleActionSuccess = async (msg: string) => {
     setAnnouncement(msg);
-    
-    // Beri jeda 300ms agar database selesai proses sebelum di-fetch ulang
     setTimeout(async () => {
       await fetchDashboardData();
       setActiveTab("overview");
-      
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => {
-        headerRef.current?.focus();
-        setAnnouncement("");
-      }, 500);
     }, 300);
   };
-
-  const handleShareCard = async () => {
-    if (!cardRef.current || isProcessing) return;
-    setIsProcessing(true);
-    setAnnouncement(`{"Sedang memproses kartu inklusi..."}`);
-
-    try {
-      const canvas = await html2canvas(cardRef.current, { 
-        scale: 2, 
-        useCORS: true, 
-        backgroundColor: "#ffffff",
-        logging: false 
-      });
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-      
-      const url = `https://disabilitas.com/perusahaan/${company?.id}`;
-      const score = ratings?.totalAvg ? ratings.totalAvg.toFixed(1) : "0.0";
-      const caption = `{"Bangga! Instansi kami memiliki Indeks Inklusi "}${score}{"/5.0. Cek profil kami: "}${url}{" #InklusiBisa #DisabilitasBisaWork"}`;
-
-      if (blob && navigator.share) {
-        const file = new File([blob], `{"Inclusion_Card_"}${company?.name || 'Instansi'}.png`, { type: "image/png" });
-        await navigator.share({ title: "Inclusion Identity Card", text: caption, files: [file] });
-      } else {
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`, '_blank');
-      }
-    } catch (err) {
-      console.error("Share failed", err);
-      setAnnouncement(`{"Gagal memproses gambar."}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  // --- LOGIKA PROGRESS KELENGKAPAN (SINKRON DATA-STATIC) ---
+  // --- LOGIKA PROGRESS KELENGKAPAN PROFIL (UNTUK DATA RISET) ---
   const calculateCompletion = () => {
     if (!company || company.is_placeholder) return { score: 0, missing: ["Profil Belum Dibuat"] };
     
@@ -189,7 +138,20 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
     return { score, missing };
   };
 
+  // --- LOGIKA SCORING AKSESIBILITAS (BERDASARKAN AKOMODASI) ---
+  const calculateAccessibilityScore = () => {
+    const acc = company?.master_accommodations_provided || [];
+    if (!Array.isArray(acc) || acc.length === 0) return 0;
+    
+    // Asumsi: Jika menyediakan 5+ akomodasi, skor maksimal (100)
+    // Ini memotivasi instansi untuk mengisi data akomodasi dengan jujur
+    const maxAcomodations = 5; 
+    const score = Math.min((acc.length / maxAcomodations) * 100, 100);
+    return Math.round(score);
+  };
+
   const { score: completionScore, missing: missingItems } = calculateCompletion();
+  const accScore = calculateAccessibilityScore();
 
   const gap = (() => {
     const total = company?.total_employees || 0;
@@ -201,33 +163,79 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
     };
   })();
 
+  const handleShareCard = async () => {
+    if (!cardRef.current || isProcessing) return;
+    setIsProcessing(true);
+    setAnnouncement("Sedang memproses kartu inklusi...");
+
+    try {
+      const canvas = await html2canvas(cardRef.current, { 
+        scale: 2, 
+        useCORS: true, 
+        backgroundColor: "#ffffff",
+        logging: false 
+      });
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+      
+      const url = `https://disabilitas.com/perusahaan/${company?.id}`;
+      const score = ratings?.totalAvg ? ratings.totalAvg.toFixed(1) : "0.0";
+      const caption = `Bangga! Instansi kami memiliki Indeks Inklusi ${score}/5.0. Cek profil kami: ${url} #InklusiBisa`;
+
+      if (blob && navigator.share) {
+        const file = new File([blob], `Inclusion_Card_${company?.name || 'Instansi'}.png`, { type: "image/png" });
+        await navigator.share({ title: "Inclusion Identity Card", text: caption, files: [file] });
+      } else {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`, '_blank');
+      }
+    } catch (err) {
+      console.error("Share failed", err);
+      setAnnouncement("Gagal memproses gambar.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
       
-      {/* 1. PROGRESS WIDGET */}
-      {completionScore < 100 && (
-        <section className="bg-amber-50 border-2 border-amber-900/10 rounded-[2.5rem] p-8 mb-8">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+      {/* 1. PROGRESS WIDGETS (PROFIL & AKSESIBILITAS) */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Widget Kelengkapan Profil */}
+        <section className="bg-amber-50 border-2 border-amber-900/10 rounded-[2.5rem] p-8">
+          <div className="flex items-center gap-6">
+            <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
               <svg className="w-full h-full transform -rotate-90">
-                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-amber-100" />
-                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={251.2} strokeDashoffset={251.2 - (251.2 * completionScore) / 100} className="text-amber-600 transition-all duration-1000" />
+                <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-amber-100" />
+                <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray={219.9} strokeDashoffset={219.9 - (219.9 * completionScore) / 100} className="text-amber-600 transition-all duration-1000" />
               </svg>
-              <span className="absolute font-black text-amber-900 text-lg">{completionScore}%</span>
+              <span className="absolute font-black text-amber-900 text-sm">{completionScore}%</span>
             </div>
-            <div className="flex-1 space-y-3">
-              <h3 className="text-sm font-black uppercase text-amber-900 tracking-tight">{"Lengkapi Profil Inklusi Instansi"}</h3>
-              <p className="text-[10px] font-bold text-amber-800/60 uppercase tracking-wide">{"Data lengkap membantu talenta disabilitas menemukan instansi Anda secara akurat."}</p>
-              <div className="flex flex-wrap gap-2">
-                {missingItems.map((item, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-white border border-amber-200 rounded-full text-[8px] font-black uppercase text-amber-700">{"✕ "}{item}</span>
-                ))}
-              </div>
+            <div>
+              <h3 className="text-[10px] font-black uppercase text-amber-900 tracking-widest">{"Kelengkapan Profil"}</h3>
+              <p className="text-[9px] font-bold text-amber-800/60 uppercase mt-1">{"Data riset instansi Anda"}</p>
+              {completionScore < 100 && (
+                <button onClick={() => setActiveTab("profile")} className="mt-3 text-[9px] font-black text-amber-700 underline uppercase">{"Lengkapi Data"}</button>
+              )}
             </div>
-            <button onClick={() => setActiveTab("profile")} className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] shadow-xl hover:scale-105 transition-all">{"Lengkapi Sekarang"}</button>
           </div>
         </section>
-      )}
+
+        {/* Widget Accessibility Score */}
+        <section className="bg-blue-50 border-2 border-blue-900/10 rounded-[2.5rem] p-8">
+          <div className="flex items-center gap-6">
+            <div className="p-5 bg-white rounded-3xl border-2 border-blue-100 text-blue-600 shadow-sm">
+              <Accessibility size={32} />
+            </div>
+            <div>
+              <h3 className="text-[10px] font-black uppercase text-blue-900 tracking-widest">{"Accessibility Score"}</h3>
+              <div className="flex items-baseline gap-2">
+                <p className="text-3xl font-black text-blue-600">{accScore}</p>
+                <p className="text-[9px] font-bold text-blue-400 uppercase">{"/ 100 Points"}</p>
+              </div>
+              <p className="text-[8px] font-bold text-blue-800/40 uppercase tracking-tighter mt-1">{"Berdasarkan Akomodasi Layak yang Disediakan"}</p>
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* 2. ACTION BUTTONS */}
       <div className="flex flex-wrap gap-4">
@@ -239,29 +247,27 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         </button>
       </div>
 
-      {/* 3. TRENDING INSIGHT & INDEX */}
+      {/* 3. TRENDING & RATING INDEX */}
       <div className="grid lg:grid-cols-3 gap-8">
-        <section className="lg:col-span-2 bg-slate-900 rounded-[3rem] p-10 text-white border-2 border-slate-800 shadow-xl relative overflow-hidden">
-          <div className="relative z-10 space-y-6">
+        <section className="lg:col-span-2 bg-slate-900 rounded-[3rem] p-10 text-white border-2 border-slate-800 shadow-xl overflow-hidden">
+          <div className="space-y-6">
             <div className="flex items-center gap-2 bg-blue-600/20 text-blue-400 w-fit px-4 py-1 rounded-full border border-blue-600/30">
               <Zap size={14} fill="currentColor" />
               <p className="text-[9px] font-black uppercase tracking-widest">{"Trending Talent Insight"}</p>
             </div>
             <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">{"Talenta di Lokasi Anda"}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {trendingSkills.length > 0 ? trendingSkills.map((s, i) => (
+              {trendingSkills.map((s, i) => (
                 <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{s.skill}</p>
                   <p className="text-xl font-black text-blue-400">{s.count}</p>
                 </div>
-              )) : (
-                <p className="text-[10px] text-slate-500 italic">{"Mencari data talenta sekitar..."}</p>
-              )}
+              ))}
             </div>
           </div>
         </section>
 
-        <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] flex flex-col justify-center text-center">
+        <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-center">
           <p className="text-[10px] font-black uppercase text-slate-400 mb-2">{"Inclusion Index"}</p>
           <h3 className="text-6xl font-black text-slate-900">{ratings ? ratings.totalAvg.toFixed(1) : "0.0"}</h3>
           <div className="flex justify-center gap-1 mt-4">
@@ -270,7 +276,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         </div>
       </div>
 
-      {/* 4. QUICK STATS GRID */}
+      {/* 4. STATS GRID */}
       <div className="grid md:grid-cols-4 gap-6">
         {[
           { label: "Lowongan", val: stats.jobCount, icon: Briefcase, color: "text-blue-600" },
@@ -288,50 +294,35 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         ))}
       </div>
 
-      {/* 5. FEEDBACK ANONIM */}
-      <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm">
-        <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-3 mb-8">
-          <MessageSquare className="text-blue-600" size={20} /> {"Feedback Anonim Talenta"}
-        </h3>
-        <div className="grid md:grid-cols-3 gap-6">
-          {anonReviews.length > 0 ? anonReviews.map((rev, i) => (
-            <div key={i} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 relative">
-              <Quote className="absolute top-4 right-4 text-slate-200" size={32} />
-              <p className="text-xs italic text-slate-600 leading-relaxed mb-6">{"\""}{rev.comment_anonymous}{"\""}</p>
-              <p className="text-[9px] font-black uppercase text-slate-400">{new Date(rev.created_at).toLocaleDateString()}</p>
+      {/* HIDDEN INCLUSION CARD - HANYA UNTUK GENERATE GAMBAR SHARE */}
+      <div className="fixed -top-[9999px] -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
+        <div ref={cardRef} className="w-[800px] h-[450px] bg-white p-12 flex flex-col justify-between border-[16px] border-slate-900 rounded-[4rem] font-sans">
+          <div className="flex justify-between items-center border-b-4 border-blue-600 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl font-black italic">{"D"}</div>
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
             </div>
-          )) : (
-            <p className="col-span-3 text-[10px] font-bold text-slate-300 uppercase tracking-widest text-center py-10 italic">{"Belum ada review dari talenta."}</p>
-          )}
-        </div>
-      </section>
-
-      {/* HIDDEN INCLUSION CARD FOR SHARE */}
-      <div className="absolute -left-[9999px] top-0">
-        <div ref={cardRef} className="w-[600px] h-[350px] bg-white p-10 flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem] font-sans">
-          <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black italic">{"D"}</div>
-              <h2 className="text-xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
+            <div className="flex gap-4 items-center">
+              <span className="text-[10px] font-black bg-blue-600 text-white px-5 py-1.5 rounded-full uppercase">{"Accessibility Score: "}{accScore}</span>
+              <span className="text-[10px] font-black bg-emerald-500 text-white px-5 py-1.5 rounded-full uppercase">{"Verified Partner"}</span>
             </div>
-            <span className="text-[9px] font-black bg-emerald-500 text-white px-4 py-1 rounded-full uppercase">{"Verified Partner"}</span>
           </div>
-          <div className="flex-1 py-6 flex justify-between items-center">
-            <div className="space-y-1">
-              <p className="text-2xl font-black uppercase text-slate-900">{company?.name || "Instansi"}</p>
-              <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">{company?.industry || "Sektor Industri"}</p>
-              <div className="mt-4 flex gap-6">
-                <div><p className="text-[8px] font-black text-slate-400 uppercase">{"Inclusion Index"}</p><p className="text-xl font-black">{ratings?.totalAvg.toFixed(1) || "0.0"}</p></div>
-                <div><p className="text-[8px] font-black text-slate-400 uppercase">{"Quota Progress"}</p><p className="text-xl font-black">{gap.percent}{"%"}</p></div>
+          <div className="flex-1 py-10 flex justify-between items-center">
+            <div className="space-y-2">
+              <p className="text-4xl font-black uppercase text-slate-900 tracking-tighter leading-none">{company?.name || "Instansi"}</p>
+              <p className="text-sm font-bold text-blue-600 uppercase tracking-[0.2em]">{company?.industry || "Sektor Industri"}</p>
+              <div className="mt-8 flex gap-10">
+                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{"Inclusion Index"}</p><p className="text-3xl font-black">{ratings?.totalAvg.toFixed(1) || "0.0"}</p></div>
+                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{"Quota Progress"}</p><p className="text-3xl font-black">{gap.percent}{"%"}</p></div>
               </div>
             </div>
-            <div className="bg-slate-50 p-3 rounded-2xl border-2 border-slate-100">
-              {company?.id && <QRCodeSVG value={`https://disabilitas.com/perusahaan/${company.id}`} size={80} />}
+            <div className="bg-slate-50 p-5 rounded-[2rem] border-4 border-slate-100 shadow-sm">
+              {company?.id && <QRCodeSVG value={`https://disabilitas.com/perusahaan/${company.id}`} size={120} />}
             </div>
           </div>
-          <div className="border-t-2 border-slate-100 pt-4 flex justify-between items-center">
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{"Inclusion Identity Card — © 2026"}</p>
-            <p className="text-[8px] font-bold italic text-blue-600">{"Powered by disabilitas.com"}</p>
+          <div className="border-t-2 border-slate-100 pt-6 flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-widest">
+            <p>{"Inclusion Identity Card — © 2026"}</p>
+            <p className="italic text-blue-600">{"#InklusiBisa #DisabilitasBisaWork"}</p>
           </div>
         </div>
       </div>
@@ -340,8 +331,8 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
   if (loading) return (
     <div className="p-20 text-center flex flex-col items-center gap-4">
-      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      <p className="font-black animate-pulse text-slate-400 italic text-[10px] tracking-widest uppercase">{"MENYIAPKAN DASHBOARD..."}</p>
+      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <p className="font-black animate-pulse text-slate-400 italic text-[10px] tracking-widest uppercase">{"MENGHUBUNGKAN DATA RISET..."}</p>
     </div>
   );
 
@@ -352,18 +343,18 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
         <header className="bg-white border-2 border-slate-900 p-8 rounded-[3rem] shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] flex flex-col lg:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white shrink-0"><Building2 size={36} /></div>
+            <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-white shrink-0 shadow-lg"><Building2 size={36} /></div>
             <div>
               <div className="flex items-center gap-3">
                 <h1 ref={headerRef} tabIndex={-1} className="text-2xl font-black italic uppercase tracking-tighter focus:outline-none">
-                  {company?.name || "Lengkapi Profil Anda"}
+                  {company?.name || "Instansi Baru"}
                 </h1>
                 {company?.is_verified && <CheckCircle2 className="text-blue-600" size={20} />}
               </div>
-              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{company?.industry || "Instansi Baru"}</p>
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{company?.industry || "Menunggu Data Profil"}</p>
             </div>
           </div>
-          <nav className="flex flex-wrap justify-center gap-2 p-2 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+          <nav className="flex flex-wrap justify-center gap-2 p-2 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
               { id: "simulator", label: "Simulator", icon: Search },
@@ -372,7 +363,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
               { id: "profile", label: "Profile", icon: Settings },
               { id: "settings", label: "Account", icon: ShieldCheck },
             ].map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-xl scale-105' : 'text-slate-400 hover:text-slate-900'}`}>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-xl scale-105' : 'text-slate-400 hover:text-slate-900 hover:bg-white'}`}>
                 {<tab.icon size={16} />} {tab.label}
               </button>
             ))}
@@ -387,7 +378,6 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           {activeTab === "profile" && <ProfileEditor company={company} user={user} onSuccess={() => handleActionSuccess(`{"Profil diperbarui!"}`)} />}
           {activeTab === "settings" && <AccountSettings user={user} onSuccess={() => handleActionSuccess(`{"Akun diperbarui!"}`)} />}
         </main>
-        <div className="h-20" aria-hidden="true" />
       </div>
     </div>
   );
