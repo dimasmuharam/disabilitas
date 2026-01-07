@@ -88,13 +88,13 @@ if (autoOpenProfile) {
 
       // 4. Tracking Dashboard (Lamaran & Pelatihan)
       const { data: apps } = await supabase.from("applications")
-        .select("id, status, created_at, jobs(title, company_name)")
-        .eq("profile_id", user.id);
+.select("id, status, created_at, jobs(title, companies(name))") // Ambil name dari table companies
+.eq("applicant_id", user.id); // Pakai applicant_id
       setAppliedJobs(apps || []);
 
       const { data: trains } = await supabase.from("trainees")
-        .select("id, status, created_at, trainings(title, organizer_name)")
-        .eq("profile_id", user.id);
+.select("id, status, created_at, trainings(title, partners(name))") // Ambil name dari table partners
+.eq("profile_id", user.id); // Ini sudah benar pakai profile_id sesuai skema
       setAppliedTrainings(trains || []);
 
       setStats({ jobs: apps?.length || 0, trainings: trains?.length || 0 });
