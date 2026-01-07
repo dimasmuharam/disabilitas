@@ -47,7 +47,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       const targetId = user?.id;
       if (!targetId) return;
 
-      // 1. Ambil Profil Terbaru (Sinkronisasi Database)
+      // 1. Ambil Profil Terbaru (Direct Database Sync)
       const { data: latestComp } = await supabase
         .from("companies")
         .select("*")
@@ -138,20 +138,9 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
     return { score, missing };
   };
 
-  // --- LOGIKA SCORING AKSESIBILITAS (BERDASARKAN AKOMODASI) ---
-  const calculateAccessibilityScore = () => {
-    const acc = company?.master_accommodations_provided || [];
-    if (!Array.isArray(acc) || acc.length === 0) return 0;
-    
-    // Asumsi: Jika menyediakan 5+ akomodasi, skor maksimal (100)
-    // Ini memotivasi instansi untuk mengisi data akomodasi dengan jujur
-    const maxAcomodations = 5; 
-    const score = Math.min((acc.length / maxAcomodations) * 100, 100);
-    return Math.round(score);
-  };
-
+  // SINKRONISASI DATABASE: Ambil skor langsung dari kolom database Mas
+  const accScore = company?.inclusion_score || 0;
   const { score: completionScore, missing: missingItems } = calculateCompletion();
-  const accScore = calculateAccessibilityScore();
 
   const gap = (() => {
     const total = company?.total_employees || 0;
@@ -179,7 +168,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       
       const url = `https://disabilitas.com/perusahaan/${company?.id}`;
       const score = ratings?.totalAvg ? ratings.totalAvg.toFixed(1) : "0.0";
-      const caption = `Bangga! Instansi kami memiliki Indeks Inklusi ${score}/5.0. Cek profil kami: ${url} #InklusiBisa`;
+      const caption = `Bangga! Instansi kami memiliki Indeks Inklusi ${score}/5.0. Cek profil kami: ${url} #InklusiBisa #DisabilitasBisaWork`;
 
       if (blob && navigator.share) {
         const file = new File([blob], `Inclusion_Card_${company?.name || 'Instansi'}.png`, { type: "image/png" });
@@ -194,13 +183,14 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       setIsProcessing(false);
     }
   };
+
   const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* 1. PROGRESS WIDGETS (PROFIL & AKSESIBILITAS) */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Widget Kelengkapan Profil */}
-        <section className="bg-amber-50 border-2 border-amber-900/10 rounded-[2.5rem] p-8">
+        <section className="bg-amber-50 border-2 border-amber-900/10 rounded-[2.5rem] p-8 shadow-sm">
           <div className="flex items-center gap-6">
             <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
               <svg className="w-full h-full transform -rotate-90">
@@ -211,7 +201,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase text-amber-900 tracking-widest">{"Kelengkapan Profil"}</h3>
-              <p className="text-[9px] font-bold text-amber-800/60 uppercase mt-1">{"Data riset instansi Anda"}</p>
+              <p className="text-[9px] font-bold text-amber-800/60 uppercase mt-1">{"Data riset instansi"}</p>
               {completionScore < 100 && (
                 <button onClick={() => setActiveTab("profile")} className="mt-3 text-[9px] font-black text-amber-700 underline uppercase">{"Lengkapi Data"}</button>
               )}
@@ -219,10 +209,10 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           </div>
         </section>
 
-        {/* Widget Accessibility Score */}
-        <section className="bg-blue-50 border-2 border-blue-900/10 rounded-[2.5rem] p-8">
+        {/* Widget Accessibility Score (AMBIL DARI DATABASE) */}
+        <section className="bg-blue-50 border-2 border-blue-900/10 rounded-[2.5rem] p-8 shadow-sm">
           <div className="flex items-center gap-6">
-            <div className="p-5 bg-white rounded-3xl border-2 border-blue-100 text-blue-600 shadow-sm">
+            <div className="p-5 bg-white rounded-3xl border-2 border-blue-100 text-blue-600">
               <Accessibility size={32} />
             </div>
             <div>
@@ -231,7 +221,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
                 <p className="text-3xl font-black text-blue-600">{accScore}</p>
                 <p className="text-[9px] font-bold text-blue-400 uppercase">{"/ 100 Points"}</p>
               </div>
-              <p className="text-[8px] font-bold text-blue-800/40 uppercase tracking-tighter mt-1">{"Berdasarkan Akomodasi Layak yang Disediakan"}</p>
+              <p className="text-[8px] font-bold text-blue-800/40 uppercase tracking-tighter mt-1">{"Skor Otomatis dari Database"}</p>
             </div>
           </div>
         </section>
@@ -246,28 +236,29 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           <Share2 size={18} /> {isProcessing ? "Memproses..." : "Share Inclusion Card"}
         </button>
       </div>
-
       {/* 3. TRENDING & RATING INDEX */}
       <div className="grid lg:grid-cols-3 gap-8">
-        <section className="lg:col-span-2 bg-slate-900 rounded-[3rem] p-10 text-white border-2 border-slate-800 shadow-xl overflow-hidden">
-          <div className="space-y-6">
+        <section className="lg:col-span-2 bg-slate-900 rounded-[3rem] p-10 text-white border-2 border-slate-800 shadow-xl overflow-hidden relative">
+          <div className="relative z-10 space-y-6">
             <div className="flex items-center gap-2 bg-blue-600/20 text-blue-400 w-fit px-4 py-1 rounded-full border border-blue-600/30">
               <Zap size={14} fill="currentColor" />
               <p className="text-[9px] font-black uppercase tracking-widest">{"Trending Talent Insight"}</p>
             </div>
             <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">{"Talenta di Lokasi Anda"}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {trendingSkills.map((s, i) => (
+              {trendingSkills.length > 0 ? trendingSkills.map((s, i) => (
                 <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 text-center">
                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{s.skill}</p>
                   <p className="text-xl font-black text-blue-400">{s.count}</p>
                 </div>
-              ))}
+              )) : (
+                <p className="text-[10px] text-slate-500 italic">{"Mencari data talenta sekitar..."}</p>
+              )}
             </div>
           </div>
         </section>
 
-        <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-center">
+        <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-center flex flex-col justify-center">
           <p className="text-[10px] font-black uppercase text-slate-400 mb-2">{"Inclusion Index"}</p>
           <h3 className="text-6xl font-black text-slate-900">{ratings ? ratings.totalAvg.toFixed(1) : "0.0"}</h3>
           <div className="flex justify-center gap-1 mt-4">
@@ -276,22 +267,46 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         </div>
       </div>
 
-      {/* 4. STATS GRID */}
+      {/* 4. STATS GRID & LOGIKA KUOTA INKLUSIF (1% MANDATE) */}
       <div className="grid md:grid-cols-4 gap-6">
-        {[
-          { label: "Lowongan", val: stats.jobCount, icon: Briefcase, color: "text-blue-600" },
-          { label: "Pelamar", val: stats.applicantCount, icon: Users, color: "text-emerald-600" },
-          { label: "Kuota 1%", val: `${gap.percent}%`, icon: ShieldCheck, color: "text-indigo-600" },
-          { label: "Kekurangan", val: gap.need, icon: TrendingUp, color: "text-red-600" },
-        ].map((item, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 shadow-sm flex items-center gap-5">
-            <div className={`p-4 rounded-2xl bg-slate-50 ${item.color}`}><item.icon size={24} /></div>
-            <div>
-              <p className="text-[9px] font-black uppercase text-slate-400">{item.label}</p>
-              <p className="text-2xl font-black text-slate-900">{item.val}</p>
-            </div>
+        <div className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 shadow-sm flex items-center gap-5">
+          <div className="p-4 rounded-2xl bg-blue-50 text-blue-600"><Briefcase size={24} /></div>
+          <div>
+            <p className="text-[9px] font-black uppercase text-slate-400">{"Lowongan"}</p>
+            <p className="text-2xl font-black text-slate-900">{stats.jobCount}</p>
           </div>
-        ))}
+        </div>
+
+        <div className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 shadow-sm flex items-center gap-5">
+          <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-600"><Users size={24} /></div>
+          <div>
+            <p className="text-[9px] font-black uppercase text-slate-400">{"Pelamar"}</p>
+            <p className="text-2xl font-black text-slate-900">{stats.applicantCount}</p>
+          </div>
+        </div>
+
+        {/* LOGIKA KUOTA 1% YANG DIPERBAIKI */}
+        <div className="bg-white p-6 rounded-[2rem] border-2 border-slate-100 shadow-sm flex items-center gap-5 md:col-span-2">
+          <div className={`p-4 rounded-2xl ${gap.need <= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+            {gap.need <= 0 ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+          </div>
+          <div className="flex-1">
+            <p className="text-[9px] font-black uppercase text-slate-400">{"Status Kuota Inklusi (Min. 1%)"}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xl font-black text-slate-900">
+                {gap.need <= 0 ? "Sudah Terpenuhi" : `Butuh ${gap.need} Talenta Lagi`}
+              </p>
+              <span className="text-[9px] font-bold px-3 py-1 bg-slate-100 rounded-full text-slate-600 uppercase">
+                {gap.percent}% Disabilitas
+              </span>
+            </div>
+            <p className="text-[8px] font-bold text-slate-400 mt-1 italic uppercase tracking-tighter">
+              {gap.need <= 0 
+                ? "Bagus! Teruskan rekrutmen melampaui batas minimum untuk inklusivitas total." 
+                : "Ayo capai ambang batas 1% sebagai langkah awal kepatuhan inklusi."}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* HIDDEN INCLUSION CARD - HANYA UNTUK GENERATE GAMBAR SHARE */}
@@ -303,7 +318,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
             </div>
             <div className="flex gap-4 items-center">
-              <span className="text-[10px] font-black bg-blue-600 text-white px-5 py-1.5 rounded-full uppercase">{"Accessibility Score: "}{accScore}</span>
+              <span className="text-[10px] font-black bg-blue-600 text-white px-5 py-1.5 rounded-full uppercase">{"Acc. Score: "}{accScore}</span>
               <span className="text-[10px] font-black bg-emerald-500 text-white px-5 py-1.5 rounded-full uppercase">{"Verified Partner"}</span>
             </div>
           </div>
@@ -313,7 +328,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
               <p className="text-sm font-bold text-blue-600 uppercase tracking-[0.2em]">{company?.industry || "Sektor Industri"}</p>
               <div className="mt-8 flex gap-10">
                 <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{"Inclusion Index"}</p><p className="text-3xl font-black">{ratings?.totalAvg.toFixed(1) || "0.0"}</p></div>
-                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{"Quota Progress"}</p><p className="text-3xl font-black">{gap.percent}{"%"}</p></div>
+                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{"Quota Status"}</p><p className="text-3xl font-black">{gap.percent}{"%"}</p></div>
               </div>
             </div>
             <div className="bg-slate-50 p-5 rounded-[2rem] border-4 border-slate-100 shadow-sm">
