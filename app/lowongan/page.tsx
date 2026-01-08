@@ -9,7 +9,7 @@ import {
   MapPin, Briefcase, DollarSign, Filter, 
   Search, Building2, CheckCircle, Monitor, 
   X, GraduationCap, ChevronRight, BookOpen,
-  Wrench, ArrowDownWideEqual, RotateCcw
+  Wrench, ListFilter, RotateCcw
 } from "lucide-react";
 
 import { 
@@ -126,7 +126,7 @@ export default function LowonganPage() {
             </div>
             
             <div className="flex items-center gap-3 bg-slate-100 p-2 rounded-2xl border-2 border-slate-200">
-              <ArrowDownWideEqual size={18} className="ml-2 text-slate-500" />
+              <ListFilter size={18} className="ml-2 text-slate-500" />
               <select 
                 aria-label="Urutkan Lowongan"
                 value={sortBy} 
