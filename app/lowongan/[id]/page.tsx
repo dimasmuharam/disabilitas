@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { 
   MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
-  CheckCircle, ExternalLink, Send, ShieldCheck, Info, 
+  CheckCircle, ListChecks, ExternalLink, Send, ShieldCheck, Info, 
   Clock, DollarSign, Monitor, GraduationCap, Tag, 
   Accessibility, AlertCircle
 } from "lucide-react"
@@ -239,7 +239,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                 </h2>
                 <div className="p-6 bg-white rounded-[2rem] border border-emerald-100 shadow-inner">
                   <p className="text-emerald-900 leading-relaxed font-bold italic text-lg whitespace-pre-line">
-                    "{job.accessibility_note}"
+                    {job.accessibility_note}
                   </p>
                 </div>
                 <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">
