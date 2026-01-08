@@ -6,7 +6,7 @@ import {
   Plus, FileText, Trash2, Sparkles, 
   Briefcase, MapPin, Info, X, CheckCircle2,
   GraduationCap, Heart, Clock, Calendar,
-  Search, Tag, Edit3
+  Search, Tag, Edit3, Monitor, ListChecks
 } from "lucide-react";
 
 import { 
@@ -35,9 +35,9 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     slug: "" as string,
     title: "",
     description: "",
-    requirements: "",
+    requirements: "", // Kolom Syarat Kualifikasi
     location: company?.location || "Jakarta Selatan",
-    work_mode: WORK_MODES[0],
+    work_mode: WORK_MODES[0], // Sinkron dengan data-static
     job_type: EMPLOYMENT_TYPES[0],
     salary_min: 0,
     salary_max: 0,
@@ -74,14 +74,14 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     });
     setIsEditing(true);
     setShowForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setAnnouncement(`{"Mode edit aktif: "}${job.title}`);
   };
 
   const handleDelete = async (id: string, title: string) => {
     if (confirm(`{"Hapus lowongan "}${title}{"?"}`)) {
       const { error } = await supabase.from("jobs").delete().eq("id", id);
       if (!error) {
-        setAnnouncement("Lowongan telah dihapus.");
+        setAnnouncement("Lowongan berhasil dihapus.");
         fetchJobs();
       }
     }
@@ -115,7 +115,7 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     });
 
     if (!error) {
-      setAnnouncement(isEditing ? "Lowongan diperbarui." : "Lowongan diterbitkan.");
+      setAnnouncement(isEditing ? "Update berhasil." : "Lowongan baru tayang.");
       setShowForm(false);
       setIsEditing(false);
       setJobData(initialFormState);
@@ -129,102 +129,110 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="sr-only" aria-live="polite">{announcement}</div>
+      <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border-2 border-slate-900">
         <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3">
           <FileText className="text-blue-600" size={24} /> 
-          {showForm ? (isEditing ? "Edit Lowongan" : "Buat Lowongan") : "Manajemen Lowongan"}
+          {showForm ? (isEditing ? "Edit Lowongan" : "Input Lowongan") : "Manajemen Lowongan"}
         </h2>
         <button 
           onClick={() => {
             setShowForm(!showForm);
-            if (showForm) {
-              setIsEditing(false);
-              setJobData(initialFormState);
-            }
+            if (showForm) { setIsEditing(false); setJobData(initialFormState); }
           }}
-          className={`px-8 py-4 rounded-2xl font-black uppercase text-[10px] flex items-center gap-3 transition-all shadow-xl ${showForm ? 'bg-white border-2 border-slate-900' : 'bg-slate-900 text-white'}`}
+          className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] flex items-center gap-2"
         >
-          {showForm ? <><X size={18}/> Batal</> : <><Plus size={18}/> Buat Lowongan</>}
+          {showForm ? <><X size={16}/> Batal</> : <><Plus size={16}/> Tambah Lowongan</>}
         </button>
       </div>
 
       {showForm ? (
-        <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-12">
+        <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-12">
+          
           <fieldset className="space-y-6">
-            <legend className="text-sm font-black uppercase text-blue-600 pb-4 border-b-2 border-blue-50 w-full mb-8">1. Informasi Dasar</legend>
+            <legend className="text-sm font-black uppercase text-blue-600 pb-2 border-b-2 border-blue-50 w-full mb-6">1. Identitas Pekerjaan</legend>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label htmlFor="job-title" className="text-[10px] font-black uppercase text-slate-400 ml-2">Nama Posisi</label>
-                <input id="job-title" required value={jobData.title} onChange={e => setJobData({...jobData, title: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold focus:border-blue-600 outline-none" />
+                <label htmlFor="title" className="text-[10px] font-black uppercase text-slate-400 ml-2">Nama Jabatan</label>
+                <input id="title" required value={jobData.title} onChange={e => setJobData({...jobData, title: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-600" />
               </div>
               <div className="space-y-2">
-                <label htmlFor="job-location" className="text-[10px] font-black uppercase text-slate-400 ml-2">Lokasi Kerja</label>
-                <select id="job-location" value={jobData.location} onChange={e => setJobData({...jobData, location: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white outline-none">
-                  {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
+                <label htmlFor="location" className="text-[10px] font-black uppercase text-slate-400 ml-2">Lokasi Kantor</label>
+                <select id="location" value={jobData.location} onChange={e => setJobData({...jobData, location: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white">
+                  {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="space-y-2">
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sistem Kerja (Work Mode)</label>
+                <div className="flex flex-wrap gap-4">
+                  {WORK_MODES.map(m => (
+                    <label key={m} className="flex items-center gap-2 cursor-pointer p-3 rounded-xl border-2 border-slate-50 has-[:checked]:border-blue-600">
+                      <input type="radio" name="work_mode" value={m} checked={jobData.work_mode === m} onChange={() => setJobData({...jobData, work_mode: m})} className="w-5 h-5" />
+                      <span className="text-[10px] font-bold uppercase">{m}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Tipe Kontrak</label>
-                <select value={jobData.job_type} onChange={e => setJobData({...jobData, job_type: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white outline-none">
-                  {EMPLOYMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Gaji Min</label>
-                <input type="number" value={jobData.salary_min} onChange={e => setJobData({...jobData, salary_min: parseInt(e.target.value)})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Gaji Max</label>
-                <input type="number" value={jobData.salary_max} onChange={e => setJobData({...jobData, salary_max: parseInt(e.target.value)})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold" />
+                <div className="flex flex-wrap gap-4">
+                  {EMPLOYMENT_TYPES.map(t => (
+                    <label key={t} className="flex items-center gap-2 cursor-pointer p-3 rounded-xl border-2 border-slate-50 has-[:checked]:border-indigo-600">
+                      <input type="radio" name="job_type" value={t} checked={jobData.job_type === t} onChange={() => setJobData({...jobData, job_type: t})} className="w-5 h-5" />
+                      <span className="text-[10px] font-bold uppercase">{t}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           </fieldset>
 
           <fieldset className="space-y-8 p-8 bg-slate-50 rounded-[2.5rem] border-2 border-slate-100">
-            <legend className="text-[10px] font-black uppercase text-slate-500 px-4 py-1 bg-white border border-slate-200 rounded-full flex items-center gap-2">2. Kriteria Kompetensi</legend>
+            <legend className="text-[10px] font-black uppercase text-slate-500 px-4 py-1 bg-white border border-slate-200 rounded-full flex items-center gap-2"><GraduationCap size={14} /> 2. Kriteria & Keahlian</legend>
+            
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Cari & Tambah Jurusan</label>
+              <label htmlFor="major-search" className="text-[10px] font-black uppercase text-slate-400 ml-2">Target Jurusan (Multiple)</label>
               <div className="relative">
-                <Search className="absolute left-4 top-4 text-slate-300" size={18} />
-                <input value={majorSearch} onChange={(e) => setMajorSearch(e.target.value)} placeholder="Ketik jurusan..." className="w-full p-4 pl-12 rounded-2xl border-2 border-white font-bold outline-none focus:border-blue-600 shadow-sm" />
+                <Search className="absolute left-4 top-4 text-slate-300" size={20} />
+                <input id="major-search" value={majorSearch} onChange={(e) => setMajorSearch(e.target.value)} placeholder="Cari jurusan..." className="w-full p-4 pl-12 rounded-2xl border-2 border-white font-bold outline-none focus:border-blue-600 shadow-sm" />
                 {majorSearch && (
-                  <div className="absolute z-20 w-full mt-2 bg-white border-2 border-slate-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-2">
+                  <ul className="absolute z-30 w-full mt-2 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl max-h-56 overflow-y-auto p-2">
                     {UNIVERSITY_MAJORS.filter(m => m.toLowerCase().includes(majorSearch.toLowerCase())).map(m => (
-                      <button key={m} type="button" onClick={() => toggleTag('required_education_major', m)} className="w-full text-left p-3 hover:bg-blue-50 rounded-xl font-bold text-[10px] uppercase">{m}</button>
+                      <li key={m}><button type="button" onClick={() => toggleTag('required_education_major', m)} className="w-full text-left p-3 hover:bg-blue-600 hover:text-white rounded-xl font-bold text-[10px] uppercase">{m}</button></li>
                     ))}
-                  </div>
+                  </ul>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
                 {jobData.required_education_major.map(m => (
                   <span key={m} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2">
-                    {m} <X size={14} className="cursor-pointer" onClick={() => toggleTag('required_education_major', m)} />
+                    {m} <button type="button" aria-label={`Hapus ${m}`} onClick={() => toggleTag('required_education_major', m)}><X size={14}/></button>
                   </span>
                 ))}
               </div>
             </div>
 
             <div className="space-y-4 pt-6 border-t border-slate-200">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Cari & Tambah Skills</label>
+              <label htmlFor="skill-search" className="text-[10px] font-black uppercase text-slate-400 ml-2">Skill yang Dibutuhkan (Multiple)</label>
               <div className="relative">
-                <Tag className="absolute left-4 top-4 text-slate-300" size={18} />
-                <input value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} placeholder="Ketik skill..." className="w-full p-4 pl-12 rounded-2xl border-2 border-white font-bold outline-none focus:border-blue-600 shadow-sm" />
+                <Tag className="absolute left-4 top-4 text-slate-300" size={20} />
+                <input id="skill-search" value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} placeholder="Cari skill..." className="w-full p-4 pl-12 rounded-2xl border-2 border-white font-bold outline-none focus:border-emerald-600 shadow-sm" />
                 {skillSearch && (
-                  <div className="absolute z-20 w-full mt-2 bg-white border-2 border-slate-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-2">
+                  <ul className="absolute z-30 w-full mt-2 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl max-h-56 overflow-y-auto p-2">
                     {SKILLS_LIST.filter(s => s.toLowerCase().includes(skillSearch.toLowerCase())).map(s => (
-                      <button key={s} type="button" onClick={() => toggleTag('required_skills', s)} className="w-full text-left p-3 hover:bg-emerald-50 rounded-xl font-bold text-[10px] uppercase">{s}</button>
+                      <li key={s}><button type="button" onClick={() => toggleTag('required_skills', s)} className="w-full text-left p-3 hover:bg-emerald-600 hover:text-white rounded-xl font-bold text-[10px] uppercase">{s}</button></li>
                     ))}
-                  </div>
+                  </ul>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
                 {jobData.required_skills.map(s => (
                   <span key={s} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2">
-                    {s} <X size={14} className="cursor-pointer" onClick={() => toggleTag('required_skills', s)} />
+                    {s} <button type="button" aria-label={`Hapus ${s}`} onClick={() => toggleTag('required_skills', s)}><X size={14}/></button>
                   </span>
                 ))}
               </div>
@@ -232,42 +240,47 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
           </fieldset>
 
           <fieldset className="space-y-8">
-            <legend className="text-sm font-black uppercase text-emerald-600 pb-4 border-b-2 border-emerald-50 w-full mb-8 flex items-center gap-2">3. Akomodasi & Inklusi</legend>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {ACCOMMODATION_TYPES.map(acc => (
-                <label key={acc} className="flex items-center gap-4 p-4 bg-white border-2 border-slate-100 has-[:checked]:border-emerald-600 rounded-2xl cursor-pointer hover:bg-emerald-50 transition-all">
-                  <input type="checkbox" checked={jobData.preferred_disability_tools.includes(acc)} onChange={() => toggleTag('preferred_disability_tools', acc)} className="w-5 h-5 rounded border-slate-300 text-emerald-600" />
-                  <span className="text-[10px] font-black uppercase text-slate-600">{acc}</span>
-                </label>
-              ))}
+            <legend className="text-sm font-black uppercase text-emerald-600 pb-2 border-b-2 border-emerald-50 w-full mb-6 flex items-center gap-2"><Heart size={18} /> 3. Narasi & Syarat Tambahan</legend>
+            <div className="space-y-2">
+              <label htmlFor="reqs" className="text-[10px] font-black uppercase text-slate-400 ml-2">Kualifikasi Umum (Requirements)</label>
+              <textarea id="reqs" rows={4} value={jobData.requirements} onChange={e => setJobData({...jobData, requirements: e.target.value})} className="w-full p-6 rounded-[2rem] border-2 border-slate-100 font-medium text-sm" placeholder="Contoh: Domisili Jakarta, Pengalaman min. 1 tahun..." />
             </div>
-            <textarea required rows={6} value={jobData.description} onChange={e => setJobData({...jobData, description: e.target.value})} className="w-full p-6 rounded-[2rem] border-2 border-slate-100 font-medium text-sm outline-none focus:border-blue-600" placeholder="Deskripsi tugas..." />
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label htmlFor="desc" className="text-[10px] font-black uppercase text-slate-400 ml-2">Deskripsi Tugas</label>
+                <button type="button" onClick={() => setJobData(p => ({...p, description: INCLUSIVE_JOB_TEMPLATE}))} className="text-[9px] font-black text-blue-600 underline">Gunakan Template Inklusif</button>
+              </div>
+              <textarea id="desc" required rows={6} value={jobData.description} onChange={e => setJobData({...jobData, description: e.target.value})} className="w-full p-6 rounded-[2rem] border-2 border-slate-100 font-medium text-sm shadow-inner bg-slate-50/30" />
+            </div>
           </fieldset>
 
-          <button type="submit" disabled={loading} className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] font-black uppercase text-sm shadow-xl flex items-center justify-center gap-3">
-            {loading ? "MEMPROSES..." : (isEditing ? "SIMPAN PERUBAHAN" : "TAYANGKAN LOWONGAN")}
+          <button type="submit" disabled={loading} className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] font-black uppercase text-sm shadow-xl flex items-center justify-center gap-3 hover:bg-slate-900 transition-all">
+            {loading ? <Clock className="animate-spin" /> : <CheckCircle2 />} 
+            {isEditing ? "Update Lowongan" : "Tayangkan Lowongan"}
           </button>
         </form>
       ) : (
         <div className="grid gap-4">
           {myJobs.length > 0 ? myJobs.map(job => (
-            <div key={job.id} className="bg-white p-8 rounded-[3rem] border-2 border-slate-100 flex justify-between items-center group hover:border-slate-900 transition-all gap-6">
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-all"><Briefcase size={28} /></div>
-                <div className="text-left">
+            <div key={job.id} className="bg-white p-8 rounded-[3rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-center group hover:border-slate-900 transition-all gap-6 shadow-sm">
+              <div className="flex items-center gap-6 text-left">
+                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600"><Briefcase size={28} /></div>
+                <div>
                   <h4 className="font-black text-slate-900 uppercase text-sm">{job.title}</h4>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{job.location} • {job.job_type}</p>
+                  <div className="flex flex-wrap items-center gap-3 mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span className="flex items-center gap-1"><MapPin size={10}/> {job.location}</span>
+                    <span className="text-blue-600">• {job.work_mode}</span>
+                    <span className="text-indigo-600">• {job.job_type}</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleEdit(job)} className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm"><Edit3 size={20} /></button>
-                <button onClick={() => handleDelete(job.id, job.title)} className="p-4 bg-slate-50 text-slate-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all shadow-sm"><Trash2 size={20} /></button>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <button onClick={() => handleEdit(job)} className="flex-1 md:flex-none p-4 bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 font-black text-[9px] uppercase"><Edit3 size={18} /> Edit</button>
+                <button onClick={() => handleDelete(job.id, job.title)} className="p-4 bg-slate-50 text-slate-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all shadow-sm"><Trash2 size={18} /></button>
               </div>
             </div>
           )) : (
-            <div className="p-20 border-4 border-dashed border-slate-50 rounded-[4rem] text-center opacity-50">
-              <p className="text-[10px] font-black text-slate-300 uppercase italic">Belum ada lowongan.</p>
-            </div>
+            <div className="p-20 border-4 border-dashed border-slate-50 rounded-[4rem] text-center opacity-50"><p className="text-[10px] font-black text-slate-300 uppercase italic tracking-widest">Belum ada lowongan.</p></div>
           )}
         </div>
       )}
