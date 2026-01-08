@@ -31,7 +31,8 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
   const [skillSearch, setSkillSearch] = useState("");
 
   const initialFormState = {
-    id: undefined, // Digunakan untuk penanda edit
+    id: undefined as string | undefined, 
+    slug: "" as string, // SEKARANG SUDAH DIDEFINISIKAN
     title: "",
     description: "",
     requirements: "",
@@ -67,7 +68,6 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
   const handleEdit = (job: any) => {
     setJobData({
       ...job,
-      // Pastikan data array tidak null
       required_education_major: job.required_education_major || [],
       required_skills: job.required_skills || [],
       preferred_disability_tools: job.preferred_disability_tools || []
@@ -93,15 +93,15 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     e.preventDefault();
     setLoading(true);
     
-    // Generate slug hanya jika lowongan baru
-    const slug = jobData.id 
+    // Logika slug yang aman dari Type Error
+    const currentSlug = jobData.id && jobData.slug
       ? jobData.slug 
       : `${jobData.title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}`;
 
     const { error } = await supabase.from("jobs").upsert({
       ...jobData,
       company_id: company.id,
-      slug: slug,
+      slug: currentSlug,
       updated_at: new Date().toISOString()
     });
 
@@ -116,13 +116,6 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
       setAnnouncement(`{"Gagal: "}${error.message}`);
     }
     setLoading(false);
-  };
-
-  const handleDelete = async (id: string, title: string) => {
-    if (confirm(`{"Hapus lowongan "}${title}{"?"}`)) {
-      await supabase.from("jobs").delete().eq("id", id);
-      fetchJobs();
-    }
   };
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
