@@ -5,7 +5,6 @@ export const runtime = 'edge'
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
-import Head from "next/head" // Untuk SEO Dinamis
 import { 
   MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
   CheckCircle, ExternalLink, Send, ShieldCheck, Info, 
@@ -20,6 +19,8 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   const [applying, setApplying] = useState(false)
   const [hasApplied, setHasApplied] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [msg, setMsg] = useState("")
+  const [isSuccess, setIsSuccess] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -42,7 +43,12 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         setJob(data)
 
         if (authUser && data) {
-          const { data: appData } = await supabase.from('applications').select('id').eq('job_id', data.id).eq('applicant_id', authUser.id).maybeSingle()
+          const { data: appData } = await supabase.from('applications')
+            .select('id')
+            .eq('job_id', data.id)
+            .eq('applicant_id', authUser.id)
+            .maybeSingle()
+          
           if (appData) setHasApplied(true)
         }
       } catch (e) { 
@@ -54,7 +60,44 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
     init()
   }, [params.id])
 
-  // Formatter Tanggal untuk SEO
+  // FUNGSI UTAMA MELAMAR (Smart Match Sync)
+  const handleApply = async () => {
+    if (!user) {
+      router.push("/masuk")
+      return
+    }
+
+    setApplying(true)
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .insert([
+          {
+            job_id: job.id,
+            applicant_id: user.id,
+            status: "applied" // Sesuai ENUM database ::application_status
+          }
+        ])
+
+      if (error) throw error
+
+      // Memberikan feedback visual sebelum redirect
+      setIsSuccess(true)
+      setMsg("Lamaran berhasil terkirim. Mengarahkan Anda kembali ke dashboard dalam 3 detik.")
+      setHasApplied(true)
+
+      setTimeout(() => {
+        router.push("/dashboard?applied=true")
+      }, 3500)
+
+    } catch (error: any) {
+      console.error("Apply Error:", error)
+      alert("Gagal mengirim lamaran: " + error.message)
+    } finally {
+      setApplying(false)
+    }
+  }
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "Segera";
     return new Date(dateStr).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' });
@@ -68,21 +111,21 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         const parsed = JSON.parse(fieldData);
         if (Array.isArray(parsed)) return parsed;
       } catch (e) {
-        return fieldData.split(',').map(s => s.trim()).filter(s => s !== "");
+        return fieldData.split(',').map((s: string) => s.trim()).filter((s: string) => s !== "");
       }
     }
     return [];
   };
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400 italic">MENYINKRONKAN...</div>;
-  if (!job) return <div className="p-20 text-center font-black uppercase italic tracking-widest text-slate-300">Data Lowongan Tidak Ditemukan</div>;
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-slate-400 italic uppercase tracking-widest">Menyinkronkan Detail...</div>;
+  if (!job) return <div className="p-20 text-center font-black uppercase italic tracking-widest text-slate-300 border-2 border-dashed border-slate-100 rounded-[3rem]">Data Lowongan Tidak Ditemukan</div>;
 
-  // KONSTRUKSI Judul SEO
   const seoTitle = `Lowongan Inklusif ${job.title} di ${job.companies?.name || 'Instansi Mitra'} - Batas: ${formatDate(job.expires_at)}`;
+
   return (
     <main className="min-h-screen bg-[#FDFDFD] pb-24 pt-10 font-sans text-left selection:bg-blue-100 selection:text-blue-900">
       
-      {/* DINAMIS SEO & CANONICAL */}
+      {/* SEO DINAMIS & CANONICAL */}
       <title>{seoTitle}</title>
       <link rel="canonical" href={`https://disabilitas.com/lowongan/${job.slug}`} />
       <meta name="description" content={`Lamar posisi ${job.title} di ${job.companies?.name}. Pekerjaan inklusif dengan dukungan akomodasi: ${parseToArray(job.preferred_disability_tools).join(", ")}.`} />
@@ -96,7 +139,6 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
           
           <div className="lg:col-span-2 space-y-8">
-            {/* 1. KARTU IDENTITAS */}
             <article className="bg-white rounded-[3rem] p-8 md:p-12 border-2 border-slate-100 shadow-sm space-y-6">
               <div className="flex flex-wrap gap-3 font-black uppercase text-[10px]">
                 <span className="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-xl border border-blue-100 italic">{job.job_type}</span>
@@ -113,7 +155,6 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               </div>
             </article>
 
-            {/* 2. KRITERIA KOMPETENSI */}
             <section className="bg-white rounded-[3rem] p-8 md:p-12 border-2 border-slate-100 shadow-sm grid md:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <h2 className="text-[10px] font-black uppercase text-blue-600 tracking-widest flex items-center gap-2 italic"><GraduationCap size={16}/> Pendidikan Minimal</h2>
@@ -136,25 +177,24 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                         {skill}{idx < arr.length - 1 ? ", " : "."}
                       </span>
                     ))
-                  ) : <span className="text-[10px] text-slate-300 italic">Data tidak tersedia.</span>}
+                  ) : <span className="text-[10px] text-slate-300 italic">Data skill tidak tersedia.</span>}
                 </div>
               </div>
             </section>
 
-            {/* 3. DESKRIPSI & AKSESIBILITAS */}
-            <section className="bg-white rounded-[3rem] p-8 md:p-12 border-2 border-slate-100 shadow-sm space-y-10">
+            <section className="bg-white rounded-[3rem] p-8 md:p-12 border-2 border-slate-100 shadow-sm space-y-10 text-left">
               <div className="space-y-4">
                 <h2 className="text-[10px] font-black uppercase text-slate-400 border-b pb-2 flex items-center gap-2 italic"><Info size={14}/> Deskripsi Pekerjaan</h2>
                 <div className="text-slate-700 whitespace-pre-line leading-relaxed font-medium text-lg italic">{job.description}</div>
               </div>
 
               {job.accessibility_note && (
-                <div className="space-y-4 pt-8 border-t-2 border-slate-50 border-dashed animate-in fade-in duration-700">
+                <div className="space-y-4 pt-8 border-t-2 border-slate-50 border-dashed">
                   <h2 className="text-[11px] font-black uppercase text-emerald-600 flex items-center gap-2 italic">
                     <Accessibility size={18}/> Budaya Inklusi & Aksesibilitas
                   </h2>
                   <div className="p-8 bg-emerald-50/30 rounded-[2.5rem] border-2 border-emerald-100 shadow-inner">
-                    <p className="text-emerald-900 leading-relaxed font-bold italic text-lg whitespace-pre-line text-left">
+                    <p className="text-emerald-900 leading-relaxed font-bold italic text-lg whitespace-pre-line">
                       <strong>{job.accessibility_note}</strong>
                     </p>
                   </div>
@@ -163,25 +203,38 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
             </section>
           </div>
 
-          {/* ASIDE: PANEL REKRUTMEN */}
           <aside className="space-y-8 sticky top-10 font-black uppercase tracking-tighter">
             <div className="bg-slate-900 text-white rounded-[3.5rem] p-10 shadow-2xl relative overflow-hidden">
               <h3 className="text-[10px] text-blue-400 mb-8 border-b border-white/10 pb-4 flex items-center gap-2 italic tracking-widest"><Send size={14}/> Rekrutmen Panel</h3>
               <div className="relative z-10 space-y-4">
+                
+                {isSuccess && (
+                  <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-[2rem] text-[10px] text-emerald-400 font-black italic animate-in zoom-in-95">
+                    <strong>{msg}</strong>
+                  </div>
+                )}
+
                 {hasApplied ? (
                   <div className="w-full py-6 bg-emerald-500/20 text-emerald-400 rounded-3xl text-center text-xs flex flex-col items-center gap-3 italic border border-emerald-500/30">
                     <CheckCircle size={32}/> SUDAH MELAMAR
                   </div>
                 ) : (
-                  <button onClick={() => router.push('/dashboard')} className="w-full h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 text-white rounded-2xl shadow-xl transition-all active:scale-95 text-xs tracking-[0.2em]">
-                    KIRIM LAMARAN
+                  <button 
+                    onClick={handleApply} 
+                    disabled={applying || isSuccess}
+                    className="w-full h-16 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 text-white rounded-2xl shadow-xl transition-all active:scale-95 text-xs tracking-[0.2em] flex items-center justify-center gap-2"
+                  >
+                    {applying ? "MEMPROSES DATA..." : isSuccess ? "BERHASIL TERKIRIM" : "KIRIM LAMARAN"}
+                    {!applying && !isSuccess && <Send size={16} />}
                   </button>
                 )}
-                <p className="text-[8px] text-slate-500 text-center leading-relaxed italic">Gunakan dashboard talenta untuk melamar posisi ini secara resmi.</p>
+                <p className="text-[8px] text-slate-500 text-center leading-relaxed italic">
+                  Data profil Anda akan otomatis dilampirkan ke dalam lamaran ini.
+                </p>
               </div>
             </div>
 
-            <section className="bg-white rounded-[3rem] p-10 border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-6">
+            <section className="bg-white rounded-[3rem] p-10 border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-6 text-left">
               <h3 className="text-sm font-black uppercase italic text-slate-900 flex items-center gap-2"><ShieldCheck className="text-blue-600" size={20}/> Akomodasi Kantor</h3>
               <div className="space-y-3">
                 {parseToArray(job.companies?.master_accommodations_provided).length > 0 ? (
@@ -191,7 +244,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                       <span>{acc}{idx < arr.length - 1 ? ", " : "."}</span>
                     </div>
                   ))
-                ) : <p className="text-[10px] italic text-slate-400">Belum ada rincian akomodasi fisik.</p>}
+                ) : <p className="text-[10px] italic text-slate-400">Rincian akomodasi fisik belum tersedia.</p>}
               </div>
             </section>
           </aside>
