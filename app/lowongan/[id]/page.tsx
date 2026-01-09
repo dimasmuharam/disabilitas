@@ -60,7 +60,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
     init()
   }, [params.id])
 
-  // FUNGSI UTAMA MELAMAR (Smart Match Sync)
+  // FUNGSI UTAMA MELAMAR (Updated with company_id sync)
   const handleApply = async () => {
     if (!user) {
       router.push("/masuk")
@@ -75,13 +75,13 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
           {
             job_id: job.id,
             applicant_id: user.id,
-            status: "applied" // Sesuai ENUM database ::application_status
+            company_id: job.company_id, // POINT KRUSIAL: Menghubungkan lamaran langsung ke perusahaan
+            status: "applied"
           }
         ])
 
       if (error) throw error
 
-      // Memberikan feedback visual sebelum redirect
       setIsSuccess(true)
       setMsg("Lamaran berhasil terkirim. Mengarahkan Anda kembali ke dashboard dalam 3 detik.")
       setHasApplied(true)
@@ -125,7 +125,6 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   return (
     <main className="min-h-screen bg-[#FDFDFD] pb-24 pt-10 font-sans text-left selection:bg-blue-100 selection:text-blue-900">
       
-      {/* SEO DINAMIS & CANONICAL */}
       <title>{seoTitle}</title>
       <link rel="canonical" href={`https://disabilitas.com/lowongan/${job.slug}`} />
       <meta name="description" content={`Lamar posisi ${job.title} di ${job.companies?.name}. Pekerjaan inklusif dengan dukungan akomodasi: ${parseToArray(job.preferred_disability_tools).join(", ")}.`} />
