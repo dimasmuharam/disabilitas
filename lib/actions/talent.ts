@@ -1,7 +1,10 @@
+"use server"
+
 import { supabase } from "@/lib/supabase";
 
 /**
  * UPDATE PROFIL UTAMA (Tabel: profiles)
+ * Digunakan untuk memperbarui data dasar talenta.
  */
 export async function updateTalentProfile(userId: string, updates: any) {
   try {
@@ -11,6 +14,8 @@ export async function updateTalentProfile(userId: string, updates: any) {
         id: userId,
         ...updates,
         updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id'
       })
       .select()
       .single();
@@ -25,6 +30,7 @@ export async function updateTalentProfile(userId: string, updates: any) {
 
 /**
  * MANAJEMEN RIWAYAT KERJA (Tabel: work_experiences)
+ * Menyimpan atau memperbarui pengalaman kerja talenta.
  */
 export async function upsertWorkExperience(experience: any) {
   try {
@@ -32,6 +38,7 @@ export async function upsertWorkExperience(experience: any) {
       .from("work_experiences")
       .upsert({
         ...experience,
+        // Sinkronisasi dengan skema boolean is_verified
         is_verified: experience.is_verified || false,
         updated_at: new Date().toISOString(),
       })
@@ -46,28 +53,32 @@ export async function upsertWorkExperience(experience: any) {
 }
 
 /**
- * SINKRONISASI SERTIFIKAT OTOMATIS DARI PELATIHAN
+ * SINKRONISASI SERTIFIKAT OTOMATIS DARI MODUL PELATIHAN
+ * Menarik data dari tabel 'trainees' yang statusnya sudah 'completed'.
+ * Jalur Data: Pelatihan (Trainees) -> Profil (Certifications)
  */
 export async function syncOfficialCertifications(userId: string) {
   try {
-    const { data: traineeData, error } = await (supabase
+    // Mencari riwayat pendaftaran pelatihan (bukan lamaran kerja)
+    const { data: traineeData, error } = await supabase
       .from("trainees")
       .select(`
         status,
         trainings (
           title, 
-          updated_at, 
-          organizer_name
+          organizer_name,
+          updated_at
         )
       `)
-      .eq("profile_id", userId)
-      .eq("status", "completed") as any);
+      .eq("profile_id", userId) // Benar: trainees menggunakan profile_id
+      .eq("status", "completed");
 
     if (error) throw error;
 
+    // Transformasi data agar cocok dengan struktur tabel certifications
     const officialCerts = traineeData?.map((item: any) => ({
       name: item.trainings?.title || "Sertifikat Pelatihan",
-      issuer: item.trainings?.organizer_name || "Official Partner",
+      organizer_name: item.trainings?.organizer_name || "Official Partner",
       year: item.trainings?.updated_at 
         ? new Date(item.trainings.updated_at).getFullYear().toString() 
         : new Date().getFullYear().toString(),
@@ -82,23 +93,26 @@ export async function syncOfficialCertifications(userId: string) {
 }
 
 /**
- * CEK STATUS PENEMPATAN KERJA (Status: accepted)
- * Sinkron dengan label 'accepted' di DB
+ * CEK STATUS PENEMPATAN KERJA DARI MODUL LOWONGAN
+ * Menarik data dari tabel 'applications' yang statusnya sudah 'accepted'.
+ * Jalur Data: Lamaran Kerja (Applications) -> Status Pekerjaan
  */
 export async function checkVerifiedPlacement(userId: string) {
   try {
-    const { data, error } = await (supabase
+    const { data, error } = await supabase
       .from("applications")
       .select(`
         status,
-        jobs (title, company_id, companies (name))
+        company_id,
+        jobs (title)
       `)
-      .eq("profile_id", userId)
-      .eq("status", "accepted") as any); // Diubah dari 'hired' ke 'accepted'
+      .eq("applicant_id", userId) // Benar: applications menggunakan applicant_id
+      .eq("status", "accepted");
 
     if (error) throw error;
     return { success: true, data };
   } catch (error: any) {
+    console.error("Placement Check Error:", error.message);
     return { success: false, error: error.message };
   }
 }
