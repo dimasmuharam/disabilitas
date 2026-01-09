@@ -7,12 +7,12 @@ import {
   Briefcase, MapPin, Info, X, CheckCircle2,
   GraduationCap, Heart, Clock, Calendar,
   Search, Tag, Edit3, Monitor, DollarSign,
-  Accessibility, ListChecks, HelpCircle
+  Accessibility, ListChecks, HelpCircle, BookOpen, RotateCcw
 } from "lucide-react";
 
 import { 
   WORK_MODES, 
-  INCLUSIVE_JOB_TEMPLATE,
+  INCLUSIVE_JOB_TEMPLATE, // Ini yang akan dipindah
   INDONESIA_CITIES,
   EDUCATION_LEVELS,
   ACCOMMODATION_TYPES,
@@ -66,7 +66,6 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     setMyJobs(data || []);
   }
 
-  // FIX: Fungsi Edit yang Aman dari NULL dan Meta-data
   const handleEdit = (job: any) => {
     setJobData({
       id: job.id,
@@ -89,14 +88,8 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     });
     setIsEditing(true);
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setAnnouncement(`Mengedit lowongan ${job.title}`);
-  };
-
-  const handleDelete = async (id: string, title: string) => {
-    if (confirm(`Hapus lowongan ${title}?`)) {
-      const { error } = await supabase.from("jobs").delete().eq("id", id);
-      if (!error) { fetchJobs(); }
-    }
   };
 
   const toggleTag = (field: 'required_education_major' | 'required_skills' | 'preferred_disability_tools', value: string) => {
@@ -114,7 +107,6 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
     e.preventDefault();
     setLoading(true);
     
-    // Pastikan ID tidak ikut dikirim jika sedang tambah baru (Upsert butuh ID jika edit)
     const payload = { ...jobData };
     if (!isEditing) delete (payload as any).id;
 
@@ -136,151 +128,197 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
       fetchJobs();
       onSuccess();
     } else {
-      alert(`Error: ${error.message}`);
+      alert(`Error simpan: ${error.message}`);
     }
     setLoading(false);
   };
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 font-sans">
       <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
-      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border-2 border-slate-900 shadow-sm">
-        <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-slate-900">
-          <FileText className="text-blue-600" size={24} /> 
-          {showForm ? (isEditing ? "Edit Lowongan" : "Tayangkan Lowongan") : "Manajemen Lowongan"}
+      {/* Header Dashboard */}
+      <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-6 rounded-[2rem] border-2 border-slate-900 gap-4">
+        <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-slate-900 text-left w-full sm:w-auto">
+          <FileText className="text-blue-600 shrink-0" size={24} /> 
+          {showForm ? (isEditing ? "Edit Lowongan" : "Posting Baru") : "Manajemen Karir Inklusif"}
         </h2>
         <button 
           onClick={() => {
             setShowForm(!showForm);
             if (showForm) { setIsEditing(false); setJobData(initialFormState); }
           }}
-          className={`px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 transition-all shadow-md ${showForm ? 'bg-white border-2 border-slate-900 text-slate-900' : 'bg-slate-900 text-white hover:bg-blue-600'}`}
+          className={`w-full sm:w-auto px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-md ${showForm ? 'bg-white border-2 border-slate-900 text-slate-900' : 'bg-slate-900 text-white hover:bg-blue-600'}`}
         >
-          {showForm ? <><X size={16}/> Batal</> : <><Plus size={16}/> Lowongan Baru</>}
+          {showForm ? <><X size={16}/> Batal</> : <><Plus size={16}/> Terbitkan Lowongan</>}
         </button>
       </div>
 
       {showForm ? (
-        <form onSubmit={handleSubmit} className="bg-white p-8 md:p-12 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-12">
+        <form onSubmit={handleSubmit} className="bg-white p-6 md:p-12 rounded-[3.5rem] border-2 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-12 text-left font-black uppercase tracking-tighter transition-all">
           
-          {/* 1. INFORMASI DASAR */}
-          <fieldset className="space-y-6">
-            <legend className="text-sm font-black uppercase text-blue-600 pb-2 border-b-2 border-blue-50 w-full mb-8">1. Informasi Pekerjaan & Gaji</legend>
+          {/* SECTION 1: DASAR */}
+          <fieldset className="space-y-8">
+            <legend className="text-sm font-black uppercase text-blue-600 pb-2 border-b-4 border-blue-50 w-full mb-8 italic">1. Identitas Pekerjaan</legend>
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label htmlFor="title" className="text-[10px] font-black uppercase text-slate-400 ml-2">Nama Posisi</label>
-                <input id="title" required value={jobData.title} onChange={e => setJobData({...jobData, title: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold focus:border-blue-600 outline-none" placeholder="Digital Marketing Specialist" />
+              <div className="space-y-3">
+                <label htmlFor="title" className="text-[10px] text-slate-400 ml-2">Posisi Jabatan</label>
+                <input id="title" required value={jobData.title} onChange={e => setJobData({...jobData, title: e.target.value})} className="w-full p-5 rounded-2xl border-2 border-slate-50 bg-slate-50 focus:bg-white focus:border-blue-600 outline-none font-bold" placeholder="Contoh: Admin Gudang" />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="location" className="text-[10px] font-black uppercase text-slate-400 ml-2">Lokasi Penempatan</label>
-                <select id="location" value={jobData.location} onChange={e => setJobData({...jobData, location: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white outline-none">
+              <div className="space-y-3">
+                <label htmlFor="location" className="text-[10px] text-slate-400 ml-2">Domisili Penempatan</label>
+                <select id="location" value={jobData.location} onChange={e => setJobData({...jobData, location: e.target.value})} className="w-full p-5 rounded-2xl border-2 border-slate-50 bg-white font-bold outline-none focus:border-blue-600">
                   {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
-
-            <div className="grid md:grid-cols-3 gap-6 pt-4">
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2"><DollarSign size={12}/> Rentang Gaji (Rp)</label>
-                <div className="flex items-center gap-3">
-                  <input type="number" value={jobData.salary_min} onChange={e => setJobData({...jobData, salary_min: parseInt(e.target.value) || 0})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold" />
-                  <span className="font-black text-slate-300">—</span>
-                  <input type="number" value={jobData.salary_max} onChange={e => setJobData({...jobData, salary_max: parseInt(e.target.value) || 0})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold" />
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <p className="text-[10px] text-blue-600 italic">Sistem Kerja</p>
+                <div className="flex flex-wrap gap-2">
+                  {WORK_MODES.map(m => (
+                    <label key={m} className="flex items-center gap-2 p-3 bg-white border-2 border-slate-50 rounded-xl has-[:checked]:border-blue-600 shadow-sm transition-all">
+                      <input type="radio" name="work_mode" value={m} checked={jobData.work_mode === m} onChange={() => setJobData({...jobData, work_mode: m})} className="w-4 h-4 accent-blue-600" />
+                      <span className="text-[10px] font-bold">{m}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="expires" className="text-[10px] font-black uppercase text-slate-400 ml-2">Tutup Lowongan</label>
-                <input id="expires" type="date" value={jobData.expires_at} onChange={e => setJobData({...jobData, expires_at: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold outline-none" />
+              <div className="space-y-4">
+                <p className="text-[10px] text-indigo-600 italic">Tipe Hubungan Kerja</p>
+                <div className="flex flex-wrap gap-2">
+                  {EMPLOYMENT_TYPES.map(t => (
+                    <label key={t} className="flex items-center gap-2 p-3 bg-white border-2 border-slate-50 rounded-xl has-[:checked]:border-indigo-600 shadow-sm transition-all">
+                      <input type="radio" name="job_type" value={t} checked={jobData.job_type === t} onChange={() => setJobData({...jobData, job_type: t})} className="w-4 h-4 accent-indigo-600" />
+                      <span className="text-[10px] font-bold">{t}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           </fieldset>
 
-          {/* 2. KRITERIA KOMPETENSI (LOGIKA ARRAY FIX) */}
-          <fieldset className="space-y-8 p-8 bg-slate-50 rounded-[2.5rem] border-2 border-slate-100">
-            <legend className="text-[10px] font-black uppercase text-slate-500 px-4 py-1 bg-white border border-slate-200 rounded-full flex items-center gap-2 italic">
-              <GraduationCap size={14} /> 2. Kriteria Pendidikan & Kompetensi
+          {/* SECTION 2: KOMPETENSI */}
+          <fieldset className="space-y-10 p-8 bg-slate-900 rounded-[3rem] text-white shadow-xl relative overflow-hidden">
+            <legend className="text-[10px] font-black uppercase text-slate-900 px-6 py-2 bg-blue-400 rounded-full flex items-center gap-2 tracking-widest italic">
+              <GraduationCap size={16} /> 2. Kriteria Kompetensi & Jurusan
             </legend>
-            
-            <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase text-slate-400 ml-2">Minimal Pendidikan</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-6">
+              <p className="text-[11px] text-blue-400 italic">Jenjang Pendidikan Minimal</p>
+              <div className="flex flex-wrap gap-3">
                 {EDUCATION_LEVELS.map(lv => (
-                  <label key={lv} className="flex items-center gap-2 p-3 bg-white rounded-xl border-2 border-slate-100 has-[:checked]:border-slate-900 cursor-pointer transition-all">
-                    <input type="radio" name="edu_level" value={lv} checked={jobData.required_education_level === lv} onChange={() => setJobData({...jobData, required_education_level: lv})} className="w-4 h-4 accent-slate-900" />
-                    <span className="text-[10px] font-bold uppercase">{lv}</span>
+                  <label key={lv} className="flex items-center gap-2 p-4 bg-white/5 rounded-2xl border-2 border-white/10 has-[:checked]:border-blue-400 has-[:checked]:bg-blue-400/10 transition-all">
+                    <input type="radio" name="edu_level" value={lv} checked={jobData.required_education_level === lv} onChange={() => setJobData({...jobData, required_education_level: lv})} className="w-4 h-4 accent-blue-400" />
+                    <span className="text-xs font-black">{lv}</span>
                   </label>
                 ))}
               </div>
             </div>
-
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2">Keahlian / Skill Utama <Tag size={12}/></label>
+              <label className="text-[11px] text-blue-400 italic">Target Jurusan Pendidikan</label>
               <div className="relative">
-                <input value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} placeholder="Ketik skill (contoh: Excel, Coding, Desain)..." className="w-full p-4 rounded-2xl border-2 border-white font-bold outline-none focus:border-emerald-600 shadow-sm" />
-                {skillSearch && (
-                  <ul className="absolute z-30 w-full mt-2 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl max-h-48 overflow-y-auto p-2">
-                    {SKILLS_LIST.filter(s => s.toLowerCase().includes(skillSearch.toLowerCase())).map(s => (
-                      <li key={s}><button type="button" onClick={() => toggleTag('required_skills', s)} className="w-full text-left p-3 hover:bg-emerald-50 rounded-xl font-bold text-[10px] uppercase">{s}</button></li>
+                <input value={majorSearch} onChange={(e) => setMajorSearch(e.target.value)} placeholder="Cari Jurusan..." className="w-full p-5 rounded-2xl bg-white/5 border-2 border-white/10 focus:border-blue-400 outline-none text-sm font-bold" />
+                {majorSearch && (
+                  <ul className="absolute z-30 w-full mt-2 bg-slate-800 border-2 border-slate-700 rounded-2xl p-3 max-h-56 overflow-y-auto">
+                    {UNIVERSITY_MAJORS.filter(m => m.toLowerCase().includes(majorSearch.toLowerCase())).map(m => (
+                      <li key={m} className="mb-1"><button type="button" onClick={() => toggleTag('required_education_major', m)} className="w-full text-left p-3 hover:bg-blue-600 rounded-xl font-bold text-[10px] uppercase transition-colors">{m}</button></li>
                     ))}
                   </ul>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
+                {jobData.required_education_major.map(m => (
+                  <span key={m} className="px-4 py-2 bg-blue-500 text-white rounded-xl text-[10px] flex items-center gap-3">
+                    {m} <button type="button" aria-label={`Hapus jurusan ${m}`} onClick={() => toggleTag('required_education_major', m)} className="hover:text-red-300"><X size={16}/></button>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4 border-t border-white/10 pt-8">
+              <label className="text-[11px] text-emerald-400 italic">Keahlian (Skills) Utama</label>
+              <div className="relative">
+                <input value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} placeholder="Cari Skill..." className="w-full p-5 rounded-2xl bg-white/5 border-2 border-white/10 focus:border-emerald-400 outline-none text-sm font-bold" />
+                {skillSearch && (
+                  <ul className="absolute z-30 w-full mt-2 bg-slate-800 border-2 border-slate-700 rounded-2xl p-3 max-h-56 overflow-y-auto">
+                    {SKILLS_LIST.filter(s => s.toLowerCase().includes(skillSearch.toLowerCase())).map(s => (
+                      <li key={s} className="mb-1"><button type="button" onClick={() => toggleTag('required_skills', s)} className="w-full text-left p-3 hover:bg-emerald-600 rounded-xl font-bold text-[10px] uppercase transition-colors">{s}</button></li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-3">
                 {jobData.required_skills.map(s => (
-                  <span key={s} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase flex items-center gap-2">
-                    {s} <button type="button" onClick={() => toggleTag('required_skills', s)}><X size={14}/></button>
+                  <span key={s} className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-[10px] flex items-center gap-3">
+                    {s} <button type="button" aria-label={`Hapus keahlian ${s}`} onClick={() => toggleTag('required_skills', s)} className="hover:text-red-300"><X size={16}/></button>
                   </span>
                 ))}
               </div>
             </div>
           </fieldset>
 
-          {/* 3. DESKRIPSI & AKSESIBILITAS */}
-          <fieldset className="space-y-8">
-            <legend className="text-sm font-black uppercase text-emerald-600 pb-2 border-b-2 border-emerald-50 w-full mb-8 flex items-center gap-2">
-              <Accessibility size={18} /> 3. Narasi & Aksesibilitas Riset
+          {/* SECTION 3: AKOMODASI */}
+          <fieldset className="space-y-10">
+            <legend className="text-sm font-black uppercase text-emerald-600 pb-2 border-b-4 border-emerald-50 w-full mb-8 flex items-center gap-2 italic">
+              <Accessibility size={20} /> 3. Dukungan Akomodasi
             </legend>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-slate-400 ml-2 italic">Deskripsi Kerja (Job Description)</label>
-                <textarea required rows={6} value={jobData.description} onChange={e => setJobData({...jobData, description: e.target.value})} className="w-full p-6 rounded-[2rem] border-2 border-slate-100 font-medium text-sm outline-none focus:border-blue-600" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ACCOMMODATION_TYPES.map(acc => (
+                <label key={acc} className="flex items-center gap-4 p-5 bg-white border-2 border-slate-100 rounded-3xl has-[:checked]:border-emerald-600 transition-all hover:bg-emerald-50/50 shadow-sm group">
+                  <input type="checkbox" checked={jobData.preferred_disability_tools.includes(acc)} onChange={() => toggleTag('preferred_disability_tools', acc)} className="w-6 h-6 rounded-lg border-slate-300 text-emerald-600 focus:ring-emerald-500 transition-transform group-hover:scale-110" />
+                  <span className="text-[10px] font-black text-slate-700 leading-tight uppercase">{acc}</span>
+                </label>
+              ))}
+            </div>
+            
+            <div className="space-y-6 pt-10 border-t-2 border-slate-50 border-dashed">
+              <div className="space-y-3">
+                <label htmlFor="desc" className="text-[10px] text-slate-400 ml-2">Deskripsi Kerja (Job Description)</label>
+                <textarea id="desc" required rows={6} value={jobData.description} onChange={e => setJobData({...jobData, description: e.target.value})} className="w-full p-8 rounded-[3rem] border-2 border-slate-100 font-medium text-base shadow-inner bg-slate-50/20 outline-none focus:border-blue-600" placeholder="Tuliskan tugas harian talenta di posisi ini..." />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-emerald-700 ml-2 italic font-black">Catatan Inklusi / Aksesibilitas</label>
-                <textarea rows={3} value={jobData.accessibility_note} onChange={e => setJobData({...jobData, accessibility_note: e.target.value})} className="w-full p-6 bg-emerald-50/10 border-emerald-100 border-2 rounded-[2rem] font-medium text-sm outline-none focus:border-emerald-600" placeholder="Contoh: Kantor kami ramah disabilitas netra dengan ubin pemandu." />
+
+              {/* CATATAN AKSESIBILITAS: Tombol Template dipindah ke sini! */}
+              <div className="space-y-4 p-8 bg-emerald-50/20 rounded-[3.5rem] border-2 border-emerald-100">
+                <div className="flex justify-between items-center px-2">
+                  <label htmlFor="acc-note" className="text-[11px] text-emerald-700 font-black flex items-center gap-2">
+                    <Sparkles size={16}/> Catatan Aksesibilitas Khusus
+                  </label>
+                  <button type="button" onClick={() => setJobData(p => ({...p, accessibility_note: INCLUSIVE_JOB_TEMPLATE}))} className="text-[9px] text-blue-600 underline font-black flex items-center gap-1 uppercase italic transition-all hover:text-blue-900">
+                    <Sparkles size={12}/> Gunakan Template Aksesibilitas
+                  </button>
+                </div>
+                <textarea id="acc-note" rows={4} value={jobData.accessibility_note} onChange={e => setJobData({...jobData, accessibility_note: e.target.value})} className="w-full p-6 bg-white border-2 border-emerald-200 rounded-[2.5rem] font-medium text-sm outline-none focus:border-emerald-600 shadow-sm" placeholder="Contoh: Kami memberikan instruksi tertulis dan lisan secara fleksibel." />
+                <p className="text-[9px] text-emerald-400 italic ml-4 leading-relaxed font-bold lowercase">Bantu talenta memahami lingkungan kerjanya dengan narasi yang jujur dan inklusif.</p>
               </div>
             </div>
           </fieldset>
 
-          <button type="submit" disabled={loading} className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] font-black uppercase tracking-widest text-sm hover:bg-slate-900 transition-all shadow-xl flex items-center justify-center gap-3">
+          <button type="submit" disabled={loading} className="w-full py-8 bg-blue-600 text-white rounded-[3.5rem] font-black uppercase tracking-[0.4em] text-sm hover:bg-slate-900 transition-all shadow-2xl flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50">
             {loading ? <Clock className="animate-spin" /> : <CheckCircle2 />} 
-            {isEditing ? "SIMPAN PERUBAHAN DATA" : "TAYANGKAN SEKARANG"}
+            {isEditing ? "Konfirmasi Perubahan Data" : "Publikasikan Lowongan Riset"}
           </button>
         </form>
       ) : (
-        /* LIST VIEW */
-        <div className="grid gap-4">
+        /* LIST LOWONGAN */
+        <div className="grid gap-6">
           {myJobs.length > 0 ? myJobs.map(job => (
-            <div key={job.id} className="bg-white p-8 rounded-[3rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-center group hover:border-slate-900 transition-all gap-6 shadow-sm">
-              <div className="flex items-center gap-6 text-left">
-                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 transition-all shadow-inner"><Briefcase size={28} /></div>
+            <div key={job.id} className="bg-white p-8 rounded-[3.5rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-center group hover:border-slate-900 transition-all gap-8 shadow-sm">
+              <div className="flex items-center gap-8 text-left flex-1">
+                <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 transition-all shadow-inner border border-slate-100"><Briefcase size={36} /></div>
                 <div>
-                  <h4 className="font-black text-slate-900 uppercase text-sm">{job.title}</h4>
-                  <div className="flex items-center gap-3 mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">
-                    <span className="flex items-center gap-1"><MapPin size={10}/> {job.location}</span>
-                    <span className="text-blue-600">• {job.job_type}</span>
+                  <h4 className="font-black text-slate-900 uppercase text-lg italic tracking-tight">{job.title}</h4>
+                  <div className="flex flex-wrap items-center gap-4 mt-2 text-[10px] font-black text-slate-400 italic">
+                    <span className="flex items-center gap-1.5"><MapPin size={12} className="text-red-500"/> {job.location}</span>
+                    <span className="text-blue-600 px-2 py-0.5 bg-blue-50 rounded-lg">{job.job_type}</span>
+                    <span className="text-emerald-600 px-2 py-0.5 bg-emerald-50 rounded-lg">{job.work_mode}</span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <button onClick={() => handleEdit(job)} className="flex-1 md:flex-none p-4 bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 font-black text-[9px] uppercase"><Edit3 size={18} /> EDIT</button>
-                <button onClick={() => handleDelete(job.id, job.title)} className="p-4 bg-slate-50 text-slate-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all shadow-sm"><Trash2 size={18} /></button>
+              <div className="flex items-center gap-4 w-full md:w-auto pt-6 md:pt-0 md:pl-8 border-t md:border-t-0 md:border-l-2 border-slate-50">
+                <button onClick={() => handleEdit(job)} className="flex-1 md:flex-none px-8 py-4 bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white rounded-2xl transition-all shadow-sm font-black text-[10px] uppercase tracking-widest italic">Edit</button>
+                <button onClick={() => handleDelete(job.id, job.title)} aria-label={`Hapus lowongan ${job.title}`} className="p-4 bg-slate-100 text-slate-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all shadow-sm"><Trash2 size={20} /></button>
               </div>
             </div>
           )) : (
-            <div className="p-24 border-4 border-dashed border-slate-100 rounded-[4rem] text-center opacity-50">
-              <p className="text-[10px] font-black text-slate-300 uppercase italic">Belum ada lowongan riset.</p>
-            </div>
+            <div className="p-32 border-4 border-dashed border-slate-100 rounded-[5rem] text-center opacity-40 font-black uppercase italic text-slate-300 tracking-[0.4em]">Belum ada lowongan riset aktif.</div>
           )}
         </div>
       )}
