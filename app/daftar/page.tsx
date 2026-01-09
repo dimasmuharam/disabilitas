@@ -20,7 +20,6 @@ export default function RegisterPage() {
   const [turnstileToken, setTurnstileToken] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
 
-  // WHITE-LIST ROLE: Menjamin Admin/Government tidak bocor ke publik
   const PUBLIC_ROLES = [USER_ROLES.TALENT, USER_ROLES.COMPANY, USER_ROLES.PARTNER];
   const filteredRoles = USER_ROLE_LABELS.filter(r => PUBLIC_ROLES.includes(r.id as any));
 
@@ -28,7 +27,7 @@ export default function RegisterPage() {
     e.preventDefault()
     
     if (!turnstileToken) {
-        setMsg(`{"Mohon selesaikan verifikasi keamanan Turnstile terlebih dahulu."}`)
+        setMsg("Mohon selesaikan verifikasi keamanan Turnstile terlebih dahulu.")
         setIsError(true)
         return
     }
@@ -37,8 +36,9 @@ export default function RegisterPage() {
     setMsg("")
     setIsError(false)
 
-    const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
     const normalizedEmail = email.toLowerCase().trim()
+    // HARDCODE URL untuk menjamin kecocokan dengan Whitelist Supabase
+    const finalRedirect = "https://www.disabilitas.com/konfirmasi"
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -50,71 +50,73 @@ export default function RegisterPage() {
             role: role 
           },
           captchaToken: turnstileToken, 
-          emailRedirectTo: `${siteUrl}/konfirmasi`,
+          emailRedirectTo: finalRedirect,
         },
       })
 
       if (error) throw error
 
       if (data.user) {
-        // --- LOGIKA AKSESIBILITAS & UX ---
         setIsSuccess(true)
-        setMsg(`{"Pendaftaran Berhasil! Instruksi aktivasi telah dikirim ke email Anda. Anda akan diarahkan ke halaman masuk dalam 3 detik."}`)
+        setMsg("Pendaftaran Berhasil! Instruksi aktivasi telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam.")
         setIsError(false)
 
-        // Keluar dari kotak edit agar keyboard virtual (HP) tertutup
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
 
-        // Pindahkan fokus ke pesan status untuk Screen Reader
         setTimeout(() => {
           const alertElement = document.getElementById("register-announcement");
           if (alertElement) alertElement.focus();
         }, 100);
 
-        // Redirect ke halaman masuk setelah memberi waktu SR membacakan pesan
         setTimeout(() => {
           router.push("/masuk");
-        }, 4000);
+        }, 5000);
       }
 
     } catch (error: any) {
-      console.error('[REGISTRASI] Error:', error)
+      console.error("[REGISTRASI] Error:", error)
       setIsError(true)
-      setMsg(error.message || `{"Terjadi kesalahan sistem saat mendaftar."}`)
+      setMsg(error.message || "Terjadi kesalahan sistem saat mendaftar.")
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <main className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans selection:bg-blue-100">
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
         <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
             <UserPlus className="text-white" size={32} />
         </div>
-        <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50">
-          {"Daftar Akun Baru"}
+        <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">
+          Daftar Akun Baru
         </h1>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white dark:bg-slate-900 py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
+        <div className="bg-white py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200">
           
-          {/* Tampilan Kondisional: Sembunyikan form jika sukses agar fokus ke pesan */}
+          {isError && (
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-100 rounded-2xl flex items-center gap-3 text-red-700 animate-in fade-in duration-300">
+              <AlertCircle size={20} />
+              <p className="text-[10px] font-black uppercase tracking-widest leading-tight">{msg}</p>
+            </div>
+          )}
+
           {!isSuccess ? (
             <form className="space-y-6" onSubmit={handleRegister}>
-              <div>
-                <label htmlFor="role-select" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
-                  {"Daftar Sebagai"}
+              <div className="space-y-2">
+                <label htmlFor="role-select" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  Kategori Akun
                 </label>
                 <div className="relative">
                   <select 
                     id="role-select"
                     value={role} 
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none appearance-none cursor-pointer transition-all"
+                    className="w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none appearance-none cursor-pointer focus:border-blue-600 transition-all"
                   >
                     {filteredRoles.map((r) => (
                       <option key={r.id} value={r.id}>{r.label}</option>
@@ -128,9 +130,9 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="full_name" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
-                  {"Nama Lengkap / Instansi"}
+              <div className="space-y-2">
+                <label htmlFor="full_name" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  Nama Lengkap atau Instansi
                 </label>
                 <input 
                   id="full_name"
@@ -139,13 +141,13 @@ export default function RegisterPage() {
                   value={fullName} 
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Nama sesuai identitas..."
-                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none transition-all" 
+                  className="block w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none focus:border-blue-600 transition-all placeholder:text-slate-300" 
                 />
               </div>
 
-              <div>
-                <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
-                  {"Alamat Email"}
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  Alamat Email Aktif
                 </label>
                 <input 
                   id="email"
@@ -154,13 +156,13 @@ export default function RegisterPage() {
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@email.com"
-                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none transition-all" 
+                  className="block w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none focus:border-blue-600 transition-all placeholder:text-slate-300" 
                 />
               </div>
 
-              <div>
-                <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
-                  {"Kata Sandi"}
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  Kata Sandi Baru
                 </label>
                 <input 
                   id="password"
@@ -169,54 +171,56 @@ export default function RegisterPage() {
                   minLength={6} 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none transition-all" 
+                  placeholder="Minimal 6 karakter..."
+                  className="block w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none focus:border-blue-600 transition-all placeholder:text-slate-300" 
                 />
               </div>
 
-              <div className="flex justify-center py-2">
+              <div className="flex justify-center py-2 scale-90 md:scale-100">
                   <Turnstile 
                       siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
                       onSuccess={(token) => setTurnstileToken(token)}
-                      options={{ theme: 'auto' }} 
+                      options={{ theme: 'light' }} 
                   />
               </div>
 
               <button 
                   type="submit" 
                   disabled={loading || !turnstileToken} 
-                  className="w-full flex justify-center py-5 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-widest text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-[0.98]"
+                  className="w-full flex justify-center py-5 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
               >
                 {loading ? "MEMPROSES DATA..." : "BUAT AKUN SEKARANG"}
               </button>
             </form>
           ) : (
-            /* AREA NOTIFIKASI SUKSES (Hanya ini yang tampil saat berhasil) */
             <div 
               id="register-announcement"
               role="alert" 
               aria-live="assertive" 
               tabIndex={-1}
-              className="p-10 rounded-[2rem] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-100 dark:border-emerald-800 text-center space-y-4 animate-in zoom-in-95 outline-none"
+              className="p-10 rounded-[2.5rem] bg-emerald-50 text-emerald-700 border-2 border-emerald-100 text-center space-y-6 animate-in zoom-in-95 outline-none"
             >
-              <CheckCircle2 size={48} className="mx-auto mb-4" />
-              <p className="text-sm font-black uppercase tracking-tighter">{"Pendaftaran Berhasil!"}</p>
-              <p className="text-[10px] font-bold leading-relaxed uppercase">
-                {msg}
-              </p>
-              <div className="pt-6">
-                <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto"></div>
+              <CheckCircle2 size={56} className="mx-auto text-emerald-500" />
+              <div className="space-y-2">
+                <p className="text-lg font-black uppercase italic tracking-tighter">Pendaftaran Berhasil</p>
+                <p className="text-[10px] font-bold leading-relaxed uppercase tracking-widest">
+                  <strong>{msg}</strong>
+                </p>
+              </div>
+              <div className="pt-4">
+                <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto"></div>
+                <p className="mt-4 text-[8px] font-black uppercase text-slate-400 italic">Mengarahkan ke halaman masuk...</p>
               </div>
             </div>
           )}
 
-          <nav className="mt-8 text-center">
-             <Link href="/masuk" className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">
-                {"Sudah punya akun? Masuk di sini"}
-             </Link>
+          <nav className="mt-10 text-center border-t border-slate-50 pt-6">
+              <Link href="/masuk" className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-slate-900 transition-colors">
+                Sudah punya akun? Masuk di sini
+              </Link>
           </nav>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
