@@ -6,7 +6,7 @@ import {
   Users, Search, FileDown, 
   ExternalLink, CheckCircle, XCircle, 
   Briefcase, GraduationCap, MapPin, 
-  Wrench, ShieldCheck, Clock, Activity, PieChart
+  Wrench, ShieldCheck, Clock, Activity
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -74,19 +74,64 @@ export default function ApplicantTracker({ company }: { company: any }) {
     return [];
   };
 
+  // VARIABEL KRUSIAL YANG TADI HILANG:
+  const filteredApplicants = applicants.filter(app => {
+    const matchSearch = app.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = filterStatus === "all" || app.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
   const stats = {
     total: applicants.length,
     pending: applicants.filter(a => a.status === 'applied').length,
     accepted: applicants.filter(a => a.status === 'accepted').length,
   };
 
-  if (loading) return <div className="p-20 text-center font-black italic text-slate-400 animate-pulse uppercase tracking-widest">Sinkronisasi Data Riset...</div>;
+  // --- FUNGSI CETAK CV AUDIT ---
+  const generateProfessionalCV = async (app: any) => {
+    const doc = new jsPDF();
+    const p = app.profiles;
+    const work = p.work_experiences || [];
+    const certs = p.certifications || [];
+
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, 210, 40, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.text("CURRICULUM VITAE - DISABILITAS.COM", 20, 20);
+    doc.setFontSize(10);
+    doc.text(`Posisi: ${app.jobs?.title} | Perusahaan: ${company.name}`, 20, 30);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
+    doc.text((p.full_name || "NAMA TALENTA").toUpperCase(), 20, 55);
+    doc.setFontSize(10);
+    doc.text(`${p.disability_type || 'Talenta'} | ${p.city || '-'} | ${p.email || '-'}`, 20, 62);
+
+    doc.setFontSize(12);
+    doc.text("RINGKASAN PROFIL", 20, 75);
+    doc.setFontSize(9);
+    const summary = p.bio || "Talenta profesional yang berkomitmen dan siap berkontribusi secara inklusif.";
+    const splitSummary = doc.splitTextToSize(summary, 170);
+    doc.text(splitSummary, 20, 82);
+
+    autoTable(doc, {
+      startY: 110,
+      head: [["Posisi", "Instansi", "Periode"]],
+      body: work.map((w: any) => [w.position, w.company_name, `${w.start_date} - ${w.is_current_work ? 'Sekarang' : w.end_date}`]),
+      headStyles: { fillColor: [37, 99, 235] },
+    });
+
+    doc.save(`CV_Audit_${p.full_name}.pdf`);
+  };
+
+  if (loading) return <div className="p-20 text-center font-black italic text-slate-400 animate-pulse uppercase tracking-widest">Menyinkronkan Data Riset...</div>;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in text-left pb-20">
       <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
-      {/* --- STATISTIK --- */}
+      {/* --- SECTION STATISTIK --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-slate-900 p-6 rounded-[2.5rem] text-white shadow-xl flex flex-col justify-center italic">
           <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1 flex items-center gap-2 italic">
@@ -108,7 +153,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
         </div>
       </div>
 
-      {/* --- HEADER & FILTER --- */}
+      {/* --- SECTION HEADER & FILTER --- */}
       <div className="flex flex-col md:flex-row justify-between gap-6 items-center pt-4">
         <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-slate-900">
           <Users className="text-blue-600" size={24} /> Applicant Tracker
@@ -131,7 +176,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
         </div>
       </div>
 
-      {/* --- LIST PELAMAR DENGAN NARASI PROFESIONAL --- */}
+      {/* --- LIST PELAMAR --- */}
       <div className="grid gap-6">
         {filteredApplicants.length > 0 ? filteredApplicants.map((app) => {
           const p = app.profiles;
@@ -148,10 +193,9 @@ export default function ApplicantTracker({ company }: { company: any }) {
                 <div className="space-y-4 max-w-2xl">
                   <div>
                     <h4 className="font-black text-slate-900 uppercase text-xl italic leading-none">{p?.full_name}</h4>
-                    <p className="text-[10px] font-black text-blue-600 uppercase italic tracking-[0.2em] mt-2">Melamar: {app.jobs?.title}</p>
+                    <p className="text-[10px] font-black text-blue-600 uppercase italic tracking-[0.2em] mt-2">Melamar Posisi: {app.jobs?.title}</p>
                   </div>
 
-                  {/* NARASI KOMPETENSI */}
                   <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 italic text-slate-700 leading-relaxed text-sm font-medium">
                     Pelamar ini berdomisili di <strong>{p?.city || "Kota/Kabupaten tidak tertera"}</strong>. 
                     Memiliki latar belakang pendidikan terakhir <strong>{p?.last_education_level || "Jenjang Pendidikan"}</strong> jurusan <strong>{p?.last_education_major || "Bidang Jurusan"}</strong> dari <strong>{p?.last_university_name || "Institusi Pendidikan"}</strong> tahun lulus <strong>{p?.graduation_year || "Tahun Lulus"}</strong>.
@@ -170,13 +214,12 @@ export default function ApplicantTracker({ company }: { company: any }) {
                 </div>
               </div>
 
-              {/* ACTION PANEL */}
               <div className="flex md:flex-col items-center gap-3 mt-8 md:mt-0 w-full md:w-auto">
-                <button onClick={() => handleUpdateStatus(app.id, 'accepted')} className="flex-1 md:w-full p-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all shadow-sm border border-emerald-100 font-black uppercase text-[10px] italic">Terima</button>
-                <button onClick={() => handleUpdateStatus(app.id, 'rejected')} className="flex-1 md:w-full p-4 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all shadow-sm border border-red-100 font-black uppercase text-[10px] italic">Tolak</button>
+                <button onClick={() => handleUpdateStatus(app.id, 'accepted')} className="flex-1 md:w-full p-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all border border-emerald-100 font-black uppercase text-[10px] italic">Terima</button>
+                <button onClick={() => handleUpdateStatus(app.id, 'rejected')} className="flex-1 md:w-full p-4 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all border border-red-100 font-black uppercase text-[10px] italic">Tolak</button>
                 <div className="flex gap-2 w-full justify-center">
-                  <button className="p-4 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl border border-slate-100" title="Cetak CV Audit"><FileDown size={20} /></button>
-                  <a href={`/talent/${p?.id}`} target="_blank" className="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl border border-slate-100" title="Profil Publik"><ExternalLink size={20} /></a>
+                  <button onClick={() => generateProfessionalCV(app)} className="p-4 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl border border-slate-100"><FileDown size={20} /></button>
+                  <a href={`/talent/${p?.id}`} target="_blank" className="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl border border-slate-100"><ExternalLink size={20} /></a>
                 </div>
               </div>
             </div>
@@ -184,7 +227,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
         }) : (
           <div className="p-24 text-center border-2 border-dashed border-slate-100 rounded-[4rem] bg-slate-50/20">
             <Users className="mx-auto text-slate-200 mb-4" size={48} />
-            <p className="text-[11px] font-black uppercase text-slate-300 italic tracking-[0.3em]">Belum Ada Lamaran Yang Perlu Dimonitor</p>
+            <p className="text-[11px] font-black uppercase text-slate-300 italic tracking-[0.3em]">Belum Ada Pelamar Yang Perlu Dimonitor</p>
           </div>
         )}
       </div>
