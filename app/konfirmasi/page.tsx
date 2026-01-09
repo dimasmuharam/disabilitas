@@ -7,7 +7,7 @@ import { CheckCircle, ArrowRight, Building2, User, Landmark, GraduationCap } fro
 import { USER_ROLES } from "@/lib/data-static"
 
 function ConfirmContent() {
-  const [profile, setProfile] = useState<any>(null)
+  const [profileName, setProfileName] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState<string>("talent")
   const router = useRouter()
@@ -19,27 +19,32 @@ function ConfirmContent() {
         
         if (user) {
           const userRole = user.user_metadata?.role || USER_ROLES.TALENT
+          const metaName = user.user_metadata?.full_name || "Pengguna"
           setRole(userRole)
 
-          // --- LOGIKA PENCARIAN DATA LINEAR (Sesuai Rumah Masing-masing) ---
-          let data = null
+          // --- LOGIKA PENCARIAN DATA (Sinkron dengan Trigger Database) ---
+          let displayName = metaName
+
           if (userRole === USER_ROLES.COMPANY) {
-            const { data: companyData } = await supabase.from("companies").select("name").eq("id", user.id).maybeSingle()
-            data = { full_name: companyData?.name, role: userRole }
-          } else if (userRole === USER_ROLES.PARTNER) {
-            const { data: partnerData } = await supabase.from("partners").select("name").eq("id", user.id).maybeSingle()
-            data = { full_name: partnerData?.name, role: userRole }
-          } else if (userRole === USER_ROLES.GOVERNMENT) {
-            const { data: govData } = await supabase.from("government").select("name").eq("id", user.id).maybeSingle()
-            data = { full_name: govData?.name, role: userRole }
-          } else {
-            const { data: talentData } = await supabase.from("profiles").select("full_name, role").eq("id", user.id).maybeSingle()
-            data = talentData
+            const { data } = await supabase.from("companies").select("name").eq("id", user.id).maybeSingle()
+            if (data?.name) displayName = data.name
+          } 
+          else if (userRole === USER_ROLES.PARTNER) {
+            const { data } = await supabase.from("partners").select("name").eq("id", user.id).maybeSingle()
+            if (data?.name) displayName = data.name
+          } 
+          else if (userRole === USER_ROLES.GOVERNMENT) {
+            const { data } = await supabase.from("government").select("name").eq("id", user.id).maybeSingle()
+            if (data?.name) displayName = data.name
+          } 
+          else {
+            const { data } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
+            if (data?.full_name) displayName = data.full_name
           }
 
-          setProfile(data)
+          setProfileName(displayName)
 
-          // --- MANAJEMEN FOKUS UNTUK SCREEN READER ---
+          // MANAJEMEN FOKUS UNTUK SCREEN READER
           setTimeout(() => {
             const heading = document.querySelector("h1")
             if (heading) {
@@ -58,7 +63,7 @@ function ConfirmContent() {
   }, [])
 
   const getDisplayData = () => {
-    const name = profile?.full_name || "Pengguna"
+    const name = profileName
     const currentRole = role.toLowerCase()
 
     switch (currentRole) {
@@ -67,7 +72,7 @@ function ConfirmContent() {
           icon: <Building2 size={48} />,
           title: "Akses Bisnis Aktif",
           desc: `Halo, ${name}! Akun perusahaan Anda telah diverifikasi. Mari temukan talenta terbaik untuk memperkuat inklusivitas bisnis Anda.`,
-          btnText: "Masuk ke Dashboard Bisnis"
+          btnText: "Buka Dashboard Bisnis"
         }
       case USER_ROLES.GOVERNMENT:
         return {
@@ -97,33 +102,33 @@ function ConfirmContent() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950" aria-busy="true">
-      <p className="font-black animate-pulse text-slate-400 uppercase italic tracking-widest">
-        {"Menyinkronkan Akun..."}
+      <p className="font-black animate-pulse text-slate-400 uppercase italic tracking-widest text-sm">
+        Menyinkronkan Akun...
       </p>
     </div>
   )
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 font-sans">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 font-sans selection:bg-blue-100">
       <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl p-10 text-center border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-500">
-        <div className="flex justify-center mb-6">
-          <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-[2rem] shadow-inner text-blue-600 dark:text-blue-400">
+        <div className="flex justify-center mb-8">
+          <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-inner text-blue-600 dark:text-blue-400">
             {content.icon}
           </div>
         </div>
 
-        <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-4 py-1 rounded-full mb-4">
-          <CheckCircle size={14} className="text-green-600 dark:text-green-400" />
-          <span className="text-[10px] font-black uppercase text-green-700 dark:text-green-400 tracking-wider">
-            {"Email Terverifikasi"}
+        <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/30 px-5 py-1.5 rounded-full mb-6">
+          <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
+          <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-widest">
+            Email Terverifikasi
           </span>
         </div>
 
-        <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50 mb-2 outline-none">
+        <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50 mb-4 outline-none">
           {content.title}
         </h1>
         
-        <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-10 leading-relaxed px-2">
+        <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-10 leading-relaxed px-4">
           {content.desc}
         </p>
 
@@ -132,7 +137,7 @@ function ConfirmContent() {
           className="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-xl active:scale-95"
         >
           {content.btnText}
-          <ArrowRight size={16} />
+          <ArrowRight size={18} />
         </button>
       </div>
     </main>
@@ -141,7 +146,7 @@ function ConfirmContent() {
 
 export default function ConfirmSuccessPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
       <ConfirmContent />
     </Suspense>
   )
