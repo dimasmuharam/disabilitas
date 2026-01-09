@@ -3,15 +3,16 @@
 import { supabase } from "@/lib/supabase"
 
 /**
- * Memperbarui status lamaran kerja (Pending, Interview, Accepted, Rejected)
- * Digunakan oleh HRD di Dashboard Perusahaan/BUMN
+ * Memperbarui status lamaran kerja (applied, accepted, rejected)
+ * Digunakan oleh HRD di Dashboard Perusahaan/Instansi
+ * Sesuai Skema DB: status menggunakan USER-DEFINED (application_status)
  */
 export async function updateApplicationStatus(applicationId: string, status: string) {
     try {
         const { data, error } = await supabase
             .from("applications")
             .update({ 
-                status: status,
+                status: status, // Pastikan input status sesuai enum di DB (huruf kecil)
                 updated_at: new Date().toISOString()
             })
             .eq("id", applicationId)
@@ -28,7 +29,7 @@ export async function updateApplicationStatus(applicationId: string, status: str
 
 /**
  * Mengambil detail profil talenta untuk diproses rekrutmen
- * Update [2025-12-31]: Sinkronisasi nama tabel work_experiences sesuai DB
+ * Digunakan oleh HRD saat klik 'Cetak CV' atau 'Lihat Profil'
  */
 export async function getTalentDetailsForCompany(talentId: string) {
     try {
@@ -48,17 +49,18 @@ export async function getTalentDetailsForCompany(talentId: string) {
 
 /**
  * FUNGSI GOVERNMENT: Tracking Karir ASN Internal
- * Mengambil data talenta yang berstatus ASN di instansi tertentu
+ * Membantu instansi memantau talenta disabilitas yang sudah masuk sistem ASN
+ * Berdasarkan Instruksi Super Admin: Kerapihan data karir
  */
 export async function getInternalAsnTracking(agencyName: string) {
     try {
-        // Mencari talenta yang saat ini bekerja di instansi yang login
-        // Berdasarkan kolom is_current_work di tabel work_experiences
+        // Logika: Mencari profil yang punya riwayat kerja saat ini di instansi tsb
         const { data, error } = await supabase
             .from("profiles")
             .select("*, work_experiences!inner(*)")
             .eq("work_experiences.company_name", agencyName)
             .eq("work_experiences.is_current_work", true)
+            // career_status harus sesuai dengan pilihan di data-static.ts
             .eq("career_status", "ASN (PNS / PPPK)")
 
         if (error) throw error
