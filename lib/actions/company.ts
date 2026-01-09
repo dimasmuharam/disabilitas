@@ -42,7 +42,7 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
 
 /**
  * Mengambil data statistik perusahaan untuk dashboard (Job & Pelamar)
- * Filter pelamar dilakukan melalui relasi tabel 'jobs'
+ * UPDATE: Sekarang memfilter pelamar langsung via kolom company_id
  */
 export async function getCompanyStats(companyId: string) {
   try {
@@ -55,11 +55,11 @@ export async function getCompanyStats(companyId: string) {
     if (jobError) throw jobError
 
     // 2. Ambil jumlah pelamar
-    // Karena tabel applications tidak punya company_id, kita filter lewat jobs!inner
+    // SINKRONISASI: Sekarang memfilter langsung ke kolom company_id di tabel applications
     const { count: appCount, error: appError } = await supabase
       .from("applications")
-      .select("id, jobs!inner(company_id)", { count: "exact", head: true })
-      .eq("jobs.company_id", companyId)
+      .select("*", { count: "exact", head: true })
+      .eq("company_id", companyId)
 
     if (appError) throw appError
 
