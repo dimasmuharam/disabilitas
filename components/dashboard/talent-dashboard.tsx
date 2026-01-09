@@ -29,7 +29,7 @@ interface TalentDashboardProps {
 }
 
 export default function TalentDashboard({ user, profile: initialProfile, autoOpenProfile }: TalentDashboardProps) {
-  const [loading, setLoading] = useState(!initialProfile);
+const [loading, setLoading] = useState(!initialProfile);
   const [isProcessing, setIsProcessing] = useState(false);
   const [stats, setStats] = useState({ jobs: 0, trainings: 0 });
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
@@ -40,22 +40,23 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedJobRating, setSelectedJobRating] = useState<any>(null);
-  const [ratedJobs, setRatedJobs] = useState<string[]>([]);
+const [ratedJobs, setRatedJobs] = useState<string[]>([]); // Menyimpan list ID yang sudah dirating
   const [profile, setProfile] = useState(initialProfile);
 
   useEffect(() => {
-    if (sessionStorage.getItem("pindahkan_fokus_ke_h1") === "true") {
+        if (sessionStorage.getItem("pindahkan_fokus_ke_h1") === "true") {
       const heading = document.querySelector("h1");
       if (heading) {
         heading.setAttribute("tabIndex", "-1");
         heading.focus();
       }
+      // Hapus penanda agar tidak terjadi fokus otomatis saat refresh halaman biasa
       sessionStorage.removeItem("pindahkan_fokus_ke_h1");
     }
 
-    if (autoOpenProfile) {
-      setActiveTab("identity");
-    }
+if (autoOpenProfile) {
+  setActiveTab("identity");
+}
 
     if (user?.id) {
       fetchLatestData();
@@ -64,26 +65,42 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
 
   async function fetchLatestData() {
     try {
+      // 1. Profil Dasar
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (prof) {
-        setProfile({ ...prof }); 
+        setProfile(prof);
         calculateProgress(prof);
       }
 
-      const { data: works } = await supabase.from("work_experiences").select("*").eq("profile_id", user.id).order('start_date', { ascending: false });
+      // 2. Ambil Riwayat Pengalaman Kerja Lengkap
+      const { data: works } = await supabase.from("work_experiences")
+        .select("position, description, company_name, company_location, employment_type, start_date, end_date")
+        .eq("profile_id", user.id)
+        .order('start_date', { ascending: false });
       setWorkExps(works || []);
 
-      const { data: certs } = await supabase.from("certifications").select("*").eq("profile_id", user.id).order('year', { ascending: false });
+      // 3. Ambil Sertifikasi/Pelatihan Lengkap
+      const { data: certs } = await supabase.from("certifications")
+        .select("name, organizer_name, year, certificate_url")
+        .eq("profile_id", user.id)
+        .order('year', { ascending: false });
       setCertifications(certs || []);
 
-      const { data: apps } = await supabase.from("applications").select("id, status, created_at, jobs(title, companies(name))").eq("applicant_id", user.id);
+      // 4. Tracking Dashboard (Lamaran & Pelatihan)
+      const { data: apps } = await supabase.from("applications")
+.select("id, status, created_at, jobs(title, companies(name))") // Ambil name dari table companies
+.eq("applicant_id", user.id); // Pakai applicant_id
       setAppliedJobs(apps || []);
 
-      const { data: trains } = await supabase.from("trainees").select("id, status, created_at, trainings(title, partners(name))").eq("profile_id", user.id);
+      const { data: trains } = await supabase.from("trainees")
+.select("id, status, created_at, trainings(title, partners(name))") // Ambil name dari table partners
+.eq("profile_id", user.id); // Ini sudah benar pakai profile_id sesuai skema
       setAppliedTrainings(trains || []);
 
       setStats({ jobs: apps?.length || 0, trainings: trains?.length || 0 });
+    setStats({ jobs: apps?.length || 0, trainings: trains?.length || 0 });
 
+      // --- TAMBAHAN LANGKAH C ---
       if (apps && apps.length > 0) {
         const ratedStatuses = await Promise.all(
           apps.map(async (app) => {
@@ -93,19 +110,19 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
         );
         setRatedJobs(ratedStatuses.filter(id => id !== null) as string[]);
       }
+      // --------------------------
+
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   }
 
   const handleModuleSuccess = () => {
-    setTimeout(() => {
-      fetchLatestData();
-      setActiveTab("overview");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 500);
+    fetchLatestData(); 
+    setActiveTab("overview"); 
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   function calculateProgress(profData: any) {
@@ -116,70 +133,187 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       { value: profData?.gender, label: "Jenis Kelamin", module: "Identitas" },
       { value: profData?.city, label: "Kota Domisili", module: "Identitas" },
       { value: profData?.disability_type, label: "Ragam Disabilitas", module: "Identitas" },
-      { value: profData?.document_disability_url, label: "Unggahan Dokumen", module: "Identitas" },
+      { value: profData?.document_disability_url, label: "Unggahan Dokumen Disabilitas", module: "Identitas" },
       { value: profData?.communication_preference, label: "Preferensi Komunikasi", module: "Identitas" },
       { value: profData?.has_informed_consent, label: "Informed Consent", module: "Identitas" },
       { value: profData?.internet_quality, label: "Akses Internet", module: "Sarana" },
-      { value: Array.isArray(profData?.used_assistive_tools) && profData.used_assistive_tools.length > 0 ? "filled" : null, label: "Alat Bantu", module: "Sarana" },
+      { value: profData?.used_assistive_tools?.length > 0 ? "filled" : null, label: "Alat Bantu", module: "Sarana" },
       { value: profData?.career_status, label: "Status Karir", module: "Karir" },
       { value: profData?.resume_url, label: "Unggahan CV", module: "Karir" },
       { value: profData?.education_level, label: "Jenjang Pendidikan", module: "Akademik" },
       { value: profData?.university, label: "Institusi Pendidikan", module: "Akademik" },
-      { value: Array.isArray(profData?.skills) && profData.skills.length > 0 ? "filled" : null, label: "Daftar Keahlian", module: "Skill" }
+      { value: profData?.skills?.length > 0 ? "filled" : null, label: "Daftar Keahlian", module: "Skill" }
     ];
+
     const missing = checklist.filter(item => !item.value).map(item => `${item.module}: ${item.label}`);
     setMissingFields(missing);
-    setProgress(Math.round(((checklist.length - missing.length) / checklist.length) * 100));
+    const total = checklist.length;
+    const filledCount = total - missing.length;
+    setProgress(Math.round((filledCount / total) * 100));
   }
 
-  const getDisplayBio = () => profile?.bio || `Saya adalah ${profile?.full_name || "Talenta Inklusif"}, profesional yang siap berkontribusi.`;
+  const getDisplayBio = () => {
+    if (profile?.bio) return profile.bio;
+    const name = profile?.full_name || "Talenta Inklusif";
+    return `Saya adalah ${name}, profesional yang berkomitmen untuk berkontribusi di lingkungan kerja inklusif.`;
+  };
 
   const exportPDF = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
       const doc = new jsPDF();
-      const name = (profile?.full_name || "NAMA LENGKAP").toUpperCase();
+      const name = profile?.full_name || "NAMA LENGKAP";
+      const disability = profile?.disability_type || "Profesional Inklusif";
+      const contact = `${profile?.city || '-'} | ${profile?.phone || '-'} | ${user?.email}`;
+
+      // --- HEADER ---
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
-      doc.text(name, 20, 25);
+      doc.text(name.toUpperCase(), 20, 25);
+      
       doc.setFontSize(11);
       doc.setTextColor(37, 99, 235);
-      doc.text((profile?.disability_type || "PROFESIONAL").toUpperCase(), 20, 32);
+      doc.text(disability.toUpperCase(), 20, 32);
+      
       doc.setFontSize(9);
-      doc.setTextColor(100);
-      doc.text(`${profile?.city || '-'} | ${profile?.phone || '-'} | ${user?.email}`, 20, 38);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("helvetica", "normal");
+      doc.text(contact, 20, 38);
       doc.line(20, 42, 190, 42);
-      doc.save(`CV_Aksesibel_${profile?.full_name?.replace(/\s+/g, '_')}.pdf`);
-    } catch (err) { console.error(err); } finally { setIsProcessing(false); }
+
+      let yPos = 55;
+
+      // --- RINGKASAN ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.text("RINGKASAN PROFESIONAL", 20, yPos);
+      yPos += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      const splitBio = doc.splitTextToSize(getDisplayBio(), 170);
+      doc.text(splitBio, 20, yPos);
+      yPos += (splitBio.length * 5) + 10;
+
+      // --- PENDIDIKAN (Data Profiles) ---
+      doc.setFont("helvetica", "bold");
+      doc.text("PENDIDIKAN TERAKHIR", 20, yPos);
+      yPos += 7;
+      doc.setFont("helvetica", "normal");
+      doc.text(`${profile?.university || "-"}`, 20, yPos);
+      doc.text(`${profile?.major || "-"} | Lulus: ${profile?.graduation_date || "-"}`, 20, yPos + 5);
+      yPos += 15;
+
+      // --- PENGALAMAN KERJA ---
+      doc.setFont("helvetica", "bold");
+      doc.text("RIWAYAT PEKERJAAN", 20, yPos);
+      yPos += 7;
+      if (workExps.length > 0) {
+        workExps.forEach((exp) => {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.text(`${exp.position} (${exp.employment_type || 'N/A'})`, 20, yPos);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(71, 85, 105);
+          doc.text(`${exp.company_name} - ${exp.company_location || ''}`, 20, yPos + 5);
+          doc.setFontSize(9);
+          doc.text(`${exp.start_date} - ${exp.end_date || 'Sekarang'}`, 20, yPos + 10);
+          
+          if (exp.description) {
+            doc.setTextColor(0);
+            const splitDesc = doc.splitTextToSize(exp.description, 165);
+            doc.text(splitDesc, 25, yPos + 15);
+            yPos += (splitDesc.length * 5) + 18;
+          } else {
+            yPos += 18;
+          }
+          doc.setTextColor(0);
+          if (yPos > 270) { doc.addPage(); yPos = 20; }
+        });
+      } else {
+        doc.setFont("helvetica", "italic");
+        doc.text("Belum ada riwayat kerja.", 20, yPos);
+        yPos += 12;
+      }
+
+      // --- SERTIFIKASI ---
+      yPos += 5;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("SERTIFIKASI & PELATIHAN", 20, yPos);
+      yPos += 7;
+      if (certifications.length > 0) {
+        certifications.forEach((cert) => {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.text(cert.name, 20, yPos);
+          doc.setFont("helvetica", "normal");
+          doc.text(`${cert.organizer_name} | Tahun: ${cert.year}`, 20, yPos + 5);
+          yPos += 12;
+          if (yPos > 270) { doc.addPage(); yPos = 20; }
+        });
+      } else {
+        doc.setFont("helvetica", "italic");
+        doc.text("-", 20, yPos);
+        yPos += 12;
+      }
+
+      // --- TEKNOLOGI ASISTIF ---
+      yPos += 5;
+      doc.setFont("helvetica", "bold");
+      doc.text("ALAT BANTU & TEKNOLOGI ASISTIF", 20, yPos);
+      yPos += 7;
+      doc.setFont("helvetica", "normal");
+      const tools = Array.isArray(profile?.used_assistive_tools) ? profile.used_assistive_tools.join(", ") : "-";
+      doc.text(`Aksesibilitas: ${tools}`, 20, yPos);
+
+      // --- FOOTER ---
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setDrawColor(226, 232, 240);
+      doc.line(20, pageHeight - 35, 190, pageHeight - 35);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text("Dokumen ini dihasilkan secara otomatis oleh disabilitas.com", 20, pageHeight - 25);
+      doc.text(`Tautan Profil: https://disabilitas.com/talent/${user.id}`, 20, pageHeight - 20);
+
+      doc.save(`CV_${name.replace(/\s+/g, '_')}.pdf`);
+    } catch (err) {
+      console.error("Gagal cetak CV:", err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
-  // FITUR SHARE (YANG TADI KETINGGALAN)
+
   const handleShare = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
     const url = `https://disabilitas.com/talent/${user.id}`;
     const name = profile?.full_name || "Talenta Inklusif";
-    const shareText = `Cek profil profesional saya di #TalentaInklusif disabilitas.com: ${url}`;
+    const shareText = `Bangga menjadi bagian dari #TalentaInklusif di disabilitas.com! 💪 Yuk gabung untuk dapat lowongan terbaik, dan Cek profil profesional saya di sini: ${url}`;
+
+    const openWhatsApp = () => {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+    };
 
     if (navigator.share) {
       try {
         const element = document.getElementById("inclusion-card");
         if (element) {
-          const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+          const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
           canvas.toBlob(async (blob) => {
             if (blob) {
-              const file = new File([blob], `Card_${name}.png`, { type: "image/png" });
-              await navigator.share({ title: "Inclusion Card", text: shareText, url: url, files: [file] });
-            }
+              const file = new File([blob], `Inclusion_Card_${name}.png`, { type: "image/png" });
+              try {
+                await navigator.share({ title: "Inclusion Identity Card", text: shareText, url: url, files: [file] });
+              } catch (err) { openWhatsApp(); }
+            } else { openWhatsApp(); }
             setIsProcessing(false);
-          });
+          }, "image/png");
         }
-      } catch (err) {
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
-        setIsProcessing(false);
-      }
+      } catch (err) { openWhatsApp(); setIsProcessing(false); }
     } else {
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+      openWhatsApp();
       setIsProcessing(false);
     }
   };
@@ -191,64 +325,105 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       case "career": return <CareerExperience user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       case "academic": return <AcademicBarriers user={user} profile={profile} onSuccess={handleModuleSuccess} />;
       case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={handleModuleSuccess} />;
-      case "settings": return <AccountSettings user={user} onSuccess={handleModuleSuccess} />;
+        case "settings": return <AccountSettings user={user} onSuccess={handleModuleSuccess} />;
       default: return (
-        <div className="space-y-10 animate-in fade-in duration-500 text-left italic font-medium">
-          <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-sm relative overflow-hidden">
-            <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
-              <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black shrink-0">
+        <div className="space-y-10 animate-in fade-in duration-500">
+          <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black italic shadow-lg shadow-blue-200 shrink-0">
                 {profile?.full_name?.charAt(0) || "T"}
               </div>
               <div className="flex-1 space-y-2">
-                <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">{profile?.full_name || "Lengkapi Profil"}</h2>
-                <p className="text-sm font-bold text-blue-600 uppercase tracking-widest">{profile?.disability_type || "Ragam Disabilitas"}</p>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">{profile?.full_name || "Nama Belum Diisi"}</h2>
+                  {progress === 100 && <CheckCircle2 className="text-emerald-500" size={24} />}
+                </div>
+                <p className="text-sm font-bold text-blue-600 uppercase tracking-widest">{profile?.disability_type || "Ragam Disabilitas Belum Diisi"}</p>
                 <div className="flex flex-wrap gap-6 pt-4 text-[10px] font-black uppercase text-slate-400">
                   <span className="flex items-center gap-2"><MapPin size={14} className="text-blue-600"/> {profile?.city || "N/A"}</span>
                   <span className="flex items-center gap-2"><Briefcase size={14} className="text-blue-600"/> {profile?.career_status || "N/A"}</span>
+                  <span className="flex items-center gap-2"><GraduationCap size={14} className="text-blue-600"/> {profile?.education_level || "N/A"}</span>
                 </div>
               </div>
             </div>
-            <div className="mt-10 p-8 bg-slate-50 rounded-[2rem] border border-slate-100 italic text-sm text-slate-600 leading-relaxed">
-              <strong>{getDisplayBio()}</strong>
+            <div className="mt-10 p-8 bg-slate-50 rounded-[2rem] border border-slate-100 italic text-sm text-slate-600 leading-relaxed text-justify">
+              {"\""}{getDisplayBio()}{"\""}
             </div>
           </section>
 
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 flex items-center gap-2 italic"><Briefcase size={16} className="text-blue-600" /> Tracking Lamaran</h3>
-              <div className="bg-white border-2 border-slate-900 rounded-[2.5rem] overflow-hidden min-h-[200px]">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2"><Briefcase size={16} className="text-blue-600" /> {"Tracking Lamaran"}</h3>
+              <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden min-h-[200px]">
                 {appliedJobs.length > 0 ? (
-                  <div className="divide-y-2 divide-slate-50">
+                  <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
-                      <div key={app.id} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-all font-black uppercase">
-                        <div className="space-y-1">
-                          <p className="text-slate-900 text-xs italic">{app.jobs?.title}</p>
-                          <p className="text-[9px] text-slate-400 tracking-widest">{app.jobs?.companies?.name}</p>
-                        </div>
-                        <span className="text-[8px] px-3 py-1 bg-blue-50 text-blue-600 rounded-lg italic">{app.status}</span>
-                      </div>
+<div key={app.id} className="p-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
+  <div className="flex-1">
+    <p className="font-black text-slate-900 text-xs uppercase">{(app.jobs as any)?.title}</p>
+    <p className="text-[9px] font-bold text-slate-400 uppercase">{(app.jobs as any)?.company_name}</p>
+  </div>
+  
+  {/* --- TAMBAHAN LANGKAH D --- */}
+  <div className="flex items-center gap-3">
+    {(app.status === "accepted" || app.status === "rejected") && (
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedJobRating(app);
+        }}
+        disabled={ratedJobs.includes(app.id)}
+        className={`text-[8px] font-black uppercase px-3 py-1 rounded-full transition-all ${
+          ratedJobs.includes(app.id) 
+          ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+          : "bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white shadow-sm"
+        }`}
+      >
+        {ratedJobs.includes(app.id) ? "Sudah Diaudit" : "Audit Inklusi"}
+      </button>
+    )}
+    <span className="text-[8px] font-black uppercase px-3 py-1 bg-blue-50 text-blue-600 rounded-full">
+      {app.status}
+    </span>
+  </div>
+  {/* -------------------------- */}
+</div>
                     ))}
                   </div>
-                ) : <div className="p-20 text-center text-[10px] font-black text-slate-300 uppercase italic tracking-widest">Belum ada lamaran.</div>}
+                ) : <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada lamaran"}</div>}
               </div>
             </div>
+
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 flex items-center gap-2 italic"><BookOpen size={16} className="text-emerald-600" /> Tracking Pelatihan</h3>
-              <div className="bg-white border-2 border-slate-900 rounded-[2.5rem] overflow-hidden min-h-[200px]">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2"><BookOpen size={16} className="text-emerald-600" /> {"Tracking Pelatihan"}</h3>
+              <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden min-h-[200px]">
                 {appliedTrainings.length > 0 ? (
-                  <div className="divide-y-2 divide-slate-50 font-black uppercase italic">
+                  <div className="divide-y divide-slate-50">
                     {appliedTrainings.map((reg) => (
-                      <div key={reg.id} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-all">
+                      <div key={reg.id} className="p-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
                         <div>
-                          <p className="text-slate-900 text-xs">{reg.trainings?.title}</p>
-                          <p className="text-[9px] text-slate-400 tracking-widest">{reg.trainings?.partners?.name}</p>
+                          <p className="font-black text-slate-900 text-xs uppercase">{(reg.trainings as any)?.title}</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase">{(reg.trainings as any)?.organizer_name}</p>
                         </div>
-                        <span className="text-[8px] px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg">{reg.status}</span>
+                        <span className="text-[8px] font-black uppercase px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">{reg.status}</span>
                       </div>
                     ))}
                   </div>
-                ) : <div className="p-20 text-center text-[10px] font-black text-slate-300 uppercase italic tracking-widest">Belum ada pelatihan.</div>}
+                ) : <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada pendaftaran"}</div>}
               </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto text-white"><Search size={32} /></div>
+              <h4 className="text-lg font-black text-white italic uppercase tracking-tighter">{"Smart Job Match"}</h4>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{"Rekomendasi lowongan yang sesuai profil Anda."}</p>
+            </div>
+            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl">
+              <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto text-white"><BookOpen size={32} /></div>
+              <h4 className="text-lg font-black text-white italic uppercase tracking-tighter">{"Training Match"}</h4>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{"Tingkatkan keahlian dengan kursus pilihan."}</p>
             </div>
           </div>
         </div>
@@ -256,90 +431,123 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     }
   };
 
-  if (loading) return <div className="p-20 text-center font-black italic tracking-widest text-slate-400 animate-pulse uppercase">SINKRONISASI DATA...</div>;
+  if (loading) return <div className="p-20 text-center font-black italic tracking-widest text-slate-400 animate-pulse">{"SINKRONISASI DATA..."}</div>;
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans text-left selection:bg-blue-100">
-      <div className="max-w-6xl mx-auto space-y-8 pt-8 px-6">
-        <section className="bg-white border-2 border-slate-900 p-8 rounded-[3.5rem] shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] relative overflow-hidden">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
+    <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans">
+      <div className="max-w-6xl mx-auto space-y-8 pt-8 px-4">
+        <section className="bg-white border-2 border-slate-900 p-8 rounded-[3rem] shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-1">
-              <h1 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">{progress === 100 ? "Profil Sempurna!" : "Optimalkan Profil Anda"}</h1>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Data lengkap mendukung akurasi rekrutmen inklusif.</p>
+              <h1 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{progress === 100 ? "Profil Siap Kerja!" : "Kelengkapan Profil Talenta"}</h1>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{"Lengkapi Profil dan Raih Karir Impianmu"}</p>
             </div>
-            <div className="flex items-center gap-6 w-full md:w-auto bg-slate-50 p-4 rounded-3xl border border-slate-100">
-              <div className="flex-1 md:w-64 bg-slate-200 h-3 rounded-full overflow-hidden" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
                 <div className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${progress}%` }}></div>
               </div>
-              <span className="font-black italic text-3xl text-slate-900">{`${progress}%`}</span>
+              <span className="font-black italic text-2xl text-slate-900 min-w-[60px]">{`${progress}%`}</span>
             </div>
           </div>
 
+          {progress < 100 && missingFields.length > 0 && (
+            <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100">
+              <h3 className="text-[10px] font-black uppercase text-amber-700 tracking-widest mb-4 flex items-center gap-2"><AlertCircle size={14} /> {"Data Yang Perlu Dilengkapi:"}</h3>
+              <ul className="grid md:grid-cols-2 gap-x-8 gap-y-2">
+                {missingFields.map((field, idx) => (
+                  <li key={idx} className="text-[10px] font-bold text-slate-500 uppercase border-b border-amber-100/50 pb-1">
+                    <span className="text-amber-700 font-black">{field.split(': ')[0]}:</span> {field.split(': ')[1]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {activeTab === "overview" && (
-            <nav className="grid grid-cols-3 md:grid-cols-6 gap-4 mt-12 border-t-2 border-slate-50 pt-10">
+            <nav className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 border-t border-slate-100 pt-8">
               {[
                 { label: "Identitas", id: "identity", icon: User },
                 { label: "Sarana", id: "tech", icon: Laptop },
                 { label: "Karir", id: "career", icon: Briefcase },
                 { label: "Akademik", id: "academic", icon: GraduationCap },
                 { label: "Skill", id: "skills", icon: BookOpen },
-                { label: "Pengaturan", id: "settings", icon: ShieldCheck }
+                { label: "Akun", id: "settings", icon: ShieldCheck }
               ].map((m) => (
-                <button key={m.id} onClick={() => setActiveTab(m.id)} className="bg-white border-2 border-slate-100 p-6 rounded-3xl hover:border-slate-900 transition-all text-center group active:scale-95 shadow-sm">
-                  <m.icon className="mx-auto mb-3 text-slate-400 group-hover:text-blue-600 transition-colors" size={24} />
-                  <p className="text-[9px] font-black uppercase text-slate-900 tracking-widest italic">{m.label}</p>
+                <button key={m.id} onClick={() => setActiveTab(m.id)} className="bg-slate-50 border-2 border-transparent p-4 rounded-2xl hover:border-blue-600 transition-all text-center group">
+                  <m.icon className="mx-auto mb-2 text-slate-400 group-hover:text-blue-600 transition-colors" size={20} />
+                  <p className="text-[9px] font-black uppercase text-slate-900">{m.label}</p>
                 </button>
               ))}
             </nav>
           )}
 
           {activeTab !== "overview" && (
-            <button onClick={() => setActiveTab("overview")} className="mt-10 flex items-center gap-2 text-[10px] font-black uppercase text-blue-600 italic tracking-widest border-b-2 border-blue-100 pb-1">
-              <ChevronLeft size={16}/> Dashboard Utama
+            <button onClick={() => setActiveTab("overview")} className="mt-6 flex items-center gap-2 text-xs font-black uppercase text-blue-600 hover:gap-3 transition-all">
+              <ChevronLeft size={16}/> {"Kembali ke Dashboard Utama"}
             </button>
           )}
         </section>
 
-        <div className="grid lg:grid-cols-3 gap-10 items-start">
+        <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">{renderContent()}</div>
-          <aside className="space-y-8 sticky top-8">
-            <div className="bg-slate-900 p-10 rounded-[3.5rem] text-white space-y-8 shadow-2xl relative overflow-hidden font-black uppercase tracking-tighter italic">
-              <h3 className="text-[10px] text-blue-400 border-b border-white/10 pb-4">Opsi Talenta</h3>
-              <div className="space-y-4 relative z-10">
-                <a href={`/talent/${user.id}`} target="_blank" className="w-full bg-blue-600 hover:bg-blue-700 py-5 rounded-[2rem] text-[10px] flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all">
-                  <ExternalLink size={18} /> Profil Publik
+          <aside className="space-y-6">
+            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-6 shadow-xl relative overflow-hidden">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400">{"Aksi Talenta"}</h3>
+              <div className="space-y-3">
+                <a href={`https://disabilitas.com/talent/${user.id}`} target="_blank" className="w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 transition-all">
+                  <ExternalLink size={18} /> {"Lihat Profil Publik"}
                 </a>
-                <button onClick={exportPDF} disabled={isProcessing} className="w-full bg-white text-slate-900 py-5 rounded-[2rem] text-[10px] flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all disabled:opacity-50">
-                  <FileDown size={18} /> {isProcessing ? "Menyusun Data..." : "Cetak Resume"}
+                <button onClick={exportPDF} disabled={isProcessing} className="w-full bg-white text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-slate-100 transition-all disabled:opacity-50">
+                  <FileDown size={18} /> {isProcessing ? "Menyusun Dokumen..." : "Cetak CV Aksesibel"}
                 </button>
-                <button onClick={handleShare} disabled={isProcessing} className="w-full bg-emerald-600 py-5 rounded-[2rem] text-[10px] flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all shadow-emerald-900/20">
-                  <Share2 size={18} /> Share Card
+                <button onClick={handleShare} disabled={isProcessing} className="w-full bg-emerald-600 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all disabled:opacity-50 shadow-lg shadow-emerald-900/20">
+                  <Share2 size={18} /> {isProcessing ? "Memotret Kartu..." : "Share Kartu Talenta Inklusif"}
                 </button>
               </div>
             </div>
           </aside>
         </div>
 
-        {/* IDENTITY CARD ASSET (HIDDEN FOR SCREENSHOT) */}
         <div className="opacity-0 pointer-events-none absolute -z-50 overflow-hidden h-0 w-0" aria-hidden="true">
-           <div id="inclusion-card" className="p-12 bg-white w-[800px] h-[450px] text-slate-900 border-[16px] border-slate-900 rounded-[4rem] font-sans flex flex-col justify-between italic font-black">
-              <h2 className="text-4xl text-blue-600 border-b-8 border-blue-600 pb-4">disabilitas.com</h2>
-              <div className="flex-1 py-10">
-                <p className="text-5xl uppercase tracking-tighter">{profile?.full_name || "TALENTA"}</p>
-                <p className="text-2xl text-blue-600 uppercase tracking-widest mt-2">{profile?.disability_type || "RAGAM DISABILITAS"}</p>
+           <div id="inclusion-card" className="p-10 bg-white w-[600px] h-[350px] text-slate-900 flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem] font-sans">
+              <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
+                <h2 className="text-2xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
+                <span className="text-[10px] font-black bg-blue-600 text-white px-4 py-1 rounded-full uppercase">{"Verified Talent"}</span>
               </div>
-              <div className="flex justify-between items-end border-t-4 border-slate-100 pt-8">
-                <p className="text-xs uppercase text-slate-400">Identity Card | {user.id.slice(0,8)}</p>
-                <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={80} />
+              <div className="flex-1 py-6">
+                <p className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Nama Lengkap"}</p>
+                <p className="text-lg font-bold text-blue-600 uppercase tracking-widest mt-1">{profile?.disability_type || "Ragam Disabilitas"}</p>
+                <div className="text-[10px] font-bold text-slate-400 uppercase mt-4 flex items-center gap-4">
+                  <span>{profile?.city || "Lokasi"}</span>
+                  <span className="w-1.5 h-1.5 bg-slate-200 rounded-full"></span>
+                  <span>{profile?.education_level || "Pendidikan"}</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-end pt-4 border-t-2 border-slate-100">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase text-slate-900">{"Inclusion Identity Card"}</p>
+                  <p className="text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em]">{"Scan to view professional portfolio"}</p>
+                </div>
+                <div className="bg-slate-50 p-2 rounded-2xl border-2 border-slate-100"><QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} /></div>
               </div>
            </div>
         </div>
       </div>
       
+      {/* --- TAMBAHAN LANGKAH E --- */}
       {selectedJobRating && (
-        <InclusionRatingModal job={selectedJobRating} userId={user.id} onClose={() => setSelectedJobRating(null)}
-          onSuccess={() => { setSelectedJobRating(null); fetchLatestData(); }} />
+        <InclusionRatingModal 
+          job={selectedJobRating}
+          userId={user.id}
+          onClose={() => setSelectedJobRating(null)}
+          onSuccess={() => {
+            setSelectedJobRating(null);
+            fetchLatestData(); 
+          }}
+        />
       )}
+      {/* -------------------------- */}
+
     </div>
   );
 }
