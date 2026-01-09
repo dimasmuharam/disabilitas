@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 import { 
-  User, MapPin, Briefcase, GraduationCap, 
-  FileDown, BookOpen, Laptop, Wifi, 
-  AlertCircle, CheckCircle2, Search,
-  ChevronLeft, LayoutDashboard, Share2, ExternalLink, ShieldCheck, Clock
+  User, MapPin, Briefcase, GraduationCap, FileDown, BookOpen, Laptop, Wifi, ArrowRight, AlertCircle, CheckCircle2, Search, ChevronLeft, LayoutDashboard, Share2, ExternalLink, ShieldCheck, Clock
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import jsPDF from "jspdf";
@@ -42,6 +40,8 @@ const [loading, setLoading] = useState(!initialProfile);
   const [selectedJobRating, setSelectedJobRating] = useState<any>(null);
 const [ratedJobs, setRatedJobs] = useState<string[]>([]); // Menyimpan list ID yang sudah dirating
   const [profile, setProfile] = useState(initialProfile);
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
+const [recommendedTrainings, setRecommendedTrainings] = useState<any[]>([]);
 
   useEffect(() => {
         if (sessionStorage.getItem("pindahkan_fokus_ke_h1") === "true") {
@@ -67,10 +67,29 @@ if (autoOpenProfile) {
     try {
       // 1. Profil Dasar
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      if (prof) {
-        setProfile(prof);
-        calculateProgress(prof);
-      }
+if (prof) {
+  setProfile({ ...prof }); // Menggunakan spread agar React deteksi perubahan
+  calculateProgress(prof);
+
+  // --- LOGIKA SMART MATCH FLEKSIBEL (OR) ---
+  // Mencari lowongan yang: Kotanya sama OR Pendidikannya sama OR Jurusannya sama
+  const { data: recJobs } = await supabase
+    .from("jobs")
+    .select("*, companies(name)")
+    .eq("is_active", true)
+    .or(`location.eq.${prof.city},required_education_level.eq.${prof.education_level},required_education_major.eq.${prof.major}`)
+    .limit(4);
+  setRecommendedJobs(recJobs || []);
+
+  // Mencari pelatihan yang: Lokasinya sama OR Kategorinya sesuai jurusan
+  const { data: recTrains } = await supabase
+    .from("trainings")
+    .select("*, partners(name)")
+    .eq("is_published", true)
+    .or(`location.eq.${prof.city},category.eq.${prof.major}`)
+    .limit(4);
+  setRecommendedTrainings(recTrains || []);
+}
 
       // 2. Ambil Riwayat Pengalaman Kerja Lengkap
       const { data: works } = await supabase.from("work_experiences")
@@ -414,16 +433,51 @@ if (autoOpenProfile) {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl">
-              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto text-white"><Search size={32} /></div>
-              <h4 className="text-lg font-black text-white italic uppercase tracking-tighter">{"Smart Job Match"}</h4>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">{"Rekomendasi lowongan yang sesuai profil Anda."}</p>
+{/* SEKSI SMART MATCH DINAMIS */}
+          <div className="space-y-6 pt-10 border-t-2 border-slate-50 font-black uppercase italic">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs tracking-widest text-slate-900 flex items-center gap-2">
+                <Search size={16} className="text-blue-600" /> Rekomendasi Peluang (Smart Match)
+              </h3>
+              <span className="text-[8px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full">Berdasarkan Profil Anda</span>
             </div>
-            <div className="bg-slate-900 p-10 rounded-[3rem] text-center space-y-4 shadow-xl">
-              <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto text-white"><BookOpen size={32} /></div>
-              <h4 className="text-lg font-black text-white italic uppercase tracking-tighter">{"Training Match"}</h4>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">{"Tingkatkan keahlian dengan kursus pilihan."}</p>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4 text-left">
+                <p className="text-[10px] text-slate-400 tracking-widest">Lowongan Relevan</p>
+                {recommendedJobs.length > 0 ? recommendedJobs.map((job) => (
+                  <Link href={`/lowongan/${job.id}`} key={job.id} className="block p-5 bg-white border-2 border-slate-100 rounded-[2rem] hover:border-blue-600 transition-all group shadow-sm">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-900 group-hover:text-blue-600 transition-colors leading-tight">{job.title}</p>
+                        <p className="text-[8px] text-slate-400 tracking-widest">{job.companies?.name} | {job.location}</p>
+                      </div>
+                    </div>
+                  </Link>
+                )) : (
+                  <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100 text-center">
+                    <p className="text-[8px] text-slate-300">Lengkapi profil untuk melihat lowongan.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4 text-left">
+                <p className="text-[10px] text-slate-400 tracking-widest">Pelatihan & Kursus</p>
+                {recommendedTrainings.length > 0 ? recommendedTrainings.map((train) => (
+                  <Link href={`/training/${train.id}`} key={train.id} className="block p-5 bg-white border-2 border-slate-100 rounded-[2rem] hover:border-emerald-600 transition-all group shadow-sm">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-900 group-hover:text-emerald-600 transition-colors leading-tight">{train.title}</p>
+                        <p className="text-[8px] text-slate-400 tracking-widest">{train.partners?.name} | {train.location}</p>
+                      </div>
+                    </div>
+                  </Link>
+                )) : (
+                  <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100 text-center">
+                    <p className="text-[8px] text-slate-300">Cek kembali setelah melengkapi profil.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -450,7 +504,7 @@ if (autoOpenProfile) {
             </div>
           </div>
 
-          {progress < 100 && missingFields.length > 0 && (
+          {progress < 100 && missingFields.length > 0 && activeTab === "overview" && (
             <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100">
               <h3 className="text-[10px] font-black uppercase text-amber-700 tracking-widest mb-4 flex items-center gap-2"><AlertCircle size={14} /> {"Data Yang Perlu Dilengkapi:"}</h3>
               <ul className="grid md:grid-cols-2 gap-x-8 gap-y-2">
