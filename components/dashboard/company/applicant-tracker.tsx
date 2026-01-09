@@ -7,7 +7,7 @@ import {
   ExternalLink, CheckCircle, XCircle, 
   Briefcase, GraduationCap, MapPin, 
   Wrench, ShieldCheck, Clock, Activity
-} from "lucide-center";
+} from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
