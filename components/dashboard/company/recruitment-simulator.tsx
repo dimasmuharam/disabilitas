@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { 
   Search, Users, MapPin, BookOpen, 
   Zap, ArrowRight, Briefcase, Sparkles, X,
-  CheckCircle2, Clock, Info, GraduationCap, Wrench, ShieldCheck
+  CheckCircle2, Info, GraduationCap, Wrench, ShieldCheck,
+  Clock // Ikon yang tadi ketinggalan
 } from "lucide-react";
 import { 
   SKILLS_LIST, 
@@ -42,20 +43,30 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
     setAnnouncement("Memulai pemindaian sistem database talenta inklusif.");
 
     try {
-      let query = supabase.from("profiles").select("*, tech_access_tools", { count: "exact" });
+      // Menghitung ketersediaan talenta berdasarkan profil
+      let query = supabase.from("profiles").select("id, tech_access_tools", { count: "exact" });
 
-      if (filters.skills.length > 0) query = query.contains("skills", filters.skills);
-      if (filters.location) query = query.eq("city", filters.location);
-      if (filters.education) query = query.eq("education_level", filters.education);
-      if (filters.major) query = query.contains("education_major", [filters.major]);
+      // LOGIKA FILTER OPSIONAL: Hanya memfilter jika ada input
+      if (filters.skills.length > 0) {
+        query = query.contains("skills", filters.skills);
+      }
+      if (filters.location) {
+        query = query.eq("city", filters.location);
+      }
+      if (filters.education) {
+        query = query.eq("education_level", filters.education);
+      }
+      if (filters.major) {
+        // Karena education_major disimpan sebagai array di database kita
+        query = query.contains("education_major", [filters.major]);
+      }
 
-      const { data, count, error } = await query.limit(50);
+      const { data, count, error } = await query.limit(100);
       if (error) throw error;
 
       setResultCount(count);
 
-      // ANALISIS KOMPATIBILITAS (Inspirasi Riset)
-      // Menghitung alat apa yang paling banyak dibutuhkan talenta dalam pencarian ini
+      // ANALISIS AKOMODASI (Untuk Encouragement)
       if (data && data.length > 0) {
         const needsMap: Record<string, number> = {};
         data.forEach(p => {
@@ -71,25 +82,24 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
           : [];
 
         setCompatibility({
-          topNeed: topNeed ? topNeed[0] : "Dukungan Digital",
-          isMatched: topNeed ? companyTools.includes(topNeed[0]) : true,
-          matchPercent: Math.floor(Math.random() * (95 - 70 + 1) + 70) // Mock data kompetensi
+          topNeed: topNeed ? topNeed[0] : "Dukungan Aksesibilitas Umum",
+          isMatched: topNeed ? companyTools.includes(topNeed[0]) : true
         });
       }
 
-      setAnnouncement(`Simulasi selesai. Ditemukan ${count} talenta yang cocok.`);
+      setAnnouncement(`Simulasi selesai. Ditemukan ${count} talenta yang sesuai.`);
     } catch (err) {
       console.error(err);
-      setAnnouncement("Terjadi kendala teknis saat menjalankan simulasi.");
+      setAnnouncement("Gagal menjalankan simulasi.");
     } finally {
       setLoading(false);
     }
   };
   return (
-    <div className="max-w-6xl mx-auto space-y-10 pb-20 font-sans text-left">
+    <div className="max-w-6xl mx-auto space-y-10 pb-20 font-sans text-left selection:bg-blue-100">
       <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
-      {/* HEADER HERO */}
+      {/* HERO SECTION */}
       <section className="bg-slate-900 rounded-[3.5rem] p-10 md:p-16 text-white shadow-2xl relative overflow-hidden border-2 border-slate-800">
         <div className="relative z-10 space-y-6">
           <div className="flex items-center gap-3 bg-blue-500/10 text-blue-400 w-fit px-5 py-2 rounded-full border border-blue-500/20 font-black text-[10px] uppercase tracking-[0.2em]">
@@ -106,23 +116,23 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
       </section>
 
       <div className="grid lg:grid-cols-5 gap-10">
-        {/* PANEL FILTER (ACCESSIBLE FORM) */}
+        {/* PANEL PARAMETER (FILTER) */}
         <aside className="lg:col-span-2 space-y-8">
           <div className="bg-white p-8 md:p-10 rounded-[3rem] border-2 border-slate-900 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] space-y-10">
-            <h2 className="text-[11px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-3 border-b-2 border-slate-50 pb-4">
-              <Search size={18} /> PARAMETER RISET
+            <h2 className="text-[11px] font-black uppercase text-slate-400 tracking-[0.3em] flex items-center gap-3 border-b-2 border-slate-50 pb-4 italic">
+              <Search size={18} /> Parameter Riset
             </h2>
 
             <fieldset className="space-y-6">
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2">
-                   <GraduationCap size={14} className="text-blue-600"/> Jenjang Pendidikan
+                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2 italic">
+                   <GraduationCap size={14} className="text-blue-600"/> Pendidikan Minimal
                 </label>
                 <select 
-                  aria-label="Pilih minimal pendidikan"
+                  aria-label="Pilih kriteria pendidikan"
                   value={filters.education}
                   onChange={e => setFilters({...filters, education: e.target.value})}
-                  className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-50 font-bold text-xs outline-none focus:border-blue-600 appearance-none cursor-pointer"
+                  className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-50 font-bold text-xs outline-none focus:border-blue-600 appearance-none"
                 >
                   <option value="">Semua Jenjang</option>
                   {EDUCATION_LEVELS.map(lv => <option key={lv} value={lv}>{lv}</option>)}
@@ -130,14 +140,14 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2 italic">
                    <BookOpen size={14} className="text-indigo-600"/> Bidang Jurusan
                 </label>
                 <select 
-                  aria-label="Pilih fokus jurusan"
+                  aria-label="Pilih kriteria jurusan"
                   value={filters.major}
                   onChange={e => setFilters({...filters, major: e.target.value})}
-                  className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-50 font-bold text-xs outline-none focus:border-indigo-600 appearance-none cursor-pointer"
+                  className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-50 font-bold text-xs outline-none focus:border-indigo-600 appearance-none"
                 >
                   <option value="">Semua Jurusan</option>
                   {UNIVERSITY_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
@@ -145,10 +155,10 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2 italic">
                    <Wrench size={14} className="text-emerald-600"/> Keahlian (Skills)
                 </label>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 border-2 border-slate-50 rounded-2xl shadow-inner bg-slate-50/30">
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 border-2 border-slate-50 rounded-2xl bg-slate-50/30">
                   {SKILLS_LIST.map(skill => (
                     <button
                       key={skill}
@@ -157,7 +167,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
                       onClick={() => toggleFilter('skills', skill)}
                       className={`p-3 rounded-xl text-[9px] font-black uppercase border-2 transition-all text-left leading-tight ${
                         filters.skills.includes(skill)
-                        ? "bg-blue-600 text-white border-blue-600"
+                        ? "bg-blue-600 text-white border-blue-600 shadow-md"
                         : "bg-white text-slate-400 border-white hover:border-blue-200"
                       }`}
                     >
@@ -168,14 +178,14 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2 italic">
                    <MapPin size={14} className="text-red-600"/> Target Lokasi
                 </label>
                 <select 
                   aria-label="Pilih lokasi kerja"
                   value={filters.location}
                   onChange={e => setFilters({...filters, location: e.target.value})}
-                  className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-50 font-bold text-xs outline-none focus:border-red-600 appearance-none cursor-pointer"
+                  className="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-50 font-bold text-xs outline-none focus:border-red-600 appearance-none"
                 >
                   <option value="">Seluruh Indonesia</option>
                   {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -186,7 +196,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
             <button 
               onClick={runSimulation}
               disabled={loading}
-              className="w-full py-6 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-xl hover:bg-slate-900 transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50"
+              className="w-full py-6 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl hover:bg-slate-900 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
             >
               {loading ? <Clock className="animate-spin" /> : <Zap size={20} fill="currentColor" />} 
               JALANKAN SIMULASI
@@ -194,14 +204,14 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
           </div>
         </aside>
 
-        {/* PANEL HASIL INFORMASI (ACCESSIBLE RESULTS) */}
+        {/* PANEL HASIL ANALISIS */}
         <main className="lg:col-span-3">
           {resultCount !== null ? (
-            <div className="bg-white p-10 md:p-14 rounded-[4rem] border-2 border-slate-100 shadow-sm space-y-12 animate-in zoom-in-95 duration-500">
+            <div className="bg-white p-10 md:p-14 rounded-[4rem] border-2 border-slate-100 shadow-sm space-y-12 animate-in zoom-in-95">
               <div className="text-center space-y-4">
-                <h3 className="text-[11px] font-black uppercase text-slate-300 tracking-[0.5em]">POTENSI PASAR KERJA</h3>
-                <div className="flex items-center justify-center gap-4">
-                  <span className="text-8xl font-black text-slate-900 tracking-tighter leading-none italic">{resultCount}</span>
+                <p className="text-[11px] font-black uppercase text-slate-300 tracking-[0.5em]">HASIL ANALISIS TALENTA</p>
+                <div className="flex items-center justify-center gap-5">
+                  <span className="text-8xl font-black text-slate-900 tracking-tighter italic">{resultCount}</span>
                   <div className="text-left font-black uppercase text-blue-600 italic leading-none">
                     <p className="text-2xl">Talenta</p>
                     <p className="text-sm tracking-widest">Tersedia</p>
@@ -209,17 +219,16 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
                 </div>
               </div>
 
-              {/* INFORMASI ANALITIK RISET */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="p-8 bg-emerald-50 rounded-[2.5rem] border-2 border-emerald-100 space-y-4">
                   <div className="flex items-center gap-3 text-emerald-600">
                     <CheckCircle2 size={24} />
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-left">Rekomendasi</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest">Rekomendasi Strategis</h4>
                   </div>
-                  <p className="text-sm text-emerald-900 leading-relaxed font-bold italic text-left">
+                  <p className="text-sm text-emerald-900 leading-relaxed font-medium text-left">
                     {resultCount > 0 
-                      ? <strong>Data menunjukkan pasokan talenta yang melimpah. Membuka lowongan sekarang akan memberi Anda keunggulan kompetitif.</strong>
-                      : <strong>Talenta dengan kriteria ini sangat langka. Disarankan untuk memberikan fleksibilitas pada syarat lokasi atau jenjang pendidikan.</strong>
+                      ? <strong>Data menunjukkan ketersediaan talenta profesional yang melimpah. Membuka lowongan sekarang akan memperkuat branding inklusi instansi Anda.</strong>
+                      : <strong>Kriteria ini sangat spesifik. Disarankan untuk melonggarkan syarat lokasi agar dapat menjangkau lebih banyak pakar dari berbagai daerah.</strong>
                     }
                   </p>
                 </div>
@@ -232,12 +241,12 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
                     </div>
                     <div className="space-y-2 text-left">
                       <p className="text-[11px] text-blue-800 font-black">
-                        Mayoritas talenta ini memerlukan: <strong>{compatibility.topNeed}</strong>.
+                        Talenta dalam kategori ini mayoritas memerlukan: <strong>{compatibility.topNeed}</strong>.
                       </p>
                       <p className="text-[10px] text-blue-600 font-bold italic">
                         {compatibility.isMatched 
-                          ? "Instansi Anda sudah menyediakan dukungan ini secara mandiri."
-                          : "Instansi Anda belum mencantumkan dukungan ini. Pertimbangkan untuk menyediakannya."}
+                          ? "Fasilitas instansi Anda sudah selaras dengan kebutuhan mereka."
+                          : "Pertimbangkan untuk menyediakan dukungan ini guna menarik kandidat terbaik."}
                       </p>
                     </div>
                   </div>
@@ -247,7 +256,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <button 
                   onClick={() => window.location.reload()}
-                  className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] border-2 border-slate-100 tracking-widest"
+                  className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] border-2 border-slate-100 italic"
                 >
                   Reset Simulasi
                 </button>
@@ -260,9 +269,9 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-24 border-4 border-dashed border-slate-100 rounded-[5rem] text-center opacity-40">
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8"><Users size={56} className="text-slate-200" /></div>
+              <Users size={64} className="text-slate-200 mb-8" />
               <p className="text-sm font-black text-slate-300 uppercase tracking-[0.4em] italic leading-loose max-w-md">
-                Gunakan panel parameter di samping untuk memetakan ketersediaan talenta inklusif di database kami.
+                Tentukan parameter di panel kiri untuk melihat potensi pasar talenta inklusif bagi bisnis Anda.
               </p>
             </div>
           )}
