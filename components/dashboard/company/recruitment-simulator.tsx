@@ -46,12 +46,12 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
     setAnnouncement("Memulai sinkronisasi data talenta inklusif dari database riset.");
 
     try {
-      // Sesuai skema public.profiles: city (text), major (text), skills (array), education_level (text)
+      // Sesuai skema public.profiles: city, major, skills (array), education_level
       let query = supabase
         .from("profiles")
         .select("id, used_assistive_tools, skills, major, education_level", { count: "exact" });
 
-      // Logic Filter Dinamis & Opsional
+      // Logic Filter Dinamis Berbasis Kompetensi
       if (filters.skills.length > 0) {
         query = query.contains("skills", filters.skills);
       }
@@ -65,23 +65,23 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
       }
 
       if (filters.major) {
-        // Di skema Mas, major adalah TEXT, bukan Array. Jadi pakai .eq
         query = query.eq("major", filters.major);
       }
 
       const { data, count, error } = await query;
       
       if (error) {
-        setErrorMessage(`Database Error (${error.code}): ${error.message}. Periksa apakah kolom major/skills sudah sesuai.`);
+        setErrorMessage(`Database Error (${error.code}): ${error.message}.`);
         throw error;
       }
 
       setResultCount(count || 0);
 
-      // ANALISIS AKOMODASI (Mencocokkan used_assistive_tools talenta dengan master_accommodations_provided instansi)
+      // ANALISIS AKOMODASI (Forensik Kebutuhan vs Ketersediaan Instansi)
       if (data && data.length > 0) {
         const toolsMap: Record<string, number> = {};
         data.forEach(p => {
+          // Normalisasi data array untuk digunakan dalam kalkulasi
           const tools = Array.isArray(p.used_assistive_tools) ? p.used_assistive_tools : [];
           tools.forEach((t: string) => {
             toolsMap[t] = (toolsMap[t] || 0) + 1;
@@ -91,6 +91,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
         const sortedTools = Object.entries(toolsMap).sort((a, b) => b[1] - a[1]);
         const topToolNeed = sortedTools[0];
         
+        // Cek apakah instansi sudah punya alat bantu yang paling dibutuhkan talenta tersebut
         const companySupport = Array.isArray(company?.master_accommodations_provided) 
           ? company.master_accommodations_provided 
           : [];
@@ -104,14 +105,13 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
       setAnnouncement(`Simulasi selesai. Ditemukan ${count || 0} talenta profesional.`);
     } catch (err: any) {
       console.error("Simulation Failure:", err);
-      if (!errorMessage) setErrorMessage("Koneksi terputus atau nama kolom profiles tidak cocok.");
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-24 font-sans text-left selection:bg-blue-50 selection:text-blue-900">
-      {/* Aria Live untuk Screen Reader Tunanetra */}
       <div className="sr-only" aria-live="assertive" role="alert">{announcement}</div>
 
       <header className="bg-slate-900 rounded-[3.5rem] p-10 md:p-16 text-white shadow-2xl relative overflow-hidden border-2 border-slate-800">
@@ -123,7 +123,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
             Simulasikan Kebutuhan Kompetensi Bisnis Anda
           </h1>
           <p className="text-slate-400 text-lg font-medium max-w-2xl italic leading-relaxed">
-            Data ini membantu instansi memetakan ketersediaan tenaga kerja profesional penyandang disabilitas berdasarkan kualifikasi riil.
+            Membantu instansi memetakan ketersediaan tenaga kerja profesional disabilitas berdasarkan kualifikasi riil di database.
           </p>
         </div>
         <Zap className="absolute -right-20 -bottom-20 text-white/5 rotate-12" size={400} aria-hidden="true" />
@@ -169,7 +169,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
 
               <div className="space-y-4 text-left">
                 <p className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2 italic">
-                   <Wrench size={14} className="text-emerald-600"/> Keahlian (Skills)
+                   <Wrench size={14} className="text-emerald-600"/> Keahlian Utama (Skills)
                 </p>
                 <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto p-4 border-2 border-slate-50 rounded-2xl bg-slate-50/30 shadow-inner" role="group" aria-label="Daftar keahlian">
                   {SKILLS_LIST.map(skill => (
@@ -202,7 +202,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
             </fieldset>
 
             <button onClick={runSimulation} disabled={loading} className="w-full py-6 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl hover:bg-slate-900 transition-all active:scale-95 disabled:opacity-50">
-              {loading ? <Clock className="animate-spin" /> : <Zap size={20} fill="currentColor" />} JALANKAN SIMULASI
+              {loading ? "MENYINKRONKAN..." : "JALANKAN SIMULASI"}
             </button>
           </div>
         </aside>
@@ -211,10 +211,10 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
           {resultCount !== null ? (
             <div className="bg-white p-8 md:p-14 rounded-[4rem] border-2 border-slate-100 shadow-sm space-y-12 animate-in zoom-in-95">
               <div className="text-center space-y-4">
-                <h3 className="text-[11px] font-black uppercase text-slate-300 tracking-[0.5em] italic">Potensi Pasar Kerja</h3>
+                <h3 className="text-[11px] font-black uppercase text-slate-300 tracking-[0.5em] italic">Potensi Supply Tenaga Kerja</h3>
                 <div className="flex items-center justify-center gap-5">
-                  <span className="text-8xl font-black text-slate-900 tracking-tighter italic" aria-label={`${resultCount} talenta`}>{resultCount}</span>
-                  <div className="text-left font-black uppercase text-blue-600 italic leading-none" aria-hidden="true">
+                  <span className="text-8xl font-black text-slate-900 tracking-tighter italic">{resultCount}</span>
+                  <div className="text-left font-black uppercase text-blue-600 italic leading-none">
                     <p className="text-2xl">Talenta</p>
                     <p className="text-sm tracking-widest">Tersedia</p>
                   </div>
@@ -225,12 +225,12 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
                 <section className="p-8 bg-emerald-50 rounded-[2.5rem] border-2 border-emerald-100 space-y-4 text-left">
                   <div className="flex items-center gap-3 text-emerald-600">
                     <CheckCircle2 size={24} />
-                    <h4 className="text-[10px] font-black uppercase tracking-widest">Kesimpulan Riset</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest">Analisis Riset</h4>
                   </div>
                   <p className="text-sm text-emerald-900 leading-relaxed font-medium italic">
                     {resultCount > 0 
                       ? <strong>Sistem mendeteksi pasokan talenta profesional yang melimpah pada kriteria ini. Membuka lowongan sekarang akan memberi instansi Anda keunggulan kompetitif.</strong>
-                      : <strong>Kriteria ini cukup spesifik di database. Anda disarankan untuk mempertimbangkan fleksibilitas syarat domisili guna menjaring lebih banyak pakar inklusif.</strong>
+                      : <strong>Kriteria ini sangat spesifik. Anda disarankan untuk mempertimbangkan fleksibilitas syarat domisili guna menjaring lebih banyak pakar profesional.</strong>
                     }
                   </p>
                 </section>
@@ -239,16 +239,16 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
                   <section className="p-8 bg-blue-50 rounded-[2.5rem] border-2 border-blue-100 space-y-4 text-left font-black tracking-tighter uppercase">
                     <div className="flex items-center gap-3 text-blue-600">
                       <ShieldCheck size={24} />
-                      <h4 className="text-[10px] tracking-widest">Akomodasi Dominan</h4>
+                      <h4 className="text-[10px] tracking-widest">Analisis Akomodasi</h4>
                     </div>
                     <div className="space-y-3">
                       <p className="text-[11px] text-blue-800 italic leading-tight">
-                        Umumnya, kelompok talenta ini membutuhkan: <strong>{compatibility.topNeed}</strong>.
+                        Umumnya, talenta pada kriteria ini menggunakan: <strong>{compatibility.topNeed}</strong>.
                       </p>
                       <p className="text-[10px] text-blue-600 border-t border-blue-100 pt-3 italic leading-relaxed">
                         {compatibility.isMatched 
                           ? <strong>Instansi Anda sudah memiliki infrastruktur pendukung untuk kebutuhan ini.</strong>
-                          : <strong>Anda disarankan menyediakan dukungan tersebut untuk menjamin produktivitas mereka di masa depan.</strong>}
+                          : <strong>Anda disarankan menyediakan dukungan tersebut untuk menjamin produktivitas mereka.</strong>}
                       </p>
                     </div>
                   </section>
@@ -257,14 +257,14 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
 
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <button onClick={() => window.location.reload()} className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase text-[10px] border-2 border-slate-100 italic transition-all">Atur Ulang</button>
-                <button className="flex-[2] py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all">BUAT LOWONGAN SEKARANG</button>
+                <button className="flex-[2] py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all">POSTING LOWONGAN SEKARANG</button>
               </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center p-24 border-4 border-dashed border-slate-100 rounded-[5rem] text-center opacity-40">
               <Users size={64} className="text-slate-200 mb-8" aria-hidden="true" />
               <p className="text-sm font-black text-slate-300 uppercase tracking-[0.4em] italic leading-loose max-w-md">
-                Tentukan kriteria profesional pada panel kiri untuk melihat simulasi pasokan talenta profesional inklusif.
+                Tentukan parameter kompetensi profesional untuk mensimulasikan pasokan talenta inklusif dari database riset.
               </p>
             </div>
           )}
