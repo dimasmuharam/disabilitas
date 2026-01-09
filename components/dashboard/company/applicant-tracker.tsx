@@ -48,14 +48,15 @@ export default function ApplicantTracker({ company }: { company: any }) {
     setLoading(false);
   }
 
-  const handleUpdateStatus = async (appId: string, newStatus: string) => {
+  const handleUpdateStatus = async (appId: string, newStatus: string, talentName: string) => {
     const { error } = await supabase
       .from("applications")
       .update({ status: newStatus })
       .eq("id", appId);
       
     if (!error) {
-      setAnnouncement(`Status berhasil diubah menjadi ${newStatus}`);
+      const statusText = newStatus === "accepted" ? "Diterima" : "Ditolak";
+      setAnnouncement(`Lamaran ${talentName} berhasil diubah menjadi ${statusText}`);
       fetchApplicants();
     }
   };
@@ -74,7 +75,6 @@ export default function ApplicantTracker({ company }: { company: any }) {
     return [];
   };
 
-  // VARIABEL KRUSIAL YANG TADI HILANG:
   const filteredApplicants = applicants.filter(app => {
     const matchSearch = app.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = filterStatus === "all" || app.status === filterStatus;
@@ -87,106 +87,89 @@ export default function ApplicantTracker({ company }: { company: any }) {
     accepted: applicants.filter(a => a.status === 'accepted').length,
   };
 
-  // --- FUNGSI CETAK CV AUDIT ---
   const generateProfessionalCV = async (app: any) => {
     const doc = new jsPDF();
     const p = app.profiles;
     const work = p.work_experiences || [];
-    const certs = p.certifications || [];
-
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, 210, 40, "F");
-    doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
-    doc.text("CURRICULUM VITAE - DISABILITAS.COM", 20, 20);
-    doc.setFontSize(10);
-    doc.text(`Posisi: ${app.jobs?.title} | Perusahaan: ${company.name}`, 20, 30);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(16);
-    doc.text((p.full_name || "NAMA TALENTA").toUpperCase(), 20, 55);
-    doc.setFontSize(10);
-    doc.text(`${p.disability_type || 'Talenta'} | ${p.city || '-'} | ${p.email || '-'}`, 20, 62);
-
+    doc.text("CURRICULUM VITAE", 20, 20);
     doc.setFontSize(12);
-    doc.text("RINGKASAN PROFIL", 20, 75);
-    doc.setFontSize(9);
-    const summary = p.bio || "Talenta profesional yang berkomitmen dan siap berkontribusi secara inklusif.";
-    const splitSummary = doc.splitTextToSize(summary, 170);
-    doc.text(splitSummary, 20, 82);
-
-    autoTable(doc, {
-      startY: 110,
-      head: [["Posisi", "Instansi", "Periode"]],
-      body: work.map((w: any) => [w.position, w.company_name, `${w.start_date} - ${w.is_current_work ? 'Sekarang' : w.end_date}`]),
-      headStyles: { fillColor: [37, 99, 235] },
-    });
-
-    doc.save(`CV_Audit_${p.full_name}.pdf`);
+    doc.text(`Nama: ${p.full_name}`, 20, 30);
+    doc.text(`Pendidikan: ${p.education_level} ${p.major}`, 20, 40);
+    doc.save(`CV_${p.full_name}.pdf`);
   };
 
-  if (loading) return <div className="p-20 text-center font-black italic text-slate-400 animate-pulse uppercase tracking-widest">Menyinkronkan Data Riset...</div>;
+  if (loading) return <div role="status" className="p-20 text-center font-black animate-pulse text-slate-400 uppercase">Menyinkronkan Data Riset...</div>;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in text-left pb-20">
-      <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
+    <div className="max-w-6xl mx-auto space-y-8 text-left pb-20">
+      {/* Kebutuhan Screen Reader */}
+      <div className="sr-only" aria-live="polite">{announcement}</div>
 
-      {/* --- SECTION STATISTIK --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-slate-900 p-6 rounded-[2.5rem] text-white shadow-xl flex flex-col justify-center italic">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1 flex items-center gap-2 italic">
-            <Activity size={12} className="text-blue-400" /> Total Pelamar Masuk
+      {/* --- STATISTIK --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role="region" aria-label="Statistik Pelamar">
+        <div className="bg-slate-900 p-6 rounded-[2.5rem] text-white shadow-xl italic">
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60 flex items-center gap-2">
+            <Activity size={12} className="text-blue-400" /> Total Pelamar
           </p>
           <p className="text-4xl font-black italic tracking-tighter leading-none">{stats.total}</p>
         </div>
-        <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 flex flex-col justify-center shadow-sm italic">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-2 italic">
+        <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 italic">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
             <Clock size={12} className="text-orange-400" /> Menunggu Review
           </p>
           <p className="text-4xl font-black italic tracking-tighter leading-none text-orange-500">{stats.pending}</p>
         </div>
-        <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 flex flex-col justify-center shadow-sm italic">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-2 italic">
+        <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 italic">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
             <CheckCircle size={12} className="text-emerald-400" /> Talenta Diterima
           </p>
           <p className="text-4xl font-black italic tracking-tighter leading-none text-emerald-500">{stats.accepted}</p>
         </div>
       </div>
 
-      {/* --- SECTION HEADER & FILTER --- */}
+      {/* --- HEADER & FILTER --- */}
       <div className="flex flex-col md:flex-row justify-between gap-6 items-center pt-4">
         <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-slate-900">
-          <Users className="text-blue-600" size={24} /> Applicant Tracker
+          <Users className="text-blue-600" size={24} aria-hidden="true" /> Applicant Tracker
         </h2>
-        <div className="flex gap-4">
-          <input 
-            placeholder="Cari nama talenta..." 
-            className="pl-6 pr-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 w-64 shadow-sm bg-white"
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <select 
-            onChange={(e) => setFilterStatus(e.target.value)} 
-            className="px-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 shadow-sm bg-white"
-          >
-            <option value="all">Semua Status</option>
-            <option value="applied">Baru Masuk</option>
-            <option value="accepted">Diterima</option>
-            <option value="rejected">Ditolak</option>
-          </select>
+        <div className="flex gap-4 w-full md:w-auto">
+          <div className="relative flex-1">
+            <label htmlFor="search-talent" className="sr-only">Cari nama talenta</label>
+            <input 
+              id="search-talent"
+              placeholder="Cari nama talenta..." 
+              className="w-full pl-6 pr-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 shadow-sm"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="relative">
+            <label htmlFor="filter-status" className="sr-only">Filter status lamaran</label>
+            <select 
+              id="filter-status"
+              onChange={(e) => setFilterStatus(e.target.value)} 
+              className="px-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 shadow-sm bg-white cursor-pointer"
+            >
+              <option value="all">Semua Status</option>
+              <option value="applied">Baru Masuk</option>
+              <option value="accepted">Diterima</option>
+              <option value="rejected">Ditolak</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* --- LIST PELAMAR --- */}
-      <div className="grid gap-6">
+      <div className="grid gap-6" role="list">
         {filteredApplicants.length > 0 ? filteredApplicants.map((app) => {
           const p = app.profiles;
           const tools = parseToArray(p?.used_assistive_tools);
           const skills = parseToArray(p?.skills);
 
           return (
-            <div key={app.id} className="bg-white p-8 md:p-10 rounded-[3.5rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center group hover:border-slate-900 transition-all shadow-sm">
+            <article key={app.id} role="listitem" className="bg-white p-8 md:p-10 rounded-[3.5rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center group hover:border-slate-900 transition-all shadow-sm">
               <div className="flex flex-col md:flex-row items-start gap-8 flex-1">
-                <div className="w-24 h-24 bg-slate-900 text-white rounded-[2.5rem] flex items-center justify-center font-black text-4xl uppercase italic shadow-lg shrink-0">
+                <div className="w-24 h-24 bg-slate-900 text-white rounded-[2.5rem] flex items-center justify-center font-black text-4xl uppercase italic shadow-lg shrink-0" aria-hidden="true">
                   {p?.full_name?.charAt(0) || "?"}
                 </div>
                 
@@ -196,9 +179,9 @@ export default function ApplicantTracker({ company }: { company: any }) {
                     <p className="text-[10px] font-black text-blue-600 uppercase italic tracking-[0.2em] mt-2">Melamar Posisi: {app.jobs?.title}</p>
                   </div>
 
-                  <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 italic text-slate-700 leading-relaxed text-sm font-medium">
+                  <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 italic text-slate-700 leading-relaxed text-sm font-medium" aria-label={`Ringkasan profil ${p?.full_name}`}>
                     Pelamar ini berdomisili di <strong>{p?.city || "Kota/Kabupaten tidak tertera"}</strong>. 
-                    Memiliki latar belakang pendidikan terakhir <strong>{p?.last_education_level || "Jenjang Pendidikan"}</strong> jurusan <strong>{p?.last_education_major || "Bidang Jurusan"}</strong> dari <strong>{p?.last_university_name || "Institusi Pendidikan"}</strong> tahun lulus <strong>{p?.graduation_year || "Tahun Lulus"}</strong>.
+                    Memiliki latar belakang pendidikan terakhir <strong>{p?.education_level || "Jenjang Pendidikan"}</strong> jurusan <strong>{p?.major || "Bidang Jurusan"}</strong> dari <strong>{p?.university_name || "Institusi Pendidikan"}</strong> tahun lulus <strong>{p?.graduation_year || "Tahun Lulus"}</strong>.
                     
                     {skills.length > 0 && (
                       <span> Pelamar memiliki keahlian utama dalam bidang <strong>{skills.join(", ")}</strong>.</span>
@@ -206,7 +189,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
 
                     {tools.length > 0 && (
                       <span className="block mt-3 p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100 text-xs">
-                        <ShieldCheck size={14} className="inline mr-2" />
+                        <ShieldCheck size={14} className="inline mr-2" aria-hidden="true" />
                         Dalam bekerja, pelamar didukung dengan penggunaan alat bantu: <strong>{tools.join(", ")}</strong>.
                       </span>
                     )}
@@ -214,20 +197,48 @@ export default function ApplicantTracker({ company }: { company: any }) {
                 </div>
               </div>
 
+              {/* ACTION PANEL */}
               <div className="flex md:flex-col items-center gap-3 mt-8 md:mt-0 w-full md:w-auto">
-                <button onClick={() => handleUpdateStatus(app.id, 'accepted')} className="flex-1 md:w-full p-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all border border-emerald-100 font-black uppercase text-[10px] italic">Terima</button>
-                <button onClick={() => handleUpdateStatus(app.id, 'rejected')} className="flex-1 md:w-full p-4 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all border border-red-100 font-black uppercase text-[10px] italic">Tolak</button>
+                <button 
+                  onClick={() => handleUpdateStatus(app.id, 'accepted', p?.full_name)} 
+                  aria-label={`Terima lamaran ${p?.full_name}`}
+                  className="flex-1 md:w-full p-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all border border-emerald-100 font-black uppercase text-[10px] italic shadow-sm"
+                >
+                  Terima
+                </button>
+                <button 
+                  onClick={() => handleUpdateStatus(app.id, 'rejected', p?.full_name)} 
+                  aria-label={`Tolak lamaran ${p?.full_name}`}
+                  className="flex-1 md:w-full p-4 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all border border-red-100 font-black uppercase text-[10px] italic shadow-sm"
+                >
+                  Tolak
+                </button>
                 <div className="flex gap-2 w-full justify-center">
-                  <button onClick={() => generateProfessionalCV(app)} className="p-4 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl border border-slate-100"><FileDown size={20} /></button>
-                  <a href={`/talent/${p?.id}`} target="_blank" className="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl border border-slate-100"><ExternalLink size={20} /></a>
+                  <button 
+                    onClick={() => generateProfessionalCV(app)} 
+                    className="p-4 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl border border-slate-100 transition-colors" 
+                    title="Cetak CV Audit"
+                    aria-label={`Cetak CV Audit ${p?.full_name}`}
+                  >
+                    <FileDown size={20} aria-hidden="true" />
+                  </button>
+                  <a 
+                    href={`/talent/${p?.id}`} 
+                    target="_blank" 
+                    className="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl border border-slate-100 transition-colors" 
+                    title="Profil Publik"
+                    aria-label={`Lihat Profil Publik ${p?.full_name}`}
+                  >
+                    <ExternalLink size={20} aria-hidden="true" />
+                  </a>
                 </div>
               </div>
-            </div>
+            </article>
           );
         }) : (
           <div className="p-24 text-center border-2 border-dashed border-slate-100 rounded-[4rem] bg-slate-50/20">
-            <Users className="mx-auto text-slate-200 mb-4" size={48} />
-            <p className="text-[11px] font-black uppercase text-slate-300 italic tracking-[0.3em]">Belum Ada Pelamar Yang Perlu Dimonitor</p>
+            <Users className="mx-auto text-slate-200 mb-4" size={48} aria-hidden="true" />
+            <p className="text-[11px] font-black uppercase text-slate-300 italic tracking-[0.3em]">Belum Ada Lamaran Yang Perlu Dimonitor</p>
           </div>
         )}
       </div>
