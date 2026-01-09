@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
-  Users, Search, Filter, FileDown, 
+  Users, Search, FileDown, 
   ExternalLink, CheckCircle, XCircle, 
-  Briefcase, GraduationCap, Tag, ShieldCheck,
-  Clock, Activity, PieChart
+  Briefcase, GraduationCap, MapPin, 
+  Wrench, ShieldCheck, Clock, Activity, PieChart
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -60,108 +60,6 @@ export default function ApplicantTracker({ company }: { company: any }) {
     }
   };
 
-  const stats = {
-    total: applicants.length,
-    pending: applicants.filter(a => a.status === 'applied').length,
-    accepted: applicants.filter(a => a.status === 'accepted').length,
-    tuli: applicants.filter(a => a.profiles?.disability_type?.toLowerCase().includes('tuli')).length,
-    daksa: applicants.filter(a => a.profiles?.disability_type?.toLowerCase().includes('daksa')).length,
-    netra: applicants.filter(a => a.profiles?.disability_type?.toLowerCase().includes('netra')).length,
-  };
-
-  const generateProfessionalCV = async (app: any) => {
-    const doc = new jsPDF();
-    const p = app.profiles;
-    const work = p.work_experiences || [];
-    const certs = p.certifications || [];
-
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, 210, 40, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("CURRICULUM VITAE - DISABILITAS.COM", 20, 20);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Posisi: ${app.jobs?.title} | Perusahaan: ${company.name}`, 20, 30);
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text((p.full_name || "NAMA TALENTA").toUpperCase(), 20, 55);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${p.disability_type || 'Talenta'} | ${p.city || '-'} | ${p.email || '-'}`, 20, 62);
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("RINGKASAN PROFIL", 20, 75);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "italic");
-    const summary = p.bio || "Talenta profesional yang berkomitmen dan siap berkontribusi secara inklusif.";
-    const splitSummary = doc.splitTextToSize(summary, 170);
-    doc.text(splitSummary, 20, 82);
-
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("PENGALAMAN KERJA", 20, 110);
-    autoTable(doc, {
-      startY: 115,
-      head: [["Posisi", "Instansi", "Lokasi", "Periode"]],
-      body: work.map((w: any) => [
-        w.position, 
-        w.company_name, 
-        w.company_location || "-",
-        `${w.start_date} - ${w.is_current_work ? 'Sekarang' : w.end_date}`
-      ]),
-      headStyles: { fillColor: [37, 99, 235] },
-      theme: 'grid'
-    });
-
-    const finalY = (doc as any).lastAutoTable.finalY || 150;
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("SERTIFIKASI & PELATIHAN", 20, finalY + 15);
-    autoTable(doc, {
-      startY: finalY + 20,
-      head: [["Nama Sertifikasi", "Penyelenggara", "Tahun"]],
-      body: certs.map((c: any) => [c.name, c.organizer_name, c.year]),
-      headStyles: { fillColor: [5, 150, 105] },
-      theme: 'grid'
-    });
-
-    const finalY2 = (doc as any).lastAutoTable.finalY || 210;
-    doc.setFillColor(248, 250, 252);
-    doc.rect(20, finalY2 + 10, 170, 35, "F");
-    doc.setFontSize(10);
-    doc.setTextColor(15, 23, 42);
-    doc.setFont("helvetica", "bold");
-    
-    const accs = Array.isArray(p.preferred_accommodations) && p.preferred_accommodations.length > 0 
-      ? p.preferred_accommodations.join(", ") 
-      : "Sesuai standar umum";
-    const tools = Array.isArray(p.used_assistive_tools) && p.used_assistive_tools.length > 0 
-      ? p.used_assistive_tools.join(", ") 
-      : "Tidak menggunakan alat bantu khusus";
-
-    doc.text(`Akomodasi yang diharapkan: ${accs}`, 25, finalY2 + 20);
-    doc.text(`Alat bantu yang digunakan: ${tools}`, 25, finalY2 + 30);
-
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text("Profil digital lengkap dapat diakses pada tautan berikut:", 20, 280);
-    doc.setTextColor(37, 99, 235);
-    doc.text(`https://disabilitas.com/talent/${p.id}`, 20, 285);
-
-    doc.save(`CV_Audit_${p.full_name}.pdf`);
-  };
-
-  const filteredApplicants = applicants.filter(app => {
-    const matchSearch = app.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = filterStatus === "all" || app.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
   const parseToArray = (fieldData: any) => {
     if (!fieldData) return [];
     if (Array.isArray(fieldData)) return fieldData;
@@ -176,6 +74,12 @@ export default function ApplicantTracker({ company }: { company: any }) {
     return [];
   };
 
+  const stats = {
+    total: applicants.length,
+    pending: applicants.filter(a => a.status === 'applied').length,
+    accepted: applicants.filter(a => a.status === 'accepted').length,
+  };
+
   if (loading) return <div className="p-20 text-center font-black italic text-slate-400 animate-pulse uppercase tracking-widest">Sinkronisasi Data Riset...</div>;
 
   return (
@@ -183,36 +87,24 @@ export default function ApplicantTracker({ company }: { company: any }) {
       <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
       {/* --- STATISTIK --- */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-slate-900 p-6 rounded-[2.5rem] text-white shadow-xl flex flex-col justify-center italic">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1 flex items-center gap-2">
-            <Activity size={12} className="text-blue-400" /> Total Pelamar
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1 flex items-center gap-2 italic">
+            <Activity size={12} className="text-blue-400" /> Total Pelamar Masuk
           </p>
           <p className="text-4xl font-black italic tracking-tighter leading-none">{stats.total}</p>
         </div>
-        
         <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 flex flex-col justify-center shadow-sm italic">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-2">
-            <Clock size={12} className="text-orange-400" /> Pending Review
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-2 italic">
+            <Clock size={12} className="text-orange-400" /> Menunggu Review
           </p>
           <p className="text-4xl font-black italic tracking-tighter leading-none text-orange-500">{stats.pending}</p>
         </div>
-
         <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 flex flex-col justify-center shadow-sm italic">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-2">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-2 italic">
             <CheckCircle size={12} className="text-emerald-400" /> Talenta Diterima
           </p>
           <p className="text-4xl font-black italic tracking-tighter leading-none text-emerald-500">{stats.accepted}</p>
-        </div>
-
-        <div className="bg-blue-50 p-6 rounded-[2.5rem] border-2 border-blue-100 flex flex-col justify-center italic">
-          <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-1 flex items-center gap-2">
-            <PieChart size={12} /> Ragam Dominan
-          </p>
-          <p className="text-[10px] font-black italic uppercase leading-tight text-blue-900 mt-1">
-            {stats.tuli >= stats.daksa && stats.tuli >= stats.netra ? "Talenta Tuli" : 
-             stats.daksa >= stats.tuli && stats.daksa >= stats.netra ? "Talenta Daksa" : "Talenta Netra"}
-          </p>
         </div>
       </div>
 
@@ -222,17 +114,14 @@ export default function ApplicantTracker({ company }: { company: any }) {
           <Users className="text-blue-600" size={24} /> Applicant Tracker
         </h2>
         <div className="flex gap-4">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={16} />
-            <input 
-              placeholder="Cari nama talenta..." 
-              className="pl-11 pr-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 w-64 shadow-sm bg-white"
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <input 
+            placeholder="Cari nama talenta..." 
+            className="pl-6 pr-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 w-64 shadow-sm bg-white"
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <select 
             onChange={(e) => setFilterStatus(e.target.value)} 
-            className="px-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 shadow-sm cursor-pointer bg-white"
+            className="px-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 shadow-sm bg-white"
           >
             <option value="all">Semua Status</option>
             <option value="applied">Baru Masuk</option>
@@ -242,66 +131,53 @@ export default function ApplicantTracker({ company }: { company: any }) {
         </div>
       </div>
 
-      {/* --- LIST PELAMAR (SINKRONISASI KOMPETENSI) --- */}
-      <div className="grid gap-4">
+      {/* --- LIST PELAMAR DENGAN NARASI PROFESIONAL --- */}
+      <div className="grid gap-6">
         {filteredApplicants.length > 0 ? filteredApplicants.map((app) => {
           const p = app.profiles;
           const tools = parseToArray(p?.used_assistive_tools);
           const skills = parseToArray(p?.skills);
 
           return (
-            <div key={app.id} className="bg-white p-8 rounded-[3rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-center group hover:border-slate-900 transition-all shadow-sm">
-              <div className="flex items-center gap-8 flex-1">
-                <div className="w-20 h-20 bg-slate-900 text-white rounded-[2rem] flex items-center justify-center font-black text-3xl uppercase italic shadow-lg group-hover:scale-105 transition-all">
+            <div key={app.id} className="bg-white p-8 md:p-10 rounded-[3.5rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center group hover:border-slate-900 transition-all shadow-sm">
+              <div className="flex flex-col md:flex-row items-start gap-8 flex-1">
+                <div className="w-24 h-24 bg-slate-900 text-white rounded-[2.5rem] flex items-center justify-center font-black text-4xl uppercase italic shadow-lg shrink-0">
                   {p?.full_name?.charAt(0) || "?"}
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-4 max-w-2xl">
                   <div>
-                    <h4 className="font-black text-slate-900 uppercase text-lg italic leading-none">{p?.full_name}</h4>
-                    <p className="text-[10px] font-black text-blue-600 uppercase italic tracking-widest mt-1">{app.jobs?.title}</p>
+                    <h4 className="font-black text-slate-900 uppercase text-xl italic leading-none">{p?.full_name}</h4>
+                    <p className="text-[10px] font-black text-blue-600 uppercase italic tracking-[0.2em] mt-2">Melamar: {app.jobs?.title}</p>
                   </div>
 
-                  <div className="flex flex-wrap gap-4">
-                    {/* Pendidikan */}
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <GraduationCap size={14} className="text-slate-400" />
-                      <p className="text-[10px] font-black uppercase italic">{p?.last_education_level} - {p?.last_education_major}</p>
-                    </div>
-                    {/* Alat Bantu (Visibilitas Akomodasi) */}
-                    {tools.length > 0 && (
-                      <div className="flex items-center gap-2 text-emerald-600">
-                        <ShieldCheck size={14} />
-                        <p className="text-[10px] font-black uppercase italic">Alat Bantu: {tools.join(", ")}</p>
-                      </div>
+                  {/* NARASI KOMPETENSI */}
+                  <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100 italic text-slate-700 leading-relaxed text-sm font-medium">
+                    Pelamar ini berdomisili di <strong>{p?.city || "Kota/Kabupaten tidak tertera"}</strong>. 
+                    Memiliki latar belakang pendidikan terakhir <strong>{p?.last_education_level || "Jenjang Pendidikan"}</strong> jurusan <strong>{p?.last_education_major || "Bidang Jurusan"}</strong> dari <strong>{p?.last_university_name || "Institusi Pendidikan"}</strong> tahun lulus <strong>{p?.graduation_year || "Tahun Lulus"}</strong>.
+                    
+                    {skills.length > 0 && (
+                      <span> Pelamar memiliki keahlian utama dalam bidang <strong>{skills.join(", ")}</strong>.</span>
                     )}
-                  </div>
 
-                  {/* Skills (Pusat Kompetensi) */}
-                  <div className="flex flex-wrap gap-2">
-                    {skills.slice(0, 3).map((skill: string) => (
-                      <span key={skill} className="px-3 py-1 bg-slate-100 text-slate-600 text-[9px] font-black uppercase rounded-lg italic">
-                        {skill}
+                    {tools.length > 0 && (
+                      <span className="block mt-3 p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100 text-xs">
+                        <ShieldCheck size={14} className="inline mr-2" />
+                        Dalam bekerja, pelamar didukung dengan penggunaan alat bantu: <strong>{tools.join(", ")}</strong>.
                       </span>
-                    ))}
-                    {skills.length > 3 && <span className="text-[9px] font-black text-slate-300 italic">+{skills.length - 3} Lagi</span>}
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 mt-6 md:mt-0">
-                <button onClick={() => generateProfessionalCV(app)} className="p-4 bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all shadow-sm group/btn" title="Cetak CV Audit">
-                  <FileDown size={22} className="group-hover/btn:scale-110 transition-transform" />
-                </button>
-                <button onClick={() => handleUpdateStatus(app.id, 'accepted')} className="p-4 bg-emerald-50 text-emerald-400 hover:text-white hover:bg-emerald-500 rounded-2xl transition-all shadow-sm group/btn" title="Terima Pelamar">
-                  <CheckCircle size={22} className="group-hover/btn:scale-110 transition-transform" />
-                </button>
-                <button onClick={() => handleUpdateStatus(app.id, 'rejected')} className="p-4 bg-red-50 text-red-300 hover:text-white hover:bg-red-500 rounded-2xl transition-all shadow-sm group/btn" title="Tolak Pelamar">
-                  <XCircle size={22} className="group-hover/btn:scale-110 transition-transform" />
-                </button>
-                <a href={`/talent/${p?.id}`} target="_blank" className="p-4 text-slate-200 hover:text-slate-900 transition-all" title="Lihat Profil Publik">
-                  <ExternalLink size={22} />
-                </a>
+              {/* ACTION PANEL */}
+              <div className="flex md:flex-col items-center gap-3 mt-8 md:mt-0 w-full md:w-auto">
+                <button onClick={() => handleUpdateStatus(app.id, 'accepted')} className="flex-1 md:w-full p-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all shadow-sm border border-emerald-100 font-black uppercase text-[10px] italic">Terima</button>
+                <button onClick={() => handleUpdateStatus(app.id, 'rejected')} className="flex-1 md:w-full p-4 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all shadow-sm border border-red-100 font-black uppercase text-[10px] italic">Tolak</button>
+                <div className="flex gap-2 w-full justify-center">
+                  <button className="p-4 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl border border-slate-100" title="Cetak CV Audit"><FileDown size={20} /></button>
+                  <a href={`/talent/${p?.id}`} target="_blank" className="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl border border-slate-100" title="Profil Publik"><ExternalLink size={20} /></a>
+                </div>
               </div>
             </div>
           );
