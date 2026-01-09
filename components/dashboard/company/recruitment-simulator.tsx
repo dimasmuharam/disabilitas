@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { 
   Search, Users, MapPin, BookOpen, 
   Zap, ArrowRight, Briefcase, Sparkles, X,
-  CheckCircle2, Info, GraduationCap, Wrench, ShieldCheck
+  CheckCircle2, Clock, Info, GraduationCap, Wrench, ShieldCheck
 } from "lucide-react";
 import { 
   SKILLS_LIST, 
