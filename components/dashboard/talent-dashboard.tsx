@@ -63,6 +63,7 @@ if (autoOpenProfile) {
       fetchLatestData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   async function fetchLatestData() {

@@ -41,6 +41,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
     if (user?.id) fetchDashboardData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   async function fetchDashboardData() {

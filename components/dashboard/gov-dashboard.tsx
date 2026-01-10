@@ -42,8 +42,8 @@ export default function GovDashboard({ user }: { user: any }) {
   }, [user])
 
   useEffect(() => {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchGlobalData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function fetchGlobalData() {

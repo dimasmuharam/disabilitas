@@ -103,7 +103,7 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
                   </div>
                   {/* Progress Bar Scoring */}
                   <div className="h-2 w-full overflow-hidden rounded-full border border-current/10 bg-white/50">
-                    <div className={`h-full ${badgeConfig.progressColor} transition-all duration-1000`} style={{ width: `${score}%` }}></div>
+                    <div className={`h-full transition-all duration-1000 ${badgeConfig.progressColor}`} style={{ width: `${score}%` }}></div>
                   </div>
                 </div>
               </div>

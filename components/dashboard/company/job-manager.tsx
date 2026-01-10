@@ -51,19 +51,19 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
 
   const [jobData, setJobData] = useState(initialFormState);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (company?.id) fetchJobs();
-  }, [company?.id]);
-
-  async function fetchJobs() {
+  const fetchJobs = useCallback(async () => {
+    if (!company?.id) return;
     const { data } = await supabase
       .from("jobs")
       .select("*")
       .eq("company_id", company.id)
       .order("created_at", { ascending: false });
     setMyJobs(data || []);
-  }
+  }, [company?.id]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   const handleEdit = (job: any) => {
     setJobData({

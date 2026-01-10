@@ -40,10 +40,10 @@ export default function AdminDashboard({ user }: { user: any }) {
 
   const COLORS = ["#2563eb", "#9333ea", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#ec4899"]
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { 
     console.log('[ADMIN-DASHBOARD] Initializing with user:', { id: user?.id, email: user?.email, role: user?.role })
     loadAllAdminData() 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadAllAdminData() {
