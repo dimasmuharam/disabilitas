@@ -1,9 +1,11 @@
 "use client"
 
+// Tetap menggunakan Edge Runtime sesuai konfigurasi Mas
 export const runtime = 'edge'
 
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase"
+// PERBAIKAN: Menggunakan createClient dari folder baru
+import { createClient } from "@/lib/supabase/client" 
 import Link from "next/link"
 import { 
   MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
@@ -23,12 +25,17 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   const [isSuccess, setIsSuccess] = useState(false)
   const router = useRouter()
 
+  // Inisialisasi client di dalam komponen (Client Side)
+  const supabase = createClient();
+
   useEffect(() => {
     async function init() {
+      // Mengambil user session dengan standar baru
       const { data: { user: authUser } } = await supabase.auth.getUser()
       setUser(authUser)
       
       try {
+        // Logika UUID vs Slug Mas tetap dipertahankan
         const isUuid = params.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
         let query = supabase.from('jobs').select(`*, companies (*)`)
         
@@ -42,6 +49,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         if (error) throw error
         setJob(data)
 
+        // Cek apakah user sudah melamar sebelumnya
         if (authUser && data) {
           const { data: appData } = await supabase.from('applications')
             .select('id')
@@ -58,9 +66,9 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       }
     }
     init()
-  }, [params.id])
+  }, [params.id, supabase]);
 
-  // FUNGSI UTAMA MELAMAR (Updated with company_id sync)
+  // FUNGSI UTAMA MELAMAR (Sinkronisasi dengan skema company_id)
   const handleApply = async () => {
     if (!user) {
       router.push("/masuk")
@@ -75,7 +83,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
           {
             job_id: job.id,
             applicant_id: user.id,
-            company_id: job.company_id, // POINT KRUSIAL: Menghubungkan lamaran langsung ke perusahaan
+            company_id: job.company_id, // Integrasi ID Perusahaan
             status: "applied"
           }
         ])
@@ -127,7 +135,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       
       <title>{seoTitle}</title>
       <link rel="canonical" href={`https://disabilitas.com/lowongan/${job.slug}`} />
-      <meta name="description" content={`Lamar posisi ${job.title} di ${job.companies?.name}. Pekerjaan inklusif dengan dukungan akomodasi: ${parseToArray(job.preferred_disability_tools).join(", ")}.`} />
+      <meta name="description" content={`Lamar posisi ${job.title} di ${job.companies?.name}. Pekerjaan inklusif dengan dukungan akomodasi.`} />
 
       <div className="mx-auto max-w-6xl px-6">
         
