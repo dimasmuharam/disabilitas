@@ -48,6 +48,7 @@ export default function GovDashboard({ user }: { user: any }) {
 
   async function fetchGlobalData() {
     setLoading(true)
+    const supabase = createClient()
     try {
       console.log('[GOV-DASHBOARD] Fetching data for agency:', agencyName)
       

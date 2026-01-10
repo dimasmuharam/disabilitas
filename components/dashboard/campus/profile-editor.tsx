@@ -28,6 +28,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    const supabase = createClient();
     
     const { error } = await supabase
       .from("partners")

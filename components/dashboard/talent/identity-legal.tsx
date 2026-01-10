@@ -54,6 +54,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
+    const supabase = createClient();
 
     try {
       const { error } = await supabase

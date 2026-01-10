@@ -23,6 +23,7 @@ export default function TalentTracer({ partnerName, partnerId, onBack }: TalentT
 
   const fetchAffiliatedTalents = useCallback(async () => {
     setLoading(true);
+    const supabase = createClient();
     try {
       // 1. Cari ID Talenta yang punya sertifikat dari institusi ini
       const { data: certs } = await supabase

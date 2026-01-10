@@ -54,6 +54,7 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
     let finalAccs = [...formData.preferred_accommodations];
     if (otherAcc) finalAccs.push(`Lainnya: ${otherAcc}`);
 
+    const supabase = createClient();
     try {
       const { error } = await supabase
         .from("profiles")
