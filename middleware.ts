@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
       hasKey: !!supabaseAnonKey,
       path: request.nextUrl.pathname,
     });
-    // Redirect to error page if environment is not configured
+    // Redirect to login page if environment is not configured
     if (request.nextUrl.pathname.startsWith('/dashboard')) {
       return NextResponse.redirect(new URL('/masuk', request.url));
     }

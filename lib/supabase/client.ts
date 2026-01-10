@@ -9,7 +9,6 @@ export function createClient() {
     console.error("Supabase environment variables missing:", {
       hasUrl: !!supabaseUrl,
       hasKey: !!supabaseAnonKey,
-      env: typeof process !== "undefined" ? "process exists" : "no process",
     });
     throw new Error("Missing Supabase environment variables");
   }
