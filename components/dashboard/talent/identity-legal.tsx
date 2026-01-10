@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Save, User, Phone, MapPin, Calendar, 
   MessageSquare, ShieldCheck, Link as LinkIcon, 
@@ -54,6 +54,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
+    const supabase = createClient();
 
     try {
       const { error } = await supabase

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, Suspense } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { CheckCircle, ArrowRight, Building2, User, Landmark, GraduationCap } from "lucide-react"
 import { USER_ROLES } from "@/lib/data-static"
@@ -14,6 +14,7 @@ function ConfirmContent() {
 
   useEffect(() => {
     async function getProfile() {
+      const supabase = createClient()
       try {
         const { data: { user } } = await supabase.auth.getUser()
         

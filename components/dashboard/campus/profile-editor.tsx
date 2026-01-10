@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Building2, Globe, MapPin, Info, 
   Save, ShieldCheck, CheckCircle2, AlertCircle 
@@ -28,6 +28,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    const supabase = createClient();
     
     const { error } = await supabase
       .from("partners")

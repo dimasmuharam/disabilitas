@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
 import { 
@@ -15,6 +15,7 @@ export const revalidate = 60
  * GENERATE METADATA & CANONICAL
  */
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const supabase = createClient()
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, disability_type')
@@ -44,6 +45,7 @@ function calculateAge(birthDate: string) {
 }
 
 async function getTalentProfile(id: string) {
+  const supabase = createClient()
   // Pastikan memanggil relasi dengan benar
   const { data } = await supabase
     .from('profiles')

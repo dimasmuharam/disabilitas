@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Users, CheckCircle, XCircle, Search, 
   Filter, ArrowLeft, GraduationCap, 
@@ -20,6 +20,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
 
   const fetchEnrollments = useCallback(async () => {
     setLoading(true);
+    const supabase = createClient();
     // Kita join ke tabel trainings untuk ambil judul program 
     // dan ke tabel profiles untuk ambil data talenta
     const { data, error } = await supabase
@@ -42,6 +43,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
   }, [fetchEnrollments]);
 
   async function updateStatus(id: string, newStatus: string) {
+    const supabase = createClient();
     const { error } = await supabase
       .from("trainees")
       .update({ status: newStatus, updated_at: new Date() })

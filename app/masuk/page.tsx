@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
+import { signIn } from "@/lib/actions/auth"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -33,47 +34,41 @@ export default function LoginPage() {
     const normalizedEmail = email.toLowerCase().trim()
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Use unified Server Action for sign in with role-based redirection
+      const result = await signIn({
         email: normalizedEmail,
         password,
-        options: { captchaToken: turnstileToken }
-      })
+      });
 
-      if (error) throw error
-
-      if (data?.user) {
-        // --- LOGIKA AKSESIBILITAS KHUSUS ---
-        // 1. Paksa kursor keluar dari kotak edit agar mode formulir berhenti
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-
-        // 2. Set pesan sukses
-        setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Anda akan diarahkan ke judul halaman utama...");
-        setIsError(false)
-
-        // 3. Pasang 'ranjau' fokus untuk halaman Dashboard
-        sessionStorage.setItem("pindahkan_fokus_ke_h1", "true");
-
-        // 4. Pindahkan fokus kursor ke pesan sukses sementara (agar dibaca instan)
-        setTimeout(() => {
-          const alertElement = document.getElementById("login-announcement");
-          if (alertElement) alertElement.focus();
-        }, 100);
-
-        /**
-         * CATATAN UNTUK MAS DIMAS:
-         * Logika sinkronisasi profil manual yang sebelumnya ada di sini (INSERT ke profiles) 
-         * SUDAH DIHAPUS. Sekarang kita sepenuhnya mengandalkan SQL Trigger 
-         * handle_new_user() untuk menjaga kerapihan data riset Mas.
-         */
-
-        // 5. JEDA 3 DETIK agar pengumuman suara terbaca tuntas oleh Screen Reader
-        setTimeout(() => {
-          router.push("/dashboard")
-          router.refresh()
-        }, 3000)
+      if (!result.success) {
+        throw new Error(result.error || "Login failed");
       }
+
+      // --- LOGIKA AKSESIBILITAS KHUSUS ---
+      // 1. Paksa kursor keluar dari kotak edit agar mode formulir berhenti
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+
+      // 2. Set pesan sukses
+      setMsg("Login Berhasil! Selamat datang di Dashboard Disabilitas dot com. Anda akan diarahkan ke judul halaman utama...");
+      setIsError(false)
+
+      // 3. Pasang 'ranjau' fokus untuk halaman Dashboard
+      sessionStorage.setItem("pindahkan_fokus_ke_h1", "true");
+
+      // 4. Pindahkan fokus kursor ke pesan sukses sementara (agar dibaca instan)
+      setTimeout(() => {
+        const alertElement = document.getElementById("login-announcement");
+        if (alertElement) alertElement.focus();
+      }, 100);
+
+      // 5. JEDA 3 DETIK agar pengumuman suara terbaca tuntas oleh Screen Reader
+      setTimeout(() => {
+        const redirectPath = result.redirectPath || "/dashboard";
+        router.push(redirectPath);
+        router.refresh();
+      }, 3000);
 
     } catch (error: any) {
       setIsError(true)

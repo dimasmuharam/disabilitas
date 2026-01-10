@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 // Komponen Aksesibilitas
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -18,6 +18,7 @@ export function SiteHeader() {
 
   // LOGIKA 1: Cek Status Login Realtime
   useEffect(() => {
+    const supabase = createClient()
     // Cek awal saat load
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
@@ -37,6 +38,7 @@ export function SiteHeader() {
 
   // LOGIKA 2: Fungsi Logout
   const handleLogout = async () => {
+    const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/masuk") // Lempar ke halaman masuk setelah keluar
   }

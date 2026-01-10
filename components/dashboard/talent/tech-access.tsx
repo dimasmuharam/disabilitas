@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Save, Monitor, Laptop, Wifi, Construction,
   CheckCircle2, AlertCircle, Info, PlusCircle
@@ -54,6 +54,7 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
     let finalAccs = [...formData.preferred_accommodations];
     if (otherAcc) finalAccs.push(`Lainnya: ${otherAcc}`);
 
+    const supabase = createClient();
     try {
       const { error } = await supabase
         .from("profiles")

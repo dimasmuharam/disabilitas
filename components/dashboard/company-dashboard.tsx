@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Building2, Briefcase, Users, Star, 
   TrendingUp, AlertCircle, CheckCircle2, 
@@ -46,6 +46,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
   async function fetchDashboardData() {
     setLoading(true);
+    const supabase = createClient()
     try {
       const targetId = user?.id;
       if (!targetId) return;

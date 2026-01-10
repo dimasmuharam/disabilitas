@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Plus, BookOpen, Calendar, MapPin, 
   ChevronRight, Trash2, Edit3, Globe,
@@ -35,6 +35,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
   const fetchPrograms = useCallback(async () => {
     setLoading(true);
+    const supabase = createClient();
     const { data } = await supabase
       .from("trainings")
       .select("*")
@@ -51,6 +52,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const supabase = createClient();
     const { error } = await supabase
       .from("trainings")
       .insert([{ ...formData, partner_id: partnerId }]);

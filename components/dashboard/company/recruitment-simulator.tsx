@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Search, Users, MapPin, BookOpen, 
   Zap, ArrowRight, Briefcase, Sparkles, X,
@@ -45,6 +45,7 @@ export default function RecruitmentSimulator({ company }: { company: any }) {
     setErrorMessage(null);
     setAnnouncement("Memulai sinkronisasi data talenta inklusif dari database riset.");
 
+    const supabase = createClient();
     try {
       // Sesuai skema public.profiles: city, major, skills (array), education_level
       let query = supabase

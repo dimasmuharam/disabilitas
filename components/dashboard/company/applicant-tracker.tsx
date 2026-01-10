@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Users, Search, FileDown, 
   ExternalLink, CheckCircle, XCircle, 
@@ -22,6 +22,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
   const fetchApplicants = useCallback(async () => {
     if (!company?.id) return;
     setLoading(true);
+    const supabase = createClient();
     const { data, error } = await supabase
       .from("applications")
       .select(`
@@ -51,6 +52,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
   }, [company?.id, fetchApplicants]);
 
   const handleUpdateStatus = async (appId: string, newStatus: string, talentName: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from("applications")
       .update({ status: newStatus })

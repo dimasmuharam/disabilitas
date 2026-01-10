@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, Suspense } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter, useSearchParams } from "next/navigation"
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
@@ -22,6 +22,7 @@ function DashboardContent() {
 
   useEffect(() => {
     async function checkUser() {
+      const supabase = createClient()
       try {
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
         

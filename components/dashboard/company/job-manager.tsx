@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Plus, FileText, Trash2, Sparkles, 
   Briefcase, MapPin, Info, X, CheckCircle2,
@@ -53,6 +53,7 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
 
   const fetchJobs = useCallback(async () => {
     if (!company?.id) return;
+    const supabase = createClient()
     const { data } = await supabase
       .from("jobs")
       .select("*")
@@ -104,6 +105,7 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const supabase = createClient()
     
     const payload = { ...jobData };
     if (!isEditing) delete (payload as any).id;
@@ -323,7 +325,7 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
               </div>
               <div className="flex w-full items-center gap-4 border-t border-slate-50 pt-6 md:w-auto md:border-l-2 md:border-t-0 md:pl-8 md:pt-0">
                 <button onClick={() => handleEdit(job)} className="flex-1 rounded-2xl bg-slate-100 px-8 py-4 text-[10px] font-black uppercase italic text-slate-500 shadow-sm transition-all hover:bg-slate-900 hover:text-white md:flex-none">Edit</button>
-                <button onClick={async () => { if(confirm(`Hapus ${job.title}?`)) { await supabase.from("jobs").delete().eq("id", job.id); fetchJobs(); } }} aria-label={`Hapus ${job.title}`} className="rounded-2xl bg-slate-100 p-4 text-slate-400 shadow-sm transition-all hover:bg-red-600 hover:text-white"><Trash2 size={20} /></button>
+                <button onClick={async () => { if(confirm(`Hapus ${job.title}?`)) { const supabase = createClient(); await supabase.from("jobs").delete().eq("id", job.id); fetchJobs(); } }} aria-label={`Hapus ${job.title}`} className="rounded-2xl bg-slate-100 p-4 text-slate-400 shadow-sm transition-all hover:bg-red-600 hover:text-white"><Trash2 size={20} /></button>
               </div>
             </div>
           )) : (

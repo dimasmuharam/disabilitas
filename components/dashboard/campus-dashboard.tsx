@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+// 1. IMPORT BARU: Sesuai standar Supabase SSR Client
+import { createClient } from "@/lib/supabase/client";
 import { 
   GraduationCap, 
   Users, 
@@ -28,7 +29,6 @@ import TalentTracer from "./campus/talent-tracer";
 import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
 
-// SEKARANG SUDAH SERAGAM: Menggunakan { user } bukan { session }
 export default function CampusDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [partner, setPartner] = useState<any>(null);
@@ -42,12 +42,15 @@ export default function CampusDashboard({ user }: { user: any }) {
     totalPrograms: 0
   });
 
+  // 2. INISIALISASI SUPABASE CLIENT
+  const supabase = createClient();
+
   useEffect(() => {
     if (user?.id) {
       fetchDashboardData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, supabase]); // Menambahkan supabase ke dependency
 
   async function fetchDashboardData() {
     setLoading(true);
@@ -66,7 +69,7 @@ export default function CampusDashboard({ user }: { user: any }) {
         .select("*", { count: 'exact', head: true })
         .eq("partner_id", user.id);
 
-      // 3. Logika Tracing Talenta
+      // 3. Logika Tracing Talenta (Logic Mas Dimas yang sangat krusial untuk riset)
       const { data: certs } = await supabase
         .from("certifications")
         .select("profile_id")
@@ -74,6 +77,7 @@ export default function CampusDashboard({ user }: { user: any }) {
       
       const certProfileIds = Array.from(new Set(certs?.map(c => c.profile_id) || []));
 
+      // Integrasi data lintas tabel (Profiles + Certifications)
       const { data: talenta } = await supabase
         .from("profiles")
         .select("id, career_status, graduation_date")
@@ -117,7 +121,6 @@ export default function CampusDashboard({ user }: { user: any }) {
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10">
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
-      {/* HEADER */}
       <header className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
         <div className="space-y-2 text-left">
           <div className="flex items-center gap-3">
@@ -152,7 +155,6 @@ export default function CampusDashboard({ user }: { user: any }) {
         </div>
       </header>
 
-      {/* TABS */}
       <nav className="no-scrollbar flex flex-wrap gap-2 overflow-x-auto border-b-2 border-slate-100 pb-4" role="tablist">
         {[
           { id: "overview", label: "Dashboard", icon: LayoutDashboard },
@@ -178,7 +180,6 @@ export default function CampusDashboard({ user }: { user: any }) {
         ))}
       </nav>
 
-      {/* CONTENT */}
       <main className="min-h-[500px]">
         {activeTab !== "overview" && (
           <button 
@@ -235,7 +236,6 @@ export default function CampusDashboard({ user }: { user: any }) {
           </div>
         )}
 
-        {/* RENDER MODUL DENGAN PROP USER YANG SERAGAM */}
         <div className="mt-2 duration-700 animate-in fade-in">
            {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard Overview")} />}
            {activeTab === "enrollment" && <EnrollmentTracker partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard Overview")} />}

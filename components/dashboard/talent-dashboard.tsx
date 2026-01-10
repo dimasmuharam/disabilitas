@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { 
   User, MapPin, Briefcase, GraduationCap, FileDown, BookOpen, Laptop, Wifi, ArrowRight, AlertCircle, CheckCircle2, Search, ChevronLeft, LayoutDashboard, Share2, ExternalLink, ShieldCheck, Clock
@@ -67,6 +67,7 @@ if (autoOpenProfile) {
   }, [user?.id]);
 
   async function fetchLatestData() {
+    const supabase = createClient()
     try {
       // 1. Profil Dasar
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();

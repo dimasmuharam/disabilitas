@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   ShieldCheck, Mail, Lock, Eye, EyeOff, 
   Save, CheckCircle2, AlertCircle, LogOut, 
@@ -28,6 +28,7 @@ export default function AccountSettings({ user, onSuccess }: AccountSettingsProp
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
+    const supabase = createClient();
 
     try {
       // 1. UPDATE PASSWORD JIKA DIISI
@@ -70,6 +71,7 @@ export default function AccountSettings({ user, onSuccess }: AccountSettingsProp
     if (!window.confirm(`{"Keluar dari semua perangkat selain ini?"}`)) return;
     
     setLoading(true);
+    const supabase = createClient();
     try {
       const { error } = await supabase.auth.signOut({ scope: "global" });
       if (error) throw error;

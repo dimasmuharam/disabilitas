@@ -1,5 +1,5 @@
 import React from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { 
   Building2, MapPin, Briefcase, Users, 
   CheckCircle2, Globe, Mail,
@@ -15,6 +15,7 @@ import Link from "next/link";
 export const runtime = "edge";
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const supabase = createClient()
   const { data: company } = await supabase.from("companies").select("name, description").eq("id", params.id).single();
   return {
     title: `${company?.name || "Profil Instansi"} | disabilitas.com`,
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function PublicCompanyProfile({ params }: { params: { id: string } }) {
+  const supabase = createClient()
   const { data: company, error } = await supabase.from("companies").select("*").eq("id", params.id).single();
   const { data: allJobs } = await supabase.from("jobs").select("*").eq("company_id", params.id).order("created_at", { ascending: false });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Lock, Mail, LogOut, ShieldAlert, KeyRound } from "lucide-react";
 
 // SEKARANG MENGGUNAKAN PROPS 'user' AGAR SERAGAM
@@ -10,6 +10,7 @@ export default function AccountSettings({ user, onBack }: { user: any, onBack: (
 
   const handleSignOutAll = async () => {
     setLoading(true);
+    const supabase = createClient();
     // Menggunakan scope global untuk logout dari semua perangkat
     const { error } = await supabase.auth.signOut({ scope: 'global' });
     if (!error) window.location.href = "/";

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { updateTalentProfile } from "@/lib/actions/talent";
 import { 
   Award, Cpu, CheckCircle2, AlertCircle, Save, 
@@ -44,6 +44,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
   useEffect(() => {
     const fetchCerts = async () => {
+      const supabase = createClient();
       try {
         const { data } = await supabase
           .from("certifications")
@@ -81,6 +82,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       return;
     }
     if (!confirm("Hapus riwayat pelatihan ini?")) return;
+    const supabase = createClient();
     const { error } = await supabase.from("certifications").delete().eq("id", id);
     if (!error) setCerts(certs.filter(c => c.id !== id));
   };
@@ -88,6 +90,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const supabase = createClient();
     setMessage({ type: "", text: "" });
 
     try {
@@ -101,7 +104,12 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       for (const cert of certs) {
         const isTemp = cert.id.toString().startsWith("temp-");
         const { id, ...certData } = cert;
-        const payload = { ...certData, profile_id: user.id };
+        // Ensure year is stored as integer
+        const payload = { 
+          ...certData, 
+          profile_id: user.id,
+          year: certData.year ? parseInt(certData.year.toString(), 10) : new Date().getFullYear()
+        };
 
         if (isTemp) {
           await supabase.from("certifications").insert([payload]);

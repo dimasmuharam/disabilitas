@@ -3,7 +3,7 @@
 export const runtime = 'edge';
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { 
   MapPin, Briefcase, DollarSign, Filter, 
@@ -45,6 +45,7 @@ export default function LowonganPage() {
 
   async function fetchJobs() {
     setLoading(true);
+    const supabase = createClient()
     try {
       let query = supabase
         .from('jobs')
