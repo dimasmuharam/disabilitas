@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
-  GraduationCap, Users, BookOpen, 
+  GraduationCap, CheckCircle, Search, Users, BookOpen, 
   BarChart3, Settings, ShieldCheck, 
   Share2, AlertCircle, Plus, LayoutDashboard,
   ArrowLeft, Activity, Award, Lock, ExternalLink
@@ -193,7 +193,7 @@ export default function CampusDashboard({ session }: { session: any }) {
                 <p className="text-5xl font-black text-slate-900 tracking-tighter leading-none">{stats.totalAlumni}</p>
               </div>
               <div className="bg-white p-8 rounded-[3rem] border-2 border-slate-100 shadow-sm border-b-emerald-200">
-                <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest italic text-emerald-500">Terserap Kerja</p>
+                <p className="text-[9px] font-black uppercase mb-1 tracking-widest italic text-emerald-500">Terserap Kerja</p>
                 <p className="text-5xl font-black text-emerald-600 tracking-tighter leading-none">{stats.hiredAlumni}</p>
               </div>
               <div className="bg-white p-8 rounded-[3rem] border-2 border-slate-100 shadow-sm border-b-blue-200">
