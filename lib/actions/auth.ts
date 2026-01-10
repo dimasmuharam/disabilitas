@@ -59,7 +59,11 @@ export async function signUpUser(formData: {
         });
 
       if (profileError) {
-        console.error("Profile insert error:", profileError);
+        console.error("Profile insert error:", {
+          message: profileError.message || "Unknown error",
+          code: profileError.code || "UNKNOWN",
+          details: profileError.details || "No details",
+        });
         throw new Error(`Failed to create talent profile: ${profileError.message}`);
       }
     } else if (formData.role === "company") {
@@ -75,7 +79,11 @@ export async function signUpUser(formData: {
         });
 
       if (companyError) {
-        console.error("Company insert error:", companyError);
+        console.error("Company insert error:", {
+          message: companyError.message || "Unknown error",
+          code: companyError.code || "UNKNOWN",
+          details: companyError.details || "No details",
+        });
         throw new Error(`Failed to create company profile: ${companyError.message}`);
       }
     } else if (formData.role === "partner") {
@@ -91,7 +99,11 @@ export async function signUpUser(formData: {
         });
 
       if (partnerError) {
-        console.error("Partner insert error:", partnerError);
+        console.error("Partner insert error:", {
+          message: partnerError.message || "Unknown error",
+          code: partnerError.code || "UNKNOWN",
+          details: partnerError.details || "No details",
+        });
         throw new Error(`Failed to create partner profile: ${partnerError.message}`);
       }
     }
@@ -99,7 +111,13 @@ export async function signUpUser(formData: {
     revalidatePath("/", "layout");
     return { success: true, message: "Pendaftaran berhasil" };
   } catch (error: any) {
-    console.error("SignUp Error:", error);
+    // Log detailed error for debugging (no sensitive data)
+    console.error("SignUp Error:", {
+      message: error.message || "Unknown error",
+      status: error.status || "N/A",
+      code: error.code || "UNKNOWN",
+      name: error.name || "Error",
+    });
     return { success: false, message: error.message || "Terjadi kesalahan sistem" };
   }
 }
@@ -154,6 +172,13 @@ export async function signIn(formData: { email: string; password: string }) {
 
     return { success: true, message: "Login berhasil" };
   } catch (error: any) {
+    // Log detailed error for debugging (no sensitive data)
+    console.error("SignIn Error:", {
+      message: error.message || "Unknown error",
+      status: error.status || "N/A",
+      code: error.code || "UNKNOWN",
+      name: error.name || "Error",
+    });
     return { success: false, message: error.message || "Terjadi kesalahan sistem" };
   }
 }
