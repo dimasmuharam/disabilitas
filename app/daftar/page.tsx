@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
+import { signUpUser } from "@/lib/actions/auth"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -41,39 +42,36 @@ export default function RegisterPage() {
     const finalRedirect = "https://www.disabilitas.com/konfirmasi"
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Use unified Server Action for registration
+      const result = await signUpUser({
         email: normalizedEmail,
         password,
-        options: {
-          data: {
-            full_name: fullName, 
-            role: role 
-          },
-          captchaToken: turnstileToken, 
-          emailRedirectTo: finalRedirect,
-        },
-      })
+        full_name: fullName,
+        role: role as "talent" | "company" | "partner",
+        captchaToken: turnstileToken,
+        emailRedirectTo: finalRedirect,
+      });
 
-      if (error) throw error
-
-      if (data.user) {
-        setIsSuccess(true)
-        setMsg("Pendaftaran Berhasil! Instruksi aktivasi telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam.")
-        setIsError(false)
-
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-
-        setTimeout(() => {
-          const alertElement = document.getElementById("register-announcement");
-          if (alertElement) alertElement.focus();
-        }, 100);
-
-        setTimeout(() => {
-          router.push("/masuk");
-        }, 5000);
+      if (!result.success) {
+        throw new Error(result.error || "Registration failed");
       }
+
+      setIsSuccess(true)
+      setMsg("Pendaftaran Berhasil! Instruksi aktivasi telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam.")
+      setIsError(false)
+
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+
+      setTimeout(() => {
+        const alertElement = document.getElementById("register-announcement");
+        if (alertElement) alertElement.focus();
+      }, 100);
+
+      setTimeout(() => {
+        router.push("/masuk");
+      }, 5000);
 
     } catch (error: any) {
       console.error("[REGISTRASI] Error:", error)

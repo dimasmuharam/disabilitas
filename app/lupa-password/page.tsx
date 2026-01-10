@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
@@ -29,6 +29,7 @@ export default function ForgotPasswordPage() {
     setIsError(false)
 
     const normalizedEmail = email.toLowerCase().trim()
+    const supabase = createClient()
 
     try {
       // Mengirimkan link reset password ke email talenta

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Briefcase, Save, Plus, Trash2, Linkedin, 
   MapPin, DollarSign, CheckCircle2, AlertCircle, Info, AlignLeft, Building2, ShieldCheck
@@ -57,6 +57,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
   };
 
   async function fetchExperiences() {
+    const supabase = createClient();
     const { data } = await supabase
       .from("work_experiences")
       .select("*")
@@ -74,6 +75,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
   }
 
   const handleAddExperience = async () => {
+    const supabase = createClient();
     const newExp = {
       profile_id: user.id,
       company_name: "",
@@ -111,6 +113,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
   };
 
   const handleDeleteExp = async (id: string) => {
+    const supabase = createClient();
     const { error } = await supabase.from("work_experiences").delete().eq("id", id);
     if (!error) setExperiences(experiences.filter(exp => exp.id !== id));
   };
@@ -119,6 +122,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
+    const supabase = createClient();
 
     try {
       await supabase.from("profiles").update(profileData).eq("id", user.id);

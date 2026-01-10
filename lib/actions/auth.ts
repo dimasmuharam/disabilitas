@@ -2,42 +2,154 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 /**
- * PENDAFTARAN TALENTA BARU
- * Mengotomatisasi Informed Consent untuk kebutuhan riset.
+ * UNIFIED USER REGISTRATION
+ * Handles multi-role registration with atomic transactions.
+ * Branches based on selected role: TALENT, COMPANY, or PARTNER
  */
-export async function signUpTalent(formData: any) {
+export async function signUpUser(formData: {
+  email: string;
+  password: string;
+  full_name: string;
+  role: "talent" | "company" | "partner";
+  captchaToken?: string;
+  emailRedirectTo?: string;
+}) {
   const supabase = createClient();
   
   try {
+    // 1. Create auth user
     const { data, error } = await supabase.auth.signUp({
-      email: formData.email,
+      email: formData.email.toLowerCase().trim(),
       password: formData.password,
       options: {
         data: {
           full_name: formData.full_name,
-          role: "talent",
+          role: formData.role,
         },
+        captchaToken: formData.captchaToken,
+        emailRedirectTo: formData.emailRedirectTo,
       },
     });
 
     if (error) throw error;
 
-    if (data.user) {
-      // Inisialisasi Profil (Penting untuk integrasi data riset)
+    if (!data.user) {
+      throw new Error("User creation failed - no user returned");
+    }
+
+    // 2. Role-based table insertion using user ID as primary key
+    const userId = data.user.id;
+    const timestamp = new Date().toISOString();
+
+    if (formData.role === "talent") {
+      // Insert into profiles table with has_informed_consent: true
       const { error: profileError } = await supabase
         .from("profiles")
-        .upsert({
-          id: data.user.id,
+        .insert({
+          id: userId,
           full_name: formData.full_name,
-          email: formData.email,
+          email: formData.email.toLowerCase().trim(),
           role: "talent",
-          has_informed_consent: true, // Wajib diisi true sesuai standar riset
-          created_at: new Date().toISOString(),
+          has_informed_consent: true, // Required for research standards
+          created_at: timestamp,
+          updated_at: timestamp,
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile insert error:", profileError);
+        throw new Error(`Failed to create talent profile: ${profileError.message}`);
+      }
+    } else if (formData.role === "company") {
+      // Insert into companies table
+      const { error: companyError } = await supabase
+        .from("companies")
+        .insert({
+          id: userId,
+          name: formData.full_name,
+          email: formData.email.toLowerCase().trim(),
+          created_at: timestamp,
+          updated_at: timestamp,
+        });
+
+      if (companyError) {
+        console.error("Company insert error:", companyError);
+        throw new Error(`Failed to create company profile: ${companyError.message}`);
+      }
+    } else if (formData.role === "partner") {
+      // Insert into partners table
+      const { error: partnerError } = await supabase
+        .from("partners")
+        .insert({
+          id: userId,
+          name: formData.full_name,
+          email: formData.email.toLowerCase().trim(),
+          created_at: timestamp,
+          updated_at: timestamp,
+        });
+
+      if (partnerError) {
+        console.error("Partner insert error:", partnerError);
+        throw new Error(`Failed to create partner profile: ${partnerError.message}`);
+      }
+    }
+
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error: any) {
+    console.error("SignUp Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * LEGACY: PENDAFTARAN TALENTA BARU
+ * Kept for backward compatibility - use signUpUser instead
+ */
+export async function signUpTalent(formData: any) {
+  return signUpUser({
+    email: formData.email,
+    password: formData.password,
+    full_name: formData.full_name,
+    role: "talent",
+  });
+}
+
+/**
+ * SIGN IN WITH ROLE-BASED REDIRECTION
+ */
+export async function signIn(formData: { email: string; password: string }) {
+  const supabase = createClient();
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+    if (error) throw error;
+
+    // Get user role for redirection
+    if (data.user) {
+      const userRole = data.user.user_metadata?.role;
+      
+      revalidatePath("/", "layout");
+      
+      // Role-based redirection
+      let redirectPath = "/dashboard";
+      if (userRole === "talent") {
+        redirectPath = "/dashboard/talent";
+      } else if (userRole === "company") {
+        redirectPath = "/dashboard/company";
+      } else if (userRole === "partner") {
+        redirectPath = "/dashboard/partner";
+      } else if (userRole === "government") {
+        redirectPath = "/dashboard/government";
+      } else if (userRole === "admin") {
+        redirectPath = "/dashboard/super-admin";
+      }
+
+      return { success: true, redirectPath };
     }
 
     return { success: true };
@@ -47,26 +159,7 @@ export async function signUpTalent(formData: any) {
 }
 
 /**
- * MASUK (LOGIN)
- */
-export async function signIn(formData: any) {
-  const supabase = createClient();
-  try {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
-    });
-    if (error) throw error;
-
-    revalidatePath("/", "layout");
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * KELUAR (LOGOUT)
+ * SIGN OUT
  */
 export async function signOut() {
   const supabase = createClient();

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Lock, Mail, LogOut, ShieldAlert, KeyRound } from "lucide-react";
 
 // SEKARANG MENGGUNAKAN PROPS 'user' AGAR SERAGAM

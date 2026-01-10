@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { 
@@ -80,6 +80,7 @@ export default function GovDashboard({ user }: { user: any }) {
   // Fungsi Simulasi (Nasional)
   async function handleRunSimulation() {
     setIsSimulating(true)
+    const supabase = createClient()
     const { data } = await supabase.from("profiles").select("*")
     if (data) {
       const filtered = data.filter(p => {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 // Grafik Dinamis Recharts
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -49,6 +49,7 @@ export default function AdminDashboard({ user }: { user: any }) {
   async function loadAllAdminData() {
     console.log('[ADMIN-DASHBOARD] Loading admin data...')
     setLoading(true)
+    const supabase = createClient()
     try {
       const [nData, iData, aData, talentsRes, entitiesRes] = await Promise.all([
         getNationalStats(),

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Lock, Eye, EyeOff, Save, CheckCircle2, AlertCircle } from "lucide-react"
 
@@ -26,6 +26,7 @@ export default function ResetPasswordPage() {
     setLoading(true)
     setMsg("")
     setIsError(false)
+    const supabase = createClient()
 
     try {
       const { error } = await supabase.auth.updateUser({
