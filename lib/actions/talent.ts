@@ -1,12 +1,14 @@
 "use server"
 
-import { supabase } from "@/lib/supabase";
+// Menggunakan createClient untuk Server-Side (Next.js 14 Standard)
+import { createClient } from "@/lib/supabase/server"; 
+import { revalidatePath } from "next/cache";
 
 /**
- * UPDATE PROFIL UTAMA (Tabel: profiles)
- * Digunakan untuk memperbarui data dasar talenta.
+ * UPDATE PROFIL UTAMA (Tabel: public.profiles)
  */
 export async function updateTalentProfile(userId: string, updates: any) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("profiles")
@@ -21,6 +23,10 @@ export async function updateTalentProfile(userId: string, updates: any) {
       .single();
 
     if (error) throw error;
+
+    // Refresh data di halaman dashboard agar perubahan langsung terlihat
+    revalidatePath("/dashboard");
+    
     return { success: true, data };
   } catch (error: any) {
     console.error("Profile Update Error:", error.message);
@@ -30,21 +36,22 @@ export async function updateTalentProfile(userId: string, updates: any) {
 
 /**
  * MANAJEMEN RIWAYAT KERJA (Tabel: work_experiences)
- * Menyimpan atau memperbarui pengalaman kerja talenta.
  */
 export async function upsertWorkExperience(experience: any) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("work_experiences")
       .upsert({
         ...experience,
-        // Sinkronisasi dengan skema boolean is_verified
         is_verified: experience.is_verified || false,
         updated_at: new Date().toISOString(),
       })
       .select();
 
     if (error) throw error;
+    
+    revalidatePath("/dashboard");
     return { success: true, data };
   } catch (error: any) {
     console.error("Work Experience Error:", error.message);
@@ -55,30 +62,30 @@ export async function upsertWorkExperience(experience: any) {
 /**
  * SINKRONISASI SERTIFIKAT OTOMATIS DARI MODUL PELATIHAN
  * Menarik data dari tabel 'trainees' yang statusnya sudah 'completed'.
- * Jalur Data: Pelatihan (Trainees) -> Profil (Certifications)
  */
 export async function syncOfficialCertifications(userId: string) {
+  const supabase = createClient();
   try {
-    // Mencari riwayat pendaftaran pelatihan (bukan lamaran kerja)
+    // Sinkronisasi: trainees -> trainings (mengambil detail penyelenggara)
     const { data: traineeData, error } = await supabase
       .from("trainees")
       .select(`
         status,
         trainings (
           title, 
-          organizer_name,
+          category,
           updated_at
         )
       `)
-      .eq("profile_id", userId) // Benar: trainees menggunakan profile_id
+      .eq("profile_id", userId)
       .eq("status", "completed");
 
     if (error) throw error;
 
-    // Transformasi data agar cocok dengan struktur tabel certifications
+    // Transformasi data untuk visualisasi profil
     const officialCerts = traineeData?.map((item: any) => ({
       name: item.trainings?.title || "Sertifikat Pelatihan",
-      organizer_name: item.trainings?.organizer_name || "Official Partner",
+      organizer_name: "Official Partner", // Bisa dikembangkan untuk join ke tabel partners
       year: item.trainings?.updated_at 
         ? new Date(item.trainings.updated_at).getFullYear().toString() 
         : new Date().getFullYear().toString(),
@@ -94,10 +101,10 @@ export async function syncOfficialCertifications(userId: string) {
 
 /**
  * CEK STATUS PENEMPATAN KERJA DARI MODUL LOWONGAN
- * Menarik data dari tabel 'applications' yang statusnya sudah 'accepted'.
- * Jalur Data: Lamaran Kerja (Applications) -> Status Pekerjaan
+ * Applications accepted -> Memperbarui status karir secara otomatis
  */
 export async function checkVerifiedPlacement(userId: string) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("applications")
@@ -106,8 +113,8 @@ export async function checkVerifiedPlacement(userId: string) {
         company_id,
         jobs (title)
       `)
-      .eq("applicant_id", userId) // Benar: applications menggunakan applicant_id
-      .eq("status", "accepted");
+      .eq("applicant_id", userId)
+      .eq("status", "accepted"); // Sesuai skema Mas: accepted
 
     if (error) throw error;
     return { success: true, data };
