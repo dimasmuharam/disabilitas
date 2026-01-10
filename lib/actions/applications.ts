@@ -1,13 +1,15 @@
 "use server"
 
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 /**
- * Memperbarui status lamaran kerja (applied, accepted, rejected)
+ * Memperbarui status lamaran kerja (applied, accepted, rejected, interviewing)
  * Digunakan oleh HRD di Dashboard Perusahaan/Instansi
  * Sesuai Skema DB: status menggunakan USER-DEFINED (application_status)
  */
 export async function updateApplicationStatus(applicationId: string, status: string) {
+    const supabase = createClient();
     try {
         const { data, error } = await supabase
             .from("applications")
@@ -19,6 +21,9 @@ export async function updateApplicationStatus(applicationId: string, status: str
             .select()
 
         if (error) throw error
+        
+        // Sangat krusial agar HRD melihat perubahan status secara instan
+        revalidatePath("/dashboard");
         
         return { data, error: null }
     } catch (error: any) {
@@ -32,6 +37,7 @@ export async function updateApplicationStatus(applicationId: string, status: str
  * Digunakan oleh HRD saat klik 'Cetak CV' atau 'Lihat Profil'
  */
 export async function getTalentDetailsForCompany(talentId: string) {
+    const supabase = createClient();
     try {
         const { data, error } = await supabase
             .from("profiles")
@@ -53,6 +59,7 @@ export async function getTalentDetailsForCompany(talentId: string) {
  * Berdasarkan Instruksi Super Admin: Kerapihan data karir
  */
 export async function getInternalAsnTracking(agencyName: string) {
+    const supabase = createClient();
     try {
         // Logika: Mencari profil yang punya riwayat kerja saat ini di instansi tsb
         const { data, error } = await supabase
