@@ -40,8 +40,9 @@ export default function LoginPage() {
         password,
       });
 
-      if (!result.success) {
-        throw new Error(result.error || "Login failed");
+      if (!result?.success) {
+        const message = result?.message || "Terjadi kesalahan sistem";
+        throw new Error(message);
       }
 
       // --- LOGIKA AKSESIBILITAS KHUSUS ---
@@ -65,7 +66,7 @@ export default function LoginPage() {
 
       // 5. JEDA 3 DETIK agar pengumuman suara terbaca tuntas oleh Screen Reader
       setTimeout(() => {
-        const redirectPath = result.redirectPath || "/dashboard";
+        const redirectPath = result?.redirectPath || "/dashboard";
         router.push(redirectPath);
         router.refresh();
       }, 3000);

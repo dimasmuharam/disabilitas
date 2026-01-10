@@ -97,10 +97,10 @@ export async function signUpUser(formData: {
     }
 
     revalidatePath("/", "layout");
-    return { success: true };
+    return { success: true, message: "Pendaftaran berhasil" };
   } catch (error: any) {
     console.error("SignUp Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, message: error.message || "Terjadi kesalahan sistem" };
   }
 }
 
@@ -149,12 +149,12 @@ export async function signIn(formData: { email: string; password: string }) {
         redirectPath = "/dashboard/super-admin";
       }
 
-      return { success: true, redirectPath };
+      return { success: true, message: "Login berhasil", redirectPath };
     }
 
-    return { success: true };
+    return { success: true, message: "Login berhasil" };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, message: error.message || "Terjadi kesalahan sistem" };
   }
 }
 

@@ -52,8 +52,9 @@ export default function RegisterPage() {
         emailRedirectTo: finalRedirect,
       });
 
-      if (!result.success) {
-        throw new Error(result.error || "Registration failed");
+      if (!result?.success) {
+        const message = result?.message || "Terjadi kesalahan sistem";
+        throw new Error(message);
       }
 
       setIsSuccess(true)
