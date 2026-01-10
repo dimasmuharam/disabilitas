@@ -104,7 +104,12 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       for (const cert of certs) {
         const isTemp = cert.id.toString().startsWith("temp-");
         const { id, ...certData } = cert;
-        const payload = { ...certData, profile_id: user.id };
+        // Ensure year is stored as integer
+        const payload = { 
+          ...certData, 
+          profile_id: user.id,
+          year: certData.year ? parseInt(certData.year.toString(), 10) : new Date().getFullYear()
+        };
 
         if (isTemp) {
           await supabase.from("certifications").insert([payload]);
