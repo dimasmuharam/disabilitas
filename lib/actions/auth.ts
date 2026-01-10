@@ -112,6 +112,7 @@ export async function signUpUser(formData: {
     return { success: true, message: "Pendaftaran berhasil" };
   } catch (error: any) {
     // Log detailed error for debugging (no sensitive data)
+    console.error("Auth Error Details:", error);
     console.error("SignUp Error:", {
       message: error.message || "Unknown error",
       status: error.status || "N/A",
@@ -173,6 +174,7 @@ export async function signIn(formData: { email: string; password: string }) {
     return { success: true, message: "Login berhasil" };
   } catch (error: any) {
     // Log detailed error for debugging (no sensitive data)
+    console.error("Auth Error Details:", error);
     console.error("SignIn Error:", {
       message: error.message || "Unknown error",
       status: error.status || "N/A",
