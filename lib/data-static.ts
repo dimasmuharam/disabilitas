@@ -1,6 +1,5 @@
 // File: lib/data-static.ts
 // Deskripsi: Basis data statis komprehensif untuk sinkronisasi riset disabilitas.com
-// Aturan: Menggunakan format string bersih, menghindari tanda kutip ganda dalam teks narasi.
 
 export const USER_ROLES = {
   TALENT: "talent",
