@@ -68,17 +68,17 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 duration-500 animate-in fade-in">
       {/* HEADER MODUL */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">Kelola Program Pelatihan</h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Publikasikan program pengembangan SDM inklusif Anda</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Publikasikan program pengembangan SDM inklusif Anda</p>
         </div>
         {!isAdding && (
           <button 
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-black uppercase text-[10px] hover:bg-blue-600 transition-all shadow-lg"
+            className="flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-[10px] font-black uppercase text-white shadow-lg transition-all hover:bg-blue-600"
           >
             <Plus size={16} /> Buat Program Baru
           </button>
@@ -87,22 +87,22 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
       {isAdding ? (
         /* FORM TAMBAH PROGRAM */
-        <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 space-y-8 shadow-2xl shadow-slate-100">
-          <div className="flex justify-between items-center border-b pb-6">
-            <h3 className="font-black uppercase italic text-lg text-blue-600 italic">Formulir Program Baru</h3>
-            <button type="button" onClick={() => setIsAdding(false)} className="text-slate-400 hover:text-red-500 transition-colors">
+        <form onSubmit={handleSubmit} className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-2xl shadow-slate-100">
+          <div className="flex items-center justify-between border-b pb-6">
+            <h3 className="text-lg font-black uppercase italic text-blue-600">Formulir Program Baru</h3>
+            <button type="button" onClick={() => setIsAdding(false)} className="text-slate-400 transition-colors hover:text-red-500">
               <X size={24} />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {/* Kolom Kiri: Informasi Dasar */}
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Judul Program</label>
                 <input 
                   required
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-slate-900 focus:bg-white outline-none transition-all font-bold"
+                  className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
                   placeholder="Contoh: Pelatihan Digital Marketing Inklusif"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
@@ -114,7 +114,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tanggal Mulai</label>
                   <input 
                     type="date" required
-                    className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl font-bold"
+                    className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold"
                     value={formData.start_date}
                     onChange={(e) => setFormData({...formData, start_date: e.target.value})}
                   />
@@ -123,7 +123,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tanggal Selesai</label>
                   <input 
                     type="date" required
-                    className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl font-bold"
+                    className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold"
                     value={formData.end_date}
                     onChange={(e) => setFormData({...formData, end_date: e.target.value})}
                   />
@@ -133,7 +133,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Lokasi / Link Pertemuan</label>
                 <input 
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl font-bold"
+                  className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold"
                   placeholder="Contoh: Zoom / Alamat Kantor"
                   value={formData.location}
                   onChange={(e) => setFormData({...formData, location: e.target.value})}
@@ -145,9 +145,9 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Ragam Disabilitas</label>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-4 bg-slate-50 rounded-2xl no-scrollbar border-2 border-slate-50">
+                <div className="no-scrollbar grid max-h-40 grid-cols-2 gap-2 overflow-y-auto rounded-2xl border-2 border-slate-50 bg-slate-50 p-4">
                   {DISABILITY_TYPES.map(type => (
-                    <label key={type} className="flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase cursor-pointer hover:text-slate-900">
+                    <label key={type} className="flex cursor-pointer items-center gap-2 text-[10px] font-bold uppercase text-slate-600 hover:text-slate-900">
                       <input 
                         type="checkbox"
                         checked={formData.target_disability.includes(type)}
@@ -167,7 +167,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Skill yang Akan Didapat</label>
-                <div className="flex flex-wrap gap-2 p-4 bg-slate-50 rounded-2xl border-2 border-slate-50">
+                <div className="flex flex-wrap gap-2 rounded-2xl border-2 border-slate-50 bg-slate-50 p-4">
                   {SKILLS_LIST.slice(0, 10).map(skill => (
                     <button
                       key={skill} type="button"
@@ -177,8 +177,8 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                           : [...formData.provided_skills, skill];
                         setFormData({...formData, provided_skills: val});
                       }}
-                      className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase transition-all ${
-                        formData.provided_skills.includes(skill) ? "bg-slate-900 text-white" : "bg-white text-slate-400 border border-slate-200"
+                      className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase transition-all ${
+                        formData.provided_skills.includes(skill) ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-400"
                       }`}
                     >
                       {skill}
@@ -193,14 +193,14 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Deskripsi & Silabus Singkat</label>
             <textarea 
               rows={4}
-              className="w-full p-6 bg-slate-50 border-2 border-slate-50 rounded-[2rem] outline-none font-medium text-slate-700"
+              className="w-full rounded-[2rem] border-2 border-slate-50 bg-slate-50 p-6 font-medium text-slate-700 outline-none"
               placeholder="Jelaskan apa yang akan dipelajari dan manfaat program ini..."
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
             />
           </div>
 
-          <button type="submit" className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-slate-900 transition-all shadow-xl shadow-blue-100">
+          <button type="submit" className="w-full rounded-[2rem] bg-blue-600 py-5 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900">
             Publikasikan Program Sekarang
           </button>
         </form>
@@ -208,35 +208,35 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
         /* DAFTAR PROGRAM YANG ADA */
         <div className="grid grid-cols-1 gap-4">
           {programs.length > 0 ? programs.map((prog) => (
-            <div key={prog.id} className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6 group hover:border-slate-200 transition-all">
-              <div className="flex gap-6 items-center">
-                <div className="bg-slate-100 p-4 rounded-[1.5rem] text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+            <div key={prog.id} className="group flex flex-col items-center justify-between gap-6 rounded-[2.5rem] border-2 border-slate-50 bg-white p-6 transition-all hover:border-slate-200 md:flex-row">
+              <div className="flex items-center gap-6">
+                <div className="rounded-3xl bg-slate-100 p-4 text-slate-400 transition-colors group-hover:bg-blue-50 group-hover:text-blue-600">
                   <BookOpen size={24} />
                 </div>
                 <div>
-                  <h4 className="font-black uppercase italic tracking-tighter text-slate-900 text-lg leading-tight">{prog.title}</h4>
-                  <div className="flex flex-wrap gap-4 mt-1">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase flex items-center gap-1"><Calendar size={12}/> {prog.start_date} - {prog.end_date}</span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase flex items-center gap-1"><MapPin size={12}/> {prog.location}</span>
+                  <h4 className="text-lg font-black uppercase italic leading-tight tracking-tighter text-slate-900">{prog.title}</h4>
+                  <div className="mt-1 flex flex-wrap gap-4">
+                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400"><Calendar size={12}/> {prog.start_date} - {prog.end_date}</span>
+                    <span className="flex items-center gap-1 text-[9px] font-bold uppercase text-slate-400"><MapPin size={12}/> {prog.location}</span>
                   </div>
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
-                <button className="p-3 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 hover:text-slate-900 transition-all">
+                <button className="rounded-full bg-slate-50 p-3 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900">
                   <Edit3 size={18} />
                 </button>
-                <button className="p-3 bg-slate-50 text-slate-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-all">
+                <button className="rounded-full bg-slate-50 p-3 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500">
                   <Trash2 size={18} />
                 </button>
-                <button className="ml-4 flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg">
+                <button className="ml-4 flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-[9px] font-black uppercase tracking-widest text-white shadow-lg">
                   Detail Pendaftar <ChevronRight size={14} />
                 </button>
               </div>
             </div>
           )) : (
-            <div className="p-20 text-center border-4 border-dashed border-slate-100 rounded-[4rem]">
-              <p className="text-slate-300 font-black uppercase italic tracking-tighter">Belum ada program pelatihan yang dibuat.</p>
+            <div className="rounded-[4rem] border-4 border-dashed border-slate-100 p-20 text-center">
+              <p className="font-black uppercase italic tracking-tighter text-slate-300">Belum ada program pelatihan yang dibuat.</p>
             </div>
           )}
         </div>

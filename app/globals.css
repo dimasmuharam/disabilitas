@@ -35,6 +35,9 @@
     --ring: 221.2 83.2% 53.3%; /* Ring fokus jadi biru */
  
     --radius: 0.5rem;
+    
+    /* Font sans using system fonts */
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   }
  
   .dark {

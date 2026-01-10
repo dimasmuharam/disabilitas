@@ -42,7 +42,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-8">
         
         {/* BAGIAN KIRI: Logo & Menu Utama */}
@@ -51,10 +51,10 @@ export function SiteHeader() {
           {/* Logo Utama */}
           <Link 
             href="/" 
-            className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 dark:focus:ring-slate-300 rounded-md p-1"
+            className="flex items-center space-x-2 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 dark:focus:ring-slate-300"
             aria-label="Disabilitas.com, kembali ke halaman depan"
           >
-            <div className="relative h-8 w-8 overflow-hidden rounded-md bg-white p-0.5">
+            <div className="relative size-8 overflow-hidden rounded-md bg-white p-0.5">
               <Image 
                 src="/logo.png" 
                 alt="Logo Disabilitas.com" 
@@ -65,36 +65,36 @@ export function SiteHeader() {
               />
             </div>
             
-            <span className="hidden font-bold text-xl text-slate-900 dark:text-white sm:inline-block">
+            <span className="hidden text-xl font-bold text-slate-900 dark:text-white sm:inline-block">
               Disabilitas.com
             </span>
           </Link>
 
           {/* Navigasi Desktop */}
-          <nav className="hidden gap-6 md:flex items-center">
+          <nav className="hidden items-center gap-6 md:flex">
             <Link
               href="/lowongan"
-              className={`text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 rounded p-1 ${pathname === '/lowongan' ? 'text-slate-900 dark:text-white font-bold' : 'text-muted-foreground'}`}
+              className={`rounded p-1 text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 ${pathname === '/lowongan' ? 'font-bold text-slate-900 dark:text-white' : 'text-muted-foreground'}`}
             >
               Cari Lowongan
             </Link>
             
             <Link
               href="/bisnis"
-              className={`text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 rounded p-1 ${pathname === '/bisnis' ? 'text-slate-900 dark:text-white font-bold' : 'text-muted-foreground'}`}
+              className={`rounded p-1 text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 ${pathname === '/bisnis' ? 'font-bold text-slate-900 dark:text-white' : 'text-muted-foreground'}`}
             >
               Audit & Rekrutmen
             </Link>
             
             <Link
               href="/kampus"
-              className={`text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 rounded p-1 ${pathname === '/kampus' ? 'text-slate-900 dark:text-white font-bold' : 'text-muted-foreground'}`}
+              className={`rounded p-1 text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 ${pathname === '/kampus' ? 'font-bold text-slate-900 dark:text-white' : 'text-muted-foreground'}`}
             >
               Mitra Kampus
             </Link>
              <Link
               href="/tentang"
-              className={`text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 rounded p-1 ${pathname === '/tentang' ? 'text-slate-900 dark:text-white font-bold' : 'text-muted-foreground'}`}
+              className={`rounded p-1 text-sm font-medium transition-colors hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-slate-900 ${pathname === '/tentang' ? 'font-bold text-slate-900 dark:text-white' : 'text-muted-foreground'}`}
             >
               Tentang Kami
             </Link>
@@ -105,7 +105,7 @@ export function SiteHeader() {
         <div className="flex items-center space-x-2 md:space-x-4">
             
             {/* Tools Area */}
-            <div className="hidden sm:flex items-center space-x-1 border-r border-slate-200 dark:border-slate-800 pr-3 mr-1">
+            <div className="mr-1 hidden items-center space-x-1 border-r border-slate-200 pr-3 dark:border-slate-800 sm:flex">
               <LanguageToggle />
               <FontToggle />
               <ThemeToggle />
@@ -130,7 +130,7 @@ export function SiteHeader() {
             ) : (
                 // JIKA BELUM LOGIN (Guest)
                 <div className="flex items-center gap-2">
-                    <Link href="/masuk" className="text-sm font-medium text-muted-foreground hover:text-primary px-2 hidden sm:block">
+                    <Link href="/masuk" className="hidden px-2 text-sm font-medium text-muted-foreground hover:text-primary sm:block">
                         Masuk
                     </Link>
                     <Link href="/daftar">

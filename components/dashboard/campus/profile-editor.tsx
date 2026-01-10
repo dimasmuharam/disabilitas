@@ -52,13 +52,13 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="mx-auto max-w-4xl space-y-10 duration-500 animate-in fade-in">
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">Profil & Audit Inklusi</h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lengkapi data untuk meningkatkan skor aksesibilitas institusi</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Lengkapi data untuk meningkatkan skor aksesibilitas institusi</p>
         </div>
-        <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-lg shadow-blue-100">
+        <div className="flex items-center gap-3 rounded-2xl bg-blue-600 px-6 py-3 text-white shadow-lg shadow-blue-100">
           <ShieldCheck size={20} />
           <div className="text-left leading-none">
             <p className="text-[8px] font-black uppercase opacity-70">Accessibility Score</p>
@@ -69,17 +69,17 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
 
       <form onSubmit={handleSave} className="space-y-8">
         {/* DATA DASAR */}
-        <section className="bg-white p-8 rounded-[3rem] border-2 border-slate-50 space-y-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
+        <section className="space-y-6 rounded-[3rem] border-2 border-slate-50 bg-white p-8 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
             <Building2 size={18} className="text-blue-600" />
-            <h3 className="font-black uppercase italic text-sm tracking-widest">Identitas Institusi</h3>
+            <h3 className="text-sm font-black uppercase italic tracking-widest">Identitas Institusi</h3>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-slate-400">Nama Resmi</label>
               <input 
-                className="input-std w-full p-4 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-slate-900 transition-all"
+                className="input-std w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold transition-all focus:border-slate-900"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
               />
@@ -87,7 +87,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-slate-400">Kategori</label>
               <select 
-                className="input-std w-full p-4 bg-slate-50 rounded-2xl font-bold"
+                className="input-std w-full rounded-2xl bg-slate-50 p-4 font-bold"
                 value={formData.category}
                 onChange={(e) => setFormData({...formData, category: e.target.value})}
               >
@@ -98,11 +98,11 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
 
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-slate-400">Website & Lokasi</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="relative">
                 <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                 <input 
-                  className="pl-12 w-full p-4 bg-slate-50 rounded-2xl font-bold"
+                  className="w-full rounded-2xl bg-slate-50 p-4 pl-12 font-bold"
                   placeholder="https://..."
                   value={formData.website}
                   onChange={(e) => setFormData({...formData, website: e.target.value})}
@@ -111,7 +111,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
               <div className="relative">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                 <input 
-                  className="pl-12 w-full p-4 bg-slate-50 rounded-2xl font-bold"
+                  className="w-full rounded-2xl bg-slate-50 p-4 pl-12 font-bold"
                   placeholder="Kota/Provinsi"
                   value={formData.location}
                   onChange={(e) => setFormData({...formData, location: e.target.value})}
@@ -122,35 +122,35 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
         </section>
 
         {/* AUDIT AKOMODASI (RISET) */}
-        <section className="bg-slate-900 p-10 rounded-[4rem] text-white space-y-8 relative overflow-hidden">
+        <section className="relative space-y-8 overflow-hidden rounded-[4rem] bg-slate-900 p-10 text-white">
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="mb-2 flex items-center gap-3">
               <ShieldCheck className="text-emerald-400" size={24} />
-              <h3 className="font-black uppercase italic text-xl tracking-tighter">Audit Kesiapan Inklusi</h3>
+              <h3 className="text-xl font-black uppercase italic tracking-tighter">Audit Kesiapan Inklusi</h3>
             </div>
-            <p className="text-xs font-medium text-slate-400 max-w-lg mb-8">
+            <p className="mb-8 max-w-lg text-xs font-medium text-slate-400">
               Centang fasilitas dan dukungan yang secara riil tersedia di institusi Anda. Data ini akan digunakan untuk menghitung skor inklusi publik.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {ACCOMMODATION_TYPES.map((item) => (
                 <button
                   key={item}
                   type="button"
                   onClick={() => toggleAccommodation(item)}
-                  className={`flex items-center justify-between p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+                  className={`flex items-center justify-between rounded-2xl border-2 p-4 text-[10px] font-black uppercase tracking-widest transition-all ${
                     formData.master_accommodations_provided.includes(item)
-                    ? "bg-emerald-600 border-emerald-400 text-white shadow-lg shadow-emerald-900/20"
-                    : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"
+                    ? "border-emerald-400 bg-emerald-600 text-white shadow-lg shadow-emerald-900/20"
+                    : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500"
                   }`}
                 >
-                  <span className="text-left leading-tight max-w-[80%]">{item}</span>
+                  <span className="max-w-[80%] text-left leading-tight">{item}</span>
                   {formData.master_accommodations_provided.includes(item) && <CheckCircle2 size={16} />}
                 </button>
               ))}
             </div>
           </div>
-          <div className="absolute right-0 bottom-0 p-10 opacity-5">
+          <div className="absolute bottom-0 right-0 p-10 opacity-5">
             <AlertCircle size={200} />
           </div>
         </section>
@@ -158,7 +158,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full py-6 bg-slate-900 text-white rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs hover:bg-blue-600 transition-all flex items-center justify-center gap-3 shadow-2xl"
+          className="flex w-full items-center justify-center gap-3 rounded-[2.5rem] bg-slate-900 py-6 text-xs font-black uppercase tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-blue-600"
         >
           {loading ? "Menyimpan Data..." : <><Save size={18}/> Simpan & Perbarui Profil Inklusi</>}
         </button>

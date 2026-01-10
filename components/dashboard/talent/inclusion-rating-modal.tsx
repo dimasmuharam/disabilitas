@@ -49,26 +49,26 @@ export default function InclusionRatingModal({ job, userId, onClose, onSuccess }
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-[3rem] border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] overflow-hidden">
-        <div className="p-8 border-b-2 border-slate-100 flex justify-between items-center bg-slate-50">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg overflow-hidden rounded-[3rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+        <div className="flex items-center justify-between border-b-2 border-slate-100 bg-slate-50 p-8">
           <div>
-            <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{"Audit Inklusi"}</h3>
-            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{(job.jobs as any)?.title}</p>
+            <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">{"Audit Inklusi"}</h3>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">{(job.jobs as any)?.title}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20}/></button>
+          <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-slate-200"><X size={20}/></button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[60vh] space-y-6 overflow-y-auto p-8">
           {INCLUSION_RATING_QUESTIONS.map((q) => (
             <div key={q.id} className="space-y-3">
-              <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{q.label}</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">{q.label}</label>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     onClick={() => setRatings(prev => ({ ...prev, [q.id]: star }))}
-                    className={`p-2 rounded-xl transition-all ${ratings[q.id] >= star ? "bg-blue-600 text-white shadow-md" : "bg-slate-50 text-slate-300 border border-slate-100"}`}
+                    className={`rounded-xl p-2 transition-all ${ratings[q.id] >= star ? "bg-blue-600 text-white shadow-md" : "border border-slate-100 bg-slate-50 text-slate-300"}`}
                   >
                     <Star size={20} fill={ratings[q.id] >= star ? "currentColor" : "none"} />
                   </button>
@@ -78,22 +78,22 @@ export default function InclusionRatingModal({ job, userId, onClose, onSuccess }
           ))}
 
           <div className="space-y-2 pt-4">
-            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{"Kesan Tambahan (Opsional & Anonim)"}</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">{"Kesan Tambahan (Opsional & Anonim)"}</label>
             <textarea 
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full p-4 rounded-2xl border-2 border-slate-100 text-sm italic focus:border-blue-600 outline-none"
+              className="w-full rounded-2xl border-2 border-slate-100 p-4 text-sm italic outline-none focus:border-blue-600"
               placeholder="Tuliskan pengalaman Anda..."
               rows={3}
             />
           </div>
         </div>
 
-        <div className="p-8 bg-slate-50 border-t-2 border-slate-100">
+        <div className="border-t-2 border-slate-100 bg-slate-50 p-8">
           <button 
             onClick={handleSubmit}
             disabled={issubmitting}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 hover:bg-blue-600 transition-all"
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-4 text-xs font-black uppercase text-white transition-all hover:bg-blue-600"
           >
             {issubmitting ? "MENGIRIM..." : <><Send size={18}/> {"Kirim Penilaian"}</>}
           </button>

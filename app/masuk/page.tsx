@@ -89,26 +89,26 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans text-slate-900">
+    <div className="flex min-h-screen flex-col justify-center bg-slate-50 py-12 font-sans text-slate-900 dark:bg-slate-950 sm:px-6 lg:px-8">
       
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
-        <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6 text-white">
-            <span className="font-black text-2xl italic">{"D"}</span>
+      <div className="px-4 text-center sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg">
+            <span className="text-2xl font-black italic">{"D"}</span>
         </div>
         <h1 className="text-3xl font-black uppercase italic tracking-tighter dark:text-slate-50">
           {"Masuk ke Akun"}
         </h1>
-        <p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">
+        <p className="mt-2 text-sm font-bold uppercase italic tracking-widest text-slate-500 dark:text-slate-400">
           {"Akses Dashboard Disabilitas.com"}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white dark:bg-slate-900 py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
+      <div className="mt-8 px-4 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="rounded-[2.5rem] border border-slate-200 bg-white px-6 py-10 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
           
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+              <label htmlFor="email" className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
                 {"Alamat Email"}
               </label>
               <input
@@ -119,16 +119,16 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
-                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="block w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
 
             <div>
-              <div className="flex justify-between items-center mb-2 px-1">
+              <div className="mb-2 flex items-center justify-between px-1">
                 <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500">
                   {"Kata Sandi"}
                 </label>
-                <Link href="/lupa-password" intermediate-title="Reset Kata Sandi" className="text-[9px] font-black uppercase text-blue-600 hover:text-blue-700 underline decoration-2 underline-offset-4 rounded p-1 focus:ring-2 focus:ring-blue-500">
+                <Link href="/lupa-password" intermediate-title="Reset Kata Sandi" className="rounded p-1 text-[9px] font-black uppercase text-blue-600 underline decoration-2 underline-offset-4 hover:text-blue-700 focus:ring-2 focus:ring-blue-500">
                   {"Lupa Sandi?"}
                 </Link>
               </div>
@@ -141,12 +141,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="block w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 transition-colors"
+                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 transition-colors hover:text-blue-600"
                   aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -168,7 +168,7 @@ export default function LoginPage() {
                 role="alert" 
                 aria-live="assertive" 
                 tabIndex={-1}
-                className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border outline-none ${isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'} animate-in zoom-in-95`}
+                className={`rounded-2xl border p-4 text-center text-[11px] font-black uppercase outline-none ${isError ? 'border-red-100 bg-red-50 text-red-700' : 'border-emerald-100 bg-emerald-50 text-emerald-700'} animate-in zoom-in-95`}
               >
                 <div className="flex items-center justify-center gap-2">
                   {isError ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
@@ -180,7 +180,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !turnstileToken}
-              className="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 p-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98]"
             >
               {loading ? "MENSINKRONISASI..." : (
                 <>
@@ -194,13 +194,13 @@ export default function LoginPage() {
           <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-800" /></div>
-              <div className="relative flex justify-center text-[10px] font-black uppercase"><span className="px-4 bg-white dark:bg-slate-900 text-slate-400">{"Atau"}</span></div>
+              <div className="relative flex justify-center text-[10px] font-black uppercase"><span className="bg-white px-4 text-slate-400 dark:bg-slate-900">{"Atau"}</span></div>
             </div>
 
             <div className="mt-6 flex flex-col gap-3">
               <Link
                 href="/daftar"
-                className="w-full flex justify-center py-4 px-4 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                className="flex w-full justify-center rounded-2xl border-2 border-slate-100 p-4 text-[10px] font-black uppercase tracking-widest text-slate-600 transition-all hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 {"Daftar Akun Baru"}
               </Link>

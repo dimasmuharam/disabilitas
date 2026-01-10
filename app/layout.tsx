@@ -1,17 +1,11 @@
 import "./globals.css"
 import { Metadata } from "next"
-import { Inter as FontSans } from "next/font/google"
 import Script from "next/script" // Import untuk Google Analytics
 
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
-
-const fontSans = FontSans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.disabilitas.com"),
@@ -57,8 +51,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable
+          "min-h-screen bg-background font-sans antialiased"
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
