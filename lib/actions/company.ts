@@ -1,10 +1,14 @@
-import { supabase } from "@/lib/supabase"
+"use server"
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 /**
  * Memperbarui atau mendaftarkan profil master perusahaan
  * Menggunakan ID Tunggal (id = userId)
  */
 export async function updateCompanyMaster(userId: string, companyData: any) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("companies")
@@ -32,6 +36,9 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
       console.error("Supabase Error:", error.message);
       throw error;
     }
+
+    // Refresh dashboard perusahaan agar profil terbaru muncul
+    revalidatePath("/dashboard");
     
     return { data, error: null }
   } catch (error: any) {
@@ -45,6 +52,7 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
  * UPDATE: Sekarang memfilter pelamar langsung via kolom company_id
  */
 export async function getCompanyStats(companyId: string) {
+  const supabase = createClient();
   try {
     // 1. Ambil jumlah lowongan perusahaan
     const { count: jobCount, error: jobError } = await supabase
@@ -55,7 +63,7 @@ export async function getCompanyStats(companyId: string) {
     if (jobError) throw jobError
 
     // 2. Ambil jumlah pelamar
-    // SINKRONISASI: Sekarang memfilter langsung ke kolom company_id di tabel applications
+    // SINKRONISASI: Memfilter langsung ke kolom company_id di tabel applications
     const { count: appCount, error: appError } = await supabase
       .from("applications")
       .select("*", { count: "exact", head: true })
@@ -78,6 +86,7 @@ export async function getCompanyStats(companyId: string) {
  * FUNGSI ADMIN: Verifikasi Perusahaan (Centang Biru)
  */
 export async function verifyCompanyStatus(companyId: string, status: boolean) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("companies")
@@ -86,8 +95,13 @@ export async function verifyCompanyStatus(companyId: string, status: boolean) {
       .select()
     
     if (error) throw error
+
+    // Revalidate agar admin dan perusahaan melihat status verifikasi terbaru
+    revalidatePath("/dashboard");
+    
     return { data, error: null }
   } catch (error: any) {
+    console.error("Error verifying company:", error.message)
     return { data: null, error: error.message }
   }
 }
