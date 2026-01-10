@@ -36,7 +36,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
 
     if (data) setEnrollments(data);
     setLoading(false);
-  }, [partnerId, filterStatus]);
+  }, [partnerId, filterStatus, supabase]);
 
   useEffect(() => {
     fetchEnrollments();
