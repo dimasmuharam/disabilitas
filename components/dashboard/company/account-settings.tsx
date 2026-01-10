@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { createClient } from "@/lib/supabase/client/client";
+import { createClient } from "@/lib/supabase/client";
 import { 
   ShieldCheck, Mail, Lock, Eye, EyeOff, 
   Save, CheckCircle2, AlertCircle, LogOut, 

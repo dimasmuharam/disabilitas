@@ -5,7 +5,7 @@ export const runtime = 'edge'
 
 import { useState, useEffect } from "react"
 // PERBAIKAN: Menggunakan createClient dari folder baru
-import { createClient } from "@/lib/supabase/client/client" 
+import { createClient } from "@/lib/supabase/client" 
 import Link from "next/link"
 import { 
   MapPin, Briefcase, Building2, Calendar, ArrowLeft, 

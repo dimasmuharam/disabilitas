@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, Suspense } from "react"
-import { createClient } from "@/lib/supabase/client/client"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { CheckCircle, ArrowRight, Building2, User, Landmark, GraduationCap } from "lucide-react"
 import { USER_ROLES } from "@/lib/data-static"
