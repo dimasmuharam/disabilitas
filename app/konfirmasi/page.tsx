@@ -101,40 +101,40 @@ function ConfirmContent() {
   const content = getDisplayData()
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950" aria-busy="true">
-      <p className="font-black animate-pulse text-slate-400 uppercase italic tracking-widest text-sm">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950" aria-busy="true">
+      <p className="animate-pulse text-sm font-black uppercase italic tracking-widest text-slate-400">
         Menyinkronkan Akun...
       </p>
     </div>
   )
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 font-sans selection:bg-blue-100">
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl p-10 text-center border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-500">
-        <div className="flex justify-center mb-8">
-          <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-inner text-blue-600 dark:text-blue-400">
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6 font-sans selection:bg-blue-100 dark:bg-slate-950">
+      <div className="w-full max-w-md rounded-[3rem] border border-slate-100 bg-white p-10 text-center shadow-2xl duration-500 animate-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mb-8 flex justify-center">
+          <div className="rounded-[2.5rem] bg-slate-50 p-6 text-blue-600 shadow-inner dark:bg-slate-800 dark:text-blue-400">
             {content.icon}
           </div>
         </div>
 
-        <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/30 px-5 py-1.5 rounded-full mb-6">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-5 py-1.5 dark:bg-emerald-900/30">
           <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400" />
-          <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-widest">
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
             Email Terverifikasi
           </span>
         </div>
 
-        <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50 mb-4 outline-none">
+        <h1 className="mb-4 text-2xl font-black uppercase italic tracking-tighter text-slate-900 outline-none dark:text-slate-50">
           {content.title}
         </h1>
         
-        <p className="text-slate-500 dark:text-slate-400 font-bold text-sm mb-10 leading-relaxed px-4">
+        <p className="mb-10 px-4 text-sm font-bold leading-relaxed text-slate-500 dark:text-slate-400">
           {content.desc}
         </p>
 
         <button 
           onClick={() => router.push("/dashboard?verified=true")}
-          className="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-xl active:scale-95"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-600 active:scale-95 dark:bg-blue-600 dark:hover:bg-blue-700"
         >
           {content.btnText}
           <ArrowRight size={18} />

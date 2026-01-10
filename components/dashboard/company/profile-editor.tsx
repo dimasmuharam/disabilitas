@@ -61,39 +61,39 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
   };
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 animate-in slide-in-from-bottom-4">
+    <div className="mx-auto max-w-6xl pb-20 animate-in slide-in-from-bottom-4">
       <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* SEKSI 1: IDENTITAS LEGAL */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-10">
+        <section className="space-y-10 rounded-[3rem] border-2 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
           <div className="flex items-center gap-4 border-b pb-8">
-            <div className="p-3 bg-blue-600 text-white rounded-2xl"><Building2 size={24} /></div>
+            <div className="rounded-2xl bg-blue-600 p-3 text-white"><Building2 size={24} /></div>
             <h2 className="text-xl font-black uppercase italic tracking-tighter">{"Informasi Resmi Instansi"}</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-10">
+          <div className="grid gap-10 md:grid-cols-2">
             <div className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="comp-name" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Nama Resmi Instansi"}</label>
-                <input id="comp-name" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-600 transition-all focus:ring-4 focus:ring-blue-50" />
+                <label htmlFor="comp-name" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Nama Resmi Instansi"}</label>
+                <input id="comp-name" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 font-bold outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-50" />
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="comp-nib" className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2"><FileBadge size={12} className="text-blue-600" /> {"NIB (Nomor Induk Berusaha)"}</label>
-                <input id="comp-nib" required placeholder="13 digit nomor..." value={formData.nib_number} onChange={e => setFormData({...formData, nib_number: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-black tracking-[0.2em] outline-none focus:border-blue-600 transition-all" />
+                <label htmlFor="comp-nib" className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400"><FileBadge size={12} className="text-blue-600" /> {"NIB (Nomor Induk Berusaha)"}</label>
+                <input id="comp-nib" required placeholder="13 digit nomor..." value={formData.nib_number} onChange={e => setFormData({...formData, nib_number: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 font-black tracking-[0.2em] outline-none transition-all focus:border-blue-600" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="comp-cat" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Kategori"}</label>
-                  <select id="comp-cat" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white focus:border-blue-600 outline-none">
+                  <label htmlFor="comp-cat" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Kategori"}</label>
+                  <select id="comp-cat" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-white p-4 font-bold outline-none focus:border-blue-600">
                     {EMPLOYER_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="comp-size" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Skala Usaha"}</label>
-                  <select id="comp-size" value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white focus:border-blue-600 outline-none">
+                  <label htmlFor="comp-size" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Skala Usaha"}</label>
+                  <select id="comp-size" value={formData.size} onChange={e => setFormData({...formData, size: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-white p-4 font-bold outline-none focus:border-blue-600">
                     <option value="">{"Pilih Skala"}</option>
                     {COMPANY_SIZE_CATEGORIES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -103,21 +103,21 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="comp-ind" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Sektor Industri"}</label>
-                <select id="comp-ind" value={formData.industry} onChange={e => setFormData({...formData, industry: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white focus:border-blue-600 outline-none">
+                <label htmlFor="comp-ind" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Sektor Industri"}</label>
+                <select id="comp-ind" value={formData.industry} onChange={e => setFormData({...formData, industry: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-white p-4 font-bold outline-none focus:border-blue-600">
                   <option value="">{"Pilih Industri"}</option>
                   {INDUSTRY_CATEGORIES.map(i => <option key={i} value={i}>{i}</option>)}
                 </select>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="comp-web" className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2"><Globe size={12}/> {"Website"}</label>
-                <input id="comp-web" placeholder="https://..." value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold focus:border-blue-600 outline-none" />
+                <label htmlFor="comp-web" className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400"><Globe size={12}/> {"Website"}</label>
+                <input id="comp-web" placeholder="https://..." value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 font-bold outline-none focus:border-blue-600" />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="comp-loc" className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2"><MapPin size={12}/> {"Lokasi Kantor Pusat"}</label>
-                <select id="comp-loc" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 font-bold bg-white focus:border-blue-600 outline-none">
+                <label htmlFor="comp-loc" className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400"><MapPin size={12}/> {"Lokasi Kantor Pusat"}</label>
+                <select id="comp-loc" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-white p-4 font-bold outline-none focus:border-blue-600">
                   <option value="">{"Pilih Kota"}</option>
                   {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                 </select>
@@ -127,33 +127,33 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
         </section>
 
         {/* SEKSI 2: RISET KARYAWAN & DATA AKOMODASI */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-12">
-          <div className="grid md:grid-cols-2 gap-10">
+        <section className="space-y-12 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
+          <div className="grid gap-10 md:grid-cols-2">
             <div className="space-y-6">
-              <div className="flex items-center gap-3 text-slate-900 mb-2">
+              <div className="mb-2 flex items-center gap-3 text-slate-900">
                 <Users size={24} className="text-blue-600" />
                 <h2 className="text-sm font-black uppercase tracking-tight">{"Statistik Karyawan"}</h2>
               </div>
-              <div className="grid grid-cols-1 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+              <div className="grid grid-cols-1 gap-6 rounded-[2rem] border border-slate-100 bg-slate-50 p-8">
                 <div className="space-y-2">
-                  <label htmlFor="total-emp" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Total Seluruh Pegawai"}</label>
-                  <input id="total-emp" type="number" value={formData.total_employees} onChange={e => setFormData({...formData, total_employees: parseInt(e.target.value) || 0})} className="w-full p-4 rounded-2xl border-2 border-slate-200 font-black text-xl outline-none focus:border-blue-600 transition-all" />
+                  <label htmlFor="total-emp" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Total Seluruh Pegawai"}</label>
+                  <input id="total-emp" type="number" value={formData.total_employees} onChange={e => setFormData({...formData, total_employees: parseInt(e.target.value) || 0})} className="w-full rounded-2xl border-2 border-slate-200 p-4 text-xl font-black outline-none transition-all focus:border-blue-600" />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="dis-emp" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Pegawai Disabilitas Saat Ini"}</label>
-                  <input id="dis-emp" type="number" value={formData.total_employees_with_disability} onChange={e => setFormData({...formData, total_employees_with_disability: parseInt(e.target.value) || 0})} className="w-full p-4 rounded-2xl border-2 border-slate-200 font-black text-xl text-blue-600 outline-none focus:border-blue-600 transition-all" />
+                  <label htmlFor="dis-emp" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Pegawai Disabilitas Saat Ini"}</label>
+                  <input id="dis-emp" type="number" value={formData.total_employees_with_disability} onChange={e => setFormData({...formData, total_employees_with_disability: parseInt(e.target.value) || 0})} className="w-full rounded-2xl border-2 border-slate-200 p-4 text-xl font-black text-blue-600 outline-none transition-all focus:border-blue-600" />
                 </div>
               </div>
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-center gap-3 text-slate-900 mb-2">
+              <div className="mb-2 flex items-center gap-3 text-slate-900">
                 <FileText size={24} className="text-blue-600" />
                 <h2 className="text-sm font-black uppercase tracking-tight">{"Deskripsi & Komitmen"}</h2>
               </div>
               <div className="space-y-2">
-                <label htmlFor="comp-desc" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Profil Singkat Instansi"}</label>
-                <textarea id="comp-desc" rows={8} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full p-4 rounded-2xl border-2 border-slate-100 text-sm font-medium outline-none focus:border-blue-600 transition-all" placeholder="Ceritakan profil umum..." />
+                <label htmlFor="comp-desc" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Profil Singkat Instansi"}</label>
+                <textarea id="comp-desc" rows={8} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 text-sm font-medium outline-none transition-all focus:border-blue-600" placeholder="Ceritakan profil umum..." />
               </div>
             </div>
           </div>
@@ -163,7 +163,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
               <Accessibility size={24} className="text-emerald-600" />
               <div>
                 <h2 className="text-sm font-black uppercase italic tracking-tighter">{"Master Fasilitas & Akomodasi Inklusi"}</h2>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{"Pilih fasilitas yang tersedia secara nyata di kantor Anda"}</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{"Pilih fasilitas yang tersedia secara nyata di kantor Anda"}</p>
               </div>
             </div>
             
@@ -173,9 +173,9 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                 {ACCOMMODATION_TYPES.map((acc) => {
                   const isChecked = formData.master_accommodations_provided.includes(acc);
                   return (
-                    <label key={acc} className="relative cursor-pointer group">
-                      <input type="checkbox" className="sr-only peer" checked={isChecked} onChange={() => handleToggleFeature(acc)} aria-label={acc} />
-                      <div className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all border-2 ${isChecked ? "bg-emerald-600 text-white border-emerald-600 shadow-lg scale-105" : "bg-slate-50 text-slate-400 border-slate-100 hover:border-emerald-200"} peer-focus-visible:ring-4 peer-focus-visible:ring-emerald-200`}>
+                    <label key={acc} className="group relative cursor-pointer">
+                      <input type="checkbox" className="peer sr-only" checked={isChecked} onChange={() => handleToggleFeature(acc)} aria-label={acc} />
+                      <div className={`rounded-2xl border-2 px-6 py-3 text-[10px] font-black uppercase transition-all ${isChecked ? "scale-105 border-emerald-600 bg-emerald-600 text-white shadow-lg" : "border-slate-100 bg-slate-50 text-slate-400 hover:border-emerald-200"} peer-focus-visible:ring-4 peer-focus-visible:ring-emerald-200`}>
                         {isChecked && <span className="mr-2">{"✓"}</span>} {acc}
                       </div>
                     </label>
@@ -187,11 +187,11 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
         </section>
 
         {/* TOMBOL SIMPAN */}
-        <div className="pt-10 flex flex-col md:flex-row justify-end items-center gap-6 border-t border-slate-100">
-          <p className="text-[9px] font-bold text-slate-400 uppercase italic text-center md:text-right">
+        <div className="flex flex-col items-center justify-end gap-6 border-t border-slate-100 pt-10 md:flex-row">
+          <p className="text-center text-[9px] font-bold uppercase italic text-slate-400 md:text-right">
             {"* Dengan menyimpan, data ini akan menjadi basis perhitungan indeks inklusi instansi Anda."}
           </p>
-          <button type="submit" disabled={loading} className="w-full md:w-auto px-20 py-6 bg-slate-900 text-white rounded-[2.5rem] font-black uppercase text-sm tracking-[0.2em] shadow-2xl hover:bg-blue-600 hover:-translate-y-1 active:translate-y-0 transition-all disabled:opacity-50">
+          <button type="submit" disabled={loading} className="w-full rounded-[2.5rem] bg-slate-900 px-20 py-6 text-sm font-black uppercase tracking-[0.2em] text-white shadow-2xl transition-all hover:-translate-y-1 hover:bg-blue-600 active:translate-y-0 disabled:opacity-50 md:w-auto">
             {loading ? "MEMPROSES DATA..." : "SIMPAN & SELESAI"}
           </button>
         </div>
