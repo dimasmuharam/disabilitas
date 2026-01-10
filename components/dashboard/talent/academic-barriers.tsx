@@ -99,7 +99,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           <GraduationCap className="text-emerald-600" size={40} aria-hidden="true" />
           Pendidikan & Riset
         </h1>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">
+        <p className="mt-2 text-[10px] font-bold uppercase italic tracking-widest text-slate-400">
           Data tahun lulus dan hambatan digunakan untuk analisis inklusivitas nasional.
         </p>
       </header>
@@ -119,7 +119,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
         
         {/* DETAIL INSTITUSI */}
-        <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm md:p-12 space-y-8">
+        <section className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm md:p-12">
           <div className="flex items-center gap-3 border-b border-slate-50 pb-6">
             <School className="text-emerald-600" size={20} aria-hidden="true" />
             <h2 className="text-xs font-black uppercase tracking-[0.2em]">Data Akademik</h2>
@@ -127,26 +127,26 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           
           <div className="grid gap-8 text-sm font-bold md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="education_level" className="block ml-2 text-[10px] font-black uppercase text-slate-400">Jenjang</label>
-              <select id="education_level" required value={formData.education_level} onChange={(e) => setFormData({...formData, education_level: e.target.value})} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600 focus:bg-white transition-all appearance-none">
+              <label htmlFor="education_level" className="ml-2 block text-[10px] font-black uppercase text-slate-400">Jenjang</label>
+              <select id="education_level" required value={formData.education_level} onChange={(e) => setFormData({...formData, education_level: e.target.value})} className="w-full appearance-none rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none transition-all focus:border-emerald-600 focus:bg-white">
                 <option value="">Pilih Jenjang</option>
                 {EDUCATION_LEVELS.map((l, i) => <option key={i} value={l}>{l}</option>)}
               </select>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="university" className="block ml-2 text-[10px] font-black uppercase text-slate-400">{isCollege ? "Nama Perguruan Tinggi" : "Nama Sekolah"}</label>
-              <input id="university" list="uni-list" required placeholder="Contoh: Universitas Gadjah Mada" value={formData.university} onChange={(e) => setFormData({...formData, university: e.target.value})} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600 focus:bg-white transition-all" />
+              <label htmlFor="university" className="ml-2 block text-[10px] font-black uppercase text-slate-400">{isCollege ? "Nama Perguruan Tinggi" : "Nama Sekolah"}</label>
+              <input id="university" list="uni-list" required placeholder="Contoh: Universitas Gadjah Mada" value={formData.university} onChange={(e) => setFormData({...formData, university: e.target.value})} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none transition-all focus:border-emerald-600 focus:bg-white" />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="major" className="block ml-2 text-[10px] font-black uppercase text-slate-400">Program Studi</label>
-              <input id="major" list="major-list" required placeholder="Cari atau ketik jurusan..." value={formData.major} onChange={(e) => setFormData({...formData, major: e.target.value})} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600 focus:bg-white transition-all" />
+              <label htmlFor="major" className="ml-2 block text-[10px] font-black uppercase text-slate-400">Program Studi</label>
+              <input id="major" list="major-list" required placeholder="Cari atau ketik jurusan..." value={formData.major} onChange={(e) => setFormData({...formData, major: e.target.value})} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none transition-all focus:border-emerald-600 focus:bg-white" />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="graduation_date" className="block ml-2 text-[10px] font-black uppercase text-slate-400 text-left">Tahun Lulus (Hanya Angka)</label>
-              <input id="graduation_date" required type="number" min="1970" max="2035" placeholder="YYYY" value={formData.graduation_date} onChange={(e) => setFormData({...formData, graduation_date: e.target.value})} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600 focus:bg-white transition-all" />
+              <label htmlFor="graduation_date" className="ml-2 block text-left text-[10px] font-black uppercase text-slate-400">Tahun Lulus (Hanya Angka)</label>
+              <input id="graduation_date" required type="number" min="1970" max="2035" placeholder="YYYY" value={formData.graduation_date} onChange={(e) => setFormData({...formData, graduation_date: e.target.value})} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none transition-all focus:border-emerald-600 focus:bg-white" />
             </div>
           </div>
         </section>
@@ -154,14 +154,14 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         {/* HAMBATAN (SEBAGAI ARRAY UNTUK MULTI-PILIHAN) */}
         <section className="rounded-[4rem] border-2 border-slate-100 bg-slate-900 p-8 shadow-xl md:p-12 text-white">
           <fieldset className="space-y-8">
-            <legend className="mb-4 flex items-center gap-4 text-amber-400 font-black uppercase text-xs tracking-widest">
+            <legend className="mb-4 flex items-center gap-4 text-xs font-black uppercase tracking-widest text-amber-400">
               <AlertTriangle size={24} aria-hidden="true" /> Hambatan Selama Pendidikan
             </legend>
-            <p className="text-[10px] font-bold uppercase text-slate-400 mb-6 italic tracking-widest">Anda dapat memilih lebih dari satu hambatan sesuai pengalaman riil.</p>
+            <p className="mb-6 text-[10px] font-bold uppercase italic tracking-widest text-slate-400">Anda dapat memilih lebih dari satu hambatan sesuai pengalaman riil.</p>
             <div className="grid gap-4 md:grid-cols-2">
               {EDUCATION_BARRIERS.map((barrier, i) => (
                 <label key={i} className={`flex cursor-pointer items-center gap-4 rounded-2xl border-2 p-5 transition-all ${
-                  formData.education_barrier.includes(barrier) ? 'border-amber-400 bg-slate-800' : 'border-slate-800 hover:border-slate-700'
+                  formData.education_barrier.includes(barrier) ? 'bg-slate-800 border-amber-400' : 'border-slate-800 hover:border-slate-700'
                 }`}>
                   <input type="checkbox" checked={formData.education_barrier.includes(barrier)} onChange={() => handleMultiToggle('education_barrier', barrier)} className="size-6 accent-amber-400" />
                   <span className="text-[10px] font-black uppercase leading-tight">{barrier}</span>
@@ -172,7 +172,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         </section>
 
         {/* TOMBOL SIMPAN */}
-        <div className="flex justify-center md:justify-end pb-10">
+        <div className="flex justify-center pb-10 md:justify-end">
           <button type="submit" disabled={loading} className="flex min-w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 px-16 py-8 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-emerald-600 disabled:bg-slate-400 md:min-w-[320px]">
             {loading ? <Loader2 className="animate-spin" size={24} /> : <><Save size={24} /> Simpan Data & Hambatan</>}
           </button>

@@ -14,13 +14,13 @@ interface EnrollmentTrackerProps {
 }
 
 export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrackerProps) {
-  const supabase = createClient();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("applied");
 
   const fetchEnrollments = useCallback(async () => {
     setLoading(true);
+    const supabase = createClient();
     // Kita join ke tabel trainings untuk ambil judul program 
     // dan ke tabel profiles untuk ambil data talenta
     const { data, error } = await supabase
@@ -36,13 +36,14 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
 
     if (data) setEnrollments(data);
     setLoading(false);
-  }, [partnerId, filterStatus, supabase]);
+  }, [partnerId, filterStatus]);
 
   useEffect(() => {
     fetchEnrollments();
   }, [fetchEnrollments]);
 
   async function updateStatus(id: string, newStatus: string) {
+    const supabase = createClient();
     const { error } = await supabase
       .from("trainees")
       .update({ status: newStatus, updated_at: new Date() })
