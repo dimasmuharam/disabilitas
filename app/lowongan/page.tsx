@@ -110,28 +110,28 @@ export default function LowonganPage() {
     setSearchQuery("");
   };
   return (
-    <div className="flex flex-col bg-[#F8FAFC] min-h-screen font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="flex min-h-screen flex-col bg-[#F8FAFC] font-sans selection:bg-blue-100 selection:text-blue-900">
       
       {/* SEARCH HEADER */}
-      <header className="bg-white border-b-2 border-slate-100 py-12 shadow-sm relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10">
+      <header className="relative overflow-hidden border-b-2 border-slate-100 bg-white py-12 shadow-sm">
+        <div className="relative z-10 mx-auto max-w-7xl px-6">
+          <div className="mb-10 flex flex-col items-end justify-between gap-6 md:flex-row">
             <div className="space-y-2 text-left">
-              <h1 className="text-4xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">
+              <h1 className="text-4xl font-black uppercase italic leading-none tracking-tighter text-slate-900">
                 Eksplorasi Peluang
               </h1>
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">
                 Berdasarkan Kompetensi & Kesiapan Akomodasi Instansi
               </p>
             </div>
             
-            <div className="flex items-center gap-3 bg-slate-100 p-2 rounded-2xl border-2 border-slate-200">
+            <div className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 bg-slate-100 p-2">
               <ListFilter size={18} className="ml-2 text-slate-500" />
               <select 
                 aria-label="Urutkan Lowongan"
                 value={sortBy} 
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-[10px] font-black uppercase outline-none pr-4 cursor-pointer text-slate-700"
+                className="cursor-pointer bg-transparent pr-4 text-[10px] font-black uppercase text-slate-700 outline-none"
               >
                 <option value="latest">Terbaru</option>
                 <option value="salary_high">Gaji Tertinggi</option>
@@ -139,56 +139,56 @@ export default function LowonganPage() {
             </div>
           </div>
           
-          <form onSubmit={(e) => { e.preventDefault(); fetchJobs(); }} className="flex flex-col md:flex-row gap-4 max-w-5xl">
-            <div className="relative flex-[2] group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+          <form onSubmit={(e) => { e.preventDefault(); fetchJobs(); }} className="flex max-w-5xl flex-col gap-4 md:flex-row">
+            <div className="group relative flex-[2]">
+              <Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-600" />
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari posisi pekerjaan..." 
-                className="w-full h-16 pl-14 pr-4 rounded-[1.5rem] border-2 border-slate-100 font-bold bg-slate-50/50 focus:bg-white focus:border-blue-600 outline-none transition-all shadow-inner"
+                className="h-16 w-full rounded-3xl border-2 border-slate-100 bg-slate-50/50 pl-14 pr-4 font-bold shadow-inner outline-none transition-all focus:border-blue-600 focus:bg-white"
               />
             </div>
             <div className="relative flex-1">
-              <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />
+              <MapPin className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-red-500" />
               <select 
                 aria-label="Pilih Kota"
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                className="w-full h-16 pl-14 pr-6 rounded-[1.5rem] border-2 border-slate-100 font-bold bg-white outline-none appearance-none cursor-pointer focus:border-blue-600 shadow-sm"
+                className="h-16 w-full cursor-pointer appearance-none rounded-3xl border-2 border-slate-100 bg-white pl-14 pr-6 font-bold shadow-sm outline-none focus:border-blue-600"
               >
                 <option value="">Seluruh Lokasi</option>
                 {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
               </select>
             </div>
-            <button type="submit" className="h-16 px-10 rounded-[1.5rem] bg-slate-900 text-white font-black uppercase text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3">
+            <button type="submit" className="flex h-16 items-center justify-center gap-3 rounded-3xl bg-slate-900 px-10 text-xs font-black uppercase text-white shadow-xl transition-all hover:bg-blue-600 active:scale-95">
               Cari Sekarang
             </button>
           </form>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-12">
+      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-6 py-12 lg:flex-row">
         
         {/* SIDEBAR FILTER: DEEP COMPETECE & ACCESS */}
-        <aside className="w-full lg:w-80 space-y-8">
-          <div className="bg-white p-8 rounded-[3rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] sticky top-8">
-            <div className="flex justify-between items-center mb-8 border-b-2 border-slate-50 pb-4">
-              <h2 className="font-black uppercase italic text-sm flex items-center gap-2">
+        <aside className="w-full space-y-8 lg:w-80">
+          <div className="sticky top-8 rounded-[3rem] border-2 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+            <div className="mb-8 flex items-center justify-between border-b-2 border-slate-50 pb-4">
+              <h2 className="flex items-center gap-2 text-sm font-black uppercase italic">
                 <Filter size={18} className="text-blue-600" /> Filter Lanjutan
               </h2>
-              <button onClick={handleReset} className="p-2 hover:bg-red-50 rounded-xl transition-colors text-red-500" title="Reset Filter">
+              <button onClick={handleReset} className="rounded-xl p-2 text-red-500 transition-colors hover:bg-red-50" title="Reset Filter">
                 <RotateCcw size={18} />
               </button>
             </div>
 
-            <div className="space-y-8 h-[calc(100vh-320px)] overflow-y-auto pr-3 custom-scrollbar text-left font-black uppercase tracking-tighter">
+            <div className="custom-scrollbar h-[calc(100vh-320px)] space-y-8 overflow-y-auto pr-3 text-left font-black uppercase tracking-tighter">
               
               {/* PENDIDIKAN */}
               <div className="space-y-3">
-                <label className="text-[10px] text-slate-400 flex items-center gap-2 italic"><GraduationCap size={14}/> Jenjang Pendidikan</label>
-                <select value={selectedEducation} onChange={(e) => setSelectedEducation(e.target.value)} className="w-full p-4 rounded-2xl border-2 border-slate-50 bg-slate-50 text-[11px] font-bold outline-none focus:border-blue-600 transition-all">
+                <label className="flex items-center gap-2 text-[10px] italic text-slate-400"><GraduationCap size={14}/> Jenjang Pendidikan</label>
+                <select value={selectedEducation} onChange={(e) => setSelectedEducation(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-blue-600">
                   <option value="">Semua Jenjang</option>
                   {EDUCATION_LEVELS.map(edu => <option key={edu} value={edu}>{edu}</option>)}
                 </select>
@@ -196,8 +196,8 @@ export default function LowonganPage() {
 
               {/* JURUSAN */}
               <div className="space-y-3">
-                <label className="text-[10px] text-slate-400 flex items-center gap-2 italic"><BookOpen size={14}/> Fokus Jurusan</label>
-                <select value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)} className="w-full p-4 rounded-2xl border-2 border-slate-50 bg-slate-50 text-[11px] font-bold outline-none focus:border-blue-600 transition-all">
+                <label className="flex items-center gap-2 text-[10px] italic text-slate-400"><BookOpen size={14}/> Fokus Jurusan</label>
+                <select value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-blue-600">
                   <option value="">Semua Jurusan</option>
                   {UNIVERSITY_MAJORS.map(major => <option key={major} value={major}>{major}</option>)}
                 </select>
@@ -205,35 +205,35 @@ export default function LowonganPage() {
 
               {/* SKILL UTAMA */}
               <div className="space-y-3">
-                <label className="text-[10px] text-slate-400 flex items-center gap-2 italic"><Wrench size={14}/> Spesialisasi Keahlian</label>
-                <select value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)} className="w-full p-4 rounded-2xl border-2 border-slate-50 bg-slate-50 text-[11px] font-bold outline-none focus:border-emerald-600 transition-all">
+                <label className="flex items-center gap-2 text-[10px] italic text-slate-400"><Wrench size={14}/> Spesialisasi Keahlian</label>
+                <select value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-emerald-600">
                   <option value="">Semua Skill</option>
                   {SKILLS_LIST.map(skill => <option key={skill} value={skill}>{skill}</option>)}
                 </select>
               </div>
 
               {/* RANGE GAJI */}
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <label className="text-[10px] text-slate-400 flex items-center justify-between italic">
-                  <span><DollarSign size={14} className="inline mb-0.5"/> Min. Gaji</span>
-                  <span className="text-slate-900 font-black">Rp {minSalary/1000000} Jt</span>
+              <div className="space-y-4 border-t border-slate-100 pt-4">
+                <label className="flex items-center justify-between text-[10px] italic text-slate-400">
+                  <span><DollarSign size={14} className="mb-0.5 inline"/> Min. Gaji</span>
+                  <span className="font-black text-slate-900">Rp {minSalary/1000000} Jt</span>
                 </label>
-                <input type="range" min="0" max="25000000" step="1000000" value={minSalary} onChange={(e) => setMinSalary(parseInt(e.target.value))} className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-slate-900" />
+                <input type="range" min="0" max="25000000" step="1000000" value={minSalary} onChange={(e) => setMinSalary(parseInt(e.target.value))} className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-100 accent-slate-900" />
               </div>
 
               {/* DUKUNGAN AKOMODASI (PENGGANTI RAGAM DISABILITAS) */}
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <h3 className="text-[10px] text-slate-400 italic">Dukungan Aksesibilitas Tersedia</h3>
+              <div className="space-y-4 border-t border-slate-100 pt-4">
+                <h3 className="text-[10px] italic text-slate-400">Dukungan Aksesibilitas Tersedia</h3>
                 <div className="space-y-2">
                   {ACCOMMODATION_TYPES.slice(0, 8).map((item) => (
-                    <label key={item} className="flex items-center gap-3 cursor-pointer group p-2 rounded-xl hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100">
+                    <label key={item} className="group flex cursor-pointer items-center gap-3 rounded-xl border border-transparent p-2 transition-all hover:border-blue-100 hover:bg-blue-50">
                       <input 
                         type="checkbox" 
                         checked={selectedAccommodations.includes(item)}
                         onChange={() => handleFilterChange(item, 'acc')}
-                        className="w-5 h-5 rounded border-2 border-slate-200 text-blue-600" 
+                        className="size-5 rounded border-2 border-slate-200 text-blue-600" 
                       />
-                      <span className="text-[10px] font-black text-slate-600 group-hover:text-blue-700 leading-tight">{item}</span>
+                      <span className="text-[10px] font-black leading-tight text-slate-600 group-hover:text-blue-700">{item}</span>
                     </label>
                   ))}
                 </div>
@@ -245,66 +245,66 @@ export default function LowonganPage() {
 
         {/* FEED LOWONGAN */}
         <main className="flex-1 space-y-6">
-          <div className="flex justify-between items-center px-4">
+          <div className="flex items-center justify-between px-4">
             <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-              Menampilkan <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">{jobs.length}</span> Lowongan Inklusif
+              Menampilkan <span className="rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 text-blue-600">{jobs.length}</span> Lowongan Inklusif
             </h2>
           </div>
 
           {loading ? (
              <div className="space-y-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-[3.5rem] bg-white border-2 border-slate-50 animate-pulse shadow-sm"></div>)}
+                {[1, 2, 3].map(i => <div key={i} className="h-48 animate-pulse rounded-[3.5rem] border-2 border-slate-50 bg-white shadow-sm"></div>)}
              </div>
           ) : jobs.length === 0 ? (
-            <div className="text-center py-32 bg-white rounded-[4rem] border-4 border-dashed border-slate-100">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200"><Briefcase size={40} /></div>
-              <p className="text-sm font-black text-slate-300 uppercase italic tracking-widest">Tidak ada data yang sesuai dengan kriteria riset Anda.</p>
-              <button onClick={handleReset} className="mt-4 text-blue-600 font-black uppercase text-[10px] underline underline-offset-4">Bersihkan Filter</button>
+            <div className="rounded-[4rem] border-4 border-dashed border-slate-100 bg-white py-32 text-center">
+              <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-slate-50 text-slate-200"><Briefcase size={40} /></div>
+              <p className="text-sm font-black uppercase italic tracking-widest text-slate-300">Tidak ada data yang sesuai dengan kriteria riset Anda.</p>
+              <button onClick={handleReset} className="mt-4 text-[10px] font-black uppercase text-blue-600 underline underline-offset-4">Bersihkan Filter</button>
             </div>
           ) : (
             <div className="grid gap-6">
               {jobs.map((job) => (
-                <Link key={job.id} href={`/lowongan/${job.slug}`} className="group bg-white p-8 md:p-10 rounded-[3.5rem] border-2 border-slate-100 hover:border-slate-900 transition-all shadow-sm hover:shadow-2xl flex flex-col md:flex-row justify-between items-center gap-10 relative overflow-hidden">
+                <Link key={job.id} href={`/lowongan/${job.slug}`} className="group relative flex flex-col items-center justify-between gap-10 overflow-hidden rounded-[3.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-slate-900 hover:shadow-2xl md:flex-row md:p-10">
                   
-                  <div className="space-y-6 flex-1 w-full text-left">
+                  <div className="w-full flex-1 space-y-6 text-left">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 bg-slate-900 rounded-xl flex items-center justify-center text-white shrink-0"><Building2 size={16} /></div>
-                        <span className="text-[11px] font-black uppercase text-slate-500 tracking-widest truncate max-w-[200px]">{job.companies?.name}</span>
-                        {job.companies?.is_verified && <CheckCircle size={16} className="text-blue-500 shrink-0" />}
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white"><Building2 size={16} /></div>
+                        <span className="max-w-[200px] truncate text-[11px] font-black uppercase tracking-widest text-slate-500">{job.companies?.name}</span>
+                        {job.companies?.is_verified && <CheckCircle size={16} className="shrink-0 text-blue-500" />}
                       </div>
-                      <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-slate-900 group-hover:text-blue-600 transition-colors leading-none">
+                      <h2 className="text-2xl font-black uppercase italic leading-none tracking-tighter text-slate-900 transition-colors group-hover:text-blue-600 md:text-3xl">
                         {job.title}
                       </h2>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-tighter italic">
-                      <span className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl text-slate-500 border border-slate-100 shadow-sm"><MapPin size={12} className="text-red-500"/> {job.location}</span>
-                      <span className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-xl text-blue-600 border border-blue-100 shadow-sm"><GraduationCap size={12}/> {job.required_education_level}</span>
-                      <span className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-xl text-emerald-600 border border-emerald-100 shadow-sm"><Monitor size={12}/> {job.work_mode}</span>
+                    <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase italic tracking-tighter">
+                      <span className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-1.5 text-slate-500 shadow-sm"><MapPin size={12} className="text-red-500"/> {job.location}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 text-blue-600 shadow-sm"><GraduationCap size={12}/> {job.required_education_level}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-600 shadow-sm"><Monitor size={12}/> {job.work_mode}</span>
                     </div>
 
                     {/* ACCOMMODATION TAGS: Tunjukkan kesiapan instansi */}
-                    <div className="flex flex-wrap gap-2 pt-4 border-t-2 border-slate-50 border-dashed">
-                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mr-2 mt-1">Dukungan:</span>
+                    <div className="flex flex-wrap gap-2 border-t-2 border-dashed border-slate-50 pt-4">
+                      <span className="mr-2 mt-1 text-[9px] font-black uppercase tracking-widest text-slate-300">Dukungan:</span>
                       {job.preferred_disability_tools?.slice(0, 4).map((tool: string) => (
-                        <span key={tool} className="text-[9px] font-black bg-slate-900 text-white px-3 py-1 rounded-full uppercase tracking-tighter">
+                        <span key={tool} className="rounded-full bg-slate-900 px-3 py-1 text-[9px] font-black uppercase tracking-tighter text-white">
                           {tool}
                         </span>
                       ))}
-                      {job.preferred_disability_tools?.length > 4 && <span className="text-[9px] font-black text-slate-300 self-center">+{job.preferred_disability_tools.length - 4}</span>}
+                      {job.preferred_disability_tools?.length > 4 && <span className="self-center text-[9px] font-black text-slate-300">+{job.preferred_disability_tools.length - 4}</span>}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-10 shrink-0 w-full md:w-auto border-t md:border-t-0 md:border-l-2 md:border-slate-50 pt-8 md:pt-0 md:pl-10">
-                    <div className="text-left md:text-right flex-1 md:flex-none space-y-1">
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] italic">Estimasi Gaji</p>
-                      <p className="text-2xl font-black text-slate-900 tracking-tighter">
-                        <DollarSign size={20} className="inline text-emerald-500 mb-1" />
+                  <div className="flex w-full shrink-0 items-center gap-10 border-t pt-8 md:w-auto md:border-l-2 md:border-t-0 md:border-slate-50 md:pl-10 md:pt-0">
+                    <div className="flex-1 space-y-1 text-left md:flex-none md:text-right">
+                      <p className="text-[9px] font-black uppercase italic tracking-[0.2em] text-slate-300">Estimasi Gaji</p>
+                      <p className="text-2xl font-black tracking-tighter text-slate-900">
+                        <DollarSign size={20} className="mb-1 inline text-emerald-500" />
                         {job.salary_min > 0 ? `${(job.salary_min/1000000).toFixed(1)} - ${(job.salary_max/1000000).toFixed(1)} Jt` : "Kompetitif"}
                       </p>
                     </div>
-                    <div className="bg-slate-900 text-white p-5 rounded-3xl group-hover:bg-blue-600 transition-all shadow-xl group-hover:translate-x-2 active:scale-90">
+                    <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-xl transition-all active:scale-90 group-hover:translate-x-2 group-hover:bg-blue-600">
                       <ChevronRight size={28} />
                     </div>
                   </div>
@@ -315,7 +315,7 @@ export default function LowonganPage() {
           )}
           
           <div className="pt-10 text-center">
-            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.4em] italic">disabilitas.com © 2026 • Inklusi Melalui Kompetensi</p>
+            <p className="text-[9px] font-bold uppercase italic tracking-[0.4em] text-slate-300">disabilitas.com © 2026 • Inklusi Melalui Kompetensi</p>
           </div>
         </main>
       </div>

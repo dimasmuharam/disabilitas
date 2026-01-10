@@ -17,9 +17,9 @@ export default function AccountSettings({ user, onBack }: { user: any, onBack: (
   };
 
   return (
-    <div className="mx-auto max-w-2xl animate-in fade-in pb-20 duration-500">
+    <div className="mx-auto max-w-2xl pb-20 duration-500 animate-in fade-in">
       <div className="space-y-2 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-slate-100">
           <Lock size={28} className="text-slate-900" />
         </div>
         <h2 className="text-2xl font-black uppercase italic tracking-tighter">Manajemen Akun</h2>

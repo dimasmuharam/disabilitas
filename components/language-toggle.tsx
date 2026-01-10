@@ -19,11 +19,11 @@ export function LanguageToggle() {
   return (
     <button
       onClick={toggleLanguage}
-      className="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-300 border border-slate-200 dark:border-slate-800"
+      className="inline-flex items-center justify-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:border-slate-800 dark:hover:bg-slate-800 dark:focus:ring-slate-300"
       aria-label={label}
       title={label}
     >
-      <Languages className="mr-2 h-4 w-4" />
+      <Languages className="mr-2 size-4" />
       <span>{lang === "id" ? "ID" : "EN"}</span>
     </button>
   )

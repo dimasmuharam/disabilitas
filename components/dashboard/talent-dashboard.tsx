@@ -43,6 +43,7 @@ const [ratedJobs, setRatedJobs] = useState<string[]>([]); // Menyimpan list ID y
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
 const [recommendedTrainings, setRecommendedTrainings] = useState<any[]>([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
         if (sessionStorage.getItem("pindahkan_fokus_ke_h1") === "true") {
       const heading = document.querySelector("h1");
@@ -60,7 +61,9 @@ if (autoOpenProfile) {
 
     if (user?.id) {
       fetchLatestData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   async function fetchLatestData() {
@@ -346,18 +349,18 @@ if (prof) {
       case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={handleModuleSuccess} />;
         case "settings": return <AccountSettings user={user} onSuccess={handleModuleSuccess} />;
       default: return (
-        <div className="space-y-10 animate-in fade-in duration-500">
-          <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm relative overflow-hidden">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black italic shadow-lg shadow-blue-200 shrink-0">
+        <div className="space-y-10 duration-500 animate-in fade-in">
+          <section className="relative overflow-hidden rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
+            <div className="flex flex-col items-start gap-8 md:flex-row">
+              <div className="flex size-20 shrink-0 items-center justify-center rounded-3xl bg-blue-600 text-3xl font-black italic text-white shadow-lg shadow-blue-200">
                 {profile?.full_name?.charAt(0) || "T"}
               </div>
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">{profile?.full_name || "Nama Belum Diisi"}</h2>
+                  <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Nama Belum Diisi"}</h2>
                   {progress === 100 && <CheckCircle2 className="text-emerald-500" size={24} />}
                 </div>
-                <p className="text-sm font-bold text-blue-600 uppercase tracking-widest">{profile?.disability_type || "Ragam Disabilitas Belum Diisi"}</p>
+                <p className="text-sm font-bold uppercase tracking-widest text-blue-600">{profile?.disability_type || "Ragam Disabilitas Belum Diisi"}</p>
                 <div className="flex flex-wrap gap-6 pt-4 text-[10px] font-black uppercase text-slate-400">
                   <span className="flex items-center gap-2"><MapPin size={14} className="text-blue-600"/> {profile?.city || "N/A"}</span>
                   <span className="flex items-center gap-2"><Briefcase size={14} className="text-blue-600"/> {profile?.career_status || "N/A"}</span>
@@ -365,22 +368,22 @@ if (prof) {
                 </div>
               </div>
             </div>
-            <div className="mt-10 p-8 bg-slate-50 rounded-[2rem] border border-slate-100 italic text-sm text-slate-600 leading-relaxed text-justify">
+            <div className="mt-10 rounded-[2rem] border border-slate-100 bg-slate-50 p-8 text-justify text-sm italic leading-relaxed text-slate-600">
               {"\""}{getDisplayBio()}{"\""}
             </div>
           </section>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2"><Briefcase size={16} className="text-blue-600" /> {"Tracking Lamaran"}</h3>
-              <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden min-h-[200px]">
+              <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-900"><Briefcase size={16} className="text-blue-600" /> {"Tracking Lamaran"}</h3>
+              <div className="min-h-[200px] overflow-hidden rounded-[2.5rem] border-2 border-slate-100 bg-white">
                 {appliedJobs.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
-<div key={app.id} className="p-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
+<div key={app.id} className="flex items-center justify-between p-5 transition-colors hover:bg-slate-50">
   <div className="flex-1">
-    <p className="font-black text-slate-900 text-xs uppercase">{(app.jobs as any)?.title}</p>
-    <p className="text-[9px] font-bold text-slate-400 uppercase">{(app.jobs as any)?.company_name}</p>
+    <p className="text-xs font-black uppercase text-slate-900">{(app.jobs as any)?.title}</p>
+    <p className="text-[9px] font-bold uppercase text-slate-400">{(app.jobs as any)?.company_name}</p>
   </div>
   
   {/* --- TAMBAHAN LANGKAH D --- */}
@@ -392,16 +395,16 @@ if (prof) {
           setSelectedJobRating(app);
         }}
         disabled={ratedJobs.includes(app.id)}
-        className={`text-[8px] font-black uppercase px-3 py-1 rounded-full transition-all ${
+        className={`rounded-full px-3 py-1 text-[8px] font-black uppercase transition-all ${
           ratedJobs.includes(app.id) 
-          ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
-          : "bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white shadow-sm"
+          ? "cursor-not-allowed bg-slate-100 text-slate-400" 
+          : "bg-amber-100 text-amber-700 shadow-sm hover:bg-amber-600 hover:text-white"
         }`}
       >
         {ratedJobs.includes(app.id) ? "Sudah Diaudit" : "Audit Inklusi"}
       </button>
     )}
-    <span className="text-[8px] font-black uppercase px-3 py-1 bg-blue-50 text-blue-600 rounded-full">
+    <span className="rounded-full bg-blue-50 px-3 py-1 text-[8px] font-black uppercase text-blue-600">
       {app.status}
     </span>
   </div>
@@ -409,71 +412,71 @@ if (prof) {
 </div>
                     ))}
                   </div>
-                ) : <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada lamaran"}</div>}
+                ) : <div className="p-10 text-center text-[10px] font-bold uppercase italic text-slate-400">{"Belum ada lamaran"}</div>}
               </div>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2"><BookOpen size={16} className="text-emerald-600" /> {"Tracking Pelatihan"}</h3>
-              <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden min-h-[200px]">
+              <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-900"><BookOpen size={16} className="text-emerald-600" /> {"Tracking Pelatihan"}</h3>
+              <div className="min-h-[200px] overflow-hidden rounded-[2.5rem] border-2 border-slate-100 bg-white">
                 {appliedTrainings.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedTrainings.map((reg) => (
-                      <div key={reg.id} className="p-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                      <div key={reg.id} className="flex items-center justify-between p-5 transition-colors hover:bg-slate-50">
                         <div>
-                          <p className="font-black text-slate-900 text-xs uppercase">{(reg.trainings as any)?.title}</p>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase">{(reg.trainings as any)?.organizer_name}</p>
+                          <p className="text-xs font-black uppercase text-slate-900">{(reg.trainings as any)?.title}</p>
+                          <p className="text-[9px] font-bold uppercase text-slate-400">{(reg.trainings as any)?.organizer_name}</p>
                         </div>
-                        <span className="text-[8px] font-black uppercase px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">{reg.status}</span>
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600">{reg.status}</span>
                       </div>
                     ))}
                   </div>
-                ) : <div className="p-10 text-center text-[10px] font-bold text-slate-400 uppercase italic">{"Belum ada pendaftaran"}</div>}
+                ) : <div className="p-10 text-center text-[10px] font-bold uppercase italic text-slate-400">{"Belum ada pendaftaran"}</div>}
               </div>
             </div>
           </div>
 
 {/* SEKSI SMART MATCH DINAMIS */}
-          <div className="space-y-6 pt-10 border-t-2 border-slate-50 font-black uppercase italic">
+          <div className="space-y-6 border-t-2 border-slate-50 pt-10 font-black uppercase italic">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs tracking-widest text-slate-900 flex items-center gap-2">
+              <h3 className="flex items-center gap-2 text-xs tracking-widest text-slate-900">
                 <Search size={16} className="text-blue-600" /> Rekomendasi Peluang (Smart Match)
               </h3>
-              <span className="text-[8px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full">Berdasarkan Profil Anda</span>
+              <span className="rounded-full bg-blue-50 px-3 py-1 text-[8px] text-blue-600">Berdasarkan Profil Anda</span>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4 text-left">
-                <p className="text-[10px] text-slate-400 tracking-widest">Lowongan Relevan</p>
+                <p className="text-[10px] tracking-widest text-slate-400">Lowongan Relevan</p>
                 {recommendedJobs.length > 0 ? recommendedJobs.map((job) => (
-                  <Link href={`/lowongan/${job.id}`} key={job.id} className="block p-5 bg-white border-2 border-slate-100 rounded-[2rem] hover:border-blue-600 transition-all group shadow-sm">
-                    <div className="flex justify-between items-start">
+                  <Link href={`/lowongan/${job.id}`} key={job.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-blue-600">
+                    <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <p className="text-xs text-slate-900 group-hover:text-blue-600 transition-colors leading-tight">{job.title}</p>
-                        <p className="text-[8px] text-slate-400 tracking-widest">{job.companies?.name} | {job.location}</p>
+                        <p className="text-xs leading-tight text-slate-900 transition-colors group-hover:text-blue-600">{job.title}</p>
+                        <p className="text-[8px] tracking-widest text-slate-400">{job.companies?.name} | {job.location}</p>
                       </div>
                     </div>
                   </Link>
                 )) : (
-                  <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100 text-center">
+                  <div className="rounded-[2rem] border-2 border-dashed border-slate-100 bg-slate-50 p-8 text-center">
                     <p className="text-[8px] text-slate-300">Lengkapi profil untuk melihat lowongan.</p>
                   </div>
                 )}
               </div>
 
               <div className="space-y-4 text-left">
-                <p className="text-[10px] text-slate-400 tracking-widest">Pelatihan & Kursus</p>
+                <p className="text-[10px] tracking-widest text-slate-400">Pelatihan & Kursus</p>
                 {recommendedTrainings.length > 0 ? recommendedTrainings.map((train) => (
-                  <Link href={`/training/${train.id}`} key={train.id} className="block p-5 bg-white border-2 border-slate-100 rounded-[2rem] hover:border-emerald-600 transition-all group shadow-sm">
-                    <div className="flex justify-between items-start">
+                  <Link href={`/training/${train.id}`} key={train.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-emerald-600">
+                    <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <p className="text-xs text-slate-900 group-hover:text-emerald-600 transition-colors leading-tight">{train.title}</p>
-                        <p className="text-[8px] text-slate-400 tracking-widest">{train.partners?.name} | {train.location}</p>
+                        <p className="text-xs leading-tight text-slate-900 transition-colors group-hover:text-emerald-600">{train.title}</p>
+                        <p className="text-[8px] tracking-widest text-slate-400">{train.partners?.name} | {train.location}</p>
                       </div>
                     </div>
                   </Link>
                 )) : (
-                  <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100 text-center">
+                  <div className="rounded-[2rem] border-2 border-dashed border-slate-100 bg-slate-50 p-8 text-center">
                     <p className="text-[8px] text-slate-300">Cek kembali setelah melengkapi profil.</p>
                   </div>
                 )}
@@ -485,32 +488,32 @@ if (prof) {
     }
   };
 
-  if (loading) return <div className="p-20 text-center font-black italic tracking-widest text-slate-400 animate-pulse">{"SINKRONISASI DATA..."}</div>;
+  if (loading) return <div className="animate-pulse p-20 text-center font-black italic tracking-widest text-slate-400">{"SINKRONISASI DATA..."}</div>;
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans">
-      <div className="max-w-6xl mx-auto space-y-8 pt-8 px-4">
-        <section className="bg-white border-2 border-slate-900 p-8 rounded-[3rem] shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 pt-8">
+        <section className="rounded-[3rem] border-2 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div className="space-y-1">
-              <h1 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{progress === 100 ? "Profil Siap Kerja!" : "Kelengkapan Profil Talenta"}</h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{"Lengkapi Profil dan Raih Karir Impianmu"}</p>
+              <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">{progress === 100 ? "Profil Siap Kerja!" : "Kelengkapan Profil Talenta"}</h1>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{"Lengkapi Profil dan Raih Karir Impianmu"}</p>
             </div>
-            <div className="flex items-center gap-4 w-full md:w-auto">
-              <div className="flex-1 md:w-64 bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+            <div className="flex w-full items-center gap-4 md:w-auto">
+              <div className="h-4 flex-1 overflow-hidden rounded-full border border-slate-200 bg-slate-100 md:w-64" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
                 <div className={`h-full transition-all duration-1000 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${progress}%` }}></div>
               </div>
-              <span className="font-black italic text-2xl text-slate-900 min-w-[60px]">{`${progress}%`}</span>
+              <span className="min-w-[60px] text-2xl font-black italic text-slate-900">{`${progress}%`}</span>
             </div>
           </div>
 
           {progress < 100 && missingFields.length > 0 && activeTab === "overview" && (
-            <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100">
-              <h3 className="text-[10px] font-black uppercase text-amber-700 tracking-widest mb-4 flex items-center gap-2"><AlertCircle size={14} /> {"Data Yang Perlu Dilengkapi:"}</h3>
-              <ul className="grid md:grid-cols-2 gap-x-8 gap-y-2">
+            <div className="mt-8 rounded-2xl border border-amber-100 bg-amber-50 p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700"><AlertCircle size={14} /> {"Data Yang Perlu Dilengkapi:"}</h3>
+              <ul className="grid gap-x-8 gap-y-2 md:grid-cols-2">
                 {missingFields.map((field, idx) => (
-                  <li key={idx} className="text-[10px] font-bold text-slate-500 uppercase border-b border-amber-100/50 pb-1">
-                    <span className="text-amber-700 font-black">{field.split(': ')[0]}:</span> {field.split(': ')[1]}
+                  <li key={idx} className="border-b border-amber-100/50 pb-1 text-[10px] font-bold uppercase text-slate-500">
+                    <span className="font-black text-amber-700">{field.split(': ')[0]}:</span> {field.split(': ')[1]}
                   </li>
                 ))}
               </ul>
@@ -518,7 +521,7 @@ if (prof) {
           )}
 
           {activeTab === "overview" && (
-            <nav className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 border-t border-slate-100 pt-8">
+            <nav className="mt-8 grid grid-cols-2 gap-4 border-t border-slate-100 pt-8 md:grid-cols-5">
               {[
                 { label: "Identitas", id: "identity", icon: User },
                 { label: "Sarana", id: "tech", icon: Laptop },
@@ -527,8 +530,8 @@ if (prof) {
                 { label: "Skill", id: "skills", icon: BookOpen },
                 { label: "Akun", id: "settings", icon: ShieldCheck }
               ].map((m) => (
-                <button key={m.id} onClick={() => setActiveTab(m.id)} className="bg-slate-50 border-2 border-transparent p-4 rounded-2xl hover:border-blue-600 transition-all text-center group">
-                  <m.icon className="mx-auto mb-2 text-slate-400 group-hover:text-blue-600 transition-colors" size={20} />
+                <button key={m.id} onClick={() => setActiveTab(m.id)} className="group rounded-2xl border-2 border-transparent bg-slate-50 p-4 text-center transition-all hover:border-blue-600">
+                  <m.icon className="mx-auto mb-2 text-slate-400 transition-colors group-hover:text-blue-600" size={20} />
                   <p className="text-[9px] font-black uppercase text-slate-900">{m.label}</p>
                 </button>
               ))}
@@ -536,25 +539,25 @@ if (prof) {
           )}
 
           {activeTab !== "overview" && (
-            <button onClick={() => setActiveTab("overview")} className="mt-6 flex items-center gap-2 text-xs font-black uppercase text-blue-600 hover:gap-3 transition-all">
+            <button onClick={() => setActiveTab("overview")} className="mt-6 flex items-center gap-2 text-xs font-black uppercase text-blue-600 transition-all hover:gap-3">
               <ChevronLeft size={16}/> {"Kembali ke Dashboard Utama"}
             </button>
           )}
         </section>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">{renderContent()}</div>
           <aside className="space-y-6">
-            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-6 shadow-xl relative overflow-hidden">
+            <div className="relative space-y-6 overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-xl">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400">{"Aksi Talenta"}</h3>
               <div className="space-y-3">
-                <a href={`https://disabilitas.com/talent/${user.id}`} target="_blank" className="w-full bg-blue-600 hover:bg-blue-700 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 transition-all">
+                <a href={`https://disabilitas.com/talent/${user.id}`} target="_blank" className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 p-4 text-[10px] font-black uppercase transition-all hover:bg-blue-700">
                   <ExternalLink size={18} /> {"Lihat Profil Publik"}
                 </a>
-                <button onClick={exportPDF} disabled={isProcessing} className="w-full bg-white text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-slate-100 transition-all disabled:opacity-50">
+                <button onClick={exportPDF} disabled={isProcessing} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-4 text-[10px] font-black uppercase text-slate-900 transition-all hover:bg-slate-100 disabled:opacity-50">
                   <FileDown size={18} /> {isProcessing ? "Menyusun Dokumen..." : "Cetak CV Aksesibel"}
                 </button>
-                <button onClick={handleShare} disabled={isProcessing} className="w-full bg-emerald-600 p-4 rounded-2xl font-black uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-emerald-700 transition-all disabled:opacity-50 shadow-lg shadow-emerald-900/20">
+                <button onClick={handleShare} disabled={isProcessing} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-600 p-4 text-[10px] font-black uppercase shadow-lg shadow-emerald-900/20 transition-all hover:bg-emerald-700 disabled:opacity-50">
                   <Share2 size={18} /> {isProcessing ? "Memotret Kartu..." : "Share Kartu Talenta Inklusif"}
                 </button>
               </div>
@@ -562,27 +565,27 @@ if (prof) {
           </aside>
         </div>
 
-        <div className="opacity-0 pointer-events-none absolute -z-50 overflow-hidden h-0 w-0" aria-hidden="true">
-           <div id="inclusion-card" className="p-10 bg-white w-[600px] h-[350px] text-slate-900 flex flex-col justify-between border-[12px] border-slate-900 rounded-[3rem] font-sans">
-              <div className="flex justify-between items-center border-b-4 border-blue-600 pb-4">
-                <h2 className="text-2xl font-black italic uppercase tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
-                <span className="text-[10px] font-black bg-blue-600 text-white px-4 py-1 rounded-full uppercase">{"Verified Talent"}</span>
+        <div className="pointer-events-none absolute -z-50 size-0 overflow-hidden opacity-0" aria-hidden="true">
+           <div id="inclusion-card" className="flex h-[350px] w-[600px] flex-col justify-between rounded-[3rem] border-[12px] border-slate-900 bg-white p-10 font-sans text-slate-900">
+              <div className="flex items-center justify-between border-b-4 border-blue-600 pb-4">
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
+                <span className="rounded-full bg-blue-600 px-4 py-1 text-[10px] font-black uppercase text-white">{"Verified Talent"}</span>
               </div>
               <div className="flex-1 py-6">
                 <p className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Nama Lengkap"}</p>
-                <p className="text-lg font-bold text-blue-600 uppercase tracking-widest mt-1">{profile?.disability_type || "Ragam Disabilitas"}</p>
-                <div className="text-[10px] font-bold text-slate-400 uppercase mt-4 flex items-center gap-4">
+                <p className="mt-1 text-lg font-bold uppercase tracking-widest text-blue-600">{profile?.disability_type || "Ragam Disabilitas"}</p>
+                <div className="mt-4 flex items-center gap-4 text-[10px] font-bold uppercase text-slate-400">
                   <span>{profile?.city || "Lokasi"}</span>
-                  <span className="w-1.5 h-1.5 bg-slate-200 rounded-full"></span>
+                  <span className="size-1.5 rounded-full bg-slate-200"></span>
                   <span>{profile?.education_level || "Pendidikan"}</span>
                 </div>
               </div>
-              <div className="flex justify-between items-end pt-4 border-t-2 border-slate-100">
+              <div className="flex items-end justify-between border-t-2 border-slate-100 pt-4">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase text-slate-900">{"Inclusion Identity Card"}</p>
-                  <p className="text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em]">{"Scan to view professional portfolio"}</p>
+                  <p className="text-[7px] font-bold uppercase tracking-[0.2em] text-slate-400">{"Scan to view professional portfolio"}</p>
                 </div>
-                <div className="bg-slate-50 p-2 rounded-2xl border-2 border-slate-100"><QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} /></div>
+                <div className="rounded-2xl border-2 border-slate-100 bg-slate-50 p-2"><QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={60} /></div>
               </div>
            </div>
         </div>
