@@ -1,8 +1,9 @@
 import { MetadataRoute } from 'next'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.disabilitas.com'
+  const supabase = createClient()
 
   // 1. Ambil semua ID lowongan dari database untuk sitemap dinamis
   const { data: jobs } = await supabase

@@ -3,7 +3,7 @@
 export const runtime = 'edge'
 
 import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { 
   MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
@@ -25,6 +25,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     async function init() {
+      const supabase = createClient()
       const { data: { user: authUser } } = await supabase.auth.getUser()
       setUser(authUser)
       
