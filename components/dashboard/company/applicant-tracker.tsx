@@ -19,12 +19,6 @@ export default function ApplicantTracker({ company }: { company: any }) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [announcement, setAnnouncement] = useState("");
 
-  useEffect(() => {
-    if (company?.id) {
-      fetchApplicants();
-    }
-  }, [company?.id, fetchApplicants]);
-
   const fetchApplicants = useCallback(async () => {
     if (!company?.id) return;
     setLoading(true);
@@ -49,6 +43,12 @@ export default function ApplicantTracker({ company }: { company: any }) {
     }
     setLoading(false);
   }, [company?.id]);
+
+  useEffect(() => {
+    if (company?.id) {
+      fetchApplicants();
+    }
+  }, [company?.id, fetchApplicants]);
 
   const handleUpdateStatus = async (appId: string, newStatus: string, talentName: string) => {
     const { error } = await supabase
