@@ -1,9 +1,11 @@
-import { supabase } from "@/lib/supabase"
+"use server"
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 /**
  * Mengirimkan penilaian inklusi anonim dari talenta.
  * Mencakup 4 indikator utama riset kepuasan kerja inklusif.
- * Dihubungkan dengan jobId untuk melacak pengalaman spesifik per lowongan.
  */
 export async function postInclusionRating(ratingData: {
   talentId: string,
@@ -15,6 +17,7 @@ export async function postInclusionRating(ratingData: {
   onboarding: number,
   comment?: string
 }) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("inclusion_ratings")
@@ -34,10 +37,14 @@ export async function postInclusionRating(ratingData: {
     if (error) {
       // Menangani duplikasi rating (Unique Constraint: talent_id + job_id)
       if (error.code === "23505") {
-        throw new Error("Anda sudah memberikan penilaian untuk lamaran pada posisi ini.");
+        throw new Error("Anda sudah memberikan penilaian untuk posisi ini.");
       }
       throw error
     }
+    
+    // Refresh halaman lowongan dan dashboard agar skor terbaru muncul
+    revalidatePath("/lowongan");
+    revalidatePath("/dashboard");
     
     return { success: true, error: null }
   } catch (error: any) {
@@ -48,9 +55,9 @@ export async function postInclusionRating(ratingData: {
 
 /**
  * Mengecek apakah talenta sudah memberikan rating untuk lowongan tertentu.
- * Penting untuk mengatur logika tampilan tombol di Dashboard Talenta.
  */
 export async function checkIfAlreadyRated(talentId: string, jobId: string) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("inclusion_ratings")
@@ -60,7 +67,7 @@ export async function checkIfAlreadyRated(talentId: string, jobId: string) {
       .maybeSingle();
 
     if (error) throw error;
-    return !!data; // Mengembalikan true jika data ditemukan, false jika tidak.
+    return !!data;
   } catch (error: any) {
     console.error("Error checking rating status:", error.message);
     return false;
@@ -69,9 +76,9 @@ export async function checkIfAlreadyRated(talentId: string, jobId: string) {
 
 /**
  * Mengambil rata-rata rating (agregat) untuk profil publik perusahaan.
- * Digunakan untuk menampilkan 'Inclusion Score' di halaman lowongan kerja.
  */
 export async function getCompanyRatingAggregate(companyId: string) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("inclusion_ratings")
@@ -81,16 +88,21 @@ export async function getCompanyRatingAggregate(companyId: string) {
     if (error) throw error
     if (!data || data.length === 0) return null
 
-    const count = data.length
-    const sum = (key: string) => data.reduce((acc, curr: any) => acc + curr[key], 0)
+    const count = data.length;
+    const sum = (key: string) => data.reduce((acc, curr: any) => acc + (curr[key] || 0), 0);
+
+    const avgAccessibility = sum("score_accessibility") / count;
+    const avgCulture = sum("score_culture") / count;
+    const avgManagement = sum("score_management") / count;
+    const avgOnboarding = sum("score_onboarding") / count;
 
     return {
       count,
-      accessibility: sum("score_accessibility") / count,
-      culture: sum("score_culture") / count,
-      management: sum("score_management") / count,
-      onboarding: sum("score_onboarding") / count,
-      totalAvg: (sum("score_accessibility") + sum("score_culture") + sum("score_management") + sum("score_onboarding")) / (4 * count)
+      accessibility: avgAccessibility,
+      culture: avgCulture,
+      management: avgManagement,
+      onboarding: avgOnboarding,
+      totalAvg: (avgAccessibility + avgCulture + avgManagement + avgOnboarding) / 4
     }
   } catch (error: any) {
     console.error("Error aggregating ratings:", error.message)
@@ -102,6 +114,7 @@ export async function getCompanyRatingAggregate(companyId: string) {
  * FUNGSI ADMIN: Mengambil ulasan terbaru untuk audit konten.
  */
 export async function getLatestInclusionReviews(limit = 10) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase
       .from("inclusion_ratings")
@@ -116,6 +129,7 @@ export async function getLatestInclusionReviews(limit = 10) {
     if (error) throw error
     return { data, error: null }
   } catch (error: any) {
+    console.error("Error fetching reviews:", error.message)
     return { data: [], error: error.message }
   }
 }
