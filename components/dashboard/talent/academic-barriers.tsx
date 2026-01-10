@@ -152,7 +152,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         </section>
 
         {/* HAMBATAN (SEBAGAI ARRAY UNTUK MULTI-PILIHAN) */}
-        <section className="rounded-[4rem] border-2 border-slate-100 bg-slate-900 p-8 shadow-xl md:p-12 text-white">
+        <section className="rounded-[4rem] border-2 border-slate-100 bg-slate-900 p-8 text-white shadow-xl md:p-12">
           <fieldset className="space-y-8">
             <legend className="mb-4 flex items-center gap-4 text-xs font-black uppercase tracking-widest text-amber-400">
               <AlertTriangle size={24} aria-hidden="true" /> Hambatan Selama Pendidikan
@@ -161,7 +161,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
             <div className="grid gap-4 md:grid-cols-2">
               {EDUCATION_BARRIERS.map((barrier, i) => (
                 <label key={i} className={`flex cursor-pointer items-center gap-4 rounded-2xl border-2 p-5 transition-all ${
-                  formData.education_barrier.includes(barrier) ? 'bg-slate-800 border-amber-400' : 'border-slate-800 hover:border-slate-700'
+                  formData.education_barrier.includes(barrier) ? 'border-amber-400 bg-slate-800' : 'border-slate-800 hover:border-slate-700'
                 }`}>
                   <input type="checkbox" checked={formData.education_barrier.includes(barrier)} onChange={() => handleMultiToggle('education_barrier', barrier)} className="size-6 accent-amber-400" />
                   <span className="text-[10px] font-black uppercase leading-tight">{barrier}</span>
