@@ -102,12 +102,12 @@ export default async function PublicCompanyProfile({ params }: { params: { id: s
                     <span className="text-xs font-black italic">{score}%</span>
                   </div>
                   {/* Progress Bar Scoring */}
-                  <div className="h-2 w-full overflow-hidden rounded-full border border-current/10 bg-white/50">
+                  <div className="border-current/10 h-2 w-full overflow-hidden rounded-full border bg-white/50">
                     <div className={`h-full transition-all duration-1000 ${badgeConfig.progressColor}`} style={{ width: `${score}%` }}></div>
                   </div>
                 </div>
               </div>
-              <p className="border-t border-current/10 pt-3 text-[11px] font-bold italic leading-relaxed opacity-80">
+              <p className="border-current/10 border-t pt-3 text-[11px] font-bold italic leading-relaxed opacity-80">
                 {badgeConfig.description}
               </p>
             </div>
