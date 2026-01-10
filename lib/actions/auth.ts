@@ -60,9 +60,9 @@ export async function signUpUser(formData: {
 
       if (profileError) {
         console.error("Profile insert error:", {
-          message: profileError.message,
-          code: profileError.code,
-          details: profileError.details,
+          message: profileError.message || "Unknown error",
+          code: profileError.code || "UNKNOWN",
+          details: profileError.details || "No details",
         });
         throw new Error(`Failed to create talent profile: ${profileError.message}`);
       }
@@ -80,9 +80,9 @@ export async function signUpUser(formData: {
 
       if (companyError) {
         console.error("Company insert error:", {
-          message: companyError.message,
-          code: companyError.code,
-          details: companyError.details,
+          message: companyError.message || "Unknown error",
+          code: companyError.code || "UNKNOWN",
+          details: companyError.details || "No details",
         });
         throw new Error(`Failed to create company profile: ${companyError.message}`);
       }
@@ -100,9 +100,9 @@ export async function signUpUser(formData: {
 
       if (partnerError) {
         console.error("Partner insert error:", {
-          message: partnerError.message,
-          code: partnerError.code,
-          details: partnerError.details,
+          message: partnerError.message || "Unknown error",
+          code: partnerError.code || "UNKNOWN",
+          details: partnerError.details || "No details",
         });
         throw new Error(`Failed to create partner profile: ${partnerError.message}`);
       }
@@ -113,10 +113,10 @@ export async function signUpUser(formData: {
   } catch (error: any) {
     // Log detailed error for debugging (no sensitive data)
     console.error("SignUp Error:", {
-      message: error.message,
-      status: error.status,
-      code: error.code,
-      name: error.name,
+      message: error.message || "Unknown error",
+      status: error.status || "N/A",
+      code: error.code || "UNKNOWN",
+      name: error.name || "Error",
     });
     return { success: false, message: error.message || "Terjadi kesalahan sistem" };
   }
@@ -174,10 +174,10 @@ export async function signIn(formData: { email: string; password: string }) {
   } catch (error: any) {
     // Log detailed error for debugging (no sensitive data)
     console.error("SignIn Error:", {
-      message: error.message,
-      status: error.status,
-      code: error.code,
-      name: error.name,
+      message: error.message || "Unknown error",
+      status: error.status || "N/A",
+      code: error.code || "UNKNOWN",
+      name: error.name || "Error",
     });
     return { success: false, message: error.message || "Terjadi kesalahan sistem" };
   }
