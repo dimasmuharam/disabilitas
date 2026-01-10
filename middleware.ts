@@ -9,10 +9,27 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Log error if environment variables are missing (helps debug Cloudflare Pages deployment)
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Middleware: Supabase environment variables missing:", {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      path: request.nextUrl.pathname,
+    });
+    // Redirect to login page if environment is not configured
+    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+      return NextResponse.redirect(new URL('/masuk', request.url));
+    }
+    return response;
+  }
+
   // 2. Inisialisasi Supabase Client khusus Middleware
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
