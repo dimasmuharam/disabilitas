@@ -14,6 +14,7 @@ interface EnrollmentTrackerProps {
 }
 
 export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrackerProps) {
+  const supabase = createClient();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("applied");
