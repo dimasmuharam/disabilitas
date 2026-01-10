@@ -3,7 +3,7 @@
 export const runtime = 'edge';
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client/client";
 import Link from "next/link";
 import { 
   MapPin, Briefcase, DollarSign, Filter, 

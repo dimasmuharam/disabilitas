@@ -1,5 +1,5 @@
 import React from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client/server";
 import { 
   Building2, MapPin, Briefcase, Users, 
   CheckCircle2, Globe, Mail,

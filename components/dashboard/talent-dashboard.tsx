@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client/client";
 import Link from "next/link";
 import { 
   User, MapPin, Briefcase, GraduationCap, FileDown, BookOpen, Laptop, Wifi, ArrowRight, AlertCircle, CheckCircle2, Search, ChevronLeft, LayoutDashboard, Share2, ExternalLink, ShieldCheck, Clock

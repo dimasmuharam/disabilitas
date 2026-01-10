@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client/client";
 import { 
   Briefcase, Save, Plus, Trash2, Linkedin, 
   MapPin, DollarSign, CheckCircle2, AlertCircle, Info, AlignLeft, Building2, ShieldCheck

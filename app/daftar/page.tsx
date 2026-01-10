@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client/client"
 import { signUpUser } from "@/lib/actions/auth"
 import Link from "next/link"
 import { useRouter } from "next/navigation"

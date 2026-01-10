@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client/client";
 import { 
   Plus, BookOpen, Calendar, MapPin, 
   ChevronRight, Trash2, Edit3, Globe,

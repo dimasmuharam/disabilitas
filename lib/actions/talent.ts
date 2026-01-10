@@ -1,7 +1,7 @@
 "use server"
 
 // Menggunakan createClient untuk Server-Side (Next.js 14 Standard)
-import { createClient } from "@/lib/supabase/server"; 
+import { createClient } from "@/lib/supabase/client/server"; 
 import { revalidatePath } from "next/cache";
 
 /**

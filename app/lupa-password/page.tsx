@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client/client"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, Suspense } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client/client"
 import { useRouter, useSearchParams } from "next/navigation"
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"

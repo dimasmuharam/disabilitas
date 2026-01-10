@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client/client";
 import { 
   Save, Monitor, Laptop, Wifi, Construction,
   CheckCircle2, AlertCircle, Info, PlusCircle
