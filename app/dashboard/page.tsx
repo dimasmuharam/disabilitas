@@ -130,7 +130,7 @@ function DashboardContent() {
 
         {/* Dashboard Switcher dengan Proteksi Null */}
         {role === 'admin' || role === 'super_admin' ? (
-          <AdminDashboard user={{ ...user, ...profile }} />
+          <AdminDashboard user={user} />
         ) : role === USER_ROLES.TALENT ? (
           <TalentDashboard 
             user={user} 
@@ -139,13 +139,13 @@ function DashboardContent() {
           />
         ) : role === USER_ROLES.COMPANY ? (
           <CompanyDashboard 
-            user={{ ...user, ...profile }} 
+            user={user} 
             company={profile} 
           />
         ) : role === USER_ROLES.PARTNER ? (
-          <CampusDashboard user={{ ...user, ...profile }} />
+          <CampusDashboard user={user} />
         ) : role === USER_ROLES.GOVERNMENT ? (
-          <GovDashboard user={{ ...user, ...profile }} />
+          <GovDashboard user={user} />
         ) : (
           <div className="rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white p-20 text-center shadow-2xl dark:bg-slate-900">
             <h2 className="mb-4 text-2xl font-black uppercase italic tracking-tight text-red-600">
