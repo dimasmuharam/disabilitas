@@ -23,6 +23,7 @@ export default function TalentTracer({ partnerName, partnerId, onBack }: TalentT
 
   useEffect(() => {
     fetchAffiliatedTalents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partnerName]);
 
   async function fetchAffiliatedTalents() {

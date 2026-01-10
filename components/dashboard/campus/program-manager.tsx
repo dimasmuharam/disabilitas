@@ -35,6 +35,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
   useEffect(() => {
     fetchPrograms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partnerId]);
 
   async function fetchPrograms() {

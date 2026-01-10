@@ -45,6 +45,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
 
   useEffect(() => {
     fetchExperiences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
 
   const parseDate = (dateStr: string | null) => {

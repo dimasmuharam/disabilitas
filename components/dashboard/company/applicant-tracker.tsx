@@ -23,6 +23,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
     if (company?.id) {
       fetchApplicants();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company?.id]);
 
   async function fetchApplicants() {

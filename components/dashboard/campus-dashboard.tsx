@@ -46,6 +46,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     if (user?.id) {
       fetchDashboardData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   async function fetchDashboardData() {
