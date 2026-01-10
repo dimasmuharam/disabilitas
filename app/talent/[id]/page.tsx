@@ -133,7 +133,7 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
                 {profile.work_experiences && profile.work_experiences.length > 0 ? (
                   profile.work_experiences.map((work: any) => (
                     <div key={work.id} className="relative border-l-2 border-slate-100 pl-10">
-                      <div className="absolute -left-[11px] top-0 size-5 rounded-full border-4 border-white bg-blue-600 shadow-sm"></div>
+                      <div className="absolute left-[-11px] top-0 size-5 rounded-full border-4 border-white bg-blue-600 shadow-sm"></div>
                       <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <div>
                           <h3 className="text-xl font-black uppercase leading-none tracking-tight text-slate-900">{work.position}</h3>

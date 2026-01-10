@@ -310,7 +310,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       </div>
 
       {/* HIDDEN INCLUSION CARD - HANYA UNTUK GENERATE GAMBAR SHARE */}
-      <div className="pointer-events-none fixed -left-[9999px] -top-[9999px] opacity-0" aria-hidden="true">
+      <div className="pointer-events-none fixed left-[-9999px] top-[-9999px] opacity-0" aria-hidden="true">
         <div ref={cardRef} className="flex h-[450px] w-[800px] flex-col justify-between rounded-[4rem] border-[16px] border-slate-900 bg-white p-12 font-sans">
           <div className="flex items-center justify-between border-b-4 border-blue-600 pb-6">
             <div className="flex items-center gap-4">
