@@ -1,10 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Masukkan Project URL (https://...)
-const supabaseUrl = 'https://dsexxsnedfxbdngscdni.supabase.co'
+// Dia akan otomatis mengambil dari .env (laptop) atau Cloudflare (online)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Masukkan ANON / PUBLISHABLE Key (sb_publishable_...)
-// PENTING: Hanya kunci PUBLIC yang boleh ditaruh di sini karena repo ini terbuka.
-const supabaseKey = 'sb_publishable_a4zU6uSZiIWbj3Im9DPM5Q_tXTgKVFO'
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
