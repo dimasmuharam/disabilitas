@@ -181,7 +181,18 @@ export async function signIn(formData: { email: string; password: string }) {
       code: error.code || "UNKNOWN",
       name: error.name || "Error",
     });
-    return { success: false, message: error.message || "Terjadi kesalahan sistem" };
+    // Return detailed error information for debugging
+    const errorDetails = {
+      message: error.message || "Unknown error",
+      status: error.status,
+      code: error.code,
+      name: error.name,
+    };
+    return { 
+      success: false, 
+      message: error.message || "Terjadi kesalahan sistem",
+      error: errorDetails 
+    };
   }
 }
 

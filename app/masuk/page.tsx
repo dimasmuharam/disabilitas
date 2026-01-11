@@ -41,7 +41,7 @@ export default function LoginPage() {
       });
 
       if (!result?.success) {
-        const message = result?.message || "Terjadi kesalahan sistem";
+        const message = result?.message || "Error: " + JSON.stringify(result);
         throw new Error(message);
       }
 
