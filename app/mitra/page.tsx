@@ -3,7 +3,7 @@ import { Building2, ArrowRight, ShieldCheck, GraduationCap, Landmark } from "luc
 
 export default function MitraLoginPage() {
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] lg:grid lg:grid-cols-2">
+    <div className="min-h-[calc(100vh-4rem)] w-full lg:grid lg:grid-cols-2">
       
       {/* BAGIAN KIRI: Form Login */}
       <div className="flex items-center justify-center py-12">
@@ -66,11 +66,11 @@ export default function MitraLoginPage() {
 
           <div className="mt-4 text-center text-sm text-slate-500">
             Belum menjadi mitra?{" "}
-            <Link href="/bisnis" className="underline hover:text-blue-600 font-medium">
+            <Link href="/bisnis" className="font-medium underline hover:text-blue-600">
               Daftar Perusahaan
             </Link>{" "}
             atau{" "}
-            <Link href="/kampus" className="underline hover:text-blue-600 font-medium">
+            <Link href="/kampus" className="font-medium underline hover:text-blue-600">
               Daftar Kampus
             </Link>
           </div>
@@ -78,19 +78,19 @@ export default function MitraLoginPage() {
       </div>
 
       {/* BAGIAN KANAN: Visual / Banner (Hidden di HP) */}
-      <div className="hidden bg-slate-100 dark:bg-slate-900 lg:flex flex-col justify-center p-12 border-l border-slate-200 dark:border-slate-800">
-        <div className="max-w-md mx-auto space-y-6">
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm">
-               <Building2 className="h-8 w-8 text-orange-600 mb-2" />
+      <div className="hidden flex-col justify-center border-l border-slate-200 bg-slate-100 p-12 dark:border-slate-800 dark:bg-slate-900 lg:flex">
+        <div className="mx-auto max-w-md space-y-6">
+          <div className="mb-8 grid grid-cols-3 gap-4">
+            <div className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm dark:bg-slate-950">
+               <Building2 className="mb-2 size-8 text-orange-600" />
                <span className="text-xs font-semibold">Korporat</span>
             </div>
-            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm">
-               <GraduationCap className="h-8 w-8 text-green-600 mb-2" />
+            <div className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm dark:bg-slate-950">
+               <GraduationCap className="mb-2 size-8 text-green-600" />
                <span className="text-xs font-semibold">Kampus</span>
             </div>
-            <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-950 rounded-lg shadow-sm">
-               <Landmark className="h-8 w-8 text-purple-600 mb-2" />
+            <div className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm dark:bg-slate-950">
+               <Landmark className="mb-2 size-8 text-purple-600" />
                <span className="text-xs font-semibold">Pemerintah</span>
             </div>
           </div>
@@ -99,14 +99,14 @@ export default function MitraLoginPage() {
             <p className="text-lg font-medium leading-relaxed text-slate-700 dark:text-slate-300">
               &ldquo;Bergabung dengan ekosistem Disabilitas.com memudahkan kami dalam memenuhi kuota 2% ASN disabilitas dengan talenta yang tepat sasaran.&rdquo;
             </p>
-            <footer className="text-sm text-slate-500 font-semibold">
+            <footer className="text-sm font-semibold text-slate-500">
               — Kepala BKD (Badan Kepegawaian Daerah)
             </footer>
           </blockquote>
           
           <div className="pt-8">
              <div className="flex items-center gap-2 text-sm text-slate-500">
-               <ShieldCheck className="h-4 w-4 text-green-600" /> Data Anda terenkripsi dan aman.
+               <ShieldCheck className="size-4 text-green-600" /> Data Anda terenkripsi dan aman.
              </div>
           </div>
         </div>

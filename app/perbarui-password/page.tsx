@@ -64,25 +64,25 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans text-slate-900">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
-        <div className="mx-auto w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg mb-6 text-white" aria-hidden="true">
+    <div className="flex min-h-screen flex-col justify-center bg-slate-50 py-12 font-sans text-slate-900 dark:bg-slate-950 sm:px-6 lg:px-8">
+      <div className="px-4 text-center sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg" aria-hidden="true">
             <Lock size={32} />
         </div>
         <h1 className="text-3xl font-black uppercase italic tracking-tighter dark:text-slate-50">
           {"Atur Ulang Sandi"}
         </h1>
-        <p className="mt-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">
+        <p className="mt-2 text-sm font-bold uppercase italic tracking-widest text-slate-500 dark:text-slate-400">
           {"Buat Kata Sandi Baru Anda"}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white dark:bg-slate-900 py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
+      <div className="mt-8 px-4 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="rounded-[2.5rem] border border-slate-200 bg-white px-6 py-10 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
           
           <form className="space-y-6" onSubmit={handleUpdatePassword} aria-label="Formulir Atur Ulang Kata Sandi">
             <div>
-              <label htmlFor="new_password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+              <label htmlFor="new_password" className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
                 {"Kata Sandi Baru"}
               </label>
               <div className="relative">
@@ -94,12 +94,12 @@ export default function ResetPasswordPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimal 6 karakter"
-                  className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className="block w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                  className="absolute inset-y-0 right-4 flex items-center rounded-full p-1 text-slate-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -108,7 +108,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm_password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 ml-1">
+              <label htmlFor="confirm_password" className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
                 {"Konfirmasi Kata Sandi Baru"}
               </label>
               <input
@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Ulangi kata sandi"
-                className="appearance-none block w-full px-5 py-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="block w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
 
@@ -129,7 +129,7 @@ export default function ResetPasswordPage() {
                 role="alert" 
                 aria-live="assertive" 
                 tabIndex={-1}
-                className={`p-4 rounded-2xl text-[11px] font-black uppercase text-center border outline-none ${isError ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'} animate-in zoom-in-95`}
+                className={`rounded-2xl border p-4 text-center text-[11px] font-black uppercase outline-none ${isError ? 'border-red-100 bg-red-50 text-red-700' : 'border-emerald-100 bg-emerald-50 text-emerald-700'} animate-in zoom-in-95`}
               >
                 <div className="flex items-center justify-center gap-2">
                   {isError ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
@@ -141,7 +141,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 py-4 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-slate-900 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 p-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? "MEMPROSES..." : (
                 <>

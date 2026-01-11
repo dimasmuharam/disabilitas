@@ -81,13 +81,13 @@ const handleSubmit = async (e: React.FormEvent) => {
 };
 
 return (
-    <div className="max-w-4xl mx-auto pb-20 animate-in fade-in duration-500 font-sans text-slate-900">
+    <div className="mx-auto max-w-4xl pb-20 font-sans text-slate-900 duration-500 animate-in fade-in">
       <header className="mb-10 px-4">
-        <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
+        <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter">
           <ShieldCheck className="text-blue-600" size={36} aria-hidden="true" />
           {"Identitas & Legal"}
         </h1>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 italic">
+        <p className="mt-2 text-[10px] font-bold uppercase italic tracking-widest text-slate-400">
           {"Verifikasi data untuk mengunakan platform Disabilitas.com secara optimal."}
         </p>
       </header>
@@ -95,8 +95,8 @@ return (
       {/* REGION NOTIFIKASI AKSESIBEL */}
       <div aria-live="polite" className="px-4">
         {message.text && (
-          <div className={`mb-8 p-6 rounded-[2rem] border-2 flex items-center gap-4 ${
-            message.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800"
+          <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-2 p-6 ${
+            message.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
           }`}>
             {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
             <p className="text-sm font-black uppercase italic tracking-tight">{message.text}</p>
@@ -106,23 +106,23 @@ return (
 
       <form onSubmit={handleSubmit} className="space-y-10 px-4">
         {/* SEKSI 1: INFORMASI WAJIB */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8" aria-labelledby="section-basic">
-          <h2 id="section-basic" className="text-xs font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2">
+        <section className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm" aria-labelledby="section-basic">
+          <h2 id="section-basic" className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-blue-600">
             <User size={16} aria-hidden="true" /> {"Data Personal (Wajib)"}
           </h2>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-6">
               <div>
-                <label htmlFor="full_name" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nama Lengkap"}</label>
-                <input id="full_name" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})} aria-required="true" />
+                <label htmlFor="full_name" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Nama Lengkap"}</label>
+                <input id="full_name" type="text" required className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-blue-600" value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})} aria-required="true" />
               </div>
               <div>
-                <label htmlFor="date_of_birth" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Tanggal Lahir"}</label>
-                <input id="date_of_birth" type="date" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.date_of_birth} onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})} aria-required="true" />
+                <label htmlFor="date_of_birth" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Tanggal Lahir"}</label>
+                <input id="date_of_birth" type="date" required className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-blue-600" value={formData.date_of_birth} onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})} aria-required="true" />
               </div>
               <div>
-                <label htmlFor="city" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Kota Domisili"}</label>
-                <input id="city" list="cities-data" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} aria-required="true" />
+                <label htmlFor="city" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Kota Domisili"}</label>
+                <input id="city" list="cities-data" required className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-blue-600" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} aria-required="true" />
                 <datalist id="cities-data">
                   {INDONESIA_CITIES.map((c) => <option key={c} value={c} />)}
                 </datalist>
@@ -130,20 +130,20 @@ return (
             </div>
             <div className="space-y-6">
               <div>
-                <label htmlFor="phone" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Nomor WhatsApp"}</label>
-                <input id="phone" type="text" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} aria-required="true" />
+                <label htmlFor="phone" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Nomor WhatsApp"}</label>
+                <input id="phone" type="text" required className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-blue-600" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} aria-required="true" />
               </div>
               <div>
-                <label htmlFor="gender" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Jenis Kelamin"}</label>
-                <select id="gender" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} aria-required="true">
+                <label htmlFor="gender" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Jenis Kelamin"}</label>
+                <select id="gender" required className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-blue-600" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} aria-required="true">
                   <option value="">{"Pilih"}</option>
                   <option value="male">{"Laki-laki"}</option>
                   <option value="female">{"Perempuan"}</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="comm_pref" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Preferensi Kontak"}</label>
-                <select id="comm_pref" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.communication_preference} onChange={(e) => setFormData({...formData, communication_preference: e.target.value})} aria-required="true">
+                <label htmlFor="comm_pref" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Preferensi Kontak"}</label>
+                <select id="comm_pref" required className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-blue-600" value={formData.communication_preference} onChange={(e) => setFormData({...formData, communication_preference: e.target.value})} aria-required="true">
                   <option value="WhatsApp">{"WhatsApp"}</option>
                   <option value="Email">{"Email"}</option>
                   <option value="Telepon">{"Telepon"}</option>
@@ -154,68 +154,68 @@ return (
         </section>
 
         {/* SEKSI 2: LINK DIGITAL (OPSIONAL) */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8" aria-labelledby="section-digital">
-          <h2 id="section-digital" className="text-xs font-black uppercase text-purple-600 tracking-[0.2em] flex items-center gap-2">
+        <section className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm" aria-labelledby="section-digital">
+          <h2 id="section-digital" className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-purple-600">
             <LinkIcon size={16} aria-hidden="true" /> {"Media & Dokumen (Opsional)"}
           </h2>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-6">
               <div>
-                <label htmlFor="portfolio_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"URL Portofolio"}</label>
-                <input id="portfolio_url" type="url" placeholder="https://..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.portfolio_url} onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})} />
+                <label htmlFor="portfolio_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"URL Portofolio"}</label>
+                <input id="portfolio_url" type="url" placeholder="https://..." className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-purple-600" value={formData.portfolio_url} onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="resume_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link CV (Google Drive)"}</label>
-                <input id="resume_url" type="url" placeholder="https://drive.google.com/..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.resume_url} onChange={(e) => setFormData({...formData, resume_url: e.target.value})} />
+                <label htmlFor="resume_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Link CV (Google Drive)"}</label>
+                <input id="resume_url" type="url" placeholder="https://drive.google.com/..." className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-purple-600" value={formData.resume_url} onChange={(e) => setFormData({...formData, resume_url: e.target.value})} />
                 {driveWarning && (
-                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 mt-2 flex items-start gap-2 animate-in slide-in-from-top-2" role="alert">
-                    <Info size={14} className="text-amber-600 mt-0.5" />
-                    <p className="text-[8px] font-black uppercase text-amber-700 leading-tight">{"Peringatan: Pastikan izin akses Google Drive diatur ke 'Siapa saja yang memiliki link'!"}</p>
+                  <div className="mt-2 flex items-start gap-2 rounded-xl border border-amber-100 bg-amber-50 p-4 animate-in slide-in-from-top-2" role="alert">
+                    <Info size={14} className="mt-0.5 text-amber-600" />
+                    <p className="text-[8px] font-black uppercase leading-tight text-amber-700">{"Peringatan: Pastikan izin akses Google Drive diatur ke 'Siapa saja yang memiliki link'!"}</p>
                   </div>
                 )}
               </div>
             </div>
             <div className="space-y-6">
               <div>
-                <label htmlFor="document_disability_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Bukti Disabilitas"}</label>
-                <input id="document_disability_url" type="url" placeholder="Link KTA / Surat Dokter" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.document_disability_url} onChange={(e) => setFormData({...formData, document_disability_url: e.target.value})} />
+                <label htmlFor="document_disability_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Link Bukti Disabilitas"}</label>
+                <input id="document_disability_url" type="url" placeholder="Link KTA / Surat Dokter" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-purple-600" value={formData.document_disability_url} onChange={(e) => setFormData({...formData, document_disability_url: e.target.value})} />
               </div>
               <div>
-                <label htmlFor="video_intro_url" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Link Video Intro (YouTube)"}</label>
-                <input id="video_intro_url" type="url" placeholder="https://youtube.com/..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-purple-600 transition-all text-sm" value={formData.video_intro_url} onChange={(e) => setFormData({...formData, video_intro_url: e.target.value})} />
+                <label htmlFor="video_intro_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Link Video Intro (YouTube)"}</label>
+                <input id="video_intro_url" type="url" placeholder="https://youtube.com/..." className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-purple-600" value={formData.video_intro_url} onChange={(e) => setFormData({...formData, video_intro_url: e.target.value})} />
               </div>
             </div>
           </div>
-          <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200">
-            <h3 className="text-[10px] font-black uppercase flex items-center gap-2 mb-2 text-slate-500">
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-6">
+            <h3 className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-500">
               <Youtube size={14} aria-hidden="true" /> {"Panduan Video Intro"}
             </h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase leading-relaxed italic">
+            <p className="text-[10px] font-bold uppercase italic leading-relaxed text-slate-400">
               {"Video 1 menit: Perkenalkan Nama, Ragam Disabilitas, Keahlian, dan Harapan Karir. Upload ke YouTube sebagai 'Unlisted' untuk privasi."}
             </p>
           </div>
         </section>
 
         {/* SEKSI 3: BIO & DISABILITAS (WAJIB) */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
+        <section className="space-y-6 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
           <div className="space-y-2">
-            <label htmlFor="disability_type" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Ragam Disabilitas"}</label>
-            <select id="disability_type" required className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold outline-none focus:border-blue-600 transition-all text-sm" value={formData.disability_type} onChange={(e) => setFormData({...formData, disability_type: e.target.value})} aria-required="true">
+            <label htmlFor="disability_type" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Ragam Disabilitas"}</label>
+            <select id="disability_type" required className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-blue-600" value={formData.disability_type} onChange={(e) => setFormData({...formData, disability_type: e.target.value})} aria-required="true">
               <option value="">{"Pilih Ragam"}</option>
               {DISABILITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           
-          <label className="flex items-center gap-4 p-5 bg-blue-50 border-2 border-blue-100 rounded-3xl cursor-pointer hover:bg-blue-100 transition-all">
-            <input type="checkbox" required className="w-6 h-6 accent-blue-600" checked={formData.has_informed_consent} onChange={(e) => setFormData({...formData, has_informed_consent: e.target.checked})} aria-required="true" />
-            <span className="text-[10px] font-black uppercase text-blue-900 leading-tight">
+          <label className="flex cursor-pointer items-center gap-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-5 transition-all hover:bg-blue-100">
+            <input type="checkbox" required className="size-6 accent-blue-600" checked={formData.has_informed_consent} onChange={(e) => setFormData({...formData, has_informed_consent: e.target.checked})} aria-required="true" />
+            <span className="text-[10px] font-black uppercase leading-tight text-blue-900">
               {"Saya menyetujui Informed Consent bahwa data yang saya input dapat dipergunakan untuk pengembangan platform dan riset karir inklusif."}
             </span>
           </label>
         </section>
 
         <div className="flex justify-end pt-4">
-          <button type="submit" disabled={loading} className="bg-slate-900 text-white px-12 py-5 rounded-[2rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-blue-600 transition-all shadow-2xl disabled:opacity-50">
+          <button type="submit" disabled={loading} className="flex items-center gap-4 rounded-[2rem] bg-slate-900 px-12 py-5 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50">
             {loading ? "Menyimpan..." : <><Save size={20} aria-hidden="true" /> {"Simpan Identitas"}</>}
           </button>
         </div>

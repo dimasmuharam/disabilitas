@@ -84,10 +84,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans selection:bg-blue-100">
+    <main className="flex min-h-screen flex-col justify-center bg-slate-50 py-12 font-sans selection:bg-blue-100 sm:px-6 lg:px-8">
       
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 text-center">
-        <div className="mx-auto w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
+      <div className="px-4 text-center sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl bg-blue-600 shadow-lg">
             <UserPlus className="text-white" size={32} />
         </div>
         <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">
@@ -95,20 +95,20 @@ export default function RegisterPage() {
         </h1>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white py-10 px-6 shadow-2xl rounded-[2.5rem] border border-slate-200">
+      <div className="mt-8 px-4 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="rounded-[2.5rem] border border-slate-200 bg-white px-6 py-10 shadow-2xl">
           
           {isError && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-100 rounded-2xl flex items-center gap-3 text-red-700 animate-in fade-in duration-300">
+            <div className="mb-6 flex items-center gap-3 rounded-2xl border-2 border-red-100 bg-red-50 p-4 text-red-700 duration-300 animate-in fade-in">
               <AlertCircle size={20} />
-              <p className="text-[10px] font-black uppercase tracking-widest leading-tight">{msg}</p>
+              <p className="text-[10px] font-black uppercase leading-tight tracking-widest">{msg}</p>
             </div>
           )}
 
           {!isSuccess ? (
             <form className="space-y-6" onSubmit={handleRegister}>
               <div className="space-y-2">
-                <label htmlFor="role-select" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <label htmlFor="role-select" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Kategori Akun
                 </label>
                 <div className="relative">
@@ -116,13 +116,13 @@ export default function RegisterPage() {
                     id="role-select"
                     value={role} 
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none appearance-none cursor-pointer focus:border-blue-600 transition-all"
+                    className="w-full cursor-pointer appearance-none rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all focus:border-blue-600"
                   >
                     {filteredRoles.map((r) => (
                       <option key={r.id} value={r.id}>{r.label}</option>
                     ))}
                   </select>
-                  <div className="absolute right-5 inset-y-0 flex items-center pointer-events-none text-slate-400">
+                  <div className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-slate-400">
                     {role === USER_ROLES.TALENT && <User size={18} />}
                     {role === USER_ROLES.COMPANY && <Building2 size={18} />}
                     {role === USER_ROLES.PARTNER && <GraduationCap size={18} />}
@@ -131,7 +131,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="full_name" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <label htmlFor="full_name" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Nama Lengkap atau Instansi
                 </label>
                 <input 
@@ -141,12 +141,12 @@ export default function RegisterPage() {
                   value={fullName} 
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Nama sesuai identitas..."
-                  className="block w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none focus:border-blue-600 transition-all placeholder:text-slate-300" 
+                  className="block w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-600" 
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <label htmlFor="email" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Alamat Email Aktif
                 </label>
                 <input 
@@ -156,12 +156,12 @@ export default function RegisterPage() {
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@email.com"
-                  className="block w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none focus:border-blue-600 transition-all placeholder:text-slate-300" 
+                  className="block w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-600" 
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                <label htmlFor="password" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Kata Sandi Baru
                 </label>
                 <input 
@@ -172,11 +172,11 @@ export default function RegisterPage() {
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimal 6 karakter..."
-                  className="block w-full px-5 py-4 border-2 border-slate-50 rounded-2xl bg-slate-50 text-slate-900 font-bold outline-none focus:border-blue-600 transition-all placeholder:text-slate-300" 
+                  className="block w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-600" 
                 />
               </div>
 
-              <div className="flex justify-center py-2 scale-90 md:scale-100">
+              <div className="flex scale-90 justify-center py-2 md:scale-100">
                   <Turnstile 
                       siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
                       onSuccess={(token) => setTurnstileToken(token)}
@@ -187,7 +187,7 @@ export default function RegisterPage() {
               <button 
                   type="submit" 
                   disabled={loading || !turnstileToken} 
-                  className="w-full flex justify-center py-5 px-4 rounded-2xl shadow-xl text-xs font-black uppercase tracking-[0.2em] text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-95"
+                  className="flex w-full justify-center rounded-2xl bg-blue-600 px-4 py-5 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
               >
                 {loading ? "MEMPROSES DATA..." : "BUAT AKUN SEKARANG"}
               </button>
@@ -198,24 +198,24 @@ export default function RegisterPage() {
               role="alert" 
               aria-live="assertive" 
               tabIndex={-1}
-              className="p-10 rounded-[2.5rem] bg-emerald-50 text-emerald-700 border-2 border-emerald-100 text-center space-y-6 animate-in zoom-in-95 outline-none"
+              className="space-y-6 rounded-[2.5rem] border-2 border-emerald-100 bg-emerald-50 p-10 text-center text-emerald-700 outline-none animate-in zoom-in-95"
             >
               <CheckCircle2 size={56} className="mx-auto text-emerald-500" />
               <div className="space-y-2">
                 <p className="text-lg font-black uppercase italic tracking-tighter">Pendaftaran Berhasil</p>
-                <p className="text-[10px] font-bold leading-relaxed uppercase tracking-widest">
+                <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest">
                   <strong>{msg}</strong>
                 </p>
               </div>
               <div className="pt-4">
-                <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto"></div>
-                <p className="mt-4 text-[8px] font-black uppercase text-slate-400 italic">Mengarahkan ke halaman masuk...</p>
+                <div className="mx-auto size-10 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600"></div>
+                <p className="mt-4 text-[8px] font-black uppercase italic text-slate-400">Mengarahkan ke halaman masuk...</p>
               </div>
             </div>
           )}
 
-          <nav className="mt-10 text-center border-t border-slate-50 pt-6">
-              <Link href="/masuk" className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-slate-900 transition-colors">
+          <nav className="mt-10 border-t border-slate-50 pt-6 text-center">
+              <Link href="/masuk" className="text-[10px] font-black uppercase tracking-widest text-blue-600 transition-colors hover:text-slate-900">
                 Sudah punya akun? Masuk di sini
               </Link>
           </nav>

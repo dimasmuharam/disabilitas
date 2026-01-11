@@ -23,6 +23,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
     if (company?.id) {
       fetchApplicants();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company?.id]);
 
   async function fetchApplicants() {
@@ -240,48 +241,48 @@ export default function ApplicantTracker({ company }: { company: any }) {
     accepted: applicants.filter(a => a.status === 'accepted').length,
   };
 
-  if (loading) return <div role="status" className="p-20 text-center font-black animate-pulse text-slate-400 uppercase tracking-widest italic">Menyinkronkan Data Riset...</div>;
+  if (loading) return <div role="status" className="animate-pulse p-20 text-center font-black uppercase italic tracking-widest text-slate-400">Menyinkronkan Data Riset...</div>;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 text-left pb-20">
+    <div className="mx-auto max-w-6xl space-y-8 pb-20 text-left">
       <div className="sr-only" aria-live="assertive" role="log">{announcement}</div>
 
       {/* --- UI STATISTIK --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role="region" aria-label="Statistik Pelamar Kerja">
-        <div className="bg-slate-900 p-6 rounded-[2.5rem] text-white shadow-xl italic border-2 border-slate-800">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60 flex items-center gap-2 italic">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3" role="region" aria-label="Statistik Pelamar Kerja">
+        <div className="rounded-[2.5rem] border-2 border-slate-800 bg-slate-900 p-6 italic text-white shadow-xl">
+          <p className="flex items-center gap-2 text-[9px] font-black uppercase italic tracking-widest opacity-60">
             <Activity size={12} className="text-blue-400" /> Total Lamaran
           </p>
-          <p className="text-4xl font-black italic tracking-tighter leading-none">{stats.total}</p>
+          <p className="text-4xl font-black italic leading-none tracking-tighter">{stats.total}</p>
         </div>
-        <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 italic">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 italic">
+        <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-6 italic">
+          <p className="flex items-center gap-2 text-[9px] font-black uppercase italic tracking-widest text-slate-400">
             <Clock size={12} className="text-orange-400" /> Sedang Direview
           </p>
-          <p className="text-4xl font-black italic tracking-tighter leading-none text-orange-500">{stats.pending}</p>
+          <p className="text-4xl font-black italic leading-none tracking-tighter text-orange-500">{stats.pending}</p>
         </div>
-        <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 italic">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 italic">
+        <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-6 italic">
+          <p className="flex items-center gap-2 text-[9px] font-black uppercase italic tracking-widest text-slate-400">
             <CheckCircle size={12} className="text-emerald-400" /> Lolos Seleksi
           </p>
-          <p className="text-4xl font-black italic tracking-tighter leading-none text-emerald-500">{stats.accepted}</p>
+          <p className="text-4xl font-black italic leading-none tracking-tighter text-emerald-500">{stats.accepted}</p>
         </div>
       </div>
 
       {/* --- SEARCH & FILTER --- */}
-      <div className="flex flex-col md:flex-row justify-between gap-6 items-center pt-4">
-        <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 text-slate-900">
+      <div className="flex flex-col items-center justify-between gap-6 pt-4 md:flex-row">
+        <h2 className="flex items-center gap-3 text-xl font-black uppercase italic tracking-tighter text-slate-900">
           <Users className="text-blue-600" size={24} aria-hidden="true" /> Applicant Tracker
         </h2>
-        <div className="flex gap-4 w-full md:w-auto">
+        <div className="flex w-full gap-4 md:w-auto">
           <input 
             placeholder="CARI NAMA TALENTA..." 
-            className="w-full pl-6 pr-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 shadow-sm"
+            className="w-full rounded-2xl border-2 border-slate-100 px-6 py-3 text-[10px] font-black uppercase shadow-sm outline-none focus:border-blue-600"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <select 
             onChange={(e) => setFilterStatus(e.target.value)} 
-            className="px-6 py-3 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:border-blue-600 shadow-sm bg-white cursor-pointer"
+            className="cursor-pointer rounded-2xl border-2 border-slate-100 bg-white px-6 py-3 text-[10px] font-black uppercase shadow-sm outline-none focus:border-blue-600"
           >
             <option value="all">SEMUA STATUS</option>
             <option value="applied">BARU MASUK</option>
@@ -299,26 +300,26 @@ export default function ApplicantTracker({ company }: { company: any }) {
           const skills = parseToArray(p?.skills);
 
           return (
-            <article key={app.id} role="listitem" className="bg-white p-8 md:p-10 rounded-[3.5rem] border-2 border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center group hover:border-slate-900 transition-all shadow-sm">
-              <div className="flex flex-col md:flex-row items-start gap-8 flex-1 w-full">
-                <div className="w-24 h-24 bg-slate-900 text-white rounded-[2.5rem] flex items-center justify-center font-black text-4xl uppercase italic shadow-lg shrink-0" aria-hidden="true">
+            <article key={app.id} role="listitem" className="group flex flex-col items-start justify-between rounded-[3.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-slate-900 md:flex-row md:items-center md:p-10">
+              <div className="flex w-full flex-1 flex-col items-start gap-8 md:flex-row">
+                <div className="flex size-24 shrink-0 items-center justify-center rounded-[2.5rem] bg-slate-900 text-4xl font-black uppercase italic text-white shadow-lg" aria-hidden="true">
                   {p?.full_name?.charAt(0) || "?"}
                 </div>
                 
-                <div className="space-y-4 max-w-2xl flex-1">
+                <div className="max-w-2xl flex-1 space-y-4">
                   <div>
-                    <h4 className="font-black text-slate-900 uppercase text-xl italic leading-none">{p?.full_name}</h4>
-                    <p className="text-[10px] font-black text-blue-600 uppercase italic tracking-[0.2em] mt-2">Lamaran Untuk: {app.jobs?.title}</p>
+                    <h4 className="text-xl font-black uppercase italic leading-none text-slate-900">{p?.full_name}</h4>
+                    <p className="mt-2 text-[10px] font-black uppercase italic tracking-[0.2em] text-blue-600">Lamaran Untuk: {app.jobs?.title}</p>
                   </div>
 
-                  <div className="bg-slate-50/50 p-6 rounded-[2.5rem] border border-slate-100 italic text-slate-700 leading-relaxed text-sm font-medium">
-                    <span className="block mb-2">Pelamar ini berdomisili di <strong>{p?.city || "Lokasi tidak tersedia"}</strong>.</span>
-                    <span className="block mb-2">Pendidikan jenjang <strong>{p?.education_level || "Pendidikan"}</strong> jurusan <strong>{p?.major || "Jurusan"}</strong>.</span>
-                    <span className="block mb-2">Lulus dari <strong>{p?.university || "Institusi"}</strong> pada tahun kelulusan <strong>{p?.graduation_date || "-"}</strong>.</span>
-                    {skills.length > 0 && <span className="block mb-2">Keahlian profesional: <strong>{skills.join(", ")}</strong>.</span>}
+                  <div className="rounded-[2.5rem] border border-slate-100 bg-slate-50/50 p-6 text-sm font-medium italic leading-relaxed text-slate-700">
+                    <span className="mb-2 block">Pelamar ini berdomisili di <strong>{p?.city || "Lokasi tidak tersedia"}</strong>.</span>
+                    <span className="mb-2 block">Pendidikan jenjang <strong>{p?.education_level || "Pendidikan"}</strong> jurusan <strong>{p?.major || "Jurusan"}</strong>.</span>
+                    <span className="mb-2 block">Lulus dari <strong>{p?.university || "Institusi"}</strong> pada tahun kelulusan <strong>{p?.graduation_date || "-"}</strong>.</span>
+                    {skills.length > 0 && <span className="mb-2 block">Keahlian profesional: <strong>{skills.join(", ")}</strong>.</span>}
                     {tools.length > 0 && (
-                      <div className="mt-4 p-4 bg-emerald-50 text-emerald-800 rounded-2xl border border-emerald-100 text-xs">
-                        <ShieldCheck size={14} className="inline mr-2" aria-hidden="true" />
+                      <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-xs text-emerald-800">
+                        <ShieldCheck size={14} className="mr-2 inline" aria-hidden="true" />
                         Alat bantu kerja: <strong>{tools.join(", ")}</strong>.
                       </div>
                     )}
@@ -326,20 +327,20 @@ export default function ApplicantTracker({ company }: { company: any }) {
                 </div>
               </div>
 
-              <div className="flex md:flex-col items-center gap-3 mt-8 md:mt-0 w-full md:w-auto">
-                <button onClick={() => handleUpdateStatus(app.id, 'accepted', p?.full_name)} aria-label={`Terima ${p?.full_name}`} className="flex-1 md:w-full p-4 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all border border-emerald-100 font-black uppercase text-[10px] italic">TERIMA</button>
-                <button onClick={() => handleUpdateStatus(app.id, 'rejected', p?.full_name)} aria-label={`Tolak ${p?.full_name}`} className="flex-1 md:w-full p-4 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-2xl transition-all border border-red-100 font-black uppercase text-[10px] italic">TOLAK</button>
-                <div className="flex gap-2 w-full justify-center">
-                  <button onClick={() => generateProfessionalCV(app)} className="p-4 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl border border-slate-100 transition-colors" title="Unduh CV Audit" aria-label={`Unduh CV ${p?.full_name}`}><FileDown size={20} /></button>
-                  <a href={`/talent/${p?.id}`} target="_blank" className="p-4 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-2xl border border-slate-100 transition-colors" title="Lihat Profil" aria-label={`Profil ${p?.full_name}`}><ExternalLink size={20} /></a>
+              <div className="mt-8 flex w-full items-center gap-3 md:mt-0 md:w-auto md:flex-col">
+                <button onClick={() => handleUpdateStatus(app.id, 'accepted', p?.full_name)} aria-label={`Terima ${p?.full_name}`} className="flex-1 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-[10px] font-black uppercase italic text-emerald-600 transition-all hover:bg-emerald-600 hover:text-white md:w-full">TERIMA</button>
+                <button onClick={() => handleUpdateStatus(app.id, 'rejected', p?.full_name)} aria-label={`Tolak ${p?.full_name}`} className="flex-1 rounded-2xl border border-red-100 bg-red-50 p-4 text-[10px] font-black uppercase italic text-red-400 transition-all hover:bg-red-600 hover:text-white md:w-full">TOLAK</button>
+                <div className="flex w-full justify-center gap-2">
+                  <button onClick={() => generateProfessionalCV(app)} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-slate-400 transition-colors hover:text-blue-600" title="Unduh CV Audit" aria-label={`Unduh CV ${p?.full_name}`}><FileDown size={20} /></button>
+                  <a href={`/talent/${p?.id}`} target="_blank" className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-slate-400 transition-colors hover:text-slate-900" title="Lihat Profil" aria-label={`Profil ${p?.full_name}`}><ExternalLink size={20} /></a>
                 </div>
               </div>
             </article>
           );
         }) : (
-          <div className="p-24 text-center border-2 border-dashed border-slate-100 rounded-[4rem] bg-slate-50/20">
-            <Users className="mx-auto text-slate-200 mb-4" size={48} aria-hidden="true" />
-            <p className="text-[11px] font-black uppercase text-slate-300 italic tracking-[0.3em]">Belum ada pelamar yang masuk.</p>
+          <div className="rounded-[4rem] border-2 border-dashed border-slate-100 bg-slate-50/20 p-24 text-center">
+            <Users className="mx-auto mb-4 text-slate-200" size={48} aria-hidden="true" />
+            <p className="text-[11px] font-black uppercase italic tracking-[0.3em] text-slate-300">Belum ada pelamar yang masuk.</p>
           </div>
         )}
       </div>
