@@ -20,6 +20,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
 
   useEffect(() => {
     fetchEnrollments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partnerId, filterStatus]);
 
   async function fetchEnrollments() {

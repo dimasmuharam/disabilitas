@@ -61,7 +61,8 @@ if (autoOpenProfile) {
     if (user?.id) {
       fetchLatestData();
     }
-  }, [user?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, autoOpenProfile]);
 
   async function fetchLatestData() {
     try {

@@ -53,6 +53,7 @@ export default function JobManager({ company, onSuccess }: { company: any, onSuc
 
   useEffect(() => {
     if (company?.id) fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company?.id]);
 
   async function fetchJobs() {

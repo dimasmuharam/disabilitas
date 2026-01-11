@@ -43,6 +43,7 @@ export default function AdminDashboard({ user }: { user: any }) {
   useEffect(() => { 
     console.log('[ADMIN-DASHBOARD] Initializing with user:', { id: user?.id, email: user?.email, role: user?.role })
     loadAllAdminData() 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadAllAdminData() {
