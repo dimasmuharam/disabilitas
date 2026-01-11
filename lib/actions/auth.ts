@@ -140,8 +140,11 @@ export async function signUpTalent(formData: any) {
  * SIGN IN WITH ROLE-BASED REDIRECTION
  */
 export async function signIn(formData: { email: string; password: string }) {
-  const supabase = createClient();
+  // Verify environment variable is present
+  console.log("Checking Env:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+  
   try {
+    const supabase = createClient();
     const { data, error } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password,
@@ -181,17 +184,10 @@ export async function signIn(formData: { email: string; password: string }) {
       code: error.code || "UNKNOWN",
       name: error.name || "Error",
     });
-    // Return detailed error information for debugging
-    const errorDetails = {
-      message: error.message || "Unknown error",
-      status: error.status,
-      code: error.code,
-      name: error.name,
-    };
+    // CRITICAL: Always return a valid object, never undefined
     return { 
       success: false, 
-      message: error.message || "Terjadi kesalahan sistem",
-      error: errorDetails 
+      message: error.message || "Database Connection Error"
     };
   }
 }
