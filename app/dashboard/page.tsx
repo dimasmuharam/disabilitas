@@ -95,10 +95,10 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950" aria-busy="true">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="font-black text-slate-400 tracking-widest uppercase italic text-[10px]">
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950" aria-busy="true">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto size-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">
             {"Menyinkronkan Otoritas Akses..."}
           </p>
         </div>
@@ -107,20 +107,20 @@ function DashboardContent() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-10 px-4 font-sans">
-      <div className="container max-w-7xl mx-auto">
+    <main className="min-h-screen bg-slate-50 px-4 py-10 font-sans dark:bg-slate-950">
+      <div className="container mx-auto max-w-7xl">
         
         {isJustVerified && (
           <div 
             id="welcome-banner"
             role="alert" 
             aria-live="assertive"
-            className="mb-8 p-8 bg-blue-600 rounded-[2.5rem] shadow-xl animate-in fade-in slide-in-from-top-4 duration-700 outline-none"
+            className="mb-8 rounded-[2.5rem] bg-blue-600 p-8 shadow-xl outline-none duration-700 animate-in fade-in slide-in-from-top-4"
           >
-            <h2 className="text-white font-black uppercase italic tracking-tighter text-xl mb-1">
+            <h2 className="mb-1 text-xl font-black uppercase italic tracking-tighter text-white">
               {"✓ Verifikasi Email Berhasil"}
             </h2>
-            <p className="text-blue-100 font-bold text-[10px] uppercase tracking-widest leading-relaxed">
+            <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest text-blue-100">
               {"Selamat bergabung! Silakan mulai dengan melengkapi profil Anda pada menu yang tersedia."}
             </p>
           </div>
@@ -147,15 +147,15 @@ function DashboardContent() {
         ) : role === USER_ROLES.GOVERNMENT ? (
           <GovDashboard user={{ ...user, ...profile }} />
         ) : (
-          <div className="text-center p-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-2xl">
-            <h2 className="text-red-600 font-black uppercase italic tracking-tight mb-4 text-2xl">
+          <div className="rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white p-20 text-center shadow-2xl dark:bg-slate-900">
+            <h2 className="mb-4 text-2xl font-black uppercase italic tracking-tight text-red-600">
                 {"Profil Tidak Dikenali"}
             </h2>
-            <div className="text-slate-500 font-bold mb-8 text-[10px] uppercase tracking-widest space-y-2">
+            <div className="mb-8 space-y-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
               <p>{"Akun: "}{user?.email}</p>
               <p>{"Role: "}{role || "NULL"}</p>
             </div>
-            <button onClick={() => router.push("/masuk")} className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest">
+            <button onClick={() => router.push("/masuk")} className="rounded-2xl bg-blue-600 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white">
               {"Kembali ke Login"}
             </button>
           </div>

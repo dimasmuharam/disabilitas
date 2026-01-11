@@ -119,7 +119,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 font-sans text-slate-900">
+    <div className="mx-auto max-w-4xl pb-20 font-sans text-slate-900">
       {/* DATALIST UNTUK COMBOBOX SKILLS */}
       <datalist id="skills-list">
         {SKILLS_LIST.map((skill) => (
@@ -128,19 +128,19 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       </datalist>
 
       <header className="mb-10 px-4">
-        <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4 text-slate-900">
+        <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter text-slate-900">
           <Zap className="text-purple-600" size={36} aria-hidden="true" />
           {"Keahlian & Pelatihan"}
         </h1>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
           {"Lengkapi informasi mengenai pelatihan dan keterampilan Anda untuk rekomendasi lowongan yang sesuai. Biar pekerjaan yang mencari Anda!"}
         </p>
       </header>
 
       <div aria-live="polite" className="px-4">
         {message.text && (
-          <div className={`mb-8 p-6 rounded-[2rem] flex items-center gap-4 border-2 ${
-            message.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800"
+          <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-2 p-6 ${
+            message.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
           }`}>
             {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
             <p className="text-sm font-black uppercase italic tracking-tight">{message.text}</p>
@@ -151,18 +151,18 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
         
         {/* SEKSI 1: SKILLS UTAMA */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-6">
+        <section className="space-y-6 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
           <div className="flex items-center gap-3 text-purple-600">
             <Cpu size={20} aria-hidden="true" />
             <h2 className="text-xs font-black uppercase tracking-[0.2em]">{"Daftar Keahlian Utama"}</h2>
           </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+          <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest text-slate-400">
             {"Cantumkan keahlian yang Anda kuasai, baik dari pendidikan formal maupun belajar MANDIRI/AUTODIDAK."}
           </p>
           
           <div className="flex gap-4">
             <div className="flex-1 space-y-2">
-              <label htmlFor="skill_input" className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Ketik atau Pilih Keahlian"}</label>
+              <label htmlFor="skill_input" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Ketik atau Pilih Keahlian"}</label>
               <input 
                 id="skill_input"
                 type="text"
@@ -170,13 +170,13 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                 placeholder="Misal: Pengetikan 10 Jari, Desain, dll..."
                 value={newGlobalSkill}
                 onChange={(e) => setNewGlobalSkill(e.target.value)}
-                className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-purple-600 outline-none"
+                className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-purple-600"
               />
             </div>
             <button 
               type="button"
               onClick={() => { if(newGlobalSkill) { setGlobalSkills([...globalSkills, newGlobalSkill]); setNewGlobalSkill(""); } }}
-              className="mt-7 bg-purple-600 text-white px-8 rounded-2xl hover:bg-slate-900 transition-all flex items-center"
+              className="mt-7 flex items-center rounded-2xl bg-purple-600 px-8 text-white transition-all hover:bg-slate-900"
               aria-label="Tambahkan keahlian ini ke daftar"
             >
               <Plus size={24} />
@@ -185,7 +185,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
           <div className="flex flex-wrap gap-2" role="list">
             {globalSkills.map(s => (
-              <span key={s} role="listitem" className="bg-slate-900 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl flex items-center gap-2">
+              <span key={s} role="listitem" className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-white">
                 {s} 
                 <button type="button" onClick={() => setGlobalSkills(globalSkills.filter(x => x !== s))} aria-label={`{"Hapus ${s}"}`}>
                   <X size={12}/>
@@ -196,18 +196,18 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
         </section>
 
         {/* SEKSI 2: VARIABEL RISET */}
-        <section className="bg-emerald-50/50 p-10 rounded-[3rem] border-2 border-emerald-100 space-y-8">
+        <section className="space-y-8 rounded-[3rem] border-2 border-emerald-100 bg-emerald-50/50 p-10">
           <div className="flex items-center gap-3 text-emerald-700">
             <Microscope size={20} aria-hidden="true" />
             <h2 className="text-xs font-black uppercase tracking-[0.2em]">{"Jawab tiga pertanyaan singkat ini untuk kami dapat lebih memahami keterampilan Anda"}</h2>
           </div>
 
           <fieldset className="space-y-4">
-            <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"1. Bagaimana Anda paling dominan menguasai keahlian di atas?"}</legend>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <legend className="mb-2 ml-2 text-[10px] font-black uppercase text-slate-500">{"1. Bagaimana Anda paling dominan menguasai keahlian di atas?"}</legend>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {SKILL_ACQUISITION_METHODS?.map(method => (
-                <label key={method} className={`flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${researchData.skill_acquisition_method === method ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-white text-slate-600 hover:border-emerald-200"}`}>
-                  <input type="radio" name="acquisition" value={method} checked={researchData.skill_acquisition_method === method} onChange={(e) => setResearchData({...researchData, skill_acquisition_method: e.target.value})} className="w-5 h-5 mr-3 accent-white" />
+                <label key={method} className={`flex cursor-pointer items-center rounded-2xl border-2 p-4 transition-all ${researchData.skill_acquisition_method === method ? "border-emerald-600 bg-emerald-600 text-white" : "border-white bg-white text-slate-600 hover:border-emerald-200"}`}>
+                  <input type="radio" name="acquisition" value={method} checked={researchData.skill_acquisition_method === method} onChange={(e) => setResearchData({...researchData, skill_acquisition_method: e.target.value})} className="mr-3 size-5 accent-white" />
                   <span className="text-[10px] font-bold uppercase">{method}</span>
                 </label>
               ))}
@@ -215,11 +215,11 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </fieldset>
 
           <fieldset className="space-y-4">
-            <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"2. Secara umum, bagaimana tingkat aksesibilitas dari seluruh pelatihan yang Anda ikuti?"}</legend>
+            <legend className="mb-2 ml-2 text-[10px] font-black uppercase text-slate-500">{"2. Secara umum, bagaimana tingkat aksesibilitas dari seluruh pelatihan yang Anda ikuti?"}</legend>
             <div className="grid grid-cols-1 gap-2">
               {TRAINING_ACCESSIBILITY_SCORES?.map(score => (
-                <label key={score.value} className={`flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${Number(researchData.training_accessibility_rating) === score.value ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-white text-slate-600 hover:border-emerald-200"}`}>
-                  <input type="radio" name="accessibility" value={score.value} checked={Number(researchData.training_accessibility_rating) === score.value} onChange={(e) => setResearchData({...researchData, training_accessibility_rating: e.target.value})} className="w-5 h-5 mr-3 accent-white" />
+                <label key={score.value} className={`flex cursor-pointer items-center rounded-2xl border-2 p-4 transition-all ${Number(researchData.training_accessibility_rating) === score.value ? "border-emerald-600 bg-emerald-600 text-white" : "border-white bg-white text-slate-600 hover:border-emerald-200"}`}>
+                  <input type="radio" name="accessibility" value={score.value} checked={Number(researchData.training_accessibility_rating) === score.value} onChange={(e) => setResearchData({...researchData, training_accessibility_rating: e.target.value})} className="mr-3 size-5 accent-white" />
                   <span className="text-[10px] font-bold uppercase">{score.label}</span>
                 </label>
               ))}
@@ -227,11 +227,11 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </fieldset>
 
           <fieldset className="space-y-4">
-            <legend className="text-[10px] font-black uppercase text-slate-500 ml-2 mb-2">{"3. Sejauh mana keahlian/pelatihan yang pernah diikuti berdampak pada pekerjaan Anda?"}</legend>
+            <legend className="mb-2 ml-2 text-[10px] font-black uppercase text-slate-500">{"3. Sejauh mana keahlian/pelatihan yang pernah diikuti berdampak pada pekerjaan Anda?"}</legend>
             <div className="space-y-2">
               {SKILL_IMPACT_LEVELS?.map(level => (
-                <label key={level} className={`flex items-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${researchData.skill_impact_rating === level ? "bg-emerald-600 border-emerald-600 text-white" : "bg-white border-white text-slate-600 hover:border-emerald-200"}`}>
-                  <input type="radio" name="impact" value={level} checked={researchData.skill_impact_rating === level} onChange={(e) => setResearchData({...researchData, skill_impact_rating: e.target.value})} className="w-5 h-5 mr-3 accent-white" />
+                <label key={level} className={`flex cursor-pointer items-center rounded-2xl border-2 p-4 transition-all ${researchData.skill_impact_rating === level ? "border-emerald-600 bg-emerald-600 text-white" : "border-white bg-white text-slate-600 hover:border-emerald-200"}`}>
+                  <input type="radio" name="impact" value={level} checked={researchData.skill_impact_rating === level} onChange={(e) => setResearchData({...researchData, skill_impact_rating: e.target.value})} className="mr-3 size-5 accent-white" />
                   <span className="text-[10px] font-bold uppercase">{level}</span>
                 </label>
               ))}
@@ -241,43 +241,43 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
         {/* SEKSI 3: RIWAYAT PELATIHAN */}
         <div className="space-y-6">
-          <div className="flex justify-between items-center px-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-3">
+          <div className="flex items-center justify-between px-4">
+            <h2 className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em]">
               <Award className="text-amber-500" size={20} aria-hidden="true" /> {"Riwayat Pelatihan & Sertifikasi"}
             </h2>
-            <button type="button" onClick={addCertsItem} className="bg-blue-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-slate-900 transition-all shadow-xl shadow-blue-100">
+            <button type="button" onClick={addCertsItem} className="flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-[10px] font-black uppercase text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900">
               <Plus size={16} aria-hidden="true" /> {"Tambah Pelatihan"}
             </button>
           </div>
 
           <div className="space-y-8">
             {certs.map((cert, index) => (
-              <section key={cert.id} aria-label={`{"Item Pelatihan ke-${index + 1}"}`} className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8 relative animate-in slide-in-from-top-4">
-                <div className="flex justify-between items-start border-b border-slate-50 pb-6">
+              <section key={cert.id} aria-label={`{"Item Pelatihan ke-${index + 1}"}`} className="relative space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm animate-in slide-in-from-top-4">
+                <div className="flex items-start justify-between border-b border-slate-50 pb-6">
                   <h3 className="text-sm font-black uppercase italic tracking-tight text-slate-400">
                     {"Pelatihan #"} {certs.length - index}
                   </h3>
-                  <button type="button" onClick={() => removeCert(cert.id)} className="text-slate-300 hover:text-red-600 transition-colors" aria-label="Hapus item ini">
+                  <button type="button" onClick={() => removeCert(cert.id)} className="text-slate-300 transition-colors hover:text-red-600" aria-label="Hapus item ini">
                     <Trash2 size={20} />
                   </button>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 font-bold text-sm">
+                <div className="grid gap-8 text-sm font-bold md:grid-cols-2">
                   <div className="space-y-2">
-                    <label htmlFor={`name-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Nama / Judul Pelatihan"}</label>
-                    <input id={`name-${cert.id}`} value={cert.name} onChange={(e) => updateCertField(cert.id, "name", e.target.value)} placeholder="Misal: Sertifikasi Web Accessibility..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none" />
+                    <label htmlFor={`name-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Nama / Judul Pelatihan"}</label>
+                    <input id={`name-${cert.id}`} value={cert.name} onChange={(e) => updateCertField(cert.id, "name", e.target.value)} placeholder="Misal: Sertifikasi Web Accessibility..." className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 outline-none focus:border-blue-600" />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor={`year-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Tahun Pelaksanaan"}</label>
-                    <input id={`year-${cert.id}`} type="number" value={cert.year} onChange={(e) => updateCertField(cert.id, "year", e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none" />
+                    <label htmlFor={`year-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Tahun Pelaksanaan"}</label>
+                    <input id={`year-${cert.id}`} type="number" value={cert.year} onChange={(e) => updateCertField(cert.id, "year", e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 outline-none focus:border-blue-600" />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor={`cat-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Kategori Penyelenggara"}</label>
+                    <label htmlFor={`cat-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Kategori Penyelenggara"}</label>
                     <select 
                       id={`cat-${cert.id}`} 
                       value={cert.organizer_category} 
                       onChange={(e) => updateCertField(cert.id, "organizer_category", e.target.value)} 
-                      className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none"
+                      className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 outline-none focus:border-blue-600"
                     >
                       <option value="">{"Pilih Kategori"}</option>
                       {TRAINING_ORGANIZER_CATEGORIES.map(cat => (
@@ -286,14 +286,14 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor={`org-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2">{"Nama Institusi Penyelenggara"}</label>
+                    <label htmlFor={`org-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Nama Institusi Penyelenggara"}</label>
                     <input 
                       id={`org-${cert.id}`} 
                       list={`list-${cert.id}`} 
                       value={cert.organizer_name} 
                       onChange={(e) => updateCertField(cert.id, "organizer_name", e.target.value)} 
                       placeholder="Pilih atau ketik institusi..." 
-                      className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none" 
+                      className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 outline-none focus:border-blue-600" 
                     />
                     <datalist id={`list-${cert.id}`}>
                       {cert.organizer_category === "Pemerintah" && GOVERNMENT_AGENCIES_LIST?.map(g => <option key={g} value={g}/>)}
@@ -301,11 +301,11 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                       {cert.organizer_category === "Organisasi / Komunitas Disabilitas" && NONPROFIT_ORG_LIST?.map(c => <option key={c} value={c}/>)}
                     </datalist>
                   </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <label htmlFor={`url-${cert.id}`} className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-2">
+                  <div className="space-y-2 md:col-span-2">
+                    <label htmlFor={`url-${cert.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
                       <LinkIcon size={12} /> {"Tautan Sertifikat / Portofolio (Opsional)"}
                     </label>
-                    <input id={`url-${cert.id}`} type="url" value={cert.certificate_url} onChange={(e) => updateCertField(cert.id, "certificate_url", e.target.value)} placeholder="https://..." className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-600 outline-none" />
+                    <input id={`url-${cert.id}`} type="url" value={cert.certificate_url} onChange={(e) => updateCertField(cert.id, "certificate_url", e.target.value)} placeholder="https://..." className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 outline-none focus:border-blue-600" />
                   </div>
                 </div>
               </section>
@@ -313,8 +313,8 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </div>
         </div>
 
-        <div className="flex justify-end pt-10 border-t border-slate-100">
-          <button type="submit" disabled={loading} className="bg-slate-900 text-white px-16 py-6 rounded-[2.5rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-purple-600 transition-all shadow-2xl disabled:opacity-50">
+        <div className="flex justify-end border-t border-slate-100 pt-10">
+          <button type="submit" disabled={loading} className="flex items-center gap-4 rounded-[2.5rem] bg-slate-900 px-16 py-6 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-purple-600 disabled:opacity-50">
             {loading ? "Menyimpan..." : <><Save size={20} aria-hidden="true" /> {"Simpan & Selesai"}</>}
           </button>
         </div>

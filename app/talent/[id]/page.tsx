@@ -69,31 +69,31 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
       {/* HEADER / BANNER AREA */}
-      <div className="bg-slate-900 text-white pt-24 pb-40 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="relative overflow-hidden bg-slate-900 px-4 pb-40 pt-24 text-white">
+        <div className="pointer-events-none absolute inset-0 opacity-10">
+          <div className="absolute left-0 top-0 size-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600 blur-[120px]"></div>
         </div>
 
-        <div className="max-w-5xl mx-auto flex flex-col items-center text-center relative z-10">
-          <div className="w-28 h-28 bg-blue-600 rounded-[2.5rem] flex items-center justify-center text-5xl font-black mb-8 shadow-2xl border-4 border-white/10 uppercase italic">
+        <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center text-center">
+          <div className="mb-8 flex size-28 items-center justify-center rounded-[2.5rem] border-4 border-white/10 bg-blue-600 text-5xl font-black uppercase italic shadow-2xl">
             {profile.full_name?.substring(0, 2)}
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-4 leading-none flex items-center justify-center gap-3">
+          <h1 className="mb-4 flex items-center justify-center gap-3 text-4xl font-black uppercase leading-none tracking-tighter md:text-5xl">
             {profile.full_name}
-            {profile.is_verified && <ShieldCheck size={36} className="text-blue-400 fill-blue-400/10" />}
+            {profile.is_verified && <ShieldCheck size={36} className="fill-blue-400/10 text-blue-400" />}
           </h1>
 
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <span className="px-5 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg">
+          <div className="mb-8 flex flex-wrap justify-center gap-4">
+            <span className="rounded-full bg-blue-600 px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg">
               {profile.disability_type}
             </span>
-            <span className="px-5 py-2 bg-white/10 border border-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-blue-300 flex items-center gap-2">
+            <span className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-blue-300 backdrop-blur-md">
               <Briefcase size={14}/> {profile.career_status || "Professional"}
             </span>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-8 text-slate-400 font-bold uppercase tracking-[0.15em] text-[10px]">
+          <div className="flex flex-wrap justify-center gap-8 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
             <span className="flex items-center gap-2"><MapPin size={16} className="text-blue-500"/> {profile.city || "Indonesia"}</span>
             <span className="flex items-center gap-2"><Users size={16} className="text-blue-500"/> {profile.gender || "Tidak Disebutkan"}</span>
             {age && <span className="flex items-center gap-2"><Calendar size={16} className="text-blue-500"/> {age} Tahun</span>}
@@ -102,92 +102,92 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
       </div>
 
       {/* CONTENT AREA */}
-      <div className="max-w-5xl mx-auto px-4 -mt-28 relative z-20 space-y-8">
+      <div className="relative z-20 mx-auto -mt-28 max-w-5xl space-y-8 px-4">
         
         {/* VIDEO SECTION */}
         {videoId && (
-          <div className="bg-white rounded-[3rem] p-4 shadow-2xl border border-slate-200">
-            <div className="aspect-video w-full rounded-[2rem] overflow-hidden bg-black shadow-inner">
+          <div className="rounded-[3rem] border border-slate-200 bg-white p-4 shadow-2xl">
+            <div className="aspect-video w-full overflow-hidden rounded-[2rem] bg-black shadow-inner">
               <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${videoId}`} title="Video Perkenalan" frameBorder="0" allowFullScreen></iframe>
             </div>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="space-y-8 lg:col-span-2">
             
             {/* RINGKASAN */}
-            <section className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200">
-              <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-blue-600 mb-6">{"Ringkasan Profesional"}</h2>
-              <p className="text-lg text-slate-700 leading-relaxed font-medium italic text-justify">
+            <section className="rounded-[3rem] border border-slate-200 bg-white p-10 shadow-sm">
+              <h2 className="mb-6 text-[11px] font-black uppercase tracking-[0.25em] text-blue-600">{"Ringkasan Profesional"}</h2>
+              <p className="text-justify text-lg font-medium italic leading-relaxed text-slate-700">
                 {"\""}{profile.bio || `Saya adalah ${profile.full_name}, profesional yang siap berkontribusi.`}{"\""}
               </p>
             </section>
 
             {/* PENGALAMAN KERJA (Sinkron dengan Database) */}
-            <section className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200">
-              <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-blue-600 mb-10 flex items-center gap-3">
+            <section className="rounded-[3rem] border border-slate-200 bg-white p-10 shadow-sm">
+              <h2 className="mb-10 flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.25em] text-blue-600">
                 <Briefcase size={20}/> {"Pengalaman Karir"}
               </h2>
               <div className="space-y-12">
                 {profile.work_experiences && profile.work_experiences.length > 0 ? (
                   profile.work_experiences.map((work: any) => (
-                    <div key={work.id} className="relative pl-10 border-l-2 border-slate-100">
-                      <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-blue-600 border-4 border-white shadow-sm"></div>
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
+                    <div key={work.id} className="relative border-l-2 border-slate-100 pl-10">
+                      <div className="absolute -left-[11px] top-0 size-5 rounded-full border-4 border-white bg-blue-600 shadow-sm"></div>
+                      <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <div>
-                          <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 leading-none">{work.position}</h3>
-                          <p className="text-blue-600 font-bold uppercase text-xs mt-2 flex items-center gap-1">
+                          <h3 className="text-xl font-black uppercase leading-none tracking-tight text-slate-900">{work.position}</h3>
+                          <p className="mt-2 flex items-center gap-1 text-xs font-bold uppercase text-blue-600">
                             <Building2 size={14}/> {work.company_name} {work.company_location && `, ${work.company_location}`}
                           </p>
                         </div>
-                        <span className="text-[10px] font-black uppercase px-3 py-1 bg-slate-100 text-slate-500 rounded-lg whitespace-nowrap">
+                        <span className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1 text-[10px] font-black uppercase text-slate-500">
                           {work.start_date} - {work.end_date || 'Sekarang'}
                         </span>
                       </div>
                       {work.description && (
-                        <p className="text-sm text-slate-600 leading-relaxed text-justify bg-slate-50 p-6 rounded-2xl border border-slate-100 italic">
+                        <p className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-justify text-sm italic leading-relaxed text-slate-600">
                           {work.description}
                         </p>
                       )}
                       <div className="mt-4">
-                        <span className="text-[9px] font-black uppercase text-slate-400 border border-slate-200 px-3 py-1 rounded-full">
+                        <span className="rounded-full border border-slate-200 px-3 py-1 text-[9px] font-black uppercase text-slate-400">
                           {work.employment_type}
                         </span>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-10">
-                    <p className="text-sm italic text-slate-400 uppercase font-bold tracking-widest">{"Data riwayat pekerjaan belum tersedia."}</p>
+                  <div className="py-10 text-center">
+                    <p className="text-sm font-bold uppercase italic tracking-widest text-slate-400">{"Data riwayat pekerjaan belum tersedia."}</p>
                   </div>
                 )}
               </div>
             </section>
 
             {/* SERTIFIKASI & PELATIHAN */}
-            <section className="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-200">
-              <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-emerald-600 mb-8 flex items-center gap-3">
+            <section className="rounded-[3rem] border border-slate-200 bg-white p-10 shadow-sm">
+              <h2 className="mb-8 flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.25em] text-emerald-600">
                 <Award size={22}/> {"Sertifikasi & Pelatihan"}
               </h2>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 {profile.certifications && profile.certifications.length > 0 ? (
                   profile.certifications.map((cert: any) => (
-                    <div key={cert.id} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-emerald-500 transition-all">
-                      <h3 className="font-black text-slate-900 uppercase text-xs mb-2 group-hover:text-emerald-600">{cert.name}</h3>
-                      <div className="space-y-1 text-[10px] font-bold text-slate-500 uppercase">
+                    <div key={cert.id} className="group rounded-[2rem] border border-slate-100 bg-slate-50 p-6 transition-all hover:border-emerald-500">
+                      <h3 className="mb-2 text-xs font-black uppercase text-slate-900 group-hover:text-emerald-600">{cert.name}</h3>
+                      <div className="space-y-1 text-[10px] font-bold uppercase text-slate-500">
                         <p className="flex items-center gap-2"><Building2 size={12}/> {cert.organizer_name}</p>
                         <p className="flex items-center gap-2"><Calendar size={12}/> {cert.year}</p>
                       </div>
                       {cert.certificate_url && (
-                        <a href={cert.certificate_url} target="_blank" className="mt-4 inline-flex items-center gap-2 text-[9px] font-black text-emerald-600 uppercase hover:underline">
+                        <a href={cert.certificate_url} target="_blank" className="mt-4 inline-flex items-center gap-2 text-[9px] font-black uppercase text-emerald-600 hover:underline">
                           {"Lihat Dokumen"} <ExternalLink size={12}/>
                         </a>
                       )}
                     </div>
                   ))
                 ) : (
-                  <div className="md:col-span-2 text-center py-6 text-sm italic text-slate-400 uppercase font-bold tracking-widest">
+                  <div className="py-6 text-center text-sm font-bold uppercase italic tracking-widest text-slate-400 md:col-span-2">
                     {"Belum ada sertifikasi yang dicantumkan."}
                   </div>
                 )}
@@ -198,32 +198,32 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
           {/* SIDEBAR */}
           <div className="space-y-6">
             {/* AKOMODASI & AKSES (Penting untuk Aksesibilitas) */}
-            <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
+            <section className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm">
+              <h2 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600">
                 <Laptop size={18}/> {"Kebutuhan & Akses"}
               </h2>
               <div className="space-y-6">
                 <div>
-                  <p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-widest">{"Alat Bantu Asistif"}</p>
+                  <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-400">{"Alat Bantu Asistif"}</p>
                   <div className="flex flex-wrap gap-2">
                     {Array.isArray(profile.used_assistive_tools) && profile.used_assistive_tools.length > 0 ? (
                       profile.used_assistive_tools.map((tool: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 bg-blue-50 text-blue-700 text-[9px] font-black uppercase rounded-lg border border-blue-100">
+                        <span key={idx} className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1 text-[9px] font-black uppercase text-blue-700">
                           {tool}{idx < profile.used_assistive_tools.length - 1 ? "," : ""}
                         </span>
                       ))
                     ) : <span className="text-xs italic text-slate-400">{"-"}</span>}
                   </div>
                 </div>
-                <div className="pt-4 border-t border-slate-50">
-                  <p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-widest">{"Preferensi Akomodasi"}</p>
-                  <p className="text-xs font-bold leading-relaxed text-slate-700 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic">
+                <div className="border-t border-slate-50 pt-4">
+                  <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-400">{"Preferensi Akomodasi"}</p>
+                  <p className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs font-bold italic leading-relaxed text-slate-700">
                     {profile.preferred_accommodations || "Informasi belum tersedia."}
                   </p>
                 </div>
-                <div className="pt-4 border-t border-slate-50">
-                  <p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-widest">{"Preferensi Kerja"}</p>
-                  <p className="text-xs font-bold text-slate-700 flex items-center gap-2">
+                <div className="border-t border-slate-50 pt-4">
+                  <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-400">{"Preferensi Kerja"}</p>
+                  <p className="flex items-center gap-2 text-xs font-bold text-slate-700">
                     <Heart size={14} className="text-red-500"/> {profile.work_preference || "Fleksibel"}
                   </p>
                 </div>
@@ -231,28 +231,28 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
             </section>
 
             {/* PENDIDIKAN */}
-            <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-6 flex items-center gap-2">
+            <section className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm">
+              <h2 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900">
                 <GraduationCap size={18}/> {"Pendidikan"}
               </h2>
               <div className="space-y-4">
                 <div>
-                  <p className="text-[8px] font-black text-blue-600 uppercase mb-1 tracking-widest">{profile.education_level}</p>
+                  <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-blue-600">{profile.education_level}</p>
                   <h3 className="text-sm font-black uppercase tracking-tight">{profile.university}</h3>
-                  <p className="text-xs font-bold text-slate-500 mt-1 uppercase italic">{profile.major}</p>
-                  {profile.graduation_date && <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase">{"Lulus Tahun: "}{profile.graduation_date}</p>}
+                  <p className="mt-1 text-xs font-bold uppercase italic text-slate-500">{profile.major}</p>
+                  {profile.graduation_date && <p className="mt-2 text-[10px] font-bold uppercase text-slate-400">{"Lulus Tahun: "}{profile.graduation_date}</p>}
                 </div>
               </div>
             </section>
 
             {/* KEAHLIAN (Dengan Jeda Aksesibel) */}
-            <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-6 flex items-center gap-2">
+            <section className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm">
+              <h2 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900">
                 <Award size={18}/> {"Keahlian"}
               </h2>
               <div className="flex flex-wrap gap-2">
                 {profile.skills?.map((skill: string, idx: number) => (
-                  <span key={idx} className="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase">
+                  <span key={idx} className="rounded-xl bg-slate-900 px-3 py-1.5 text-[9px] font-black uppercase text-white">
                     {skill}{idx < profile.skills.length - 1 ? "," : ""}
                   </span>
                 ))}
@@ -260,34 +260,34 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
             </section>
 
             {/* KONTAK */}
-            <section className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl">
-              <h2 className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-6">{"Hubungi Talenta"}</h2>
+            <section className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-xl">
+              <h2 className="mb-6 text-[9px] font-black uppercase tracking-widest text-slate-500">{"Hubungi Talenta"}</h2>
               <div className="space-y-3">
                 {profile.linkedin_url && (
-                  <a href={profile.linkedin_url} target="_blank" className="flex items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5 group">
-                    <Linkedin size={18} className="text-blue-400 group-hover:scale-110 transition-all"/>
+                  <a href={profile.linkedin_url} target="_blank" className="group flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-white/10">
+                    <Linkedin size={18} className="text-blue-400 transition-all group-hover:scale-110"/>
                     <span className="text-[10px] font-black uppercase tracking-widest">{"LinkedIn"}</span>
                   </a>
                 )}
                 {profile.portfolio_url && (
-                  <a href={profile.portfolio_url} target="_blank" className="flex items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5 group">
-                    <Globe size={18} className="text-emerald-400 group-hover:scale-110 transition-all"/>
+                  <a href={profile.portfolio_url} target="_blank" className="group flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-white/10">
+                    <Globe size={18} className="text-emerald-400 transition-all group-hover:scale-110"/>
                     <span className="text-[10px] font-black uppercase tracking-widest">{"Portfolio"}</span>
                   </a>
                 )}
               </div>
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <p className="text-[8px] font-black text-slate-500 uppercase mb-2 tracking-widest">{"Metode Komunikasi"}</p>
-                <p className="text-xs font-bold italic text-blue-400 flex items-center gap-2">
+              <div className="mt-8 border-t border-white/10 pt-6">
+                <p className="mb-2 text-[8px] font-black uppercase tracking-widest text-slate-500">{"Metode Komunikasi"}</p>
+                <p className="flex items-center gap-2 text-xs font-bold italic text-blue-400">
                   <MessageSquare size={14}/> {profile.communication_preference || "Dashboard / Email"}
                 </p>
               </div>
             </section>
 
             {/* FOOTER */}
-            <div className="text-center px-6">
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">{"DISABILITAS.COM PROFESSIONAL ID"}</p>
-              <p className="text-[6px] text-slate-400 italic leading-tight">
+            <div className="px-6 text-center">
+              <p className="mb-2 text-[7px] font-black uppercase tracking-[0.3em] text-slate-400">{"DISABILITAS.COM PROFESSIONAL ID"}</p>
+              <p className="text-[6px] italic leading-tight text-slate-400">
                 {"Data ditampilkan berdasarkan Informed Consent talenta untuk tujuan pengembangan karir inklusif."}
               </p>
             </div>

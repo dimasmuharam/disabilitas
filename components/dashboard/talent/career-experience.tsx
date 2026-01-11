@@ -154,7 +154,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 font-sans text-slate-900 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-4xl pb-20 font-sans text-slate-900 duration-500 animate-in fade-in">
       <datalist id="gov-list">{GOVERNMENT_AGENCIES_LIST.map(a => <option key={a} value={a} />)}</datalist>
       <datalist id="state-list">{STATE_ENTERPRISES_LIST.map(b => <option key={b} value={b} />)}</datalist>
       <datalist id="private-list">{PRIVATE_COMPANIES_LIST.map(s => <option key={s} value={s} />)}</datalist>
@@ -162,16 +162,16 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
       <datalist id="nonprofit-list">{NONPROFIT_ORG_LIST.map(n => <option key={n} value={n} />)}</datalist>
 
       <header className="mb-10 px-4">
-        <h1 className="text-4xl font-black italic uppercase tracking-tighter flex items-center gap-4">
+        <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter">
           <Briefcase className="text-blue-600" size={36} /> {"Karir & Pengalaman"}
         </h1>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">{"Lengkapi data kerja Anda untuk tampil makin meyakinkan di hadapan recruter."}</p>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">{"Lengkapi data kerja Anda untuk tampil makin meyakinkan di hadapan recruter."}</p>
       </header>
 
       <div aria-live="polite" className="px-4">
         {message.text && (
-          <div className={`mb-8 p-6 rounded-[2rem] border-2 flex items-center gap-4 ${
-            message.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800"
+          <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-2 p-6 ${
+            message.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
           }`}>
             {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
             <p className="text-sm font-black uppercase italic tracking-tight">{message.text}</p>
@@ -181,40 +181,40 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
 
       <form onSubmit={handleSubmit} className="space-y-10 px-4">
         {/* SEKSI PROFIL */}
-        <section className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm space-y-8">
-          <h2 className="text-xs font-black uppercase text-blue-600 tracking-[0.2em] flex items-center gap-2"><Info size={16} /> {"Status & Preferensi"}</h2>
-          <div className="grid md:grid-cols-2 gap-6 text-sm font-bold">
+        <section className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
+          <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-blue-600"><Info size={16} /> {"Status & Preferensi"}</h2>
+          <div className="grid gap-6 text-sm font-bold md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="career_status" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Status Karir"}</label>
-              <select id="career_status" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.career_status} onChange={(e) => setProfileData({...profileData, career_status: e.target.value})}>
+              <label htmlFor="career_status" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Status Karir"}</label>
+              <select id="career_status" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={profileData.career_status} onChange={(e) => setProfileData({...profileData, career_status: e.target.value})}>
                 {CAREER_STATUSES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
             <div className="space-y-2">
-              <label htmlFor="work_pref" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Preferensi Model Kerja"}</label>
-              <select id="work_pref" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold focus:border-blue-600 outline-none" value={profileData.work_preference} onChange={(e) => setProfileData({...profileData, work_preference: e.target.value})}>
+              <label htmlFor="work_pref" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Preferensi Model Kerja"}</label>
+              <select id="work_pref" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={profileData.work_preference} onChange={(e) => setProfileData({...profileData, work_preference: e.target.value})}>
                 {WORK_MODES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
             <div className="space-y-2">
-              <label htmlFor="salary" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Ekspektasi Gaji"}</label>
-              <input id="salary" type="number" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold" value={profileData.expected_salary} onChange={(e) => setProfileData({...profileData, expected_salary: parseInt(e.target.value) || 0})} />
+              <label htmlFor="salary" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Ekspektasi Gaji"}</label>
+              <input id="salary" type="number" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold" value={profileData.expected_salary} onChange={(e) => setProfileData({...profileData, expected_salary: parseInt(e.target.value) || 0})} />
             </div>
             <div className="space-y-2">
-              <label htmlFor="linkedin" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"LinkedIn URL"}</label>
-              <input id="linkedin" type="url" className="w-full bg-slate-50 border-2 border-slate-50 p-4 rounded-2xl font-bold" value={profileData.linkedin_url} onChange={(e) => setProfileData({...profileData, linkedin_url: e.target.value})} />
+              <label htmlFor="linkedin" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"LinkedIn URL"}</label>
+              <input id="linkedin" type="url" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold" value={profileData.linkedin_url} onChange={(e) => setProfileData({...profileData, linkedin_url: e.target.value})} />
             </div>
           </div>
-          <div className="space-y-2 font-bold text-sm">
-            <label htmlFor="bio" className="text-[10px] font-bold uppercase ml-2 text-slate-400">{"Bio Profesional"}</label>
-            <textarea id="bio" rows={4} className="w-full bg-slate-50 border-2 border-slate-100 p-6 rounded-[2rem] font-bold outline-none italic" value={profileData.bio} onChange={(e) => setProfileData({...profileData, bio: e.target.value})} />
+          <div className="space-y-2 text-sm font-bold">
+            <label htmlFor="bio" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Bio Profesional"}</label>
+            <textarea id="bio" rows={4} className="w-full rounded-[2rem] border-2 border-slate-100 bg-slate-50 p-6 font-bold italic outline-none" value={profileData.bio} onChange={(e) => setProfileData({...profileData, bio: e.target.value})} />
           </div>
         </section>
 
         {/* DAFTAR PEKERJAAN */}
-        <div className="flex justify-between items-center px-4">
-          <h2 className="text-xl font-black italic uppercase tracking-tighter">{"Daftar Riwayat Kerja"}</h2>
-          <button type="button" onClick={handleAddExperience} className="bg-blue-600 text-white px-6 py-4 rounded-2xl hover:bg-slate-900 transition-all flex items-center gap-3 text-[10px] font-black uppercase shadow-xl tracking-widest"><Plus size={20} /> {"Tambah Riwayat"}</button>
+        <div className="flex items-center justify-between px-4">
+          <h2 className="text-xl font-black uppercase italic tracking-tighter">{"Daftar Riwayat Kerja"}</h2>
+          <button type="button" onClick={handleAddExperience} className="flex items-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-slate-900"><Plus size={20} /> {"Tambah Riwayat"}</button>
         </div>
 
         <div className="space-y-8">
@@ -222,36 +222,36 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
             const isFromSystem = !!exp.source_id; // Deteksi data sistem
 
             return (
-              <section key={exp.id} aria-label={`Riwayat ${index + 1}`} className={`bg-white border-2 p-10 rounded-[3rem] shadow-sm space-y-8 relative group ${isFromSystem ? 'border-blue-200 bg-blue-50/10' : 'border-slate-100'}`}>
+              <section key={exp.id} aria-label={`Riwayat ${index + 1}`} className={`group relative space-y-8 rounded-[3rem] border-2 bg-white p-10 shadow-sm ${isFromSystem ? 'border-blue-200 bg-blue-50/10' : 'border-slate-100'}`}>
                 
                 {isFromSystem ? (
-                  <div className="absolute top-8 right-8 bg-blue-600 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase flex items-center gap-2 shadow-lg animate-pulse">
+                  <div className="absolute right-8 top-8 flex animate-pulse items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-[10px] font-black uppercase text-white shadow-lg">
                     <ShieldCheck size={14} /> {"Hasil Penempatan Sistem"}
                   </div>
                 ) : (
-                  <button type="button" onClick={() => handleDeleteExp(exp.id)} className="absolute top-8 right-8 text-slate-300 hover:text-red-600 transition-colors"><Trash2 size={24} /></button>
+                  <button type="button" onClick={() => handleDeleteExp(exp.id)} className="absolute right-8 top-8 text-slate-300 transition-colors hover:text-red-600"><Trash2 size={24} /></button>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-8 text-sm font-bold text-slate-900">
+                <div className="grid gap-8 text-sm font-bold text-slate-900 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label htmlFor={`cat-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2">{"Kategori Employer"}</label>
-                    <select disabled={isFromSystem} id={`cat-${exp.id}`} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold focus:border-blue-600 outline-none disabled:opacity-60" value={exp.employer_category} onChange={(e) => updateExpField(exp.id, "employer_category", e.target.value)}>
+                    <label htmlFor={`cat-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Kategori Employer"}</label>
+                    <select disabled={isFromSystem} id={`cat-${exp.id}`} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 disabled:opacity-60" value={exp.employer_category} onChange={(e) => updateExpField(exp.id, "employer_category", e.target.value)}>
                       {EMPLOYER_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`comp-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2 flex items-center gap-2"><Building2 size={12}/> {"Nama Instansi"}</label>
-                    <input disabled={isFromSystem} id={`comp-${exp.id}`} type="text" list={exp.employer_category === "Instansi Pemerintah (ASN)" ? "gov-list" : exp.employer_category === "BUMN dan BUMD" ? "state-list" : exp.employer_category === "Perusahaan Swasta" ? "private-list" : exp.employer_category === "Lembaga Nonprofit" ? "nonprofit-list" : ""} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold focus:border-blue-600 outline-none disabled:opacity-60" value={exp.company_name} onChange={(e) => updateExpField(exp.id, "company_name", e.target.value)} />
+                    <label htmlFor={`comp-${exp.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400"><Building2 size={12}/> {"Nama Instansi"}</label>
+                    <input disabled={isFromSystem} id={`comp-${exp.id}`} type="text" list={exp.employer_category === "Instansi Pemerintah (ASN)" ? "gov-list" : exp.employer_category === "BUMN dan BUMD" ? "state-list" : exp.employer_category === "Perusahaan Swasta" ? "private-list" : exp.employer_category === "Lembaga Nonprofit" ? "nonprofit-list" : ""} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 disabled:opacity-60" value={exp.company_name} onChange={(e) => updateExpField(exp.id, "company_name", e.target.value)} />
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`pos-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2">{"Jabatan"}</label>
-                    <input disabled={isFromSystem} id={`pos-${exp.id}`} type="text" className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-60" value={exp.position} onChange={(e) => updateExpField(exp.id, "position", e.target.value)} />
+                    <label htmlFor={`pos-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Jabatan"}</label>
+                    <input disabled={isFromSystem} id={`pos-${exp.id}`} type="text" className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.position} onChange={(e) => updateExpField(exp.id, "position", e.target.value)} />
                   </div>
 
                   <div className="space-y-2">
-  <label htmlFor={`loc-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2">{"Lokasi (Kota/Kabupaten)"}</label>
+  <label htmlFor={`loc-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Lokasi (Kota/Kabupaten)"}</label>
   <div className="relative">
     <MapPin className="absolute left-4 top-4 text-slate-400" size={16} aria-hidden="true" />
     <input 
@@ -260,40 +260,40 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
       type="text" 
       list="city-list" // <--- Ini kunci penghubungnya
       placeholder="Cari Kota/Kabupaten..."
-      className="w-full bg-slate-50 border-2 border-transparent p-4 pl-12 rounded-xl font-bold focus:border-blue-600 outline-none disabled:opacity-60" 
+      className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 pl-12 font-bold outline-none focus:border-blue-600 disabled:opacity-60" 
       value={exp.company_location} 
       onChange={(e) => updateExpField(exp.id, "company_location", e.target.value)} 
     />
   </div>
 </div>
                   <div className="space-y-2">
-                    <label htmlFor={`type-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2">{"Ikatan Kerja"}</label>
-                    <select disabled={isFromSystem} id={`type-${exp.id}`} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-60" value={exp.employment_type} onChange={(e) => updateExpField(exp.id, "employment_type", e.target.value)}>
+                    <label htmlFor={`type-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Ikatan Kerja"}</label>
+                    <select disabled={isFromSystem} id={`type-${exp.id}`} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.employment_type} onChange={(e) => updateExpField(exp.id, "employment_type", e.target.value)}>
                       {EMPLOYMENT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
                     </select>
                   </div>
 
-                  <fieldset className="grid grid-cols-2 gap-4 border-none p-0 m-0">
-                    <legend className="text-[10px] font-bold uppercase text-slate-400 mb-2 ml-2">{"Waktu Mulai"}</legend>
-                    <select aria-label="Bulan Mulai" disabled={isFromSystem} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-60" value={exp.ui_start.month} onChange={(e) => updateUIDate(exp.id, 'start', 'month', e.target.value)}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
-                    <input aria-label="Tahun Mulai" type="number" disabled={isFromSystem} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-60" value={exp.ui_start.year} onChange={(e) => updateUIDate(exp.id, 'start', 'year', e.target.value)} />
+                  <fieldset className="m-0 grid grid-cols-2 gap-4 border-none p-0">
+                    <legend className="mb-2 ml-2 text-[10px] font-bold uppercase text-slate-400">{"Waktu Mulai"}</legend>
+                    <select aria-label="Bulan Mulai" disabled={isFromSystem} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.ui_start.month} onChange={(e) => updateUIDate(exp.id, 'start', 'month', e.target.value)}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
+                    <input aria-label="Tahun Mulai" type="number" disabled={isFromSystem} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.ui_start.year} onChange={(e) => updateUIDate(exp.id, 'start', 'year', e.target.value)} />
                   </fieldset>
 
-                  <fieldset className="grid grid-cols-2 gap-4 border-none p-0 m-0">
-                    <legend className="text-[10px] font-bold uppercase text-slate-400 mb-2 ml-2">{"Waktu Selesai"}</legend>
-                    <select aria-label="Bulan Selesai" disabled={exp.is_current_work} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-30" value={exp.ui_end.month} onChange={(e) => updateUIDate(exp.id, 'end', 'month', e.target.value)}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
-                    <input aria-label="Tahun Selesai" type="number" disabled={exp.is_current_work} className="w-full bg-slate-50 border-2 border-transparent p-4 rounded-xl font-bold disabled:opacity-30" value={exp.ui_end.year} onChange={(e) => updateUIDate(exp.id, 'end', 'year', e.target.value)} />
+                  <fieldset className="m-0 grid grid-cols-2 gap-4 border-none p-0">
+                    <legend className="mb-2 ml-2 text-[10px] font-bold uppercase text-slate-400">{"Waktu Selesai"}</legend>
+                    <select aria-label="Bulan Selesai" disabled={exp.is_current_work} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-30" value={exp.ui_end.month} onChange={(e) => updateUIDate(exp.id, 'end', 'month', e.target.value)}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
+                    <input aria-label="Tahun Selesai" type="number" disabled={exp.is_current_work} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-30" value={exp.ui_end.year} onChange={(e) => updateUIDate(exp.id, 'end', 'year', e.target.value)} />
                   </fieldset>
                 </div>
 
                 <div className="space-y-6 pt-4">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" checked={exp.is_current_work} onChange={(e) => updateExpField(exp.id, "is_current_work", e.target.checked)} className="w-6 h-6 accent-blue-600" />
-                    <span className="text-[11px] font-black uppercase text-blue-600 italic">{"Masih aktif bekerja"} {isFromSystem && "(Dapat diselesaikan jika berhenti)"}</span>
+                  <label className="flex cursor-pointer items-center gap-3">
+                    <input type="checkbox" checked={exp.is_current_work} onChange={(e) => updateExpField(exp.id, "is_current_work", e.target.checked)} className="size-6 accent-blue-600" />
+                    <span className="text-[11px] font-black uppercase italic text-blue-600">{"Masih aktif bekerja"} {isFromSystem && "(Dapat diselesaikan jika berhenti)"}</span>
                   </label>
-                  <div className="space-y-2 font-bold text-sm">
-                    <label htmlFor={`desc-${exp.id}`} className="text-[10px] font-bold uppercase text-slate-400 ml-2 flex items-center gap-2"><AlignLeft size={14} /> {"Rincian Pekerjaan"}</label>
-                    <textarea disabled={isFromSystem} id={`desc-${exp.id}`} rows={4} className="w-full bg-slate-50 border-2 border-transparent p-6 rounded-[2rem] font-bold focus:border-blue-600 outline-none disabled:opacity-60" value={exp.description} onChange={(e) => updateExpField(exp.id, "description", e.target.value)} />
+                  <div className="space-y-2 text-sm font-bold">
+                    <label htmlFor={`desc-${exp.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400"><AlignLeft size={14} /> {"Rincian Pekerjaan"}</label>
+                    <textarea disabled={isFromSystem} id={`desc-${exp.id}`} rows={4} className="w-full rounded-[2rem] border-2 border-transparent bg-slate-50 p-6 font-bold outline-none focus:border-blue-600 disabled:opacity-60" value={exp.description} onChange={(e) => updateExpField(exp.id, "description", e.target.value)} />
                   </div>
                 </div>
               </section>
@@ -302,7 +302,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
         </div>
 
         <div className="flex justify-end pt-4">
-          <button type="submit" disabled={loading} className="bg-slate-900 text-white px-12 py-5 rounded-[2rem] font-black uppercase italic tracking-widest text-sm flex items-center gap-4 hover:bg-blue-600 transition-all shadow-2xl disabled:opacity-50">
+          <button type="submit" disabled={loading} className="flex items-center gap-4 rounded-[2rem] bg-slate-900 px-12 py-5 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50">
             {loading ? "Menyimpan..." : <><Save size={20} /> {"Simpan Profil Karir"}</>}
           </button>
         </div>

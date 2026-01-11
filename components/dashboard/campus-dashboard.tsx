@@ -107,7 +107,7 @@ export default function CampusDashboard({ user }: { user: any }) {
   };
 
   if (loading) return (
-    <div role="status" className="p-20 text-center font-black animate-pulse italic uppercase tracking-tighter text-slate-400">
+    <div role="status" className="animate-pulse p-20 text-center font-black uppercase italic tracking-tighter text-slate-400">
       Sinkronisasi Database Riset...
     </div>
   );
@@ -190,17 +190,17 @@ export default function CampusDashboard({ user }: { user: any }) {
         )}
 
         {activeTab === "overview" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-10">
+          <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-bottom-4">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" role="region" aria-label="Statistik Cepat">
               <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
                 <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Total Talenta Terpeta</p>
                 <p className="text-5xl font-black tracking-tighter text-slate-900">{stats.totalAlumni}</p>
               </div>
-              <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm border-b-emerald-200">
+              <div className="rounded-[3rem] border-2 border-slate-100 border-b-emerald-200 bg-white p-8 shadow-sm">
                 <p className="mb-1 text-[9px] font-black uppercase italic tracking-widest text-emerald-500">Terserap Kerja</p>
                 <p className="text-5xl font-black tracking-tighter text-emerald-600">{stats.hiredAlumni}</p>
               </div>
-              <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm border-b-blue-200">
+              <div className="rounded-[3rem] border-2 border-slate-100 border-b-blue-200 bg-white p-8 shadow-sm">
                 <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Mahasiswa Aktif</p>
                 <p className="text-5xl font-black tracking-tighter text-blue-600">{stats.activeStudents}</p>
               </div>
@@ -209,7 +209,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                   <Activity size={120} />
                 </div>
                 <p className="mb-1 text-[9px] font-black uppercase tracking-widest opacity-60">Employability Rate</p>
-                <p className="text-6xl font-black tracking-tighter leading-none">{stats.employabilityRate}%</p>
+                <p className="text-6xl font-black leading-none tracking-tighter">{stats.employabilityRate}%</p>
                 <p className="mt-4 flex items-center gap-2 text-[9px] font-bold uppercase text-emerald-400">
                   <CheckCircle size={10} /> Data Terverifikasi Sistem
                 </p>
@@ -235,7 +235,7 @@ export default function CampusDashboard({ user }: { user: any }) {
         )}
 
         {/* RENDER MODUL DENGAN PROP USER YANG SERAGAM */}
-        <div className="mt-2 animate-in fade-in duration-700">
+        <div className="mt-2 duration-700 animate-in fade-in">
            {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard Overview")} />}
            {activeTab === "enrollment" && <EnrollmentTracker partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard Overview")} />}
            {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard Overview")} />}
