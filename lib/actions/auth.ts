@@ -184,10 +184,10 @@ export async function signIn(formData: { email: string; password: string }) {
       code: error.code || "UNKNOWN",
       name: error.name || "Error",
     });
-    // CRITICAL: Always return a valid object, never undefined
+    // Return EXACT error message from Supabase (no generic fallback)
     return { 
       success: false, 
-      message: error.message || "Database Connection Error"
+      message: error.message
     };
   }
 }
