@@ -8,8 +8,8 @@ import {
   ShieldCheck, Zap, Award,
   ArrowRight, Info, BookOpen, 
   ExternalLink, BarChart3,
-  TrendingUp, Target, Calendar,
-  Gem, Accessibility
+  TrendingUp, Calendar,
+  Gem, Accessibility, Share2
 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -31,25 +31,35 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
 
   if (error || !partner) return <div className="flex min-h-screen items-center justify-center font-black uppercase italic text-slate-400">Institusi Tidak Ditemukan</div>;
 
-  // 2. FETCH DATA RISET TALENTA (TRIPLE SYNC LOGIC)
+  // 2. FETCH DATA RISET TALENTA (Sequential Fetching agar stabil di Edge)
   const { data: certs } = await supabase.from("certifications").select("profile_id").eq("organizer_name", partner.name);
   const certProfileIds = Array.from(new Set(certs?.map(c => c.profile_id) || []));
   
-  const { data: talenta } = await supabase.from("profiles").select("id, disability_type, career_status")
-    .or(`university.eq."${partner.name}",id.in.(${certProfileIds.length > 0 ? certProfileIds.map(id => `'${id}'`).join(',') : "'00000000-0000-0000-0000-000000000000'"})`);
+  const { data: profilesByUni } = await supabase.from("profiles").select("id").eq("university", partner.name);
+  const uniProfileIds = profilesByUni?.map(p => p.id) || [];
 
-  // 3. KALKULASI STATISTIK & NARASI
-  const totalImpact = talenta?.length || 0;
-  const employed = talenta?.filter(t => !["Job Seeker", "Belum Bekerja", "Pelajar / Mahasiswa", "Fresh Graduate"].includes(t.career_status)).length || 0;
+  const allUniqueIds = Array.from(new Set([...certProfileIds, ...uniProfileIds]));
+
+  let talenta: any[] = [];
+  if (allUniqueIds.length > 0) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, disability_type, career_status")
+      .in("id", allUniqueIds);
+    talenta = data || [];
+  }
+
+  // 3. KALKULASI STATISTIK
+  const totalImpact = talenta.length;
+  const employed = talenta.filter(t => !["Job Seeker", "Belum Bekerja", "Pelajar / Mahasiswa", "Fresh Graduate"].includes(t.career_status)).length;
   const employabilityRate = totalImpact > 0 ? Math.round((employed / totalImpact) * 100) : 0;
   
   const disabilityDist: Record<string, number> = {};
-  talenta?.forEach(t => { if (t.disability_type) disabilityDist[t.disability_type] = (disabilityDist[t.disability_type] || 0) + 1; });
+  talenta.forEach(t => { if (t.disability_type) disabilityDist[t.disability_type] = (disabilityDist[t.disability_type] || 0) + 1; });
 
   const isUni = partner.category === "Perguruan Tinggi";
   const labelTalent = isUni ? "Mahasiswa & Alumni" : "Peserta Pelatihan";
   
-  // LOGIKA BADGE & TINGKATAN INKLUSI
   const score = partner.inclusion_score || 0;
   let badgeConfig = {
     label: "Emerging Inclusive Partner",
@@ -80,15 +90,14 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
     };
   }
 
-  const activeTrainings = trainings?.filter(t => t.is_published && new Date(t.end_date || '') >= new Date()) || [];
-  const archivedTrainings = trainings?.filter(t => t.is_published && new Date(t.end_date || '') < new Date()) || [];
+  const activeTrainings = trainings?.filter(t => t.is_published && new Date(t.end_date || "") >= new Date()) || [];
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans leading-relaxed text-slate-900">
       <header className="border-b-2 border-slate-100 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="flex flex-col items-center gap-10 lg:flex-row lg:items-end">
-            <div className="flex size-32 shrink-0 items-center justify-center rounded-[2.5rem] border-4 border-white bg-slate-900 text-white shadow-2xl animate-in zoom-in">
+            <div className="flex size-32 shrink-0 items-center justify-center rounded-[2.5rem] border-4 border-white bg-slate-900 text-white shadow-2xl">
               <GraduationCap size={60} />
             </div>
             
@@ -108,7 +117,6 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
               </div>
             </div>
 
-            {/* INCLUSION SCORE CARD */}
             <div className={`max-w-xs rounded-[2.5rem] border-2 p-6 shadow-sm md:max-w-sm ${badgeConfig.color}`}>
               <div className="mb-4 flex items-center gap-4">
                 <div className="rounded-2xl bg-white p-3 shadow-sm">{badgeConfig.icon}</div>
@@ -117,12 +125,12 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
                     <h3 className="text-sm font-black uppercase leading-none tracking-tighter">{badgeConfig.label}</h3>
                     <span className="text-xs font-black italic">{score}%</span>
                   </div>
-                  <div className="border-current/10 h-2 w-full overflow-hidden rounded-full border bg-white/50">
+                  <div className="h-2 w-full overflow-hidden rounded-full border border-current/10 bg-white/50">
                     <div className={`h-full ${badgeConfig.progressColor} transition-all duration-1000`} style={{ width: `${score}%` }}></div>
                   </div>
                 </div>
               </div>
-              <p className="border-current/10 border-t pt-3 text-[11px] font-bold italic leading-relaxed opacity-80 text-left">
+              <p className="border-t border-current/10 pt-3 text-left text-[11px] font-bold italic leading-relaxed opacity-80">
                 {badgeConfig.description}
               </p>
             </div>
@@ -132,38 +140,34 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
 
       <main className="mx-auto max-w-7xl px-6 py-16 text-left">
         <div className="grid gap-16 lg:grid-cols-3">
-          
           <div className="space-y-20 lg:col-span-2">
-            {/* TENTANG INSTITUSI */}
             <section className="space-y-6 text-left">
               <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
                 <Info className="text-blue-600" size={28} /> Visi & Komitmen Inklusi
               </h2>
-              <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm italic text-left">
+              <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 italic shadow-sm">
                 <p className="whitespace-pre-line text-lg font-medium leading-relaxed text-slate-700">
-                  {partner.description || "Institusi ini berkomitmen menciptakan akses pendidikan dan pelatihan yang setara bagi talenta disabilitas."}
+                  {partner.description || "Institusi ini berkomitmen menciptakan akses pendidikan dan pelatihan yang setara."}
                 </p>
               </div>
             </section>
 
-            {/* PROGRAM AKTIF */}
             <section className="space-y-8 text-left">
               <div className="flex items-center justify-between border-b-4 border-blue-600 pb-4">
-                <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter">
+                <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
                   <Zap className="fill-amber-500 text-amber-500" size={32} /> Program Berjalan
                 </h2>
                 <span className="text-xl font-black uppercase italic text-blue-600">{activeTrainings.length} Batch</span>
               </div>
-              
               <div className="grid gap-6">
                 {activeTrainings.length > 0 ? activeTrainings.map((t) => (
-                  <Link key={t.id} href={`/pelatihan/${t.id}`} className="group flex flex-col items-center justify-between gap-8 rounded-[3.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-slate-900 hover:shadow-2xl md:flex-row text-left">
-                    <div className="flex-1 space-y-4">
+                  <Link key={t.id} href={`/pelatihan/${t.id}`} className="group flex flex-col items-center justify-between gap-8 rounded-[3.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-slate-900 hover:shadow-2xl md:flex-row">
+                    <div className="flex-1 space-y-4 text-left">
                       <div className="space-y-1">
                         <h3 className="text-2xl font-black uppercase italic leading-tight tracking-tighter transition-colors group-hover:text-blue-600">{t.title}</h3>
                         <div className="flex flex-wrap items-center gap-3 text-[10px] font-black uppercase italic tracking-tighter text-blue-600">
-                          <span className="rounded-lg bg-blue-50 px-3 py-1 border border-blue-100">Pendaftaran Terbuka</span>
-                          <span className="text-slate-400 flex items-center gap-1"><Calendar size={12} /> Mulai: {new Date(t.start_date).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
+                          <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1">Pendaftaran Terbuka</span>
+                          <span className="flex items-center gap-1 text-slate-400"><Calendar size={12} /> Mulai: {new Date(t.start_date).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}</span>
                         </div>
                       </div>
                     </div>
@@ -178,7 +182,6 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
             </section>
           </div>
 
-          {/* SIDEBAR ANALYTICS */}
           <aside className="space-y-12 text-left">
             <section className="relative overflow-hidden rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl">
               <div className="absolute -bottom-4 -right-4 rotate-12 opacity-10"><BarChart3 size={120} /></div>
@@ -192,21 +195,19 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
                   <div className="text-right">
                     <TrendingUp size={24} className="mb-1 ml-auto text-emerald-400" />
                     <p className="text-xl font-black italic text-emerald-400">{employabilityRate}%</p>
-                    <span className="text-[7px] font-black uppercase text-slate-500 tracking-tighter leading-none">Terserap Kerja</span>
+                    <span className="text-[7px] font-black uppercase tracking-tighter text-slate-500">Terserap Kerja</span>
                   </div>
                 </div>
-                
                 <div className="space-y-4 rounded-[2rem] border border-white/10 bg-white/5 p-6">
                   <p className="text-[10px] font-medium italic leading-relaxed text-slate-300">
-                    Berdasarkan audit riset disabilitas.com, {partner.name} menunjukkan kontribusi signifikan dalam memberdayakan {totalImpact} talenta dengan berbagai ragam disabilitas.
+                    Berdasarkan audit riset disabilitas.com, {partner.name} menunjukkan kontribusi signifikan dalam memberdayakan {totalImpact} talenta.
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* SEBARAN RAGAM DISABILITAS - GRAFIS VISUAL */}
-            <section className="space-y-8 rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] text-left">
-              <h3 className="flex items-center gap-3 text-lg font-black uppercase tracking-tighter">
+            <section className="space-y-8 rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
+              <h3 className="flex items-center gap-3 text-lg font-black uppercase tracking-tighter text-slate-900">
                 <Users size={24} className="text-blue-600" /> Spektrum Inklusi
               </h3>
               <div className="space-y-6">
@@ -221,19 +222,17 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
                     </div>
                   </div>
                 ))}
-                {totalImpact === 0 && <p className="text-center text-[10px] font-black uppercase italic text-slate-300">Data spektrum belum tersedia.</p>}
+                {totalImpact === 0 && <p className="text-center text-[10px] font-black uppercase italic text-slate-300">Data belum tersedia.</p>}
               </div>
             </section>
 
             <section className="space-y-10 rounded-[3.5rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
-              <h3 className="flex items-center gap-3 text-lg font-black uppercase tracking-tighter text-left">
+              <h3 className="flex items-center gap-3 text-lg font-black uppercase tracking-tighter text-slate-900">
                 <Accessibility className="text-emerald-600" size={24} /> Akomodasi
               </h3>
               <div className="flex flex-wrap gap-2">
                 {partner.master_accommodations_provided?.map((item: string, idx: number) => (
-                  <span key={idx} className="rounded-xl bg-emerald-50 px-3 py-2 text-[9px] font-black uppercase tracking-tight text-emerald-700 border border-emerald-100 shadow-sm">
-                    {item}
-                  </span>
+                  <span key={idx} className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[9px] font-black uppercase tracking-tight text-emerald-700 shadow-sm">{item}</span>
                 ))}
               </div>
             </section>
@@ -242,11 +241,11 @@ export default async function PublicPartnerProfile({ params }: { params: { id: s
               className="flex w-full items-center justify-center gap-3 rounded-[2rem] border-2 border-slate-200 bg-white py-5 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-all hover:border-slate-900"
               onClick={() => {
                 const url = `https://www.disabilitas.com/partner/${partner.id}`;
-                navigator.clipboard.writeText(`Lihat kontribusi inklusif ${partner.name} dalam memberdayakan talenta disabilitas: ${url}`);
-                alert("Link Profil Publik disalin!");
+                navigator.clipboard.writeText(`Lihat kontribusi inklusif ${partner.name}: ${url}`);
+                alert("Link Profil disalin!");
               }}
             >
-              <Share2 size={18} /> Bagikan Etalase Inklusi
+              <Share2 size={18} /> Bagikan Etalase
             </button>
           </aside>
         </div>
