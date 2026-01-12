@@ -16,6 +16,9 @@ import TalentTracer from "./campus/talent-tracer";
 import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
 
+// Import Data Static sesuai standar platform
+import { CAREER_STATUSES, AGE_RANGES } from "@/lib/data-static";
+
 export default function CampusDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [partner, setPartner] = useState<any>(null);
@@ -36,7 +39,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     topLocations: [] as string[],
     impactScore: "",
     genderMap: { male: 0, female: 0 },
-    ageRanges: { "18-24": 0, "25-34": 0, "35-44": 0, "45+": 0 } as Record<string, number>
+    ageRanges: {} as Record<string, number>
   });
 
   const fetchDashboardData = useCallback(async () => {
@@ -54,13 +57,7 @@ export default function CampusDashboard({ user }: { user: any }) {
         setPartner(partnerData);
         calculateCompletion(partnerData);
         
-        // 2. AMBIL DATA PROGRAM PELATIHAN
-        const { count: progCount } = await supabase
-          .from("trainings")
-          .select("*", { count: 'exact', head: true })
-          .eq("partner_id", user.id);
-
-        // 3. IDENTIFIKASI AFILIASI (Table: certifications - Menggunakan profile_id)
+        // 2. IDENTIFIKASI AFILIASI VIA SERTIFIKASI (Jembatan yang Mas buktikan di SQL)
         const { data: certs } = await supabase
           .from("certifications")
           .select("profile_id")
@@ -68,11 +65,12 @@ export default function CampusDashboard({ user }: { user: any }) {
         
         const certProfileIds = Array.from(new Set(certs?.map(c => c.profile_id) || []));
 
-        // 4. AMBIL DATA DASAR TALENT (Table: profiles)
+        // 3. AMBIL DATA PROFIL TALENTA (Table: profiles)
         let query = supabase
           .from("profiles")
           .select("id, career_status, graduation_date, disability_type, city, skill_impact_rating, gender, date_of_birth");
 
+        // Logika Sinkronisasi: Ambil yang university cocok ATAU ID ada di list sertifikat
         const orConditions = [`university.eq."${partnerData.name}"`, `admin_partner_lock.eq.${user.id}`];
         if (certProfileIds.length > 0) {
           orConditions.push(`id.in.(${certProfileIds.map(id => `'${id}'`).join(',')})`);
@@ -85,7 +83,10 @@ export default function CampusDashboard({ user }: { user: any }) {
           const disMap: Record<string, number> = {};
           const locMap: Record<string, number> = {};
           const genderMap = { male: 0, female: 0 };
-          const ageMap: Record<string, number> = { "18-24": 0, "25-34": 0, "35-44": 0, "45+": 0 };
+          const ageMap: Record<string, number> = {};
+          // Inisialisasi sesuai AGE_RANGES di data-static.ts
+          AGE_RANGES.forEach(range => { ageMap[range] = 0; });
+          
           const impactCounts: Record<string, number> = {};
 
           talenta.forEach(t => {
@@ -96,10 +97,10 @@ export default function CampusDashboard({ user }: { user: any }) {
             
             if (t.date_of_birth) {
               const age = currentYear - new Date(t.date_of_birth).getFullYear();
-              if (age <= 24) ageMap["18-24"]++;
-              else if (age <= 34) ageMap["25-34"]++;
-              else if (age <= 44) ageMap["35-44"]++;
-              else ageMap["45+"]++;
+              if (age >= 18 && age <= 24) ageMap["18-24 Tahun"]++;
+              else if (age >= 25 && age <= 34) ageMap["25-34 Tahun"]++;
+              else if (age >= 35 && age <= 44) ageMap["35-44 Tahun"]++;
+              else if (age >= 45) ageMap["Di atas 45 Tahun"]++;
             }
             if (t.skill_impact_rating) impactCounts[t.skill_impact_rating] = (impactCounts[t.skill_impact_rating] || 0) + 1;
           });
@@ -113,7 +114,7 @@ export default function CampusDashboard({ user }: { user: any }) {
             hiredAlumni: employed,
             activeStudents: talenta.filter(t => (t.graduation_date || 0) > currentYear).length,
             employabilityRate: talenta.length > 0 ? Math.round((employed / talenta.length) * 100) : 0,
-            totalPrograms: progCount || 0
+            totalPrograms: 0 
           });
 
           setResearchStats({
@@ -167,14 +168,14 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900">
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
-      {/* HEADER SECTION - KEMBALINYA PROGRESS PROFIL */}
+      {/* HEADER SECTION - PROFILE PROGRESS KEMBALI */}
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 md:flex-row md:items-end">
         <div className="space-y-4 text-left">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-slate-900 p-2 text-white shadow-lg"><GraduationCap size={28} /></div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 leading-none">Partner Dashboard</p>
-              <h1 className="mt-1 text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name || "Institusi Partner"}</h1>
+              <h1 className="mt-1 text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name}</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -187,13 +188,10 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
               </div>
               <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Profil: {profileCompletion}%</span>
             </div>
-            <a href={`/partner/${partner?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 transition-colors hover:border-slate-900 hover:text-slate-900">
-              <ExternalLink size={14} /> Profil Publik
-            </a>
           </div>
         </div>
-        <div className="flex w-full gap-3 md:w-auto">
-          <button onClick={() => navigateTo("programs", "Buat Program")} className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 md:flex-none">
+        <div className="flex gap-3">
+          <button onClick={() => navigateTo("programs", "Program Baru")} className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-blue-100 shadow-xl transition-all hover:bg-slate-900 md:flex-none">
             <Plus size={18} /> Program Baru
           </button>
           <button onClick={shareInclusionCard} className="group flex items-center justify-center rounded-2xl border-2 border-slate-100 bg-white px-6 text-slate-900 shadow-sm transition-all hover:border-slate-900">
@@ -202,7 +200,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
         </div>
       </header>
 
-      {/* NAVIGATION TABS - KEMBALINYA TAB AKUN */}
+      {/* NAVIGATION TABS - ACCOUNT KEMBALI */}
       <nav className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist">
         {[
           { id: "overview", label: "Dashboard", icon: LayoutDashboard },
@@ -229,7 +227,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
             {/* STATS GRID */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total Talenta Terpeta</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Talenta Terpeta</p>
                 <p className="mt-1 text-5xl font-black tracking-tighter">{stats.totalAlumni}</p>
               </div>
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
@@ -243,13 +241,13 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
               <div className="group relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 italic text-white shadow-2xl transition-all hover:scale-[1.02]">
                 <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Employability Rate</p>
                 <p className="text-6xl font-black leading-none tracking-tighter">{stats.employabilityRate}%</p>
-                <p className="mt-4 flex items-center gap-2 text-[9px] font-bold uppercase text-emerald-400">
+                <p className="mt-4 flex items-center gap-2 text-[9px] font-bold uppercase text-emerald-400 italic">
                   <CheckCircle size={10} /> Validated Analytics
                 </p>
               </div>
             </div>
 
-            {/* STRATEGIC NARRATIVE - KEMBALI MUNCUL */}
+            {/* STRATEGIC NARRATIVE */}
             <section className="rounded-[3rem] border-2 border-slate-100 bg-slate-50 p-10 text-left italic shadow-inner">
               <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-blue-600">
                 <Award size={16} /> Analisis Naratif Strategis
@@ -285,7 +283,6 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
                         </div>
                       </div>
                     ))}
-                    {stats.totalAlumni === 0 && <p className="text-[10px] italic text-slate-300">Data riset sedang disinkronkan...</p>}
                   </div>
                 </div>
 
@@ -312,7 +309,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(researchStats.ageRanges).map(([range, count]) => (
                         <div key={range} className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                          <span className="text-[9px] font-black uppercase text-slate-400">{range} Thn</span>
+                          <span className="text-[9px] font-black uppercase text-slate-400">{range}</span>
                           <span className="text-xs font-black">{count}</span>
                         </div>
                       ))}
