@@ -63,17 +63,17 @@ export default function CampusDashboard({ user }: { user: any }) {
         const certProfileIds = Array.from(new Set(certs?.map(c => c.profile_id) || []));
 
         // 3. AMBIL DATA DASAR TALENT (Table: profiles - Menggunakan id)
+        // Gabungkan university match, certification match, dan manual admin lock
         let query = supabase
           .from("profiles")
           .select("id, career_status, graduation_date, disability_type, city, skill_impact_rating, gender, date_of_birth");
 
+        const orConditions = [`university.eq."${partnerData.name}"`, `admin_partner_lock.eq.${user.id}`];
         if (certProfileIds.length > 0) {
-          query = query.or(`university.eq."${partnerData.name}",id.in.(${certProfileIds.map(id => `'${id}'`).join(',')}),admin_partner_lock.eq.${user.id}`);
-        } else {
-          query = query.or(`university.eq."${partnerData.name}",admin_partner_lock.eq.${user.id}`);
+          orConditions.push(`id.in.(${certProfileIds.map(id => `'${id}'`).join(',')})`);
         }
-
-        const { data: talenta } = await query;
+        
+        const { data: talenta } = await query.or(orConditions.join(','));
 
         if (talenta) {
           const currentYear = new Date().getFullYear();
@@ -86,12 +86,9 @@ export default function CampusDashboard({ user }: { user: any }) {
           talenta.forEach(t => {
             if (t.disability_type) disMap[t.disability_type] = (disMap[t.disability_type] || 0) + 1;
             if (t.city) locMap[t.city] = (locMap[t.city] || 0) + 1;
-            
-            // Gender Mapping sesuai skema DB (male/female)
             if (t.gender === "male") genderMap.male++;
             if (t.gender === "female") genderMap.female++;
             
-            // Perhitungan Usia dari date_of_birth
             if (t.date_of_birth) {
               const age = currentYear - new Date(t.date_of_birth).getFullYear();
               if (age <= 24) ageMap["18-24"]++;
@@ -183,7 +180,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => navigateTo("programs", "Program")} className="rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-xl shadow-blue-100 hover:bg-slate-900 transition-all">Program Baru</button>
+          <button onClick={() => navigateTo("programs", "Program")} className="rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-xl shadow-blue-100 hover:bg-slate-900 transition-all uppercase">Program Baru</button>
           <button onClick={shareInclusionCard} className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm hover:border-slate-900 transition-all"><Share2 size={20} /></button>
         </div>
       </header>
@@ -202,76 +199,102 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
         ))}
       </nav>
 
-      {/* OVERVIEW CONTENT */}
-      {activeTab === "overview" && (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
-              <p className="text-[9px] font-black uppercase text-slate-400">Talenta Terpeta</p>
-              <p className="text-5xl font-black tracking-tighter mt-1">{stats.totalAlumni}</p>
-            </div>
-            <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
-              <p className="text-[9px] font-black uppercase text-emerald-500 italic">Terserap Kerja</p>
-              <p className="text-5xl font-black tracking-tighter text-emerald-600 mt-1">{stats.hiredAlumni}</p>
-            </div>
-            <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
-              <p className="text-[9px] font-black uppercase text-blue-500 italic">Mahasiswa Aktif</p>
-              <p className="text-5xl font-black tracking-tighter text-blue-600 mt-1">{stats.activeStudents}</p>
-            </div>
-            <div className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
-              <p className="text-[9px] font-black uppercase opacity-60">Employability Rate</p>
-              <p className="text-6xl font-black italic tracking-tighter">{stats.employabilityRate}%</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
-                <h4 className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-900 mb-6"><Users size={16} className="text-purple-600" /> Ragam Disabilitas</h4>
-                <div className="space-y-4">
-                  {Object.entries(researchStats.disabilityMap).map(([type, count]) => (
-                    <div key={type} className="space-y-1">
-                      <div className="flex justify-between text-[9px] font-black text-slate-500 uppercase"><span>{type}</span><span>{count}</span></div>
-                      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                        <div className="h-full bg-purple-600" style={{ width: `${(count / stats.totalAlumni) * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+      <main id="main-content" className="min-h-[600px]">
+        {activeTab === "overview" && (
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* STATS GRID */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
+                <p className="text-[9px] font-black uppercase text-slate-400">Talenta Terpeta</p>
+                <p className="text-5xl font-black tracking-tighter mt-1">{stats.totalAlumni}</p>
               </div>
-              <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm space-y-6">
-                <div>
-                  <h4 className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-900 mb-4"><User size={16} className="text-blue-500" /> Gender</h4>
-                  <div className="flex gap-3 text-center">
-                    <div className="flex-1 rounded-xl bg-slate-50 p-3"><p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p><p className="text-lg font-black">{researchStats.genderMap.male}</p></div>
-                    <div className="flex-1 rounded-xl bg-slate-50 p-3"><p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p><p className="text-lg font-black">{researchStats.genderMap.female}</p></div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-900 mb-4"><Timer size={16} className="text-amber-500" /> Usia</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(researchStats.ageRanges).map(([range, count]) => (
-                      <div key={range} className="rounded-lg bg-slate-50 p-2 flex justify-between items-center"><span className="text-[9px] font-black text-slate-400 uppercase">{range}</span><span className="text-xs font-black">{count}</span></div>
+              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
+                <p className="text-[9px] font-black uppercase text-emerald-500 italic">Terserap Kerja</p>
+                <p className="text-5xl font-black tracking-tighter text-emerald-600 mt-1">{stats.hiredAlumni}</p>
+              </div>
+              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
+                <p className="text-[9px] font-black uppercase text-blue-500 italic">Mahasiswa Aktif</p>
+                <p className="text-5xl font-black tracking-tighter text-blue-600 mt-1">{stats.activeStudents}</p>
+              </div>
+              <div className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
+                <p className="text-[9px] font-black uppercase opacity-60">Employability Rate</p>
+                <p className="text-6xl font-black italic tracking-tighter">{stats.employabilityRate}%</p>
+              </div>
+            </div>
+
+            {/* STRATEGIC NARRATIVE */}
+            <section className="rounded-[3rem] border-2 border-slate-100 bg-slate-50 p-10 italic shadow-inner text-left">
+              <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-blue-600">
+                <Award size={16} /> Analisis Naratif Strategis
+              </h3>
+              <div className="max-w-5xl space-y-6 text-xl font-medium leading-relaxed text-slate-800 md:text-2xl">
+                <p>
+                  Berdasarkan sinkronisasi riset, <strong>{partner?.name}</strong> saat ini mengayomi <strong>{stats.totalAlumni} talenta disabilitas</strong>. 
+                  Populasi ini didominasi oleh talenta dengan ragam <strong>{Object.entries(researchStats.disabilityMap).sort((a,b) => b[1]-a[1])[0]?.[0] || "..."}</strong>, 
+                  dengan komposisi gender <strong>{researchStats.genderMap.male} Laki-laki</strong> dan <strong>{researchStats.genderMap.female} Perempuan</strong>.
+                </p>
+                <p>
+                  Tingkat keterserapan alumni mencapai <strong>{stats.employabilityRate}%</strong>. Program Anda dinilai memiliki dampak 
+                  dominan pada level <strong>&quot;{researchStats.impactScore}&quot;</strong> oleh para alumni.
+                </p>
+                <p>
+                  Strategi disarankan fokus pada <strong>{stats.activeStudents} mahasiswa aktif</strong> yang mayoritas berada di wilayah <strong>{researchStats.topLocations[0] || "..."}</strong>. 
+                  Lengkapi profil untuk validasi riset nasional.
+                </p>
+              </div>
+            </section>
+
+            {/* RESEARCH WIDGETS */}
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
+                  <h4 className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-900 mb-6"><Users size={16} className="text-purple-600" /> Ragam Disabilitas</h4>
+                  <div className="space-y-4">
+                    {Object.entries(researchStats.disabilityMap).map(([type, count]) => (
+                      <div key={type} className="space-y-1">
+                        <div className="flex justify-between text-[9px] font-black text-slate-500 uppercase"><span>{type}</span><span>{count}</span></div>
+                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                          <div className="h-full bg-purple-600" style={{ width: `${(count / stats.totalAlumni) * 100}%` }} />
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
+                <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm space-y-6">
+                  <div>
+                    <h4 className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-900 mb-4"><User size={16} className="text-blue-500" /> Gender</h4>
+                    <div className="flex gap-3 text-center">
+                      <div className="flex-1 rounded-xl bg-slate-50 p-3"><p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p><p className="text-lg font-black">{researchStats.genderMap.male}</p></div>
+                      <div className="flex-1 rounded-xl bg-slate-50 p-3"><p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p><p className="text-lg font-black">{researchStats.genderMap.female}</p></div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-900 mb-4"><Timer size={16} className="text-amber-500" /> Usia</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(researchStats.ageRanges).map(([range, count]) => (
+                        <div key={range} className="rounded-lg bg-slate-50 p-2 flex justify-between items-center"><span className="text-[9px] font-black text-slate-400 uppercase">{range}</span><span className="text-xs font-black">{count}</span></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-[2.5rem] bg-blue-600 p-10 text-left text-white shadow-2xl">
+                <Zap size={32} className="mb-6 text-blue-200" />
+                <p className="text-[10px] font-black uppercase opacity-70">Impact Pelatihan</p>
+                <p className="text-2xl font-black italic uppercase tracking-tighter mt-2 leading-tight">&quot;{researchStats.impactScore}&quot;</p>
               </div>
             </div>
-            <div className="rounded-[2.5rem] bg-blue-600 p-10 text-left text-white shadow-2xl">
-              <Zap size={32} className="mb-6 text-blue-200" />
-              <p className="text-[10px] font-black uppercase opacity-70">Impact Pelatihan</p>
-              <p className="text-2xl font-black italic uppercase tracking-tighter mt-2 leading-tight">&quot;{researchStats.impactScore}&quot;</p>
-            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* TAB RENDER */}
-      <div className="mt-2">
-         {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
-         {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
-         {activeTab === "profile" && <ProfileEditor partner={partner} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
-      </div>
+        {activeTab !== "overview" && (
+           <div className="mt-2">
+              {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+              {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+              {activeTab === "profile" && <ProfileEditor partner={partner} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
+           </div>
+        )}
+      </main>
     </div>
   );
 }
