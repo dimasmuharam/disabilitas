@@ -4,9 +4,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   GraduationCap, Users, BookOpen, BarChart3, Settings, 
-  ShieldCheck, Share2, AlertCircle, Plus, LayoutDashboard,
+  ShieldCheck, Share2, Plus, LayoutDashboard,
   Activity, Award, Lock, CheckCircle,
-  MapPin, Zap, User, UserPlus, Timer, ExternalLink, Search
+  Zap, User, Timer, ExternalLink
 } from "lucide-react";
 
 // Import Modul Pendukung
@@ -15,7 +15,7 @@ import TalentTracer from "./campus/talent-tracer";
 import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
 
-// Import Data Static
+// Import Data Static sesuai AGE_RANGES yang tetap perlu kalkulasi ringan atau static mapping
 import { AGE_RANGES } from "@/lib/data-static";
 
 export default function CampusDashboard({ user }: { user: any }) {
@@ -26,21 +26,6 @@ export default function CampusDashboard({ user }: { user: any }) {
   const [announcement, setAnnouncement] = useState("");
   const [profileCompletion, setProfileCompletion] = useState(0);
   
-  const [stats, setStats] = useState({
-    totalTalenta: 0,
-    hiredTalenta: 0,
-    activeTalenta: 0,
-    employabilityRate: 0,
-  });
-
-  const [researchStats, setResearchStats] = useState({
-    disabilityMap: {} as Record<string, number>,
-    topLocations: [] as string[],
-    impactScore: "",
-    genderMap: { male: 0, female: 0 },
-    ageRanges: {} as Record<string, number>
-  });
-
   const isUni = partner?.category === "Perguruan Tinggi";
   
   // Penamaan dinamis untuk aksesibilitas & terminologi
@@ -51,8 +36,13 @@ export default function CampusDashboard({ user }: { user: any }) {
     if (!user?.id) return;
     setLoading(true);
     try {
-      // 1. Ambil Data Partner
-      const { data: partnerData } = await supabase.from("partners").select("*").eq("id", user.id).single();
+      // 1. Ambil Data Partner (Statistik sudah ada di sini berkat Trigger SQL)
+      const { data: partnerData } = await supabase
+        .from("partners")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      
       if (!partnerData) return;
       setPartner(partnerData);
       
@@ -61,86 +51,46 @@ export default function CampusDashboard({ user }: { user: any }) {
         setTrackingMode("impact");
       }
 
-      // 2. Identifikasi ID berdasarkan mode
-      let targetIds: string[] = [];
-
-      if (trackingMode === "academic") {
-        // Jalur Almamater: profiles.university
-        const { data: uniTalent } = await supabase.from("profiles").select("id").eq("university", partnerData.name);
-        targetIds = uniTalent?.map(t => t.id) || [];
-      } else {
-        // Jalur Impact: certifications.profile_id
-        const { data: certTalent } = await supabase.from("certifications").select("profile_id").eq("organizer_name", partnerData.name);
-        targetIds = Array.from(new Set(certTalent?.map(c => c.profile_id) || []));
-      }
-
-      // 3. Tambahkan ID dari Admin Lock (Selalu disertakan)
-      const { data: lockedTalent } = await supabase.from("profiles").select("id").eq("admin_partner_lock", user.id);
-      const lockedIds = lockedTalent?.map(t => t.id) || [];
-      const finalUniqueIds = Array.from(new Set([...targetIds, ...lockedIds]));
-
-      if (finalUniqueIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, career_status, graduation_date, disability_type, city, skill_impact_rating, gender, date_of_birth")
-          .in("id", finalUniqueIds);
-
-        if (profiles) {
-          const currentYear = new Date().getFullYear();
-          const disMap: Record<string, number> = {};
-          const locMap: Record<string, number> = {};
-          const genderMap = { male: 0, female: 0 };
-          const ageMap: Record<string, number> = {};
-          AGE_RANGES.forEach(r => ageMap[r] = 0);
-          const impactCounts: Record<string, number> = {};
-
-          profiles.forEach(p => {
-            if (p.disability_type) disMap[p.disability_type] = (disMap[p.disability_type] || 0) + 1;
-            if (p.city) locMap[p.city] = (locMap[p.city] || 0) + 1;
-            if (p.gender === "male") genderMap.male++;
-            if (p.gender === "female") genderMap.female++;
-            
-            if (p.date_of_birth) {
-              const age = currentYear - new Date(p.date_of_birth).getFullYear();
-              if (age >= 18 && age <= 24) ageMap["18-24 Tahun"]++;
-              else if (age >= 25 && age <= 34) ageMap["25-34 Tahun"]++;
-              else if (age >= 35 && age <= 44) ageMap["35-44 Tahun"]++;
-              else if (age >= 45) ageMap["Di atas 45 Tahun"]++;
-            }
-            if (p.skill_impact_rating) impactCounts[p.skill_impact_rating] = (impactCounts[p.skill_impact_rating] || 0) + 1;
-          });
-
-          const employed = profiles.filter(p => !["Job Seeker", "Belum Bekerja", "Pelajar / Mahasiswa", "Fresh Graduate"].includes(p.career_status)).length;
-
-          setStats({
-            totalTalenta: finalUniqueIds.length,
-            hiredTalenta: employed,
-            activeTalenta: profiles.filter(p => (p.graduation_date || 0) > currentYear).length,
-            employabilityRate: finalUniqueIds.length > 0 ? Math.round((employed / finalUniqueIds.length) * 100) : 0,
-          });
-
-          setResearchStats({
-            disabilityMap: disMap,
-            topLocations: Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0,3).map(([c]) => c),
-            impactScore: Object.entries(impactCounts).sort((a,b) => b[1]-a[1])[0]?.[0] || "Belum Ada Data",
-            genderMap,
-            ageRanges: ageMap
-          });
-        }
-      } else {
-        setStats({ totalTalenta: 0, hiredTalenta: 0, activeTalenta: 0, employabilityRate: 0 });
-      }
-
       // Calculate profile completion
       const fields = ["name", "description", "location", "website", "nib_number", "category"];
       const filled = fields.filter(f => partnerData[f] && partnerData[f].length > 0).length;
       const acc = (partnerData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
       setProfileCompletion(Math.round(((filled + acc) / (fields.length + 1)) * 100));
 
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (e) { 
+      console.error("Dashboard Stats Fetch Error:", e); 
+    } finally { 
+      setLoading(false); 
+    }
   }, [user?.id, trackingMode]);
 
   useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
+
+  // Ekstraksi data statistik berdasarkan tracking mode dari kolom Materialized
+  const getDisplayStats = () => {
+    if (trackingMode === "academic") {
+      return {
+        total: partner?.stats_academic_total || 0,
+        hired: partner?.stats_academic_hired || 0,
+        rate: partner?.stats_academic_total > 0 
+          ? Math.round((partner.stats_academic_hired / partner.stats_academic_total) * 100) 
+          : 0
+      };
+    } else {
+      return {
+        total: partner?.stats_impact_total || 0,
+        hired: partner?.stats_impact_hired || 0,
+        rate: partner?.stats_impact_total > 0 
+          ? Math.round((partner.stats_impact_hired / partner.stats_impact_total) * 100) 
+          : 0
+      };
+    }
+  };
+
+  const currentStats = getDisplayStats();
+  const disMap = partner?.stats_disability_map || {};
+  const genMap = partner?.stats_gender_map || { male: 0, female: 0 };
+
   const navigateTo = (tabId: string, label: string) => {
     setActiveTab(tabId);
     setAnnouncement(`Menampilkan halaman ${label}`);
@@ -159,7 +109,11 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! Sebagai ${partner?
     }
   };
 
-  if (loading) return <div role="status" className="flex min-h-screen items-center justify-center font-black uppercase italic text-slate-400 animate-pulse">Sinkronisasi Database Riset...</div>;
+  if (loading) return (
+    <div role="status" className="flex min-h-screen items-center justify-center font-black uppercase italic tracking-tighter text-slate-400 animate-pulse">
+      <Activity className="mr-2 animate-spin" /> Mengakses Data Riset...
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900">
@@ -171,28 +125,28 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! Sebagai ${partner?
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-slate-900 p-2 text-white shadow-lg"><GraduationCap size={28} /></div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">{partner?.category} Portal</p>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name}</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 leading-none">{partner?.category} Portal</p>
+              <h1 className="mt-1 text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name}</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700">
               <ShieldCheck size={14} /> Skor Inklusi: {partner?.inclusion_score}%
             </span>
-            <div className="flex items-center gap-3 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 shadow-sm" title="Kelengkapan Profil">
+            <div className="flex items-center gap-3 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 shadow-sm">
               <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
                 <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${profileCompletion}%` }} />
               </div>
-              <span className="text-[10px] font-black uppercase text-slate-500">Profil: {profileCompletion}%</span>
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-tighter">Profil: {profileCompletion}%</span>
             </div>
-            <a href={`/partner/${partner?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 hover:border-slate-900 transition-all">
+            <a href={`/partner/${partner?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 hover:border-slate-900 transition-all shadow-sm">
               <ExternalLink size={14} /> Profil Publik
             </a>
           </div>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button onClick={() => navigateTo("programs", "Buat Program")} className="flex-1 md:flex-none rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-blue-100 shadow-xl hover:bg-slate-900 transition-all uppercase tracking-widest">Program Baru</button>
-          <button onClick={shareInclusionCard} className="rounded-2xl border-2 border-slate-100 bg-white px-6 hover:border-slate-900 transition-all" aria-label="Bagikan Inclusion Card"><Share2 size={20} /></button>
+          <button onClick={() => navigateTo("programs", "Buat Program")} className="flex-1 md:flex-none rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-blue-100 shadow-xl hover:bg-slate-900 transition-all tracking-widest">Program Baru</button>
+          <button onClick={shareInclusionCard} className="rounded-2xl border-2 border-slate-100 bg-white px-6 hover:border-slate-900 transition-all shadow-sm" aria-label="Bagikan Inclusion Card"><Share2 size={20} /></button>
         </div>
       </header>
 
@@ -233,22 +187,22 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! Sebagai ${partner?
         {activeTab === "overview" && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* STATS */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 text-left">
+              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total {labelTalent} Terpeta</p>
-                <p className="mt-1 text-5xl font-black tracking-tighter">{stats.totalTalenta}</p>
+                <p className="mt-1 text-5xl font-black tracking-tighter">{currentStats.total}</p>
               </div>
-              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
+              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
                 <p className="text-[9px] font-black italic uppercase tracking-widest text-emerald-500">Terserap Kerja</p>
-                <p className="mt-1 text-5xl font-black tracking-tighter text-emerald-600">{stats.hiredTalenta}</p>
+                <p className="mt-1 text-5xl font-black tracking-tighter text-emerald-600">{currentStats.hired}</p>
               </div>
-              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
-                <p className="text-[9px] font-black italic uppercase tracking-widest text-blue-500">{labelTalent} Aktif</p>
-                <p className="mt-1 text-5xl font-black tracking-tighter text-blue-600">{stats.activeTalenta}</p>
+              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
+                <p className="text-[9px] font-black italic uppercase tracking-widest text-blue-500">Employability</p>
+                <p className="mt-1 text-5xl font-black tracking-tighter text-blue-600">{currentStats.rate}%</p>
               </div>
-              <div className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
-                <p className="text-[9px] font-black uppercase tracking-widest opacity-60 italic">Employability Rate</p>
-                <p className="text-6xl font-black italic tracking-tighter leading-none">{stats.employabilityRate}%</p>
+              <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
+                <p className="text-[9px] font-black uppercase tracking-widest opacity-60 italic">Platform Verified</p>
+                <p className="text-4xl font-black italic tracking-tighter leading-tight mt-2 uppercase">Inclusion Analytics</p>
               </div>
             </div>
 
@@ -257,51 +211,52 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! Sebagai ${partner?
               <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-blue-600"><Award size={16} /> Analisis Naratif Strategis</h3>
               <div className="max-w-5xl space-y-6 text-xl font-medium leading-relaxed text-slate-800 md:text-2xl">
                 <p>
-                  Melalui sinkronisasi data {trackingMode === "academic" ? "Almamater" : "Program Impact"}, <strong>{partner?.name}</strong> saat ini mengayomi <strong>{stats.totalTalenta} {labelTalent.toLowerCase()} disabilitas</strong>. 
-                  Populasi didominasi ragam <strong>{Object.entries(researchStats.disabilityMap).sort((a,b) => b[1]-a[1])[0]?.[0] || "..."}</strong>.
+                  Berdasarkan sinkronisasi data {trackingMode === "academic" ? "Almamater" : "Program Impact"}, <strong>{partner?.name}</strong> saat ini mengayomi <strong>{currentStats.total} {labelTalent.toLowerCase()} disabilitas</strong>. 
+                  Populasi didominasi ragam <strong>{Object.entries(disMap).sort((a: any, b: any) => b[1] - a[1])[0]?.[0] || "..."}</strong>.
                 </p>
                 <p>
-                  Tingkat keterserapan {labelAlumni.toLowerCase()} mencapai <strong>{stats.employabilityRate}%</strong>. {trackingMode === "impact" && `Program dinilai memiliki dampak dominan pada level "${researchStats.impactScore}" oleh peserta.`}
+                  Tingkat keterserapan {labelAlumni.toLowerCase()} mencapai <strong>{currentStats.rate}%</strong>. Institusi Anda mencatatkan sebaran gender <strong>{genMap.male} Laki-laki</strong> dan <strong>{genMap.female} Perempuan</strong>.
                 </p>
               </div>
             </section>
 
             {/* RESEARCH WIDGETS */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
-                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900"><Users className="text-purple-600" size={16} /> Ragam Disabilitas</h4>
+              <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2 text-left">
+                <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 shadow-sm">
+                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900"><Users className="text-purple-600" size={16} /> Spektrum Inklusi</h4>
                   <div className="space-y-4">
-                    {Object.entries(researchStats.disabilityMap).map(([type, count]) => (
+                    {Object.entries(disMap).map(([type, count]: [string, any]) => (
                       <div key={type} className="space-y-1">
                         <div className="flex justify-between text-[9px] font-black uppercase text-slate-500"><span>{type}</span><span>{count} Jiwa</span></div>
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: `${(count / (stats.totalTalenta || 1)) * 100}%` }} /></div>
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: `${(count / (currentStats.total || 1)) * 100}%` }} /></div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="space-y-8 rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
+                <div className="space-y-8 rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 shadow-sm">
                   <div>
                     <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900"><User className="text-blue-500" size={16} /> Gender</h4>
                     <div className="flex gap-4">
-                      <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-blue-500"><p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p><p className="mt-1 text-xl font-black">{researchStats.genderMap.male}</p></div>
-                      <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-pink-500"><p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p><p className="mt-1 text-xl font-black">{researchStats.genderMap.female}</p></div>
+                      <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-blue-500"><p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p><p className="mt-1 text-xl font-black">{genMap.male}</p></div>
+                      <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-pink-500"><p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p><p className="mt-1 text-xl font-black">{genMap.female}</p></div>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900"><Timer className="text-amber-500" size={16} /> Usia</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {Object.entries(researchStats.ageRanges).map(([range, count]) => (
-                        <div key={range} className="flex items-center justify-between rounded-xl bg-slate-50 p-3"><span className="text-[9px] font-black uppercase text-slate-400">{range}</span><span className="text-xs font-black">{count}</span></div>
-                      ))}
-                    </div>
+                  <div className="opacity-40 grayscale pointer-events-none">
+                    <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900"><Timer className="text-amber-500" size={16} /> Real-time Sync</h4>
+                    <p className="text-[10px] font-bold italic">Integrasi data kependudukan dan usia sedang disinkronkan oleh database trigger.</p>
                   </div>
                 </div>
               </div>
-              <div className="rounded-[2.5rem] bg-blue-600 p-10 text-left text-white shadow-2xl">
-                <Zap className="mb-6 text-blue-200" size={32} />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">Impact Pelatihan</p>
-                <p className="mt-2 text-2xl font-black italic tracking-tighter uppercase">&quot;{researchStats.impactScore}&quot;</p>
+              <div className="rounded-[2.5rem] bg-blue-600 p-10 text-left text-white shadow-2xl flex flex-col justify-between">
+                <div>
+                  <Zap className="mb-6 text-blue-200" size={32} />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 italic leading-none">Social Impact</p>
+                  <p className="mt-4 text-3xl font-black italic tracking-tighter uppercase leading-tight">Mendorong Kemandirian Ekonomi Talenta</p>
+                </div>
+                <div className="mt-8 border-t border-white/10 pt-4">
+                   <p className="text-[9px] font-bold uppercase opacity-60">Validated Analytics 2026</p>
+                </div>
               </div>
             </div>
           </div>
