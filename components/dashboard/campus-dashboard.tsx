@@ -36,7 +36,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     topLocations: [] as string[],
     impactScore: "",
     genderMap: { male: 0, female: 0 },
-    ageRanges: {} as Record<string, number>
+    ageRanges: { "18-24": 0, "25-34": 0, "35-44": 0, "45+": 0 } as Record<string, number>
   });
 
   const fetchDashboardData = useCallback(async () => {
@@ -54,7 +54,13 @@ export default function CampusDashboard({ user }: { user: any }) {
         setPartner(partnerData);
         calculateCompletion(partnerData);
         
-        // 2. IDENTIFIKASI AFILIASI (Table: certifications)
+        // 2. AMBIL DATA PROGRAM PELATIHAN
+        const { count: progCount } = await supabase
+          .from("trainings")
+          .select("*", { count: 'exact', head: true })
+          .eq("partner_id", user.id);
+
+        // 3. IDENTIFIKASI AFILIASI (Table: certifications - Menggunakan profile_id)
         const { data: certs } = await supabase
           .from("certifications")
           .select("profile_id")
@@ -62,7 +68,7 @@ export default function CampusDashboard({ user }: { user: any }) {
         
         const certProfileIds = Array.from(new Set(certs?.map(c => c.profile_id) || []));
 
-        // 3. AMBIL DATA DASAR TALENT (Table: profiles)
+        // 4. AMBIL DATA DASAR TALENT (Table: profiles)
         let query = supabase
           .from("profiles")
           .select("id, career_status, graduation_date, disability_type, city, skill_impact_rating, gender, date_of_birth");
@@ -107,7 +113,7 @@ export default function CampusDashboard({ user }: { user: any }) {
             hiredAlumni: employed,
             activeStudents: talenta.filter(t => (t.graduation_date || 0) > currentYear).length,
             employabilityRate: talenta.length > 0 ? Math.round((employed / talenta.length) * 100) : 0,
-            totalPrograms: 0 
+            totalPrograms: progCount || 0
           });
 
           setResearchStats({
@@ -120,7 +126,7 @@ export default function CampusDashboard({ user }: { user: any }) {
         }
       }
     } catch (e) {
-      console.error("Sync Error:", e);
+      console.error("Dashboard Sync Error:", e);
     } finally {
       setLoading(false);
     }
@@ -135,7 +141,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     setProfileCompletion(Math.round(((filledFields + hasAccommodations) / (fields.length + 1)) * 100));
   }const navigateTo = (tabId: string, label: string) => {
     setActiveTab(tabId);
-    setAnnouncement(`Menampilkan ${label}`);
+    setAnnouncement(`Menampilkan halaman ${label}`);
     window.scrollTo(0, 0);
   };
 
@@ -146,52 +152,73 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
       navigator.share({ title: partner?.name, text: caption, url: `https://disabilitas.com/partner/${partner?.id}` }).catch(console.error);
     } else {
       navigator.clipboard.writeText(caption);
-      alert("Caption disalin!");
+      alert("Caption viral disalin ke clipboard!");
     }
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center font-black uppercase italic text-slate-400">Loading Riset...</div>;
+  if (loading) return (
+    <div role="status" aria-live="polite" className="flex min-h-screen items-center justify-center p-20 text-center font-black uppercase italic tracking-tighter text-slate-400">
+      <Activity className="mr-2 animate-spin" />
+      Sinkronisasi Database Riset...
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900">
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
+      {/* HEADER SECTION - KEMBALINYA PROGRESS PROFIL */}
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 md:flex-row md:items-end">
         <div className="space-y-4 text-left">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-slate-900 p-2 text-white shadow-lg"><GraduationCap size={28} /></div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">Partner Dashboard</p>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name}</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 leading-none">Partner Dashboard</p>
+              <h1 className="mt-1 text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name || "Institusi Partner"}</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700">
+            <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700 shadow-sm">
               <ShieldCheck size={14} /> Skor Inklusi: {partner?.inclusion_score || 0}%
             </span>
             <div className="flex items-center gap-3 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 shadow-sm">
               <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
                 <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${profileCompletion}%` }} />
               </div>
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-tighter">Profil: {profileCompletion}%</span>
+              <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Profil: {profileCompletion}%</span>
             </div>
+            <a href={`/partner/${partner?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 transition-colors hover:border-slate-900 hover:text-slate-900">
+              <ExternalLink size={14} /> Profil Publik
+            </a>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button onClick={() => navigateTo("programs", "Program")} className="rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-blue-100 shadow-xl transition-all hover:bg-slate-900">Program Baru</button>
-          <button onClick={shareInclusionCard} className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900"><Share2 size={20} /></button>
+        <div className="flex w-full gap-3 md:w-auto">
+          <button onClick={() => navigateTo("programs", "Buat Program")} className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 md:flex-none">
+            <Plus size={18} /> Program Baru
+          </button>
+          <button onClick={shareInclusionCard} className="group flex items-center justify-center rounded-2xl border-2 border-slate-100 bg-white px-6 text-slate-900 shadow-sm transition-all hover:border-slate-900">
+            <Share2 size={20} className="transition-transform group-hover:rotate-12" />
+          </button>
         </div>
       </header>
 
+      {/* NAVIGATION TABS - KEMBALINYA TAB AKUN */}
       <nav className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist">
         {[
           { id: "overview", label: "Dashboard", icon: LayoutDashboard },
           { id: "programs", label: "Program", icon: BookOpen },
-          { id: "tracer", label: "Tracing", icon: BarChart3 },
-          { id: "profile", label: "Profil", icon: Settings }
+          { id: "tracer", label: "Tracing Alumni", icon: BarChart3 },
+          { id: "profile", label: "Profil Inklusi", icon: Settings },
+          { id: "account", label: "Akun", icon: Lock },
         ].map((tab) => (
-          <button key={tab.id} onClick={() => navigateTo(tab.id, tab.label)} className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "bg-slate-900 text-white shadow-xl -translate-y-1" : "bg-white border-2 border-slate-100 text-slate-400 hover:border-slate-900 hover:text-slate-900"}`}>
-            <tab.icon size={16} /> {tab.label}
+          <button
+            key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => navigateTo(tab.id, tab.label)}
+            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "bg-slate-900 text-white shadow-xl -translate-y-1" : "bg-white border-2 border-slate-100 text-slate-400 hover:border-slate-900 hover:text-slate-900"}`}
+          >
+            <tab.icon size={16} aria-hidden="true" /> {tab.label}
           </button>
         ))}
       </nav>
@@ -199,9 +226,10 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
       <main id="main-content" className="min-h-[600px]">
         {activeTab === "overview" && (
           <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-bottom-4">
+            {/* STATS GRID */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Talenta Terpeta</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total Talenta Terpeta</p>
                 <p className="mt-1 text-5xl font-black tracking-tighter">{stats.totalAlumni}</p>
               </div>
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
@@ -212,12 +240,16 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
                 <p className="text-[9px] font-black italic uppercase tracking-widest text-blue-500">Mahasiswa Aktif</p>
                 <p className="mt-1 text-5xl font-black tracking-tighter text-blue-600">{stats.activeStudents}</p>
               </div>
-              <div className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
-                <p className="text-[9px] font-black uppercase tracking-widest opacity-60 italic">Employability Rate</p>
-                <p className="text-6xl font-black italic tracking-tighter leading-none">{stats.employabilityRate}%</p>
+              <div className="group relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 italic text-white shadow-2xl transition-all hover:scale-[1.02]">
+                <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Employability Rate</p>
+                <p className="text-6xl font-black leading-none tracking-tighter">{stats.employabilityRate}%</p>
+                <p className="mt-4 flex items-center gap-2 text-[9px] font-bold uppercase text-emerald-400">
+                  <CheckCircle size={10} /> Validated Analytics
+                </p>
               </div>
             </div>
 
+            {/* STRATEGIC NARRATIVE - KEMBALI MUNCUL */}
             <section className="rounded-[3rem] border-2 border-slate-100 bg-slate-50 p-10 text-left italic shadow-inner">
               <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-blue-600">
                 <Award size={16} /> Analisis Naratif Strategis
@@ -235,6 +267,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
               </div>
             </section>
 
+            {/* RESEARCH WIDGETS */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
@@ -248,10 +281,11 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
                           <span>{type}</span><span>{count} Jiwa</span>
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                          <div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: `${(count / stats.totalAlumni) * 100}%` }} />
+                          <div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: `${(count / (stats.totalAlumni || 1)) * 100}%` }} />
                         </div>
                       </div>
                     ))}
+                    {stats.totalAlumni === 0 && <p className="text-[10px] italic text-slate-300">Data riset sedang disinkronkan...</p>}
                   </div>
                 </div>
 
@@ -262,11 +296,11 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
                     </h4>
                     <div className="flex gap-4">
                       <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-blue-500">
-                        <p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p>
+                        <p className="text-[8px] font-black uppercase text-slate-400 leading-none">Laki-laki</p>
                         <p className="mt-1 text-xl font-black leading-none">{researchStats.genderMap.male}</p>
                       </div>
                       <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-pink-500">
-                        <p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p>
+                        <p className="text-[8px] font-black uppercase text-slate-400 leading-none">Perempuan</p>
                         <p className="mt-1 text-xl font-black leading-none">{researchStats.genderMap.female}</p>
                       </div>
                     </div>
@@ -285,20 +319,6 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
                     </div>
                   </div>
                 </div>
-
-                <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm md:col-span-2">
-                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
-                    <MapPin className="text-red-500" size={16} /> Konsentrasi Wilayah Terbesar
-                  </h4>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    {researchStats.topLocations.map((city, idx) => (
-                      <div key={city} className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm">
-                        <span className="text-2xl font-black text-slate-200">0{idx + 1}</span>
-                        <p className="text-[10px] font-black uppercase leading-tight">{city}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               <div className="space-y-6 rounded-[2.5rem] bg-blue-600 p-10 text-left text-white shadow-2xl shadow-blue-200">
@@ -310,14 +330,12 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
           </div>
         )}
 
-        {activeTab !== "overview" && (
-           <div className="mt-2 duration-700 animate-in fade-in">
-              {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
-              {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
-              {activeTab === "profile" && <ProfileEditor partner={partner} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
-              {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
-           </div>
-        )}
+        <div className="mt-2 duration-700 animate-in fade-in">
+           {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+           {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+           {activeTab === "profile" && <ProfileEditor partner={partner} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
+           {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
+        </div>
       </main>
     </div>
   );
