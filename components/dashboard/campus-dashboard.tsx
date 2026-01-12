@@ -16,7 +16,7 @@ import TalentTracer from "./campus/talent-tracer";
 import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
 
-// Import Data Static sesuai standar platform
+// Import Data Static
 import { CAREER_STATUSES, AGE_RANGES } from "@/lib/data-static";
 
 export default function CampusDashboard({ user }: { user: any }) {
@@ -46,37 +46,50 @@ export default function CampusDashboard({ user }: { user: any }) {
     if (!user?.id) return;
     setLoading(true);
     try {
-      // 1. AMBIL DATA PARTNER (Table: partners)
+      // 1. AMBIL DATA PARTNER LENGKAP
       const { data: partnerData } = await supabase
         .from("partners")
         .select("*")
         .eq("id", user.id)
         .single();
       
-      if (partnerData) {
-        setPartner(partnerData);
-        calculateCompletion(partnerData);
-        
-        // 2. IDENTIFIKASI AFILIASI VIA SERTIFIKASI (Jembatan yang Mas buktikan di SQL)
-        const { data: certs } = await supabase
-          .from("certifications")
-          .select("profile_id")
-          .eq("organizer_name", partnerData.name);
-        
-        const certProfileIds = Array.from(new Set(certs?.map(c => c.profile_id) || []));
+      if (!partnerData) return;
+      setPartner(partnerData);
+      calculateCompletion(partnerData);
 
-        // 3. AMBIL DATA PROFIL TALENTA (Table: profiles)
-        let query = supabase
+      // 2. TAHAP 1: Ambil profile_id dari tabel certifications (Jembatan 2 Mas Dimas)
+      const { data: certs } = await supabase
+        .from("certifications")
+        .select("profile_id")
+        .eq("organizer_name", partnerData.name);
+      
+      const idsFromCerts = certs?.map(c => c.profile_id) || [];
+
+      // 3. TAHAP 2: Ambil ID dari profiles yang universitasnya cocok (Jembatan 3 Mas Dimas)
+      const { data: profilesByUni } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("university", partnerData.name);
+      
+      const idsFromUni = profilesByUni?.map(p => p.id) || [];
+
+      // 4. TAHAP 3: Ambil ID dari talenta yang dikunci manual oleh partner ini
+      const { data: profilesLocked } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("admin_partner_lock", user.id);
+      
+      const idsFromLock = profilesLocked?.map(p => p.id) || [];
+
+      // 5. GABUNGKAN SEMUA ID UNIK (Menghilangkan Duplikat)
+      const allUniqueIds = Array.from(new Set([...idsFromCerts, ...idsFromUni, ...idsFromLock]));
+
+      if (allUniqueIds.length > 0) {
+        // 6. AMBIL DATA LENGKAP HANYA UNTUK ID YANG TERIDENTIFIKASI
+        const { data: talenta } = await supabase
           .from("profiles")
-          .select("id, career_status, graduation_date, disability_type, city, skill_impact_rating, gender, date_of_birth");
-
-        // Logika Sinkronisasi: Ambil yang university cocok ATAU ID ada di list sertifikat
-        const orConditions = [`university.eq."${partnerData.name}"`, `admin_partner_lock.eq.${user.id}`];
-        if (certProfileIds.length > 0) {
-          orConditions.push(`id.in.(${certProfileIds.map(id => `'${id}'`).join(',')})`);
-        }
-        
-        const { data: talenta } = await query.or(orConditions.join(','));
+          .select("id, career_status, graduation_date, disability_type, city, skill_impact_rating, gender, date_of_birth")
+          .in("id", allUniqueIds);
 
         if (talenta) {
           const currentYear = new Date().getFullYear();
@@ -84,9 +97,7 @@ export default function CampusDashboard({ user }: { user: any }) {
           const locMap: Record<string, number> = {};
           const genderMap = { male: 0, female: 0 };
           const ageMap: Record<string, number> = {};
-          // Inisialisasi sesuai AGE_RANGES di data-static.ts
           AGE_RANGES.forEach(range => { ageMap[range] = 0; });
-          
           const impactCounts: Record<string, number> = {};
 
           talenta.forEach(t => {
@@ -168,7 +179,6 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900">
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
-      {/* HEADER SECTION - PROFILE PROGRESS KEMBALI */}
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 md:flex-row md:items-end">
         <div className="space-y-4 text-left">
           <div className="flex items-center gap-3">
@@ -191,7 +201,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => navigateTo("programs", "Program Baru")} className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-blue-100 shadow-xl transition-all hover:bg-slate-900 md:flex-none">
+          <button onClick={() => navigateTo("programs", "Program")} className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-blue-100 shadow-xl transition-all hover:bg-slate-900 md:flex-none">
             <Plus size={18} /> Program Baru
           </button>
           <button onClick={shareInclusionCard} className="group flex items-center justify-center rounded-2xl border-2 border-slate-100 bg-white px-6 text-slate-900 shadow-sm transition-all hover:border-slate-900">
@@ -200,7 +210,6 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
         </div>
       </header>
 
-      {/* NAVIGATION TABS - ACCOUNT KEMBALI */}
       <nav className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist">
         {[
           { id: "overview", label: "Dashboard", icon: LayoutDashboard },
@@ -241,7 +250,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
               <div className="group relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 italic text-white shadow-2xl transition-all hover:scale-[1.02]">
                 <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Employability Rate</p>
                 <p className="text-6xl font-black leading-none tracking-tighter">{stats.employabilityRate}%</p>
-                <p className="mt-4 flex items-center gap-2 text-[9px] font-bold uppercase text-emerald-400 italic">
+                <p className="mt-4 flex items-center gap-2 text-[9px] font-bold uppercase text-emerald-400">
                   <CheckCircle size={10} /> Validated Analytics
                 </p>
               </div>
@@ -283,6 +292,7 @@ Bangga mendukung talenta disabilitas bersama disabilitas.com! #IndonesiaInklusif
                         </div>
                       </div>
                     ))}
+                    {stats.totalAlumni === 0 && <p className="text-[10px] italic text-slate-300">Data riset sedang disinkronkan...</p>}
                   </div>
                 </div>
 
