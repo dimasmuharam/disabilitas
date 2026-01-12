@@ -103,33 +103,21 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
     <div className="mx-auto max-w-4xl space-y-10 pb-20 duration-500 animate-in fade-in">
       <div className="sr-only" aria-live="assertive">{statusMsg}</div>
 
-      <header className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div className="text-left">
-          <h2 className="text-2xl font-black italic tracking-tighter text-slate-900 uppercase">Profil & Audit Inklusi</h2>
-          <p className="mt-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase italic">Sinkronisasi data resmi untuk validitas riset nasional</p>
-        </div>
-        <div 
-          className="flex items-center gap-3 rounded-2xl bg-blue-600 px-6 py-3 text-white shadow-blue-100 shadow-lg"
-          aria-label={`Skor Aksesibilitas: ${partner?.inclusion_score || 0} persen`}
-        >
-          <ShieldCheck size={20} />
-          <div className="text-left leading-none">
-            <p className="text-[8px] font-black uppercase opacity-70">Inclusion Score</p>
-            <p className="text-lg font-black">{partner?.inclusion_score || 0}%</p>
-          </div>
-        </div>
+      <header className="border-b border-slate-100 pb-8 text-left">
+        <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Edit Profil Institusi</h2>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Perbarui data institusi untuk tracking data talenta yang terafiliasi dengan program-program Anda</p>
       </header>
 
       <form onSubmit={handleSave} className="space-y-8">
-        <section className="rounded-[3rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm space-y-6">
-          <div className="flex items-center gap-2 mb-4">
+        <section className="space-y-6 rounded-[3rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
             <Building2 className="text-blue-600" size={18} />
-            <h3 className="text-sm font-black italic tracking-widest uppercase">Identitas Resmi Institusi</h3>
+            <h3 className="text-sm font-black uppercase italic tracking-widest">Identitas Resmi</h3>
           </div>
           
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="inst-cat" className="text-[10px] font-black text-slate-400 uppercase">1. Kategori Institusi</label>
+              <label htmlFor="inst-cat" className="text-[10px] font-black uppercase text-slate-400">1. Kategori Institusi</label>
               <select 
                 id="inst-cat"
                 className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
