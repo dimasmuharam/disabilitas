@@ -14,9 +14,6 @@ import {
   TRAINING_PARTNERS, 
   NONPROFIT_ORG_LIST,
   UNIVERSITIES,
-  SKILL_ACQUISITION_METHODS,
-  TRAINING_ACCESSIBILITY_SCORES,
-  SKILL_IMPACT_LEVELS,
   TRAINING_ORGANIZER_CATEGORIES
 } from "@/lib/data-static";
 
@@ -162,8 +159,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
-        {/* SECTION: DAFTAR KEAHLIAN UTAMA */}
-        <section className="space-y-6 rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm">
+        <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm space-y-6">
           <div className="flex items-center gap-3 text-purple-600">
             <Cpu size={20} />
             <h2 className="text-xs font-black uppercase tracking-[0.2em]">Daftar Keahlian Utama</h2>
@@ -204,7 +200,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </div>
         </section>
 
-        {/* SECTION: RIWAYAT PELATIHAN */}
         <div className="space-y-6">
           <div className="flex items-center justify-between px-4">
             <h2 className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em]">
@@ -223,7 +218,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
             {certs.map((cert, index) => (
               <section 
                 key={cert.id} 
-                className="relative space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm animate-in slide-in-from-top-4"
+                className="relative rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm space-y-8 animate-in slide-in-from-top-4"
                 aria-label={`Formulir pelatihan nomor ${certs.length - index}`}
               >
                 <div className="flex items-center justify-between border-b border-slate-50 pb-4">
@@ -242,7 +237,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                   <div className="space-y-2">
                     <label htmlFor={`name-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Judul Pelatihan</label>
                     <input 
-                      ref={el => (certNameRefs.current[cert.id] = el)}
+                      ref={(el) => { certNameRefs.current[cert.id] = el; }}
                       id={`name-${cert.id}`}
                       value={cert.name}
                       onChange={(e) => updateCertField(cert.id, "name", e.target.value)}
@@ -279,7 +274,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                     <label htmlFor={`org-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Nama Institusi Resmi</label>
                     <div className="relative">
                       <select 
-                        ref={el => (orgNameRefs.current[cert.id] = el)}
+                        ref={(el) => { orgNameRefs.current[cert.id] = el; }}
                         id={`org-${cert.id}`}
                         disabled={!cert.organizer_category}
                         value={cert.organizer_name}
@@ -291,7 +286,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                           <option key={inst} value={inst}>{inst === "LAINNYA" ? "+ INSTITUSI TIDAK TERDAFTAR" : inst}</option>
                         ))}
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 text-slate-400 -translate-y-1/2" size={18} />
                     </div>
                   </div>
 
