@@ -33,9 +33,9 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   const [certs, setCerts] = useState<any[]>([]);
   const [selectedSkillFromList, setSelectedSkillFromList] = useState("");
   
-  // Ref untuk mengatur fokus otomatis bagi screen reader
-  const certNameRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
-  const orgNameRefs = useRef<{[key: string]: HTMLSelectElement | null}>({});
+  // Perbaikan tipe data Ref untuk TypeScript
+  const certNameRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const orgNameRefs = useRef<Record<string, HTMLSelectElement | null>>({});
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -74,7 +74,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       is_verified: false
     };
     setCerts([newItem, ...certs]);
-    // Pindahkan fokus ke judul pelatihan baru agar screen reader langsung tahu
     setTimeout(() => {
       certNameRefs.current[newId]?.focus();
     }, 100);
@@ -82,8 +81,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
   const updateCertField = (id: string, field: string, value: any) => {
     setCerts(certs.map(c => c.id === id ? { ...c, [field]: value } : c));
-    
-    // Jika user selesai pilih kategori, arahkan fokus ke Nama Institusi
     if (field === "organizer_category" && value !== "") {
       setTimeout(() => {
         orgNameRefs.current[id]?.focus();
@@ -152,13 +149,12 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     else if (category === "Organisasi / Komunitas Disabilitas") baseList = NONPROFIT_ORG_LIST;
     return [...baseList, "LAINNYA"];
   };
-
   return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900">
       <div className="sr-only" aria-live="assertive">{message.text}</div>
 
       <header className="mb-10 px-4 text-left">
-        <h1 className="flex items-center gap-4 text-4xl font-black italic tracking-tighter uppercase">
+        <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter">
           <Zap className="text-purple-600" size={36} /> Keahlian & Pelatihan
         </h1>
         <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -167,15 +163,15 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
-        {/* SKILLS SECTION */}
-        <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm space-y-6">
+        {/* SECTION: DAFTAR KEAHLIAN UTAMA */}
+        <section className="space-y-6 rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm">
           <div className="flex items-center gap-3 text-purple-600">
             <Cpu size={20} />
             <h2 className="text-xs font-black uppercase tracking-[0.2em]">Daftar Keahlian Utama</h2>
           </div>
           
           <div className="space-y-4">
-            <label htmlFor="skill-select" className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Pilih keahlian yang Anda kuasai</label>
+            <label htmlFor="skill-select" className="ml-2 text-[10px] font-black uppercase italic text-slate-400">Pilih keahlian yang Anda kuasai</label>
             <div className="flex gap-3">
               <select 
                 id="skill-select"
@@ -196,7 +192,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-2" role="list" aria-label="Daftar keahlian saya saat ini">
+            <div className="flex flex-wrap gap-2" role="list" aria-label="Daftar keahlian saya">
               {globalSkills.map(s => (
                 <span key={s} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-white shadow-md">
                   {s}
@@ -209,7 +205,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </div>
         </section>
 
-        {/* RIWAYAT PELATIHAN */}
+        {/* SECTION: RIWAYAT PELATIHAN */}
         <div className="space-y-6">
           <div className="flex items-center justify-between px-4">
             <h2 className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em]">
@@ -228,14 +224,14 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
             {certs.map((cert, index) => (
               <section 
                 key={cert.id} 
-                className="relative rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm space-y-8 animate-in slide-in-from-top-4"
+                className="relative space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm animate-in slide-in-from-top-4"
                 aria-label={`Formulir pelatihan nomor ${certs.length - index}`}
               >
                 <div className="flex items-center justify-between border-b border-slate-50 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase text-slate-300 italic">Data #{certs.length - index}</span>
+                    <span className="text-[10px] font-black uppercase italic text-slate-300">Data #{certs.length - index}</span>
                     {cert.is_verified && (
-                      <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600 border border-emerald-100">
+                      <span className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600">
                         <BadgeCheck size={12} /> Terverifikasi
                       </span>
                     )}
@@ -296,33 +292,33 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                           <option key={inst} value={inst}>{inst === "LAINNYA" ? "+ INSTITUSI TIDAK TERDAFTAR" : inst}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     </div>
                   </div>
 
                   {cert.organizer_name === "LAINNYA" && (
-                    <div className="md:col-span-2 space-y-2 animate-in zoom-in-95">
-                      <label htmlFor={`manual-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-pink-600 italic">Input Manual Nama Institusi (Mohon ketik lengkap)</label>
+                    <div className="space-y-2 md:col-span-2 animate-in zoom-in-95">
+                      <label htmlFor={`manual-${cert.id}`} className="ml-2 text-[10px] font-black uppercase italic text-pink-600">Input Manual Nama Institusi</label>
                       <input 
                         id={`manual-${cert.id}`}
                         value={cert.manual_organizer}
                         onChange={(e) => updateCertField(cert.id, "manual_organizer", e.target.value)}
                         className="w-full rounded-2xl border-2 border-pink-200 bg-pink-50 p-4 font-bold outline-none focus:border-pink-600"
-                        placeholder="Masukkan nama institusi yang tidak ada di daftar..."
+                        placeholder="Ketik nama lengkap institusi..."
                       />
                     </div>
                   )}
 
-                  <div className="md:col-span-2 space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <label htmlFor={`url-${cert.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
-                      <LinkIcon size={12} /> Tautan Sertifikat / Bukti Pelatihan (Opsional)
+                      <LinkIcon size={12} /> Tautan Sertifikat (Opsional)
                     </label>
                     <input 
                       id={`url-${cert.id}`}
                       type="url"
                       value={cert.certificate_url}
                       onChange={(e) => updateCertField(cert.id, "certificate_url", e.target.value)}
-                      placeholder="https://google-drive-link-atau-lainnya.com"
+                      placeholder="https://link-bukti-pelatihan.com"
                       className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
                     />
                   </div>
@@ -335,11 +331,4 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
         <button 
           type="submit" 
           disabled={loading}
-          className="flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-6 text-sm font-black italic tracking-widest text-white shadow-2xl transition-all uppercase hover:bg-purple-600 disabled:opacity-50"
-        >
-          {loading ? "Menyimpan Data..." : <><Save size={20} /> Simpan Seluruh Keahlian & Pelatihan</>}
-        </button>
-      </form>
-    </div>
-  );
-}
+          className="flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-6 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-purple
