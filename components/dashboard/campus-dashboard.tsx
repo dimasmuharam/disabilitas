@@ -6,7 +6,7 @@ import {
   GraduationCap, Users, BookOpen, BarChart3, Settings, 
   ShieldCheck, Share2, AlertCircle, Plus, LayoutDashboard,
   ArrowLeft, Activity, Award, Lock, CheckCircle,
-  MapPin, Zap, Venus, Mars, Timer, ExternalLink
+  MapPin, Zap, User, UserPlus, Timer, ExternalLink
 } from "lucide-react";
 
 // Import Modul Pendukung
@@ -17,7 +17,7 @@ import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
 
 // Import List dari Data Static
-import { CAREER_STATUSES, DISABILITY_TYPES } from "@/lib/data-static";
+import { CAREER_STATUSES } from "@/lib/data-static";
 
 export default function CampusDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -46,7 +46,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     if (!user?.id) return;
     setLoading(true);
     try {
-      // 1. Ambil Data Partner Lengkap
+      // 1. Ambil Data Partner
       const { data: partnerData } = await supabase
         .from("partners")
         .select("*")
@@ -58,13 +58,13 @@ export default function CampusDashboard({ user }: { user: any }) {
         calculateCompletion(partnerData);
       }
 
-      // 2. Hitung Statistik Program
+      // 2. Hitung Program
       const { count: progCount } = await supabase
         .from("trainings")
         .select("*", { count: 'exact', head: true })
         .eq("partner_id", user.id);
 
-      // 3. Logika Tracing Talenta (Exact Match Nama Institusi)
+      // 3. Tracing Talenta (Exact Match)
       const { data: certs } = await supabase
         .from("certifications")
         .select("profile_id")
@@ -75,7 +75,7 @@ export default function CampusDashboard({ user }: { user: any }) {
         ? certProfileIds.map(id => `'${id}'`).join(',') 
         : "'00000000-0000-0000-0000-000000000000'";
 
-      // 4. Ambil Profil Talenta Terafiliasi
+      // 4. Ambil Profil Talenta
       const { data: talenta } = await supabase
         .from("profiles")
         .select("id, career_status, graduation_date, disability_type, city, skill_impact_rating, gender, birth_date")
@@ -83,8 +83,6 @@ export default function CampusDashboard({ user }: { user: any }) {
 
       if (talenta) {
         const currentYear = new Date().getFullYear();
-        
-        // --- ANALISIS RISET ---
         const disMap: Record<string, number> = {};
         const locMap: Record<string, number> = {};
         const genderMap = { Laki_laki: 0, Perempuan: 0 };
@@ -92,17 +90,10 @@ export default function CampusDashboard({ user }: { user: any }) {
         const impactCounts: Record<string, number> = {};
 
         talenta.forEach(t => {
-          // Ragam Disabilitas
           if (t.disability_type) disMap[t.disability_type] = (disMap[t.disability_type] || 0) + 1;
-          
-          // Lokasi
           if (t.city) locMap[t.city] = (locMap[t.city] || 0) + 1;
-          
-          // Gender
           if (t.gender === "Laki-laki") genderMap.Laki_laki++;
           if (t.gender === "Perempuan") genderMap.Perempuan++;
-
-          // Usia (Prediksi Sederhana dari Tahun Lahir)
           if (t.birth_date) {
             const age = currentYear - new Date(t.birth_date).getFullYear();
             if (age <= 24) ageMap["18-24"]++;
@@ -110,17 +101,12 @@ export default function CampusDashboard({ user }: { user: any }) {
             else if (age <= 44) ageMap["35-44"]++;
             else ageMap["45+"]++;
           }
-
-          // Impact
           if (t.skill_impact_rating) impactCounts[t.skill_impact_rating] = (impactCounts[t.skill_impact_rating] || 0) + 1;
         });
 
         const topLocs = Object.entries(locMap).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([city]) => city);
         const topImpact = Object.entries(impactCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || "Belum Ada Data";
-
-        const employed = talenta.filter(t => 
-          !["Job Seeker", "Belum Bekerja", "Pelajar / Mahasiswa", "Fresh Graduate"].includes(t.career_status)
-        ).length;
+        const employed = talenta.filter(t => !["Job Seeker", "Belum Bekerja", "Pelajar / Mahasiswa", "Fresh Graduate"].includes(t.career_status)).length;
 
         setStats({
           totalAlumni: talenta.length,
@@ -159,7 +145,7 @@ export default function CampusDashboard({ user }: { user: any }) {
   };
 
   const shareInclusionCard = () => {
-    const caption = `[SKOR INKLUSI: ${partner?.inclusion_score}%] 
+    const caption = `[SKOR INKLUSI: ${partner?.inclusion_score || 0}%] 
 
 Bangga menjadi bagian dari ekosistem inklusif disabilitas.com! ${partner?.name} berkomitmen mendukung potensi talenta disabilitas melalui aksesibilitas dan program berkelanjutan. 
 
@@ -178,7 +164,7 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
   };
 
   if (loading) return (
-    <div role="status" aria-live="polite" className="flex min-h-screen items-center justify-center p-20 text-center font-black uppercase italic tracking-tighter text-slate-400">
+    <div role="status" aria-live="polite" className="flex min-h-screen items-center justify-center p-20 text-center font-black italic tracking-tighter text-slate-400 uppercase">
       <Activity className="mr-2 animate-spin" />
       Sinkronisasi Database Riset...
     </div>
@@ -196,22 +182,22 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
               <GraduationCap size={28} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 leading-none">Partner Dashboard</p>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none mt-1">
+              <p className="text-[10px] font-black leading-none tracking-[0.3em] text-blue-600 uppercase">Partner Dashboard</p>
+              <h1 className="mt-1 text-4xl font-black italic leading-none tracking-tighter text-slate-900 uppercase">
                 {partner?.name || "Institusi Partner"}
               </h1>
             </div>
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
-            <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700">
+            <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black text-emerald-700 uppercase">
               <ShieldCheck size={14} /> Skor Inklusi: {partner?.inclusion_score || 0}%
             </span>
             <a 
               href={`/p/${partner?.id}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 transition-colors hover:border-slate-900 hover:text-slate-900"
+              className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black text-slate-600 transition-colors hover:border-slate-900 hover:text-slate-900 uppercase"
             >
               <ExternalLink size={14} /> Lihat Profil Publik
             </a>
@@ -221,7 +207,7 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
         <div className="flex w-full gap-3 md:w-auto">
           <button 
             onClick={() => navigateTo("programs", "Buat Program")}
-            className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 md:flex-none"
+            className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 py-5 text-[11px] font-black italic text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 md:flex-none uppercase"
           >
             <Plus size={18} /> Program Baru
           </button>
@@ -249,7 +235,7 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => navigateTo(tab.id, tab.label)}
-            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${
+            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black transition-all uppercase ${
               activeTab === tab.id 
                 ? "bg-slate-900 text-white shadow-xl -translate-y-1" 
                 : "bg-white border-2 border-slate-100 text-slate-400 hover:border-slate-900 hover:text-slate-900"
@@ -268,7 +254,7 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
             {/* STATS GRID UTAMA */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-                <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Total Talenta Terpeta</p>
+                <p className="mb-1 text-[9px] font-black tracking-widest text-slate-400 uppercase">Total Talenta Terpeta</p>
                 <div className="flex items-end gap-2 text-slate-900">
                   <p className="text-5xl font-black tracking-tighter">{stats.totalAlumni}</p>
                   <span className="mb-2 text-[10px] font-bold uppercase">Orang</span>
@@ -276,7 +262,7 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
               </div>
               
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-                <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-emerald-500 italic">Terserap Kerja</p>
+                <p className="mb-1 text-[9px] font-black tracking-widest text-emerald-500 italic uppercase">Terserap Kerja</p>
                 <div className="flex items-end gap-2 text-emerald-600">
                   <p className="text-5xl font-black tracking-tighter">{stats.hiredAlumni}</p>
                   <span className="mb-2 text-[10px] font-bold uppercase">Orang</span>
@@ -284,17 +270,17 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
               </div>
 
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-                <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-blue-500 italic">Mahasiswa/Trainee Aktif</p>
+                <p className="mb-1 text-[9px] font-black tracking-widest text-blue-500 italic uppercase">Mahasiswa Aktif</p>
                 <div className="flex items-end gap-2 text-blue-600">
                   <p className="text-5xl font-black tracking-tighter">{stats.activeStudents}</p>
-                  <span className="mb-2 text-[10px] font-bold uppercase tracking-tighter">Dalam Proses</span>
+                  <span className="mb-2 text-[10px] font-bold tracking-tighter uppercase">Proses</span>
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl transition-all hover:scale-[1.02]">
-                <p className="mb-1 text-[9px] font-black uppercase tracking-widest opacity-60 italic">Employability Rate</p>
-                <p className="text-6xl font-black leading-none tracking-tighter italic">{stats.employabilityRate}%</p>
-                <p className="mt-4 flex items-center gap-2 text-[9px] font-bold uppercase text-emerald-400">
+              <div className="group relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 italic text-white shadow-2xl transition-all hover:scale-[1.02]">
+                <p className="mb-1 text-[9px] font-black tracking-widest opacity-60 uppercase">Employability Rate</p>
+                <p className="text-6xl font-black leading-none tracking-tighter">{stats.employabilityRate}%</p>
+                <p className="mt-4 flex items-center gap-2 text-[9px] font-bold text-emerald-400 uppercase">
                   <CheckCircle size={10} /> Validated Analytics
                 </p>
               </div>
@@ -306,17 +292,17 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
                 
                 {/* WIDGET: PROPORSI DISABILITAS */}
                 <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
-                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
+                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black tracking-widest text-slate-900 uppercase">
                     <Users size={16} className="text-purple-600" /> Ragam Disabilitas
                   </h4>
                   <div className="space-y-4">
                     {Object.entries(researchStats.disabilityMap).map(([type, count]) => (
                       <div key={type} className="space-y-1">
-                        <div className="flex justify-between text-[9px] font-black uppercase text-slate-500">
+                        <div className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
                           <span>{type}</span>
                           <span>{count} Jiwa</span>
                         </div>
-                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                           <div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: `${(count / stats.totalAlumni) * 100}%` }} />
                         </div>
                       </div>
@@ -327,27 +313,27 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
                 {/* WIDGET: DEMOGRAFI GENDER & USIA */}
                 <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm space-y-8">
                   <div>
-                    <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
-                      <Venus size={16} className="text-pink-500" /> / <Mars size={16} className="text-blue-500" /> Gender
+                    <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black tracking-widest text-slate-900 uppercase">
+                      <User size={16} className="text-blue-500" /> / <UserPlus size={16} className="text-pink-500" /> Gender
                     </h4>
                     <div className="flex gap-4">
-                      <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-blue-500">
-                        <p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p>
+                      <div className="flex-1 rounded-2xl border-l-4 border-blue-500 bg-slate-50 p-4">
+                        <p className="text-[8px] font-black text-slate-400 uppercase">Laki-laki</p>
                         <p className="text-xl font-black">{researchStats.genderMap.Laki_laki}</p>
                       </div>
-                      <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-l-4 border-pink-500">
-                        <p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p>
+                      <div className="flex-1 rounded-2xl border-l-4 border-pink-500 bg-slate-50 p-4">
+                        <p className="text-[8px] font-black text-slate-400 uppercase">Perempuan</p>
                         <p className="text-xl font-black">{researchStats.genderMap.Perempuan}</p>
                       </div>
                     </div>
                   </div>
                   <div>
-                    <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
+                    <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black tracking-widest text-slate-900 uppercase">
                       <Timer size={16} className="text-amber-500" /> Distribusi Usia
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(researchStats.ageRanges).map(([range, count]) => (
-                        <div key={range} className="rounded-xl bg-slate-50 p-3 flex justify-between items-center">
+                        <div key={range} className="flex items-center justify-between rounded-xl bg-slate-50 p-3">
                           <span className="text-[9px] font-black text-slate-400">{range} Thn</span>
                           <span className="text-xs font-black">{count}</span>
                         </div>
@@ -358,14 +344,14 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
 
                 {/* WIDGET: PERSEBARAN WILAYAH */}
                 <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm md:col-span-2">
-                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
+                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black tracking-widest text-slate-900 uppercase">
                     <MapPin size={16} className="text-red-500" /> Konsentrasi Wilayah Terbesar
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {researchStats.topLocations.map((city, idx) => (
                       <div key={city} className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                         <span className="text-2xl font-black text-slate-200">0{idx + 1}</span>
-                        <p className="text-[10px] font-black uppercase leading-tight">{city}</p>
+                        <p className="text-[10px] font-black leading-tight uppercase">{city}</p>
                       </div>
                     ))}
                   </div>
@@ -376,13 +362,13 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
               <div className="space-y-6">
                 <div className="rounded-[2.5rem] bg-blue-600 p-10 text-left text-white shadow-2xl shadow-blue-200">
                   <Zap size={32} className="mb-6 text-blue-200" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">Kebermanfaatan Program</p>
-                  <p className="mt-2 text-2xl font-black italic uppercase tracking-tighter leading-tight">
+                  <p className="text-[10px] font-black tracking-[0.2em] opacity-70 uppercase">Kebermanfaatan Program</p>
+                  <p className="mt-2 text-2xl font-black italic leading-tight tracking-tighter uppercase">
                     &quot;{researchStats.impactScore}&quot;
                   </p>
                   <div className="mt-8 border-t border-blue-500 pt-6">
-                    <p className="text-[10px] font-medium leading-relaxed italic opacity-80">
-                      Prediksi: Kualitas kurikulum <strong>{partner?.name}</strong> berpotensi meningkatkan keterserapan kerja talenta sebesar 15% pada semester mendatang.
+                    <p className="text-[10px] font-medium italic leading-relaxed opacity-80">
+                      Insight: Kualitas kurikulum <strong>{partner?.name}</strong> berpotensi meningkatkan keterserapan kerja talenta sebesar 15% pada kuartal mendatang.
                     </p>
                   </div>
                 </div>
@@ -391,7 +377,6 @@ Mari wujudkan Indonesia inklusif! #DisabilitasBisa #IndonesiaInklusif #Inclusive
           </div>
         )}
 
-        {/* TAB RENDERING */}
         <div className="mt-2 duration-700 animate-in fade-in">
            {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
            {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
