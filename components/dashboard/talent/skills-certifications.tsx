@@ -33,7 +33,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   const [certs, setCerts] = useState<any[]>([]);
   const [selectedSkillFromList, setSelectedSkillFromList] = useState("");
   
-  // Perbaikan tipe data Ref untuk TypeScript
   const certNameRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const orgNameRefs = useRef<Record<string, HTMLSelectElement | null>>({});
 
@@ -81,6 +80,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
   const updateCertField = (id: string, field: string, value: any) => {
     setCerts(certs.map(c => c.id === id ? { ...c, [field]: value } : c));
+    
     if (field === "organizer_category" && value !== "") {
       setTimeout(() => {
         orgNameRefs.current[id]?.focus();
@@ -148,8 +148,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     else if (category === "Mitra Pelatihan (LKP/LPK)") baseList = TRAINING_PARTNERS;
     else if (category === "Organisasi / Komunitas Disabilitas") baseList = NONPROFIT_ORG_LIST;
     return [...baseList, "LAINNYA"];
-  };
-  return (
+  };return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900">
       <div className="sr-only" aria-live="assertive">{message.text}</div>
 
@@ -243,7 +242,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                   <div className="space-y-2">
                     <label htmlFor={`name-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Judul Pelatihan</label>
                     <input 
-                      ref={el => certNameRefs.current[cert.id] = el}
+                      ref={el => (certNameRefs.current[cert.id] = el)}
                       id={`name-${cert.id}`}
                       value={cert.name}
                       onChange={(e) => updateCertField(cert.id, "name", e.target.value)}
@@ -280,7 +279,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                     <label htmlFor={`org-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Nama Institusi Resmi</label>
                     <div className="relative">
                       <select 
-                        ref={el => orgNameRefs.current[cert.id] = el}
+                        ref={el => (orgNameRefs.current[cert.id] = el)}
                         id={`org-${cert.id}`}
                         disabled={!cert.organizer_category}
                         value={cert.organizer_name}
@@ -331,4 +330,11 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
         <button 
           type="submit" 
           disabled={loading}
-          className="flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-6 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-purple
+          className="flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-6 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-purple-600 disabled:opacity-50"
+        >
+          {loading ? "Menyimpan Data..." : <><Save size={20} /> Simpan Seluruh Keahlian & Pelatihan</>}
+        </button>
+      </form>
+    </div>
+  );
+}
