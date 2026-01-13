@@ -1,19 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Building2, Globe, MapPin, Save, ShieldCheck, 
-  CheckCircle2, AlertCircle, FileText, ChevronDown 
-} from "lucide-react";
+  CheckCircle2, AlertCircle, FileText, ChevronDown, ArrowLeft
+} from "lucide-center";
 import { 
   ACCOMMODATION_TYPES, 
-  TRAINING_ORGANIZER_CATEGORIES,
   INDONESIA_CITIES,
-  UNIVERSITIES,
-  GOVERNMENT_AGENCIES_LIST,
-  TRAINING_PARTNERS,
-  NONPROFIT_ORG_LIST
+  TRAINING_PARTNERS // Hanya menggunakan ini sebagai acuan tunggal
 } from "@/lib/data-static";
 
 interface ProfileEditorProps {
@@ -25,39 +21,35 @@ interface ProfileEditorProps {
 export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEditorProps) {
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
+  const [isCustomName, setIsCustomName] = useState(false);
   
-  const instNameRef = useRef<HTMLSelectElement>(null);
-  const locationRef = useRef<HTMLSelectElement>(null);
-
   const [formData, setFormData] = useState({
     name: partner?.name || "",
     description: partner?.description || "",
     website: partner?.website || "",
     location: partner?.location || "",
-    category: partner?.category || "Perguruan Tinggi",
     nib_number: partner?.nib_number || "",
     manual_name: "",
     master_accommodations_provided: partner?.master_accommodations_provided || []
   });
 
-  const getInstitutionOptions = () => {
-    switch (formData.category) {
-      case "Perguruan Tinggi": return UNIVERSITIES;
-      case "Pemerintah": return GOVERNMENT_AGENCIES_LIST;
-      case "Mitra Pelatihan (LKP/LPK)": return TRAINING_PARTNERS;
-      case "Organisasi / Komunitas Disabilitas": return NONPROFIT_ORG_LIST;
-      default: return [];
+  useEffect(() => {
+    // Cek jika nama saat ini adalah input manual (tidak ada di list standar)
+    if (formData.name && !TRAINING_PARTNERS.includes(formData.name)) {
+      setIsCustomName(true);
+      setFormData(prev => ({ ...prev, manual_name: partner.name, name: "LAINNYA" }));
     }
-  };
+  }, []);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setStatusMsg("Sedang sinkronisasi database...");
+    setStatusMsg("Sinkronisasi data riset...");
     
     const finalName = formData.name === "LAINNYA" ? formData.manual_name : formData.name;
 
     try {
+      // Log input manual untuk audit Super Admin nanti
       if (formData.name === "LAINNYA" && formData.manual_name) {
         await supabase.from("manual_input_logs").insert([{
           field_name: "partner_name_manual",
@@ -72,7 +64,6 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
           description: formData.description,
           website: formData.website,
           location: formData.location,
-          category: formData.category,
           nib_number: formData.nib_number,
           master_accommodations_provided: formData.master_accommodations_provided,
           updated_at: new Date()
@@ -81,11 +72,10 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
 
       if (error) throw error;
 
-      setStatusMsg("Sukses! Profil berhasil diperbarui.");
+      setStatusMsg("Data Berhasil Diperbarui!");
       setTimeout(() => onUpdate(), 1500);
     } catch (err: any) {
       setStatusMsg("Gagal: " + err.message);
-      alert("Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -100,189 +90,158 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 pb-20 duration-500 animate-in fade-in">
-      <div className="sr-only" aria-live="assertive">{statusMsg}</div>
+    <div className="mx-auto max-w-5xl space-y-10 pb-20 duration-500 animate-in fade-in">
+      {/* HEADER NAV */}
+      <div className="mb-10 flex items-center justify-between border-b-4 border-slate-900 pb-6">
+        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900">
+          <ArrowLeft size={16} /> Batal
+        </button>
+        <div className="text-right text-slate-900">
+          <h2 className="text-2xl font-black uppercase italic tracking-tighter">Profil Mitra Pelatihan</h2>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Standardisasi: Training Partners List</p>
+        </div>
+      </div>
 
-      <header className="border-b border-slate-100 pb-8 text-left">
-        <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Edit Profil Institusi</h2>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Perbarui data institusi untuk tracking data talenta yang terafiliasi dengan program-program Anda</p>
-      </header>
-
-      <form onSubmit={handleSave} className="space-y-8">
-        <section className="space-y-6 rounded-[3rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <Building2 className="text-blue-600" size={18} />
-            <h3 className="text-sm font-black uppercase italic tracking-widest">Identitas Resmi</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <label htmlFor="inst-cat" className="text-[10px] font-black uppercase text-slate-400">1. Kategori Institusi</label>
-              <select 
-                id="inst-cat"
-                className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
-                value={formData.category}
-                onChange={(e) => {
-                  setFormData({...formData, category: e.target.value, name: ""});
-                  setTimeout(() => instNameRef.current?.focus(), 100);
-                }}
-              >
-                {TRAINING_ORGANIZER_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
-            </div>{/* NAMA RESMI (CLOSED LIST) */}
-            <div className="space-y-2">
-              <label htmlFor="inst-name" className="text-[10px] font-black uppercase text-slate-400">2. Nama Institusi Resmi</label>
-              <div className="relative">
-                <select 
-                  ref={instNameRef}
-                  id="inst-name"
-                  required
-                  className="w-full appearance-none rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({...formData, name: e.target.value});
-                    if(e.target.value !== "LAINNYA") setTimeout(() => locationRef.current?.focus(), 100);
-                  }}
-                >
-                  <option value="">-- Pilih Nama Resmi --</option>
-                  {getInstitutionOptions().map(inst => <option key={inst} value={inst}>{inst}</option>)}
-                  <option value="LAINNYA">+ INSTITUSI TIDAK TERDAFTAR</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-              </div>
+      <form onSubmit={handleSave} className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2 text-left">
+          {/* IDENTITAS UTAMA */}
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
+            <div className="flex items-center gap-2">
+              <Building2 className="text-blue-600" size={20} />
+              <h3 className="text-xs font-black uppercase tracking-widest italic">Kredensial Institusi</h3>
             </div>
+            
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              {/* NAMA PENYELENGGARA - DROPDOWN DARI TRAINING_PARTNERS */}
+              <div className="md:col-span-2 space-y-3">
+                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Pilih Nama Lembaga Pelatihan (List Resmi)</label>
+                {!isCustomName ? (
+                  <div className="relative">
+                    <select 
+                      required
+                      className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
+                      value={formData.name}
+                      onChange={(e) => {
+                        if (e.target.value === "LAINNYA") {
+                          setIsCustomName(true);
+                          setFormData({...formData, name: "LAINNYA"});
+                        } else {
+                          setFormData({...formData, name: e.target.value});
+                        }
+                      }}
+                    >
+                      <option value="">-- Pilih Lembaga Pelatihan --</option>
+                      {TRAINING_PARTNERS.map(inst => <option key={inst} value={inst}>{inst}</option>)}
+                      <option value="LAINNYA" className="text-blue-600 font-black italic">+ TAMBAHKAN NAMA BARU</option>
+                    </select>
+                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
+                  </div>
+                ) : (
+                  <div className="space-y-3 animate-in zoom-in-95">
+                    <input 
+                      type="text"
+                      className="w-full rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
+                      placeholder="Ketik Nama Lengkap Lembaga..."
+                      value={formData.manual_name}
+                      onChange={(e) => setFormData({...formData, manual_name: e.target.value})}
+                      required
+                    />
+                    <button type="button" onClick={() => setIsCustomName(false)} className="text-[9px] font-black uppercase text-blue-600 underline">
+                      Kembali ke Daftar Resmi
+                    </button>
+                  </div>
+                )}
+              </div>
 
-            {/* INPUT MANUAL JIKA LAINNYA */}
-            {formData.name === "LAINNYA" && (
-              <div className="md:col-span-2 space-y-2 animate-in zoom-in-95">
-                <label htmlFor="inst-manual" className="text-[10px] font-black italic uppercase text-pink-600">Input Manual Nama Lengkap Institusi</label>
+              {/* LOKASI STANDAR */}
+              <div className="space-y-3">
+                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Lokasi Kota (Domisili)</label>
+                <div className="relative">
+                  <select 
+                    className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    required
+                  >
+                    <option value="">Pilih Kota</option>
+                    {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Legalitas (NIB/Izin)</label>
                 <input 
-                  id="inst-manual"
-                  className="w-full rounded-2xl border-2 border-pink-200 bg-pink-50 p-4 font-bold outline-none focus:border-pink-600"
-                  placeholder="Ketik nama lengkap tanpa singkatan..."
-                  value={formData.manual_name}
-                  onChange={(e) => setFormData({...formData, manual_name: e.target.value})}
+                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
+                  placeholder="Masukkan Nomor Izin"
+                  value={formData.nib_number}
+                  onChange={(e) => setFormData({...formData, nib_number: e.target.value})}
                 />
               </div>
-            )}
 
-            <div className="space-y-2">
-              <label htmlFor="inst-reg" className="text-[10px] font-black uppercase text-blue-600 italic">Nomor Registrasi (NIB/Izin)</label>
-              <input 
-                id="inst-reg"
-                className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold transition-all outline-none focus:border-blue-600"
-                placeholder="Contoh: 123456789"
-                value={formData.nib_number}
-                onChange={(e) => setFormData({...formData, nib_number: e.target.value})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="inst-loc" className="text-[10px] font-black uppercase text-slate-400">Domisili Kota / Kabupaten</label>
-              <select 
-                ref={locationRef}
-                id="inst-loc"
-                className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
-                value={formData.location}
-                onChange={(e) => setFormData({...formData, location: e.target.value})}
-              >
-                <option value="">Pilih Kota</option>
-                {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
-              </select>
-            </div>
-          </div>
-        </section>
-
-        {/* VISI & WEBSITE */}
-        <section className="rounded-[3rem] border-2 border-slate-50 bg-white p-8 text-left shadow-sm space-y-6">
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="text-blue-600" size={18} />
-            <h3 className="text-sm font-black italic tracking-widest uppercase">Visi Inklusi & Website</h3>
-          </div>
-          <div className="grid grid-cols-1 gap-6">
-            <div className="space-y-2">
-              <label htmlFor="inst-web" className="text-[10px] font-black uppercase text-slate-400">Website Resmi</label>
-              <div className="relative">
-                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                <input 
-                  id="inst-web"
-                  className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 pl-12 font-bold outline-none focus:border-blue-600"
-                  placeholder="https://www.institusi.ac.id"
-                  value={formData.website}
-                  onChange={(e) => setFormData({...formData, website: e.target.value})}
+              <div className="md:col-span-2 space-y-3">
+                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Visi Inklusi Lembaga</label>
+                <textarea 
+                  rows={4}
+                  className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900 focus:bg-white"
+                  placeholder="Ceritakan bagaimana lembaga Anda melatih talenta disabilitas secara inklusif..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="inst-desc" className="text-[10px] font-black uppercase text-slate-400">Komitmen Inklusi</label>
-              <textarea 
-                id="inst-desc"
-                rows={4}
-                className="w-full rounded-3xl border-2 border-transparent bg-slate-50 p-6 font-medium leading-relaxed transition-all outline-none focus:border-slate-900"
-                placeholder="Ceritakan bagaimana institusi Anda mendukung talenta disabilitas..."
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-              />
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        {/* AUDIT AKOMODASI */}
-        <section className="relative overflow-hidden rounded-[4rem] bg-slate-900 p-10 text-left text-white shadow-blue-900/20 shadow-2xl space-y-8">
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <ShieldCheck className="text-emerald-400" size={24} />
-              <h3 className="text-xl font-black italic tracking-tighter uppercase">Audit Kesiapan Inklusi</h3>
-            </div>
-            <p className="mb-8 max-w-lg text-xs font-medium text-slate-400">
-              Data akomodasi rill ini akan disinkronkan dengan kebutuhan talenta untuk menghitung skor aksesibilitas otomatis.
-            </p>
-            <div role="group" aria-labelledby="audit-label" className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <span id="audit-label" className="sr-only">Daftar Akomodasi Tersedia</span>
+        {/* KOLOM KANAN: AKOMODASI & SAVE */}
+        <div className="space-y-8">
+          <section className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
+            <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-blue-400">
+              <ShieldCheck size={18} /> Audit Akomodasi
+            </h3>
+            <div className="max-h-[380px] space-y-3 overflow-y-auto pr-2 no-scrollbar">
               {ACCOMMODATION_TYPES.map((item) => {
                 const isSelected = formData.master_accommodations_provided.includes(item);
                 return (
-                  <label
-                    key={item}
-                    className={`group relative flex cursor-pointer items-center justify-between rounded-2xl border-2 p-4 transition-all focus-within:ring-2 focus-within:ring-blue-500 ${
-                      isSelected
-                        ? "border-emerald-400 bg-emerald-600 text-white shadow-emerald-900/20 shadow-lg"
-                        : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500"
-                    }`}
-                  >
+                  <label key={item} className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all ${isSelected ? "border-blue-500 bg-blue-600/20" : "border-slate-800 bg-slate-800/50 hover:border-slate-700"}`}>
                     <input
                       type="checkbox"
                       className="sr-only"
                       checked={isSelected}
                       onChange={() => toggleAccommodation(item)}
                     />
-                    <span className="max-w-[85%] text-[10px] font-black leading-tight uppercase tracking-widest">
+                    <span className={`text-[9px] font-black uppercase leading-tight tracking-widest ${isSelected ? "text-white" : "text-slate-500"}`}>
                       {item}
                     </span>
-                    {isSelected ? (
-                      <CheckCircle2 className="shrink-0 text-white" size={18} />
-                    ) : (
-                      <div className="size-[18px] shrink-0 rounded-full border-2 border-slate-600 group-hover:border-slate-400" />
-                    )}
+                    {isSelected && <CheckCircle2 className="shrink-0 text-blue-400 ml-auto" size={14} />}
                   </label>
                 );
               })}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <button 
-          type="submit" 
-          disabled={loading}
-          className="group flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-6 text-xs font-black uppercase tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading ? "Sinkronisasi Database..." : (
-            <>
-              <Save className="transition-transform group-hover:scale-125" size={18} /> 
-              Simpan & Perbarui Profil Institusi
-            </>
-          )}
-        </button>
+          <div className="space-y-4">
+            {statusMsg && (
+              <div className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase animate-in zoom-in-95 ${statusMsg.includes("Gagal") ? 'border-red-100 bg-red-50 text-red-600' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
+                {statusMsg.includes("Gagal") ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+                {statusMsg}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 disabled:opacity-50"
+            >
+              {loading ? "SINKRONISASI..." : (
+                <>
+                  <Save size={20} /> PERBARUI DATA MITRA
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   );
