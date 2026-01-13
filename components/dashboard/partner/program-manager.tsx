@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { 
   Plus, BookOpen, Calendar, MapPin, 
   Trash2, Save, ArrowLeft, CheckCircle2, AlertCircle,
-  Zap, ListChecks, ChevronDown, Info, Users, X, Link as LinkIcon
+  Zap, ListChecks, ChevronDown, Info, Users, X, Link as LinkIcon,
+  Search, Laptop, Building, Globe
 } from "lucide-react";
 import { 
   DISABILITY_TYPES, 
@@ -25,7 +26,11 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
   const [loading, setLoading] = useState(true);
   const [statusMsg, setStatusMsg] = useState({ text: "", isError: false });
   const [isCustomCity, setIsCustomCity] = useState(false);
+  const [skillSearch, setSkillSearch] = useState("");
   
+  // State tambahan untuk UI Logika Hybrid
+  const [deliveryMethod, setDeliveryMethod] = useState("Offline"); // Offline, Online, Hybrid
+
   const manualCityRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -33,7 +38,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
     title: "",
     description: "",
     syllabus: "",
-    participant_requirements: "",
+    participant_requirements: "", 
     provided_skills: [] as string[],
     start_date: "",
     end_date: "",
@@ -59,6 +64,19 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
   useEffect(() => { fetchPrograms(); }, [fetchPrograms]);
 
+  // Logika deteksi metode saat Edit
+  const handleEdit = (prog: any) => {
+    setFormData(prog);
+    if (prog.is_online && (prog.location === "Remote / Online" || !prog.location)) {
+      setDeliveryMethod("Online");
+    } else if (prog.is_online && prog.location && prog.location !== "Remote / Online") {
+      setDeliveryMethod("Hybrid");
+    } else {
+      setDeliveryMethod("Offline");
+    }
+    setIsEditing(true);
+  };
+
   const handleMultiToggle = (field: string, value: string) => {
     setFormData((prev: any) => {
       const current = prev[field] || [];
@@ -75,18 +93,21 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
     setStatusMsg({ text: "Sinkronisasi database...", isError: false });
 
     try {
-      const payload = {
+      // Final mapping berdasarkan deliveryMethod
+      const finalPayload = {
         ...formData,
         partner_id: partnerId,
+        is_online: deliveryMethod === "Online" || deliveryMethod === "Hybrid",
+        location: deliveryMethod === "Online" ? "Remote / Online" : formData.location,
         updated_at: new Date()
       };
 
       let error;
       if (formData.id) {
-        const { error: err } = await supabase.from("trainings").update(payload).eq("id", formData.id);
+        const { error: err } = await supabase.from("trainings").update(finalPayload).eq("id", formData.id);
         error = err;
       } else {
-        const { id, ...newPayload } = payload;
+        const { id, ...newPayload } = finalPayload;
         const { error: err } = await supabase.from("trainings").insert([newPayload]);
         error = err;
       }
@@ -97,6 +118,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
       setTimeout(() => {
         setIsEditing(false);
         fetchPrograms();
+        setStatusMsg({ text: "", isError: false });
       }, 1500);
     } catch (err: any) {
       setStatusMsg({ text: `Gagal: ${err.message}`, isError: true });
@@ -104,6 +126,10 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
       setLoading(false);
     }
   };
+
+  const filteredSkills = SKILLS_LIST.filter(s => 
+    s.toLowerCase().includes(skillSearch.toLowerCase())
+  ).slice(0, 15);
 
   if (isEditing) return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
@@ -115,18 +141,66 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
         <div className="lg:col-span-2 space-y-10">
           <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
             <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
-              <Zap className="text-blue-600" /> Informasi Utama
+              <Zap className="text-blue-600" /> Detail Program
             </h2>
             
             <div className="space-y-6">
               <div className="space-y-2 text-left">
                 <label htmlFor="title" className="ml-1 text-[10px] font-black uppercase text-slate-400">Judul Pelatihan</label>
-                <input 
-                  id="title" required value={formData.title} 
-                  onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
-                  placeholder="Contoh: Digital Literacy for Deaf Community"
-                />
+                <input id="title" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white" placeholder="Nama pelatihan..." />
+              </div>
+
+              {/* SMART DELIVERY METHOD */}
+              <fieldset className="space-y-3">
+                <legend className="ml-1 text-[10px] font-black uppercase text-slate-400">Metode Pelaksanaan</legend>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { id: 'Offline', icon: Building, label: 'Tatap Muka' },
+                    { id: 'Online', icon: Laptop, label: 'Full Online' },
+                    { id: 'Hybrid', icon: Globe, label: 'Hybrid' }
+                  ].map((m) => (
+                    <label key={m.id} className={`flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all ${deliveryMethod === m.id ? 'border-blue-600 bg-blue-50 shadow-md' : 'border-slate-100 bg-slate-50'}`}>
+                      <input type="radio" name="method" value={m.id} checked={deliveryMethod === m.id} onChange={() => setDeliveryMethod(m.id)} className="sr-only" />
+                      <m.icon size={20} className={deliveryMethod === m.id ? "text-blue-600" : "text-slate-400"} />
+                      <span className="text-[10px] font-black uppercase">{m.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 text-left">
+                <div className="space-y-2">
+                  <label htmlFor="loc-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Lokasi / Domisili Kota</label>
+                  {deliveryMethod === "Online" ? (
+                    <input disabled value="Remote / Online" className="w-full rounded-2xl border-2 border-slate-100 bg-slate-100 p-4 font-bold italic text-slate-400" />
+                  ) : !isCustomCity ? (
+                    <div className="relative">
+                      <select id="loc-select" value={formData.location} onChange={e => {
+                        if (e.target.value === "LAINNYA") {
+                          setIsCustomCity(true);
+                          setFormData({...formData, location: ""});
+                          setTimeout(() => manualCityRef.current?.focus(), 100);
+                        } else {
+                          setFormData({...formData, location: e.target.value});
+                        }
+                      }} className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900">
+                        <option value="">-- Pilih Kota --</option>
+                        {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ KOTA LAINNYA</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input ref={manualCityRef} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-2xl border-2 border-blue-100 bg-blue-50 p-4 font-bold outline-none" placeholder="Ketik Nama Kota..." />
+                      <button type="button" onClick={() => setIsCustomCity(false)} className="text-[9px] font-black uppercase text-blue-600 underline">Balik ke Daftar</button>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="quota" className="ml-1 text-[10px] font-black uppercase text-slate-400">Kuota Peserta (0 = ∞)</label>
+                  <input id="quota" type="number" value={formData.max_quota} onChange={e => setFormData({...formData, max_quota: parseInt(e.target.value) || 0})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900" />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -139,88 +213,58 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                   <input id="end_date" type="date" required value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900" />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2 text-left">
-                  <label htmlFor="loc-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Lokasi Kota</label>
-                  {!isCustomCity ? (
-                    <div className="relative">
-                      <select 
-                        id="loc-select" value={formData.location} 
-                        onChange={e => {
-                          if (e.target.value === "LAINNYA") {
-                            setIsCustomCity(true);
-                            setFormData({...formData, location: ""});
-                            setTimeout(() => manualCityRef.current?.focus(), 100);
-                          } else {
-                            setFormData({...formData, location: e.target.value});
-                          }
-                        }}
-                        className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900"
-                      >
-                        <option value="">-- Pilih Kota --</option>
-                        {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ KOTA LAINNYA</option>
-                      </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </div>
-                  ) : (
-                    <div className="space-y-2 animate-in zoom-in-95">
-                      <input ref={manualCityRef} value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-2xl border-2 border-blue-100 bg-blue-50 p-4 font-bold outline-none" placeholder="Ketik Nama Kota..." />
-                      <button type="button" onClick={() => setIsCustomCity(false)} className="text-[9px] font-black uppercase text-blue-600 underline">Pilih dari Daftar</button>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2 text-left">
-                  <label htmlFor="quota" className="ml-1 text-[10px] font-black uppercase text-slate-400">Kuota Peserta (0 = Unlimited)</label>
-                  <input 
-                    id="quota" type="number" value={formData.max_quota} 
-                    onChange={e => setFormData({...formData, max_quota: parseInt(e.target.value) || 0})}
-                    className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900" 
-                  />
-                </div>
-              </div>
             </div>
           </section>
 
-          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8 text-left">
             <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
-              <BookOpen className="text-blue-600" /> Kurikulum & Syarat
+              <BookOpen className="text-blue-600" /> Kurikulum & Output
             </h2>
             <div className="space-y-6">
-              <div className="space-y-2 text-left">
-                <label htmlFor="desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Deskripsi Singkat Program</label>
+              <div className="space-y-2">
+                <label htmlFor="desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Deskripsi Singkat</label>
                 <textarea id="desc" rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Jelaskan tujuan pelatihan..." />
               </div>
-              <div className="space-y-2 text-left">
-                <label htmlFor="syllabus" className="ml-1 text-[10px] font-black uppercase text-slate-400">Silabus / Materi Pelatihan</label>
+
+              <fieldset className="space-y-4">
+                <legend id="skills-label" className="ml-1 text-[10px] font-black uppercase text-slate-400">Output Keahlian yang Didapat</legend>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input type="text" placeholder="Cari keahlian..." className="w-full rounded-xl border-2 border-slate-100 bg-slate-50 p-3 pl-12 text-xs font-bold outline-none focus:border-blue-600" value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 max-h-48 overflow-y-auto rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 no-scrollbar">
+                   {filteredSkills.map((skill, idx) => (
+                      <label key={skill} className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent bg-white p-2 transition-all hover:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100">
+                        <input type="checkbox" aria-labelledby={`skills-label skill-opt-${idx}`} checked={formData.provided_skills.includes(skill)} onChange={() => handleMultiToggle("provided_skills", skill)} className="size-4 accent-blue-600" />
+                        <span id={`skill-opt-${idx}`} className="text-[9px] font-black uppercase tracking-tight text-slate-600">{skill}</span>
+                      </label>
+                   ))}
+                </div>
+              </fieldset>
+
+              <div className="space-y-2">
+                <label htmlFor="syllabus" className="ml-1 text-[10px] font-black uppercase text-slate-400">Silabus Lengkap</label>
                 <textarea id="syllabus" rows={3} value={formData.syllabus} onChange={e => setFormData({...formData, syllabus: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Detail materi per pertemuan..." />
               </div>
-              <div className="space-y-2 text-left">
-                <label htmlFor="req" className="ml-1 text-[10px] font-black uppercase text-slate-400">Syarat Peserta (Isian Bebas)</label>
-                <textarea id="req" rows={3} value={formData.participant_requirements} onChange={e => setFormData({...formData, participant_requirements: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Misal: Memiliki laptop, Bisa baca tulis, dsb." />
+              <div className="space-y-2">
+                <label htmlFor="req" className="ml-1 text-[10px] font-black uppercase text-slate-400">Syarat Peserta</label>
+                <textarea id="req" rows={3} value={formData.participant_requirements} onChange={e => setFormData({...formData, participant_requirements: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Misal: Punya laptop, Usia min 18th..." />
               </div>
             </div>
           </section>
 
-          <section className="rounded-[3rem] border-4 border-slate-900 bg-blue-600 p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-white space-y-6">
-            <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter">
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-blue-600 p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-white space-y-6 text-left">
+            <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-white">
                Instruksi Pasca Daftar
             </h2>
             <div className="space-y-4">
               <div className="flex items-start gap-4 rounded-2xl bg-blue-700/50 p-6 border-2 border-blue-400">
-                <Info className="shrink-0" />
-                <p className="text-[10px] font-bold leading-relaxed uppercase tracking-widest text-left">
-                  Tuliskan langkah selanjutnya bagi peserta. Informasi ini akan otomatis muncul di layar talenta setelah mereka klik &quot;Daftar&quot;. 
-                  (Contoh: Link grup WhatsApp, Link Zoom, atau No. HP Contact Person).
+                <Info className="shrink-0 text-white" />
+                <p className="text-[10px] font-bold leading-relaxed uppercase tracking-widest text-white">
+                  Informasi teknis (Link WA/Zoom) yang muncul otomatis di layar talenta segera setelah klik &quot;Daftar&quot;.
                 </p>
               </div>
-              <textarea 
-                id="reg_instructions" rows={3} required value={formData.registration_instructions} 
-                onChange={e => setFormData({...formData, registration_instructions: e.target.value})}
-                className="w-full rounded-2xl border-2 border-blue-400 bg-blue-700 p-6 font-bold text-white placeholder:text-blue-300 outline-none focus:border-white"
-                placeholder="Misal: Silakan gabung grup WhatsApp melalui link: bit.ly/..."
-              />
+              <textarea id="reg_instructions" rows={3} required value={formData.registration_instructions} onChange={e => setFormData({...formData, registration_instructions: e.target.value})} className="w-full rounded-2xl border-2 border-blue-400 bg-blue-700 p-6 font-bold text-white placeholder:text-blue-300 outline-none focus:border-white" placeholder="Link grup WA atau instruksi khusus..." />
             </div>
           </section>
         </div>
@@ -228,19 +272,13 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
         <div className="space-y-8">
           <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl text-left">
             <legend className="sr-only">Ragam Disabilitas Sasaran</legend>
-            <h3 id="dis-q" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-blue-400">
+            <h3 id="dis-title" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-blue-400">
               <Users size={18} /> Ragam Sasaran
             </h3>
             <div className="space-y-3">
               {DISABILITY_TYPES.map((type, idx) => (
                 <label key={type} className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-all focus-within:ring-4 focus-within:ring-blue-500/30 ${formData.target_disability.includes(type) ? 'border-blue-500 bg-blue-600/20' : 'border-slate-800 bg-slate-800/50 hover:border-slate-700'}`}>
-                  <input 
-                    type="checkbox" 
-                    aria-labelledby={`dis-q dis-opt-${idx}`}
-                    checked={formData.target_disability.includes(type)}
-                    onChange={() => handleMultiToggle("target_disability", type)}
-                    className="size-5 accent-blue-500"
-                  />
+                  <input type="checkbox" aria-labelledby={`dis-title dis-opt-${idx}`} checked={formData.target_disability.includes(type)} onChange={() => handleMultiToggle("target_disability", type)} className="size-5 accent-blue-500" />
                   <span id={`dis-opt-${idx}`} className="text-[10px] font-bold uppercase">{type}</span>
                 </label>
               ))}
@@ -248,20 +286,14 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
           </fieldset>
 
           <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl text-left">
-            <legend className="sr-only">Akomodasi yang Disediakan</legend>
-            <h3 id="acc-q" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-emerald-400">
+            <legend className="sr-only">Akomodasi Pelatihan</legend>
+            <h3 id="acc-title" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-emerald-400">
               <ListChecks size={18} /> Akomodasi Tersedia
             </h3>
             <div className="space-y-3">
               {ACCOMMODATION_TYPES.map((acc, idx) => (
                 <label key={acc} className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-all focus-within:ring-4 focus-within:ring-emerald-500/30 ${formData.training_accommodations.includes(acc) ? 'border-emerald-500 bg-emerald-600/20' : 'border-slate-800 bg-slate-800/50 hover:border-slate-700'}`}>
-                  <input 
-                    type="checkbox" 
-                    aria-labelledby={`acc-q acc-opt-${idx}`}
-                    checked={formData.training_accommodations.includes(acc)}
-                    onChange={() => handleMultiToggle("training_accommodations", acc)}
-                    className="size-5 accent-emerald-500"
-                  />
+                  <input type="checkbox" aria-labelledby={`acc-title acc-opt-${idx}`} checked={formData.training_accommodations.includes(acc)} onChange={() => handleMultiToggle("training_accommodations", acc)} className="size-5 accent-emerald-500" />
                   <span id={`acc-opt-${idx}`} className="text-[10px] font-bold uppercase">{acc}</span>
                 </label>
               ))}
@@ -271,7 +303,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
           <div className="space-y-4">
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                <input type="checkbox" checked={formData.is_published} onChange={e => setFormData({...formData, is_published: e.target.checked})} className="size-5 accent-slate-900" />
-               <span className="text-[10px] font-black uppercase italic">Publish ke Halaman Publik</span>
+               <span className="text-[10px] font-black uppercase italic">Tampilkan Publik</span>
             </label>
 
             {statusMsg.text && (
@@ -281,11 +313,8 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
               </div>
             )}
 
-            <button 
-              type="submit" disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? "MENYIMPAN..." : <><Save size={20} /> PUBLIKASIKAN PROGRAM</>}
+            <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-3 rounded-[2rem] bg-slate-900 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50">
+              {loading ? "SINKRONISASI..." : <><Save size={20} /> PUBLIKASIKAN SEKARANG</>}
             </button>
           </div>
         </div>
@@ -297,16 +326,10 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
     <div className="animate-in fade-in duration-500 text-left">
       <div className="mb-10 flex flex-col justify-between gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-end">
         <div>
-          <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">Program Manager</h2>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 italic">Otomasi Alur Pelatihan & Registrasi</p>
+          <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Program Manager</h2>
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Total Program Aktif: {programs.length}</p>
         </div>
-        <button 
-          onClick={() => {
-            setFormData({ id: "", title: "", description: "", syllabus: "", participant_requirements: "", provided_skills: [], start_date: "", end_date: "", location: "", max_quota: 0, registration_instructions: "", is_online: false, is_published: true, target_disability: [], training_accommodations: [] });
-            setIsEditing(true);
-          }}
-          className="flex items-center justify-center gap-3 rounded-[2rem] bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl hover:bg-slate-900 transition-all"
-        >
+        <button onClick={() => { setFormData({ id: "", title: "", description: "", syllabus: "", participant_requirements: "", provided_skills: [], start_date: "", end_date: "", location: "", max_quota: 0, registration_instructions: "", is_online: false, is_published: true, target_disability: [], training_accommodations: [] }); setDeliveryMethod("Offline"); setIsEditing(true); }} className="flex items-center justify-center gap-3 rounded-[2rem] bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl hover:bg-slate-900 transition-all">
           <Plus size={20} /> Tambah Program
         </button>
       </div>
@@ -320,13 +343,8 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                   {prog.is_published ? "Published" : "Draft"}
                 </span>
                 <div className="flex gap-2">
-                   <button onClick={() => { setFormData({...prog}); setIsEditing(true); }} className="text-slate-300 hover:text-blue-600 transition-colors"><BookOpen size={16} /></button>
-                   <button onClick={async () => {
-                      if(confirm("Hapus program ini secara permanen?")) {
-                        await supabase.from("trainings").delete().eq("id", prog.id);
-                        fetchPrograms();
-                      }
-                   }} className="text-slate-300 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
+                   <button onClick={() => handleEdit(prog)} className="text-slate-300 hover:text-blue-600 transition-colors"><BookOpen size={16} /></button>
+                   <button onClick={async () => { if(confirm("Hapus program ini secara permanen?")) { await supabase.from("trainings").delete().eq("id", prog.id); fetchPrograms(); } }} className="text-slate-300 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
                 </div>
               </div>
               <h3 className="text-2xl font-black uppercase italic leading-tight tracking-tighter text-slate-900">{prog.title}</h3>
@@ -334,16 +352,13 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                  <div className="flex items-center gap-1 text-[10px] font-black uppercase text-blue-600">
                     <Users size={14} /> {prog.current_participants || 0} / {prog.max_quota === 0 ? "∞" : prog.max_quota}
                  </div>
-                 {prog.max_quota !== 0 && prog.current_participants >= prog.max_quota && (
-                   <span className="rounded-md bg-red-50 px-2 py-1 text-[8px] font-black uppercase text-red-600">Kuota Penuh</span>
-                 )}
               </div>
             </div>
-            <div className="mt-8 flex items-center justify-between border-t-2 border-slate-50 pt-6 text-left">
+            <div className="mt-8 flex items-center justify-between border-t-2 border-slate-50 pt-6">
               <div className="flex items-center gap-1 text-[9px] font-black uppercase text-slate-500">
-                <MapPin size={12} className="text-blue-600" /> {prog.is_online ? "Remote" : prog.location}
+                <MapPin size={12} className="text-blue-600" /> {prog.location}
               </div>
-              <button onClick={() => { setFormData({...prog}); setIsEditing(true); }} className="text-[10px] font-black uppercase italic text-blue-600 underline underline-offset-4">Edit Detail</button>
+              <button onClick={() => handleEdit(prog)} className="text-[10px] font-black uppercase italic text-blue-600 underline underline-offset-4">Edit Detail</button>
             </div>
           </div>
         ))}
