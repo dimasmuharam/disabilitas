@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Building2, Globe, MapPin, Save, ShieldCheck, 
@@ -9,7 +9,7 @@ import {
 import { 
   ACCOMMODATION_TYPES, 
   INDONESIA_CITIES,
-  TRAINING_PARTNERS // Hanya menggunakan ini sebagai acuan tunggal
+  TRAINING_PARTNERS 
 } from "@/lib/data-static";
 
 interface ProfileEditorProps {
@@ -23,6 +23,8 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
   const [statusMsg, setStatusMsg] = useState("");
   const [isCustomName, setIsCustomName] = useState(false);
   
+  const manualNameRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     name: partner?.name || "",
     description: partner?.description || "",
@@ -39,17 +41,16 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
       setIsCustomName(true);
       setFormData(prev => ({ ...prev, manual_name: partner.name, name: "LAINNYA" }));
     }
-  }, []);
+  }, [partner.name]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setStatusMsg("Sinkronisasi data riset...");
+    setStatusMsg("Menyinkronkan data riset...");
     
     const finalName = formData.name === "LAINNYA" ? formData.manual_name : formData.name;
 
     try {
-      // Log input manual untuk audit Super Admin nanti
       if (formData.name === "LAINNYA" && formData.manual_name) {
         await supabase.from("manual_input_logs").insert([{
           field_name: "partner_name_manual",
@@ -72,7 +73,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
 
       if (error) throw error;
 
-      setStatusMsg("Data Berhasil Diperbarui!");
+      setStatusMsg("Profil Berhasil Diperbarui!");
       setTimeout(() => onUpdate(), 1500);
     } catch (err: any) {
       setStatusMsg("Gagal: " + err.message);
@@ -93,12 +94,12 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
     <div className="mx-auto max-w-5xl space-y-10 pb-20 duration-500 animate-in fade-in">
       {/* HEADER NAV */}
       <div className="mb-10 flex items-center justify-between border-b-4 border-slate-900 pb-6">
-        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900">
-          <ArrowLeft size={16} /> Batal
+        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
+          <ArrowLeft size={16} /> Batal & Kembali
         </button>
         <div className="text-right text-slate-900">
-          <h2 className="text-2xl font-black uppercase italic tracking-tighter">Profil Mitra Pelatihan</h2>
-          <p className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Standardisasi: Training Partners List</p>
+          <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Profil Institusi Mitra</h2>
+          <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-blue-600">Standardisasi Data-Static 2026</p>
         </div>
       </div>
 
@@ -106,31 +107,33 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
         <div className="space-y-8 lg:col-span-2 text-left">
           {/* IDENTITAS UTAMA */}
           <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
-            <div className="flex items-center gap-2">
-              <Building2 className="text-blue-600" size={20} />
-              <h3 className="text-xs font-black uppercase tracking-widest italic">Kredensial Institusi</h3>
-            </div>
+            <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-600 italic">
+              <Building2 size={20} /> Kredensial Resmi
+            </h3>
             
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              {/* NAMA PENYELENGGARA - DROPDOWN DARI TRAINING_PARTNERS */}
+              {/* NAMA PENYELENGGARA */}
               <div className="md:col-span-2 space-y-3">
-                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Pilih Nama Lembaga Pelatihan (List Resmi)</label>
+                <label id="inst-name-label" htmlFor="inst-name" className="ml-1 text-[10px] font-black uppercase text-slate-400">Nama Lembaga Pelatihan (List Resmi)</label>
                 {!isCustomName ? (
                   <div className="relative">
                     <select 
+                      id="inst-name"
                       required
+                      aria-labelledby="inst-name-label"
                       className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
                       value={formData.name}
                       onChange={(e) => {
                         if (e.target.value === "LAINNYA") {
                           setIsCustomName(true);
                           setFormData({...formData, name: "LAINNYA"});
+                          setTimeout(() => manualNameRef.current?.focus(), 100);
                         } else {
                           setFormData({...formData, name: e.target.value});
                         }
                       }}
                     >
-                      <option value="">-- Pilih Lembaga Pelatihan --</option>
+                      <option value="">-- Pilih Lembaga --</option>
                       {TRAINING_PARTNERS.map(inst => <option key={inst} value={inst}>{inst}</option>)}
                       <option value="LAINNYA" className="text-blue-600 font-black italic">+ TAMBAHKAN NAMA BARU</option>
                     </select>
@@ -139,6 +142,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                 ) : (
                   <div className="space-y-3 animate-in zoom-in-95">
                     <input 
+                      ref={manualNameRef}
                       type="text"
                       className="w-full rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
                       placeholder="Ketik Nama Lengkap Lembaga..."
@@ -146,18 +150,36 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                       onChange={(e) => setFormData({...formData, manual_name: e.target.value})}
                       required
                     />
-                    <button type="button" onClick={() => setIsCustomName(false)} className="text-[9px] font-black uppercase text-blue-600 underline">
-                      Kembali ke Daftar Resmi
+                    <button type="button" onClick={() => setIsCustomName(false)} className="text-[9px] font-black uppercase text-blue-600 underline ml-1">
+                      Pilih dari Daftar Resmi
                     </button>
                   </div>
                 )}
               </div>
 
+              {/* WEBSITE RESMI (FIX: SEBELUMNYA TIDAK ADA) */}
+              <div className="md:col-span-2 space-y-3">
+                <label htmlFor="inst-website" className="ml-1 text-[10px] font-black uppercase text-slate-400">Website Resmi Institusi</label>
+                <div className="relative">
+                   <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                   <input 
+                    id="inst-website"
+                    type="url"
+                    className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 pl-12 font-bold outline-none focus:border-slate-900 focus:bg-white"
+                    placeholder="https://www.nama-lembaga.com"
+                    value={formData.website}
+                    onChange={(e) => setFormData({...formData, website: e.target.value})}
+                  />
+                </div>
+              </div>
+
               {/* LOKASI STANDAR */}
               <div className="space-y-3">
-                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Lokasi Kota (Domisili)</label>
+                <label id="inst-loc-label" htmlFor="inst-loc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Domisili Kota (Operasional)</label>
                 <div className="relative">
                   <select 
+                    id="inst-loc"
+                    aria-labelledby="inst-loc-label"
                     className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
                     value={formData.location}
                     onChange={(e) => setFormData({...formData, location: e.target.value})}
@@ -170,9 +192,11 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                 </div>
               </div>
 
+              {/* NIB / IZIN */}
               <div className="space-y-3">
-                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Legalitas (NIB/Izin)</label>
+                <label htmlFor="inst-nib" className="ml-1 text-[10px] font-black uppercase text-slate-400">Nomor Legalitas (NIB/Izin)</label>
                 <input 
+                  id="inst-nib"
                   className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
                   placeholder="Masukkan Nomor Izin"
                   value={formData.nib_number}
@@ -180,12 +204,14 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                 />
               </div>
 
+              {/* VISI/DESKRIPSI */}
               <div className="md:col-span-2 space-y-3">
-                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Visi Inklusi Lembaga</label>
+                <label htmlFor="inst-desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Visi & Komitmen Inklusi</label>
                 <textarea 
+                  id="inst-desc"
                   rows={4}
-                  className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900 focus:bg-white"
-                  placeholder="Ceritakan bagaimana lembaga Anda melatih talenta disabilitas secara inklusif..."
+                  className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium leading-relaxed outline-none focus:border-slate-900 focus:bg-white"
+                  placeholder="Jelaskan bagaimana institusi Anda melatih talenta disabilitas secara inklusif..."
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                 />
@@ -196,22 +222,24 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
 
         {/* KOLOM KANAN: AKOMODASI & SAVE */}
         <div className="space-y-8">
-          <section className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
-            <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-blue-400">
+          <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
+            <legend className="sr-only">Audit Akomodasi</legend>
+            <h3 id="audit-title" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-blue-400">
               <ShieldCheck size={18} /> Audit Akomodasi
             </h3>
             <div className="max-h-[380px] space-y-3 overflow-y-auto pr-2 no-scrollbar">
-              {ACCOMMODATION_TYPES.map((item) => {
+              {ACCOMMODATION_TYPES.map((item, idx) => {
                 const isSelected = formData.master_accommodations_provided.includes(item);
                 return (
-                  <label key={item} className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all ${isSelected ? "border-blue-500 bg-blue-600/20" : "border-slate-800 bg-slate-800/50 hover:border-slate-700"}`}>
+                  <label key={item} className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all focus-within:ring-4 focus-within:ring-blue-500/30 ${isSelected ? "border-blue-500 bg-blue-600/20" : "border-slate-800 bg-slate-800/50 hover:border-slate-700"}`}>
                     <input
                       type="checkbox"
-                      className="sr-only"
+                      aria-labelledby={`audit-title opt-acc-${idx}`}
+                      className="mt-1 size-5 rounded border-gray-700 bg-slate-800 text-blue-600 accent-blue-500"
                       checked={isSelected}
                       onChange={() => toggleAccommodation(item)}
                     />
-                    <span className={`text-[9px] font-black uppercase leading-tight tracking-widest ${isSelected ? "text-white" : "text-slate-500"}`}>
+                    <span id={`opt-acc-${idx}`} className={`text-[9px] font-black uppercase leading-tight tracking-widest ${isSelected ? "text-white" : "text-slate-500"}`}>
                       {item}
                     </span>
                     {isSelected && <CheckCircle2 className="shrink-0 text-blue-400 ml-auto" size={14} />}
@@ -219,11 +247,11 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                 );
               })}
             </div>
-          </section>
+          </fieldset>
 
           <div className="space-y-4">
             {statusMsg && (
-              <div className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase animate-in zoom-in-95 ${statusMsg.includes("Gagal") ? 'border-red-100 bg-red-50 text-red-600' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
+              <div aria-live="polite" className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase animate-in zoom-in-95 ${statusMsg.includes("Gagal") ? 'border-red-100 bg-red-50 text-red-600' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
                 {statusMsg.includes("Gagal") ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
                 {statusMsg}
               </div>
@@ -232,7 +260,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
             <button 
               type="submit" 
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 disabled:opacity-50 active:scale-[0.98]"
             >
               {loading ? "SINKRONISASI..." : (
                 <>
