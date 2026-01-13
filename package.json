@@ -27,7 +27,8 @@
     "recharts": "^2.15.0",
     "sharp": "^0.32.6",
     "tailwind-merge": "^1.13.2",
-    "tailwindcss-animate": "^1.0.6"
+    "tailwindcss-animate": "^1.0.6",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^17.0.45",
