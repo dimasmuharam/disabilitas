@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
-import jsPDF from "jsPDF";
+import jsPDF from "jspdf"; // Perbaikan: jspdf (huruf kecil semua)
 import "jspdf-autotable";
 import { 
   Users, CheckCircle, XCircle, GraduationCap, 
@@ -119,17 +119,17 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
   }
 
   return (
-    <div className="space-y-6 text-left" role="region" aria-label="Manajemen Pendaftar">
+    <div className="space-y-6 text-left" role="region" aria-label="Halaman Manajemen Pendaftar">
       <div className="flex flex-col justify-between gap-4 border-b-4 border-slate-900 pb-6 md:flex-row md:items-center">
         <div>
           <button 
             onClick={onBack}
             className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"
-            aria-label="Kembali ke Dashboard"
+            aria-label="Kembali ke Dashboard Utama"
           >
             <ArrowLeft size={16} /> Kembali
           </button>
-          <h1 className="text-3xl font-black uppercase italic leading-none tracking-tighter text-slate-900">
+          <h1 className="text-3xl font-black uppercase tracking-tighter italic text-slate-900">
             Seleksi Pendaftar
           </h1>
         </div>
@@ -154,8 +154,8 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
       </div>
 
       <div className="grid grid-cols-1 gap-6 rounded-[2rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] md:grid-cols-2">
-        <div className="space-y-2 text-left">
-          <label htmlFor="prog-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Filter per Program</label>
+        <div className="space-y-2">
+          <label htmlFor="prog-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Filter per Program Pelatihan</label>
           <div className="relative">
             <select 
               id="prog-select"
@@ -163,15 +163,15 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
               onChange={(e) => setSelectedTrainingId(e.target.value)}
               className="w-full appearance-none rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900"
             >
-              <option value="all">Semua Program Pelatihan</option>
+              <option value="all">Tampilkan Semua Program</option>
               {trainings.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
             </select>
             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
         </div>
 
-        <div className="space-y-2 text-left">
-          <label htmlFor="stat-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Status Seleksi</label>
+        <div className="space-y-2">
+          <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Pilih Status Seleksi</label>
           <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
             {['applied', 'accepted', 'rejected', 'all'].map((s) => (
               <button
@@ -187,9 +187,9 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
       </div>
 
       {loading ? (
-        <div className="py-20 text-center font-black uppercase italic text-slate-200 animate-pulse">Menghubungkan ke server...</div>
+        <div className="py-20 text-center font-black uppercase italic text-slate-200 animate-pulse">Menghubungkan data pendaftar...</div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 text-left">
+        <div className="grid grid-cols-1 gap-4">
           {enrollments.length > 0 ? enrollments.map((item) => (
             <div key={item.id} className="group flex flex-col items-center justify-between gap-6 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:border-blue-600 md:flex-row">
               <div className="flex flex-1 items-center gap-6">
@@ -210,14 +210,14 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
                   <div className="flex gap-2">
                     <button 
                       onClick={() => updateStatus(item.id, "accepted")}
-                      aria-label={`Terima pendaftaran ${item.profiles?.full_name}`}
+                      aria-label={`Terima pendaftaran dari ${item.profiles?.full_name}`}
                       className="rounded-2xl bg-slate-900 px-6 py-4 text-[10px] font-black uppercase text-white shadow-lg transition-all hover:bg-emerald-600"
                     >
                       Terima
                     </button>
                     <button 
                       onClick={() => updateStatus(item.id, "rejected")}
-                      aria-label={`Tolak pendaftaran ${item.profiles?.full_name}`}
+                      aria-label={`Tolak pendaftaran dari ${item.profiles?.full_name}`}
                       className="rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 text-[10px] font-black uppercase text-slate-900 transition-all hover:bg-red-50 hover:text-red-600"
                     >
                       Tolak
@@ -225,12 +225,12 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
                   </div>
                 ) : (
                   <span className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase ${item.status === 'accepted' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                    {item.status === 'accepted' ? 'Status: Diterima' : 'Status: Ditolak'}
+                    {item.status === 'accepted' ? 'Pendaftar Diterima' : 'Pendaftar Ditolak'}
                   </span>
                 )}
                 <a 
                   href={`mailto:${item.profiles?.email}`}
-                  aria-label={`Kirim email ke ${item.profiles?.full_name}`}
+                  aria-label={`Kirim pesan email ke ${item.profiles?.full_name}`}
                   className="rounded-2xl bg-slate-100 p-4 text-slate-400 hover:text-slate-900 transition-all"
                 >
                   <Mail size={20} />
@@ -239,7 +239,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
             </div>
           )) : (
             <div className="rounded-[3rem] border-4 border-dashed border-slate-100 py-32 text-center">
-              <p className="text-xl font-black uppercase italic text-slate-200">Belum ada data ditemukan</p>
+              <p className="text-xl font-black uppercase italic text-slate-200">Data pendaftar tidak ditemukan</p>
             </div>
           )}
         </div>
@@ -249,7 +249,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
         <Info className="shrink-0 text-blue-400" />
         <div className="space-y-1 text-left">
           <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest opacity-80">
-            Petunjuk: Gunakan fitur **Cetak Daftar Hadir** setelah memfilter status menjadi **Diterima** pada satu program tertentu agar format tabel PDF menjadi rapi dan profesional.
+            Petunjuk Administrasi: Gunakan fitur **Cetak Daftar Hadir** setelah memfilter status menjadi **Diterima** pada satu program tertentu agar format tabel PDF menjadi rapi dan profesional untuk keperluan absensi lapangan.
           </p>
         </div>
       </div>
