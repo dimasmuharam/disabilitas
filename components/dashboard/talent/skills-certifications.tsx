@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { updateTalentProfile } from "@/lib/actions/talent";
 import { 
   Award, Cpu, CheckCircle2, AlertCircle, Save, 
-  Plus, X, Zap, Trash2, Microscope, Link as LinkIcon, ChevronDown, BadgeCheck
+  Plus, X, Zap, Trash2, Link as LinkIcon, ChevronDown, BadgeCheck
 } from "lucide-react";
 
 import { 
@@ -13,8 +13,7 @@ import {
   GOVERNMENT_AGENCIES_LIST, 
   TRAINING_PARTNERS, 
   NONPROFIT_ORG_LIST,
-  UNIVERSITIES,
-  TRAINING_ORGANIZER_CATEGORIES
+  UNIVERSITIES
 } from "@/lib/data-static";
 
 interface SkillsCertificationsProps {
@@ -31,7 +30,14 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   const [selectedSkillFromList, setSelectedSkillFromList] = useState("");
   
   const certNameRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const orgNameRefs = useRef<Record<string, HTMLSelectElement | null>>({});
+
+  // Menggabungkan semua institusi untuk pencarian yang rapi
+  const ALL_INSTITUTIONS = [
+    ...TRAINING_PARTNERS,
+    ...UNIVERSITIES,
+    ...GOVERNMENT_AGENCIES_LIST,
+    ...NONPROFIT_ORG_LIST
+  ].sort();
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -62,7 +68,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     const newItem = {
       id: newId,
       name: "",
-      organizer_category: "",
       organizer_name: "",
       manual_organizer: "",
       year: new Date().getFullYear().toString(),
@@ -77,12 +82,6 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
   const updateCertField = (id: string, field: string, value: any) => {
     setCerts(certs.map(c => c.id === id ? { ...c, [field]: value } : c));
-    
-    if (field === "organizer_category" && value !== "") {
-      setTimeout(() => {
-        orgNameRefs.current[id]?.focus();
-      }, 100);
-    }
   };
 
   const removeCert = async (id: string) => {
@@ -101,17 +100,17 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     setMessage({ type: "", text: "" });
 
     try {
+      // 1. Update Profile (Skills)
       await updateTalentProfile(user.id, { 
-        skills: globalSkills,
-        skill_acquisition_method: profile?.skill_acquisition_method,
-        training_accessibility_rating: profile?.training_accessibility_rating,
-        skill_impact_rating: profile?.skill_impact_rating
+        skills: globalSkills
       });
 
+      // 2. Update/Insert Certifications
       for (const cert of certs) {
         const isTemp = cert.id.toString().startsWith("temp-");
         const finalName = cert.organizer_name === "LAINNYA" ? cert.manual_organizer : cert.organizer_name;
         
+        // Log manual input untuk dashboard super admin
         if (cert.organizer_name === "LAINNYA" && cert.manual_organizer) {
           await supabase.from("manual_input_logs").insert([{
             field_name: "organizer_name",
@@ -120,7 +119,14 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
         }
 
         const { id, manual_organizer, ...certData } = cert;
-        const payload = { ...certData, organizer_name: finalName, profile_id: user.id };
+        // Jangan sertakan organizer_category karena sudah tidak ada di table
+        const payload = { 
+          name: certData.name,
+          organizer_name: finalName,
+          year: certData.year,
+          certificate_url: certData.certificate_url,
+          profile_id: user.id 
+        };
 
         if (isTemp) {
           await supabase.from("certifications").insert([payload]);
@@ -138,60 +144,50 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     }
   };
 
-  const getInstitutionList = (category: string) => {
-    let baseList: string[] = [];
-    if (category === "Pemerintah") baseList = GOVERNMENT_AGENCIES_LIST;
-    else if (category === "Perguruan Tinggi") baseList = UNIVERSITIES;
-    else if (category === "Mitra Pelatihan (LKP/LPK)") baseList = TRAINING_PARTNERS;
-    else if (category === "Organisasi / Komunitas Disabilitas") baseList = NONPROFIT_ORG_LIST;
-    return [...baseList, "LAINNYA"];
-  };return (
+  return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900">
-      <div className="sr-only" aria-live="assertive">{message.text}</div>
-
       <header className="mb-10 px-4 text-left">
         <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter">
           <Zap className="text-purple-600" size={36} /> Keahlian & Pelatihan
         </h1>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
           Sinkronisasi data riwayat pelatihan untuk validasi riset
         </p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
-        <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm space-y-6">
+        {/* SECTION SKILLS */}
+        <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-6">
           <div className="flex items-center gap-3 text-purple-600">
-            <Cpu size={20} />
+            <Cpu size={24} />
             <h2 className="text-xs font-black uppercase tracking-[0.2em]">Daftar Keahlian Utama</h2>
           </div>
           
           <div className="space-y-4">
-            <label htmlFor="skill-select" className="ml-2 text-[10px] font-black uppercase italic text-slate-400">Pilih keahlian yang Anda kuasai</label>
             <div className="flex gap-3">
               <select 
                 id="skill-select"
-                className="flex-1 rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-purple-600"
+                className="flex-1 rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-purple-600"
                 value={selectedSkillFromList}
                 onChange={(e) => setSelectedSkillFromList(e.target.value)}
               >
-                <option value="">-- Lihat Daftar Keahlian --</option>
+                <option value="">-- Pilih Keahlian --</option>
                 {SKILLS_LIST.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <button 
                 type="button"
                 onClick={() => addSkill(selectedSkillFromList)}
                 className="rounded-2xl bg-purple-600 px-8 text-white transition-all hover:bg-slate-900"
-                aria-label="Klik untuk tambahkan keahlian yang dipilih"
               >
                 <Plus size={24} />
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-2" role="list" aria-label="Daftar keahlian saya">
+            <div className="flex flex-wrap gap-2">
               {globalSkills.map(s => (
-                <span key={s} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-white shadow-md">
+                <span key={s} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-white">
                   {s}
-                  <button type="button" onClick={() => setGlobalSkills(globalSkills.filter(x => x !== s))} aria-label={`Hapus keahlian ${s}`}>
+                  <button type="button" onClick={() => setGlobalSkills(globalSkills.filter(x => x !== s))}>
                     <X size={14}/>
                   </button>
                 </span>
@@ -200,17 +196,18 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </div>
         </section>
 
+        {/* SECTION CERTIFICATIONS */}
         <div className="space-y-6">
           <div className="flex items-center justify-between px-4">
             <h2 className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em]">
-              <Award className="text-amber-500" size={20} /> Riwayat Sertifikasi
+              <Award className="text-amber-500" size={20} /> Riwayat Pelatihan & Sertifikasi
             </h2>
             <button 
               type="button" 
               onClick={addCertsItem} 
-              className="flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-[10px] font-black uppercase text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900"
+              className="flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-[10px] font-black uppercase text-white shadow-xl hover:bg-slate-900 transition-all"
             >
-              <Plus size={16} /> Tambah Data Baru
+              <Plus size={16} /> Tambah Pelatihan
             </button>
           </div>
 
@@ -218,102 +215,84 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
             {certs.map((cert, index) => (
               <section 
                 key={cert.id} 
-                className="relative rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-left shadow-sm space-y-8 animate-in slide-in-from-top-4"
-                aria-label={`Formulir pelatihan nomor ${certs.length - index}`}
+                className="relative rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8 animate-in slide-in-from-top-4"
               >
-                <div className="flex items-center justify-between border-b border-slate-50 pb-4">
+                <div className="flex items-center justify-between border-b-2 border-slate-50 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase italic text-slate-300">Data #{certs.length - index}</span>
+                    <span className="text-[10px] font-black uppercase italic text-slate-300 italic">Data #{certs.length - index}</span>
                     {cert.is_verified && (
                       <span className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600">
-                        <BadgeCheck size={12} /> Terverifikasi
+                        <BadgeCheck size={12} /> Verified by Platform
                       </span>
                     )}
                   </div>
-                  <button type="button" onClick={() => removeCert(cert.id)} className="text-slate-300 transition-colors hover:text-red-600" aria-label={`Hapus data pelatihan nomor ${certs.length - index}`}><Trash2 size={20} /></button>
+                  <button type="button" onClick={() => removeCert(cert.id)} className="text-slate-300 hover:text-red-600 transition-colors">
+                    <Trash2 size={20} />
+                  </button>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor={`name-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Judul Pelatihan</label>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="ml-2 text-[10px] font-black uppercase text-slate-400">Judul Pelatihan / Sertifikasi</label>
                     <input 
                       ref={(el) => { certNameRefs.current[cert.id] = el; }}
-                      id={`name-${cert.id}`}
                       value={cert.name}
                       onChange={(e) => updateCertField(cert.id, "name", e.target.value)}
-                      placeholder="Contoh: Pelatihan Administrasi Perkantoran"
-                      className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
+                      placeholder="Contoh: Digital Marketing Specialist"
+                      className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`year-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Tahun</label>
+                    <label className="ml-2 text-[10px] font-black uppercase text-slate-400">Pilih Penyelenggara (Daftar Resmi)</label>
+                    <div className="relative">
+                      <select 
+                        value={cert.organizer_name}
+                        onChange={(e) => updateCertField(cert.id, "organizer_name", e.target.value)}
+                        className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
+                      >
+                        <option value="">-- Pilih Penyelenggara --</option>
+                        {ALL_INSTITUTIONS.map(inst => (
+                          <option key={inst} value={inst}>{inst}</option>
+                        ))}
+                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ LEMBAGA TIDAK TERDAFTAR</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="ml-2 text-[10px] font-black uppercase text-slate-400">Tahun Lulus</label>
                     <input 
-                      id={`year-${cert.id}`}
                       type="number"
                       value={cert.year}
                       onChange={(e) => updateCertField(cert.id, "year", e.target.value)}
-                      className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
+                      className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor={`cat-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Kategori Institusi</label>
-                    <select 
-                      id={`cat-${cert.id}`}
-                      value={cert.organizer_category}
-                      onChange={(e) => updateCertField(cert.id, "organizer_category", e.target.value)}
-                      className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
-                    >
-                      <option value="">-- Pilih Kategori --</option>
-                      {TRAINING_ORGANIZER_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor={`org-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400">Nama Institusi Resmi</label>
-                    <div className="relative">
-                      <select 
-                        ref={(el) => { orgNameRefs.current[cert.id] = el; }}
-                        id={`org-${cert.id}`}
-                        disabled={!cert.organizer_category}
-                        value={cert.organizer_name}
-                        onChange={(e) => updateCertField(cert.id, "organizer_name", e.target.value)}
-                        className="w-full appearance-none rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 disabled:opacity-50"
-                      >
-                        <option value="">-- Pilih Nama Institusi --</option>
-                        {getInstitutionList(cert.organizer_category).map(inst => (
-                          <option key={inst} value={inst}>{inst === "LAINNYA" ? "+ INSTITUSI TIDAK TERDAFTAR" : inst}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 text-slate-400 -translate-y-1/2" size={18} />
-                    </div>
                   </div>
 
                   {cert.organizer_name === "LAINNYA" && (
                     <div className="space-y-2 md:col-span-2 animate-in zoom-in-95">
-                      <label htmlFor={`manual-${cert.id}`} className="ml-2 text-[10px] font-black uppercase italic text-pink-600">Input Manual Nama Institusi</label>
+                      <label className="ml-2 text-[10px] font-black uppercase italic text-blue-600">Input Nama Lembaga Baru</label>
                       <input 
-                        id={`manual-${cert.id}`}
                         value={cert.manual_organizer}
                         onChange={(e) => updateCertField(cert.id, "manual_organizer", e.target.value)}
-                        className="w-full rounded-2xl border-2 border-pink-200 bg-pink-50 p-4 font-bold outline-none focus:border-pink-600"
-                        placeholder="Ketik nama lengkap institusi..."
+                        className="w-full rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 font-bold outline-none focus:border-blue-600"
+                        placeholder="Masukkan nama lengkap lembaga penyelenggara..."
                       />
                     </div>
                   )}
 
                   <div className="space-y-2 md:col-span-2">
-                    <label htmlFor={`url-${cert.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
-                      <LinkIcon size={12} /> Tautan Sertifikat (Opsional)
+                    <label className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
+                      <LinkIcon size={12} /> Tautan Sertifikat (Cloud / Google Drive)
                     </label>
                     <input 
-                      id={`url-${cert.id}`}
                       type="url"
                       value={cert.certificate_url}
                       onChange={(e) => updateCertField(cert.id, "certificate_url", e.target.value)}
-                      placeholder="https://link-bukti-pelatihan.com"
-                      className="w-full rounded-2xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
+                      placeholder="https://..."
+                      className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
                     />
                   </div>
                 </div>
@@ -322,12 +301,18 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </div>
         </div>
 
+        {message.text && (
+          <div className={`rounded-2xl border-2 p-4 text-center text-[10px] font-black uppercase animate-in zoom-in-95 ${message.type === 'success' ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-red-100 bg-red-50 text-red-700'}`}>
+            {message.text}
+          </div>
+        )}
+
         <button 
           type="submit" 
           disabled={loading}
-          className="flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-6 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-purple-600 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-6 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50"
         >
-          {loading ? "Menyimpan Data..." : <><Save size={20} /> Simpan Seluruh Keahlian & Pelatihan</>}
+          {loading ? "Menyinkronkan Data..." : <><Save size={20} /> Simpan Seluruh Riwayat & Keahlian</>}
         </button>
       </form>
     </div>
