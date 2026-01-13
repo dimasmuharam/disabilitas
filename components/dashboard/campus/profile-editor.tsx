@@ -10,9 +10,9 @@ import {
 
 // MENGACU PADA DATA-STATIC.TS
 import { 
-  UNIVERSITY_LIST, 
+  UNIVERSITIES, 
   ACCOMMODATION_TYPES,
-  LOCATION_LIST // Asumsi ada daftar lokasi standar
+  INDONESIA_CITIES // Asumsi ada daftar lokasi standar
 } from "@/lib/data-static";
 
 interface ProfileEditorProps {
@@ -37,7 +37,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
 
   // Cek apakah nama kampus saat ini ada di daftar standar atau input manual
   useEffect(() => {
-    if (formData.name && !UNIVERSITY_LIST.includes(formData.name)) {
+    if (formData.name && !UNIVERSITIES.includes(formData.name)) {
       setIsCustomUniversity(true);
     }
   }, []);
@@ -121,7 +121,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                       required
                     >
                       <option value="">-- Pilih Universitas --</option>
-                      {UNIVERSITY_LIST.map((uni) => (
+                      {UNIVERSITIES.map((uni) => (
                         <option key={uni} value={uni}>{uni}</option>
                       ))}
                       <option value="LAINNYA" className="font-black text-blue-600 uppercase italic">-- Institusi Tidak Ada di Daftar --</option>
@@ -162,7 +162,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                     required
                   >
                     <option value="">-- Pilih Lokasi --</option>
-                    {LOCATION_LIST.map((loc) => (
+                    {INDONESIA_CITIES.map((loc) => (
                       <option key={loc} value={loc}>{loc}</option>
                     ))}
                   </select>
