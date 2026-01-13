@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { 
   Building2, Globe, MapPin, Save, ShieldCheck, 
   CheckCircle2, AlertCircle, FileText, ChevronDown, ArrowLeft
-} from "lucide-center";
+} from "lucide-react";
 import { 
   ACCOMMODATION_TYPES, 
   INDONESIA_CITIES,
