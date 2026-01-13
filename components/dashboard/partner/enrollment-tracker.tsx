@@ -251,7 +251,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
       <div className="rounded-3xl bg-slate-900 p-6 text-white flex items-start gap-4 border-b-8 border-blue-600 shadow-2xl">
         <Info className="shrink-0 text-blue-400" />
         <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest opacity-80 text-left">
-          Petunjuk: Gunakan fitur &quot;Cetak Daftar Hadir&quot; setelah memfilter status menjadi &quot;Diterima&quot; 
+          Petunjuk: Gunakan fitur Cetak Daftar Hadir setelah memfilter status menjadi Diterima 
           pada satu program tertentu agar format tabel PDF menjadi rapi dan profesional.
         </p>
       </div>
