@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { 
   MapPin, Info, Zap, Calendar, ArrowRight,
   ShieldCheck, Award, Users, Globe, History, 
-  CheckCircle2, Accessibility, Star, HelpCircle
+  CheckCircle2, Accessibility, Star, Gem,
+  Target, BarChart3, TrendingUp
 } from "lucide-react";
 import { Metadata } from "next";
 
@@ -14,18 +15,14 @@ type PageProps = {
   params: { id: string };
 };
 
-// OPTIMASI SEO: Judul dan Deskripsi yang lebih menjual
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { data: partner } = await supabase.from("partners").select("name").eq("id", params.id).maybeSingle();
-  const partnerName = partner?.name || "Mitra";
+  const partnerName = partner?.name || "Mitra Pelatihan";
   
   return { 
-    title: `${partnerName} | Mitra Pelatihan Inklusif & Pengembangan Talenta Disabilitas`,
-    description: `Pelajari program pelatihan inklusif, fasilitas akomodasi, dan rekam jejak dampak sosial dari ${partnerName} di ekosistem disabilitas.com.`,
-    keywords: [`pelatihan disabilitas`, `mitra inklusif`, partnerName, `pengembangan karir disabilitas`],
-    alternates: {
-      canonical: `https://disabilitas.com/partner/${params.id}`
-    }
+    title: `${partnerName} | Mitra Pelatihan Inklusif Terverifikasi`,
+    description: `Profil dampak dan fasilitas akomodasi pelatihan inklusif ${partnerName} di platform disabilitas.com.`,
+    alternates: { canonical: `https://disabilitas.com/partner/${params.id}` }
   };
 }
 
@@ -44,11 +41,42 @@ export default async function PublicPartnerProfile({ params }: PageProps) {
 
   if (!partner) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center font-black uppercase italic text-slate-400">
+      <div className="flex min-h-screen flex-col items-center justify-center font-black uppercase italic text-slate-400" role="alert">
         <ShieldCheck size={48} className="mb-4 opacity-20" />
         PROFIL TIDAK DITEMUKAN
       </div>
     );
+  }
+
+  // LOGIKA BADGE & NARASI EDUKATIF (Konsisten dengan Profil Perusahaan)
+  const score = partner.inclusion_score || 0;
+  let badgeConfig = {
+    label: "Inclusive Entity",
+    level: "Bronze",
+    color: "text-orange-700 bg-orange-50 border-orange-200",
+    progressColor: "bg-orange-500",
+    icon: <ShieldCheck size={24} />,
+    description: "Mitra ini telah menginisiasi program inklusif dengan fasilitas dasar. Langkah awal yang penting dalam membangun ekosistem pelatihan yang setara."
+  };
+
+  if (score >= 85) {
+    badgeConfig = {
+      label: "Inclusion Champion",
+      level: "Gold",
+      color: "text-amber-700 bg-amber-50 border-amber-200",
+      progressColor: "bg-amber-500",
+      icon: <Gem size={24} />,
+      description: "Mitra ini adalah standar emas inklusivitas. Memiliki kurikulum yang aksesibel, instruktur terlatih, dan lingkungan belajar yang sangat inklusif bagi semua ragam disabilitas."
+    };
+  } else if (score >= 50) {
+    badgeConfig = {
+      label: "Inclusion Leader",
+      level: "Silver",
+      color: "text-slate-700 bg-slate-50 border-slate-200",
+      progressColor: "bg-slate-600",
+      icon: <Award size={24} />,
+      description: "Mitra menunjukkan komitmen kuat melalui penyediaan akomodasi pelatihan yang layak dan penyesuaian materi pembelajaran bagi talenta disabilitas."
+    };
   }
 
   const today = new Date().toISOString().split('T')[0];
@@ -58,196 +86,146 @@ export default async function PublicPartnerProfile({ params }: PageProps) {
   const totalTalenta = Number(partner.stats_impact_total || 0);
   const totalHired = Number(partner.stats_impact_hired || 0);
   const rate = totalTalenta > 0 ? Math.round((totalHired / totalTalenta) * 100) : 0;
-  
   const disMap = (partner.stats_disability_map as Record<string, number>) || {};
   const genMap = (partner.stats_gender_map as Record<string, number>) || { male: 0, female: 0 };
-  const accommodations = (partner.master_accommodations_provided as string[]) || [];
-  const score = Number(partner.inclusion_score || 0);
+  const providedAccommodations = (partner.master_accommodations_provided as string[]) || [];
 
   return (
-    <div className="min-h-screen bg-white pb-24 font-sans text-slate-900 text-left leading-relaxed">
-      {/* HEADER: Penekanan pada Otoritas Mitra */}
-      <header className="border-b-4 border-slate-900 bg-white">
+    <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans text-slate-900 text-left leading-relaxed">
+      {/* HEADER */}
+      <header className="border-b-2 border-slate-100 bg-white shadow-sm" role="banner">
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="flex flex-col items-center gap-10 lg:flex-row lg:items-end">
-            <div className="flex size-32 shrink-0 items-center justify-center rounded-[2.5rem] bg-blue-600 text-white shadow-2xl">
-              <Award size={60} />
+            <div className="flex size-32 shrink-0 items-center justify-center rounded-[2.5rem] border-4 border-white bg-blue-600 text-white shadow-2xl animate-in zoom-in">
+              <Award size={60} aria-hidden="true" />
             </div>
-            <div className="flex-1 text-center lg:text-left space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-blue-600">
-                <ShieldCheck size={14} /> Verified Training Partner
-              </div>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none md:text-6xl">
-                {partner.name}
-              </h1>
-              <p className="text-lg font-bold text-slate-500 italic uppercase leading-none tracking-tight">Mitra Pelatihan Inklusif Terverifikasi</p>
-              <div className="flex flex-wrap justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-400 lg:justify-start">
-                <span className="flex items-center gap-2"><MapPin size={16} className="text-blue-600" /> {partner.location || "Lokasi Global"}</span>
-                {partner.website && (
-                  <a href={partner.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-blue-600 transition-colors">
-                    <Globe size={16} /> Website Resmi
-                  </a>
-                )}
-              </div>
-            </div>
-            
-            {/* SCORE MODULE: Edukatif & Interaktif */}
-            <div className="group relative rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-black uppercase opacity-60 leading-none">Inclusion Score</p>
-                <HelpCircle size={14} className="text-blue-600 cursor-help" />
-              </div>
-              <p className="text-6xl font-black italic tracking-tighter text-blue-600">{score}%</p>
-              
-              {/* Tooltip Edukatif */}
-              <div className="absolute bottom-full left-1/2 mb-4 w-64 -translate-x-1/2 rounded-2xl bg-slate-900 p-4 text-[9px] font-bold uppercase leading-relaxed text-white opacity-0 shadow-2xl transition-opacity group-hover:opacity-100 pointer-events-none">
-                <div className="mb-2 flex items-center gap-2 text-blue-400">
-                  <Star size={12} fill="currentColor" /> Apa itu Inclusion Score?
+            <div className="flex-1 space-y-4 text-center lg:text-left">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                  <h1 className="text-4xl font-black uppercase italic tracking-tighter">{partner.name}</h1>
+                  <div className="flex items-center gap-1 rounded-full bg-blue-600 px-4 py-1.5 text-white shadow-lg">
+                    <CheckCircle2 size={14} aria-hidden="true" />
+                    <span className="text-[10px] font-black uppercase italic tracking-widest">Verified Partner</span>
+                  </div>
                 </div>
-                Skor ini mengukur tingkat aksesibilitas fasilitas, kurikulum pelatihan, dan keberhasilan penempatan kerja talenta disabilitas oleh mitra ini.
+                <div className="flex flex-wrap justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-500 lg:justify-start">
+                  <span className="flex items-center gap-2 italic"><MapPin size={16} className="text-blue-600" /> {partner.location || "Lokasi Global"}</span>
+                  {partner.website && (
+                    <a href={partner.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-blue-600 transition-colors">
+                      <Globe size={16} /> Website Resmi
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* PROGRESS SCORING BOX (Identik dengan Company Profile) */}
+            <section className={`w-full max-w-xs rounded-[2.5rem] border-2 p-6 shadow-sm md:max-w-sm ${badgeConfig.color}`} aria-labelledby="score-title">
+              <div className="mb-4 flex items-center gap-4">
+                <div className="rounded-2xl bg-white p-3 shadow-sm" aria-hidden="true">{badgeConfig.icon}</div>
+                <div className="flex-1">
+                  <div className="mb-1 flex items-end justify-between">
+                    <h3 id="score-title" className="text-sm font-black uppercase leading-none tracking-tighter">{badgeConfig.label}</h3>
+                    <span className="text-xs font-black italic">{score}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full border border-current/10 bg-white/50">
+                    <div className={`h-full ${badgeConfig.progressColor} transition-all duration-1000`} style={{ width: `${score}%` }}></div>
+                  </div>
+                </div>
+              </div>
+              <p className="border-t border-current/10 pt-3 text-[11px] font-bold italic leading-relaxed opacity-80">
+                {badgeConfig.description}
+              </p>
+            </section>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-16 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-20">
-            {/* VISI & DESKRIPSI */}
-            <section className="space-y-6">
-              <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter leading-none">
-                <Info className="text-blue-600" size={28} /> Visi Pengembangan Talenta
+          <div className="space-y-20 lg:col-span-2">
+            {/* TENTANG MITRA */}
+            <section className="space-y-6" aria-labelledby="about-title">
+              <h2 id="about-title" className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
+                <Info className="text-blue-600" size={28} aria-hidden="true" /> Visi & Komitmen
               </h2>
-              <div className="rounded-[3rem] border-2 border-slate-100 bg-slate-50 p-10 text-xl italic font-medium text-slate-700 whitespace-pre-line leading-relaxed shadow-inner">
-                {partner.description || "Mitra ini berkomitmen penuh dalam menciptakan kurikulum yang fleksibel dan aksesibel bagi setiap ragam talenta disabilitas."}
+              <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
+                <p className="whitespace-pre-line text-lg font-medium leading-relaxed text-slate-700">
+                  {partner.description || "Mitra ini berkomitmen dalam menyediakan kurikulum pelatihan yang aksesibel bagi talenta disabilitas."}
+                </p>
               </div>
             </section>
 
-            {/* EDUKASI AKOMODASI */}
-            <section className="space-y-6">
-              <div className="flex items-end justify-between border-b-4 border-slate-900 pb-4">
-                <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter leading-none">
-                  <Accessibility className="text-blue-600" size={28} /> Dukungan Akomodasi
+            {/* PROGRAM AKTIF */}
+            <section className="space-y-8" aria-labelledby="active-trainings">
+              <div className="flex items-center justify-between border-b-4 border-blue-600 pb-4">
+                <h2 id="active-trainings" className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
+                  <Zap className="fill-amber-500 text-amber-500" size={32} aria-hidden="true" /> Program Pelatihan Aktif
                 </h2>
-                <span className="text-[9px] font-black uppercase text-slate-400 italic">Standar Inklusi disabilitas.com</span>
+                <span className="text-xl font-black uppercase italic text-blue-600">{activeTrainings.length} Program</span>
               </div>
-              <p className="text-[11px] font-bold uppercase text-slate-500 italic leading-relaxed">
-                Mitra ini menyediakan fasilitas pendukung berikut untuk memastikan pengalaman belajar yang setara dan bermartabat:
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {accommodations.length > 0 ? accommodations.map((item, idx) => (
-                  <span key={idx} className="rounded-2xl border-2 border-slate-900 bg-white px-5 py-3 text-[10px] font-black uppercase italic text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-transform hover:scale-105">
-                    {item}
-                  </span>
-                )) : (
-                  <p className="text-[10px] font-black uppercase italic text-slate-300">Data dukungan akomodasi sedang dalam proses verifikasi sistem.</p>
-                )}
-              </div>
-            </section>
-
-            {/* PELATIHAN AKTIF */}
-            <section className="space-y-8">
-              <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-blue-600 leading-none">
-                <Zap size={32} /> Program Pelatihan Tersedia
-              </h2>
               <div className="grid gap-6">
                 {activeTrainings.length > 0 ? activeTrainings.map((t) => (
-                  <a key={t.id} href={`/pelatihan/${t.id}`} className="group relative flex items-center justify-between rounded-[3rem] border-2 border-slate-100 p-8 transition-all hover:border-slate-900 hover:shadow-2xl bg-white overflow-hidden">
-                    <div className="relative z-10 text-left">
-                      <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-[8px] font-black uppercase text-emerald-700 mb-2">Registration Open</span>
-                      <h3 className="text-2xl font-black uppercase italic tracking-tighter group-hover:text-blue-600 leading-none">{t.title}</h3>
-                      <div className="mt-4 flex gap-6 text-[10px] font-bold text-slate-400 uppercase italic">
-                        <span className="flex items-center gap-1 text-slate-900"><Calendar size={14} /> Akhir Pendaftaran: {t.registration_deadline}</span>
+                  <a key={t.id} href={`/pelatihan/${t.id}`} className="group flex flex-col items-center justify-between gap-8 rounded-[3.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-slate-900 hover:shadow-2xl md:flex-row">
+                    <div className="flex-1 text-left space-y-2">
+                      <span className="inline-block rounded-full bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600 border border-emerald-100">Buka Pendaftaran</span>
+                      <h3 className="text-2xl font-black uppercase italic leading-tight tracking-tighter group-hover:text-blue-600">{t.title}</h3>
+                      <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase italic">
+                        <span className="flex items-center gap-1"><Calendar size={14} /> Akhir Pendaftaran: {t.registration_deadline}</span>
                       </div>
                     </div>
-                    <div className="size-16 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-xl group-hover:bg-blue-600 transition-all group-hover:rotate-[-45deg]">
-                      <ArrowRight size={28} />
-                    </div>
+                    <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-xl transition-all group-hover:translate-x-2 group-hover:bg-blue-600"><ArrowRight size={24} /></div>
                   </a>
                 )) : (
-                  <div className="rounded-[3rem] border-4 border-dashed border-slate-50 p-20 text-center">
-                    <p className="text-[11px] font-black uppercase italic text-slate-300">Saat ini tidak ada pendaftaran aktif. Silakan pantau secara berkala.</p>
-                  </div>
+                  <div className="rounded-[4rem] border-4 border-dashed border-slate-100 bg-slate-50 p-20 text-center font-black uppercase italic text-slate-300 opacity-50">Belum ada pendaftaran yang dibuka saat ini.</div>
                 )}
               </div>
             </section>
-
-            {/* RIWAYAT PELATIHAN (ARSIP) */}
-            {pastTrainings.length > 0 && (
-              <section className="space-y-8">
-                <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-400 leading-none">
-                  <History size={32} /> Jejak Rekam Program
-                </h2>
-                <div className="grid gap-4 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-                  {pastTrainings.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between rounded-[2.5rem] border-2 border-slate-50 p-6">
-                      <div className="text-left">
-                        <h3 className="text-lg font-black uppercase italic text-slate-600 leading-none">{t.title}</h3>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Batch Selesai: {t.end_date}</p>
-                      </div>
-                      <CheckCircle2 size={24} className="text-slate-200" />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
 
-          {/* SIDEBAR ANALITIK: Data Valid Riset */}
+          {/* SIDEBAR ANALYTICS & AKOMODASI */}
           <aside className="space-y-12">
-            <div className="rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl text-left border-t-[12px] border-blue-600">
-              <h4 className="mb-8 flex items-center gap-2 border-b border-white/10 pb-4 text-[10px] font-black uppercase text-blue-400 tracking-widest leading-none">
-                <Star size={12} fill="currentColor" /> Kinerja Pemberdayaan
-              </h4>
-              <div className="space-y-10">
-                <div className="flex justify-between items-end">
+            <section className="relative overflow-hidden rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl" aria-labelledby="stats-title">
+              <div className="absolute -bottom-4 -right-4 rotate-12 opacity-10" aria-hidden="true"><BarChart3 size={120} /></div>
+              <h4 id="stats-title" className="mb-10 border-b border-white/10 pb-4 text-[10px] font-black uppercase tracking-widest text-blue-400">Impact Analytics</h4>
+              <div className="relative z-10 space-y-10 text-left">
+                <div className="flex items-end justify-between border-l-4 border-blue-600 pl-6">
                   <div>
-                    <p className="text-6xl font-black tracking-tighter leading-none">{totalTalenta}</p>
-                    <p className="mt-2 text-[9px] font-black uppercase opacity-60 italic leading-none">Talenta Terpeta</p>
+                    <p className="text-3xl font-black italic leading-none">{totalTalenta} Orang</p>
+                    <p className="mt-2 text-[8px] font-black uppercase italic tracking-tighter text-slate-400">Total Talenta Terpeta</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-4xl font-black text-emerald-400 leading-none">{rate}%</p>
-                    <p className="mt-2 text-[9px] font-black uppercase opacity-60 italic leading-none">Employment Rate</p>
+                    <TrendingUp size={24} className="mb-1 ml-auto text-emerald-400" aria-hidden="true" />
+                    <span className="rounded bg-emerald-500/20 px-2 py-1 text-[7px] font-black uppercase text-emerald-400">{rate}% Success Rate</span>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 p-6 rounded-3xl border border-white/10 transition-colors hover:bg-white/10">
-                    <p className="text-[8px] font-black uppercase text-blue-400 mb-1 leading-none tracking-tighter">Pria</p>
-                    <p className="text-2xl font-black leading-none">{genMap.male || 0}</p>
-                  </div>
-                  <div className="bg-white/5 p-6 rounded-3xl border border-white/10 transition-colors hover:bg-white/10">
-                    <p className="text-[8px] font-black uppercase text-pink-400 mb-1 leading-none tracking-tighter">Wanita</p>
-                    <p className="text-2xl font-black leading-none">{genMap.female || 0}</p>
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t border-white/5 italic text-center opacity-40">
-                  <p className="text-[9px] font-bold leading-relaxed">Laporan dampak ini terintegrasi secara otomatis dengan sistem disabilitas.com 2026.</p>
+                <div className="space-y-4 rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                   <div className="flex justify-between items-center text-[10px] font-black uppercase italic">
+                      <span className="text-blue-400">Pria: {genMap.male || 0}</span>
+                      <span className="text-pink-400">Wanita: {genMap.female || 0}</span>
+                   </div>
+                   <p className="text-[9px] font-bold leading-relaxed opacity-40 text-center">Data divalidasi sistem otomatis disabilitas.com 2026.</p>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* SPEKTRUM PESERTA */}
-            <div className="rounded-[3.5rem] border-4 border-slate-100 p-10 bg-white shadow-sm text-left">
-              <h3 className="mb-8 flex items-center gap-3 text-lg font-black uppercase tracking-tighter italic leading-none">
-                <Users size={24} className="text-blue-600" /> Keberagaman Inklusi
+            {/* AKOMODASI (Aksesibel & Konsisten dengan Profil Perusahaan) */}
+            <section className="space-y-10 rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]" aria-labelledby="acc-title">
+              <h3 id="acc-title" className="flex items-center gap-3 text-lg font-black uppercase tracking-tighter text-slate-900">
+                <Accessibility className="text-blue-600" size={24} aria-hidden="true" /> Fasilitas Inklusi
               </h3>
-              <div className="space-y-8">
-                {Object.entries(disMap).map(([type, count]) => (
-                  <div key={type} className="space-y-3">
-                    <div className="flex justify-between text-[9px] font-black uppercase text-slate-500 leading-none">
-                      <span>{type}</span>
-                      <span className="text-slate-900 font-black">{totalTalenta > 0 ? Math.round((Number(count)/totalTalenta)*100) : 0}%</span>
-                    </div>
-                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.3)]" style={{ width: `${totalTalenta > 0 ? (Number(count)/totalTalenta)*100 : 0}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+              <ul className="space-y-4" aria-label="Daftar akomodasi yang disediakan mitra">
+                {providedAccommodations.length > 0 ? providedAccommodations.map((item: string, idx: number) => (
+                  <li key={idx} className="flex items-start gap-4 rounded-2xl border-2 border-emerald-50 bg-emerald-50/20 p-4 shadow-sm">
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-500" aria-hidden="true" />
+                    <span className="text-[11px] font-black uppercase leading-tight text-emerald-950">{item}</span>
+                  </li>
+                )) : (
+                  <li className="text-center text-[10px] font-black uppercase italic text-slate-300">Data fasilitas belum terdata.</li>
+                )}
+              </ul>
+            </section>
           </aside>
         </div>
       </main>
