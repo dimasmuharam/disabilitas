@@ -8,7 +8,8 @@ import "jspdf-autotable";
 import { 
   Users, CheckCircle, XCircle, GraduationCap, 
   Mail, Phone, Download, Printer,
-  MessageCircle, Info, ChevronDown, FileText
+  MessageCircle, Info, ChevronDown, FileText,
+  ArrowLeft // Ikon ini tadi lupa di-import yang menyebabkan error build
 } from "lucide-react";
 
 interface EnrollmentTrackerProps {
@@ -128,7 +129,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
           >
             <ArrowLeft size={16} /> Kembali
           </button>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic text-slate-900">
+          <h1 className="text-3xl font-black uppercase tracking-tighter italic text-slate-900 leading-none">
             Seleksi Pendaftar
           </h1>
         </div>
@@ -152,6 +153,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
         </div>
       </div>
 
+      {/* FILTER PANEL */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-[2rem] border-4 border-slate-900 bg-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
         <div className="space-y-2">
           <label htmlFor="prog-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Filter per Program</label>
@@ -170,7 +172,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="stat-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Status Seleksi</label>
+          <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Status Seleksi</label>
           <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
             {['applied', 'accepted', 'rejected', 'all'].map((s) => (
               <button
@@ -178,15 +180,16 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
                 onClick={() => setFilterStatus(s)}
                 className={`flex-1 rounded-lg py-3 text-[9px] font-black uppercase transition-all ${filterStatus === s ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
               >
-                {s === 'applied' ? 'Menunggu' : s === 'accepted' ? 'Diterima' : s === 'rejected' ? 'Ditolak' : 'Semua'}
+                {s === 'applied' ? 'Menunggu' : s === 'accepted' ? 'Diterima' : 'Ditolak' : 'Semua'}
               </button>
             ))}
           </div>
         </div>
       </div>
 
+      {/* LIST DATA */}
       {loading ? (
-        <div className="py-20 text-center font-black uppercase italic text-slate-200 animate-pulse">Sinkronisasi Data...</div>
+        <div className="py-20 text-center font-black uppercase italic text-slate-200 animate-pulse">Menghubungkan ke server...</div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {enrollments.length > 0 ? enrollments.map((item) => (
@@ -224,7 +227,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
                   </>
                 ) : (
                   <span className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase ${item.status === 'accepted' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                    {item.status === 'accepted' ? 'Sudah Diterima' : 'Sudah Ditolak'}
+                    {item.status === 'accepted' ? 'Diterima' : 'Ditolak'}
                   </span>
                 )}
                 <a 
@@ -238,17 +241,18 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
             </div>
           )) : (
             <div className="rounded-[3rem] border-4 border-dashed border-slate-100 py-32 text-center">
-              <p className="text-xl font-black uppercase italic text-slate-200">Tidak ada pendaftar ditemukan</p>
+              <p className="text-xl font-black uppercase italic text-slate-200 italic">Belum ada data ditemukan</p>
             </div>
           )}
         </div>
       )}
 
-      <div className="rounded-3xl bg-slate-900 p-6 text-white flex items-start gap-4 border-b-8 border-blue-600">
+      {/* FOOTER & ACCESSIBLE QUOTES */}
+      <div className="rounded-3xl bg-slate-900 p-6 text-white flex items-start gap-4 border-b-8 border-blue-600 shadow-2xl">
         <Info className="shrink-0 text-blue-400" />
-        <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest opacity-80">
-          Gunakan fitur &quot;Cetak Daftar Hadir&quot; setelah menyaring status pendaftar menjadi &quot;Diterima&quot; 
-          pada program tertentu untuk memudahkan absensi di lapangan.
+        <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest opacity-80 text-left">
+          Petunjuk: Gunakan fitur &quot;Cetak Daftar Hadir&quot; setelah memfilter status menjadi &quot;Diterima&quot; 
+          pada satu program tertentu agar format tabel PDF menjadi rapi dan profesional.
         </p>
       </div>
     </div>
