@@ -99,7 +99,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
         </button>
         <div className="text-right text-slate-900">
           <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Profil Institusi Mitra</h2>
-          <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-blue-600">Standardisasi Data-Static 2026</p>
+          <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-blue-600">Lengkapi Profil Institusi untuk Menjangkau Talenta Inklusif yang Terafiliasi dengan Anda</p>
         </div>
       </div>
 
@@ -206,7 +206,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
 
               {/* VISI/DESKRIPSI */}
               <div className="md:col-span-2 space-y-3">
-                <label htmlFor="inst-desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Visi & Komitmen Inklusi</label>
+                <label htmlFor="inst-desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Mengenai Institusi Anda</label>
                 <textarea 
                   id="inst-desc"
                   rows={4}
@@ -223,9 +223,9 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
         {/* KOLOM KANAN: AKOMODASI & SAVE */}
         <div className="space-y-8">
           <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
-            <legend className="sr-only">Audit Akomodasi</legend>
+            <legend className="sr-only">Akomodasi Aksesibilitas yang Tersedia</legend>
             <h3 id="audit-title" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-blue-400">
-              <ShieldCheck size={18} /> Audit Akomodasi
+              <ShieldCheck size={18} /> Akomodasi Aksesibilitas yang Tersedia
             </h3>
             <div className="max-h-[380px] space-y-3 overflow-y-auto pr-2 no-scrollbar">
               {ACCOMMODATION_TYPES.map((item, idx) => {
