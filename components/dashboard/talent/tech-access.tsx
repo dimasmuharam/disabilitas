@@ -146,7 +146,7 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
         {/* SEKSI 3: ALAT BANTU (CHECKBOX LIST MULTIPLE) */}
         <section className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
           <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-purple-600">
-            <Construction size={16} aria-hidden="true" /> {"Alat Bantu Utama"}
+            <Construction size={16} aria-hidden="true" /> {"Alat Bantu Sehari-hari"}
           </h2>
           <div className="custom-scrollbar grid max-h-72 gap-3 overflow-y-auto pr-2 md:grid-cols-2">
             {DISABILITY_TOOLS.map((tool) => (
@@ -172,7 +172,7 @@ export default function TechAccess({ user, profile, onSuccess }: TechAccessProps
         {/* SEKSI 4: AKOMODASI (CHECKBOX LIST MULTIPLE) */}
         <section className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
           <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-blue-600">
-            <Monitor size={16} aria-hidden="true" /> {"Akomodasi Kerja Dibutuhkan"}
+            <Monitor size={16} aria-hidden="true" /> {"Akomodasi yang Dibutuhkan di Tempat Kerja"}
           </h2>
           <div className="grid gap-3 md:grid-cols-2">
             {ACCOMMODATION_TYPES.map((acc) => (
