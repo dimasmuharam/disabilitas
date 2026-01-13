@@ -33,7 +33,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
     title: "",
     description: "",
     syllabus: "",
-    participant_requirements: "", // Isian Bebas
+    participant_requirements: "",
     provided_skills: [] as string[],
     start_date: "",
     end_date: "",
@@ -72,7 +72,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setStatusMsg({ text: "Menyinkronkan data...", isError: false });
+    setStatusMsg({ text: "Sinkronisasi database...", isError: false });
 
     try {
       const payload = {
@@ -93,7 +93,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
       if (error) throw error;
 
-      setStatusMsg({ text: "Program Berhasil Dipublikasikan!", isError: false });
+      setStatusMsg({ text: "Program Berhasil Disimpan!", isError: false });
       setTimeout(() => {
         setIsEditing(false);
         fetchPrograms();
@@ -113,14 +113,13 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
 
       <form onSubmit={handleSave} className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-10">
-          {/* SEKSI 1: IDENTITAS PROGRAM */}
           <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
             <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
               <Zap className="text-blue-600" /> Informasi Utama
             </h2>
             
             <div className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-2 text-left">
                 <label htmlFor="title" className="ml-1 text-[10px] font-black uppercase text-slate-400">Judul Pelatihan</label>
                 <input 
                   id="title" required value={formData.title} 
@@ -131,19 +130,19 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <label htmlFor="start_date" className="ml-1 text-[10px] font-black uppercase text-slate-400">Tanggal Mulai</label>
                   <input id="start_date" type="date" required value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <label htmlFor="end_date" className="ml-1 text-[10px] font-black uppercase text-slate-400">Estimasi Selesai</label>
                   <input id="end_date" type="date" required value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="loc-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Lokasi Kota (Sesuai Daftar)</label>
+                <div className="space-y-2 text-left">
+                  <label htmlFor="loc-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Lokasi Kota</label>
                   {!isCustomCity ? (
                     <div className="relative">
                       <select 
@@ -172,7 +171,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                     </div>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <label htmlFor="quota" className="ml-1 text-[10px] font-black uppercase text-slate-400">Kuota Peserta (0 = Unlimited)</label>
                   <input 
                     id="quota" type="number" value={formData.max_quota} 
@@ -184,28 +183,26 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
             </div>
           </section>
 
-          {/* SEKSI 2: KURIKULUM & MATERI */}
           <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
             <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
               <BookOpen className="text-blue-600" /> Kurikulum & Syarat
             </h2>
             <div className="space-y-6">
-              <div className="space-y-2">
+              <div className="space-y-2 text-left">
                 <label htmlFor="desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Deskripsi Singkat Program</label>
                 <textarea id="desc" rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Jelaskan tujuan pelatihan..." />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 text-left">
                 <label htmlFor="syllabus" className="ml-1 text-[10px] font-black uppercase text-slate-400">Silabus / Materi Pelatihan</label>
                 <textarea id="syllabus" rows={3} value={formData.syllabus} onChange={e => setFormData({...formData, syllabus: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Detail materi per pertemuan..." />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 text-left">
                 <label htmlFor="req" className="ml-1 text-[10px] font-black uppercase text-slate-400">Syarat Peserta (Isian Bebas)</label>
                 <textarea id="req" rows={3} value={formData.participant_requirements} onChange={e => setFormData({...formData, participant_requirements: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Misal: Memiliki laptop, Bisa baca tulis, dsb." />
               </div>
             </div>
           </section>
 
-          {/* SEKSI 3: INSTRUKSI OTOMATIS (FOLLOW-UP) */}
           <section className="rounded-[3rem] border-4 border-slate-900 bg-blue-600 p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-white space-y-6">
             <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter">
                Instruksi Pasca Daftar
@@ -213,8 +210,8 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
             <div className="space-y-4">
               <div className="flex items-start gap-4 rounded-2xl bg-blue-700/50 p-6 border-2 border-blue-400">
                 <Info className="shrink-0" />
-                <p className="text-[10px] font-bold leading-relaxed uppercase tracking-widest">
-                  Tuliskan langkah selanjutnya bagi peserta. Informasi ini akan otomatis muncul di layar talenta setelah mereka klik "Daftar". 
+                <p className="text-[10px] font-bold leading-relaxed uppercase tracking-widest text-left">
+                  Tuliskan langkah selanjutnya bagi peserta. Informasi ini akan otomatis muncul di layar talenta setelah mereka klik &quot;Daftar&quot;. 
                   (Contoh: Link grup WhatsApp, Link Zoom, atau No. HP Contact Person).
                 </p>
               </div>
@@ -228,7 +225,6 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
           </section>
         </div>
 
-        {/* KOLOM KANAN: RISET & PUBLISH */}
         <div className="space-y-8">
           <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl text-left">
             <legend className="sr-only">Ragam Disabilitas Sasaran</legend>
@@ -275,7 +271,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
           <div className="space-y-4">
             <label className="flex cursor-pointer items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                <input type="checkbox" checked={formData.is_published} onChange={e => setFormData({...formData, is_published: e.target.checked})} className="size-5 accent-slate-900" />
-               <span className="text-[10px] font-black uppercase italic">Tampilkan di Halaman Jelajah</span>
+               <span className="text-[10px] font-black uppercase italic">Publish ke Halaman Publik</span>
             </label>
 
             {statusMsg.text && (
@@ -289,7 +285,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
               type="submit" disabled={loading}
               className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50"
             >
-              {loading ? "SINKRONISASI..." : <><Save size={20} /> PUBLIKASIKAN PROGRAM</>}
+              {loading ? "MENYIMPAN..." : <><Save size={20} /> PUBLIKASIKAN PROGRAM</>}
             </button>
           </div>
         </div>
@@ -343,7 +339,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                  )}
               </div>
             </div>
-            <div className="mt-8 flex items-center justify-between border-t-2 border-slate-50 pt-6">
+            <div className="mt-8 flex items-center justify-between border-t-2 border-slate-50 pt-6 text-left">
               <div className="flex items-center gap-1 text-[9px] font-black uppercase text-slate-500">
                 <MapPin size={12} className="text-blue-600" /> {prog.is_online ? "Remote" : prog.location}
               </div>
