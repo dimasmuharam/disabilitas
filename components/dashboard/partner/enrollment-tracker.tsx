@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
+import jsPDF from "jsPDF";
 import "jspdf-autotable";
 import { 
   Users, CheckCircle, XCircle, GraduationCap, 
   Mail, Phone, Download, Printer,
   MessageCircle, Info, ChevronDown, FileText,
-  ArrowLeft // Ikon ini tadi lupa di-import yang menyebabkan error build
+  ArrowLeft 
 } from "lucide-react";
 
 interface EnrollmentTrackerProps {
@@ -120,7 +120,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
 
   return (
     <div className="space-y-6 text-left" role="region" aria-label="Manajemen Pendaftar">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-slate-900 pb-6">
+      <div className="flex flex-col justify-between gap-4 border-b-4 border-slate-900 pb-6 md:flex-row md:items-center">
         <div>
           <button 
             onClick={onBack}
@@ -129,7 +129,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
           >
             <ArrowLeft size={16} /> Kembali
           </button>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic text-slate-900 leading-none">
+          <h1 className="text-3xl font-black uppercase italic leading-none tracking-tighter text-slate-900">
             Seleksi Pendaftar
           </h1>
         </div>
@@ -153,9 +153,8 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
         </div>
       </div>
 
-      {/* FILTER PANEL */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-[2rem] border-4 border-slate-900 bg-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-        <div className="space-y-2">
+      <div className="grid grid-cols-1 gap-6 rounded-[2rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] md:grid-cols-2">
+        <div className="space-y-2 text-left">
           <label htmlFor="prog-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Filter per Program</label>
           <div className="relative">
             <select 
@@ -171,8 +170,8 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Status Seleksi</label>
+        <div className="space-y-2 text-left">
+          <label htmlFor="stat-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Status Seleksi</label>
           <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
             {['applied', 'accepted', 'rejected', 'all'].map((s) => (
               <button
@@ -180,21 +179,20 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
                 onClick={() => setFilterStatus(s)}
                 className={`flex-1 rounded-lg py-3 text-[9px] font-black uppercase transition-all ${filterStatus === s ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
               >
-                {s === 'applied' ? 'Menunggu' : s === 'accepted' ? 'Diterima' : 'Ditolak' : 'Semua'}
+                {s === 'applied' ? 'Menunggu' : s === 'accepted' ? 'Diterima' : s === 'rejected' ? 'Ditolak' : 'Semua'}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* LIST DATA */}
       {loading ? (
         <div className="py-20 text-center font-black uppercase italic text-slate-200 animate-pulse">Menghubungkan ke server...</div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-4 text-left">
           {enrollments.length > 0 ? enrollments.map((item) => (
-            <div key={item.id} className="group flex flex-col md:flex-row items-center justify-between gap-6 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:border-blue-600">
-              <div className="flex items-center gap-6 flex-1">
+            <div key={item.id} className="group flex flex-col items-center justify-between gap-6 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:border-blue-600 md:flex-row">
+              <div className="flex flex-1 items-center gap-6">
                 <div className="rounded-3xl bg-blue-50 p-5 text-blue-600 shadow-inner">
                   <GraduationCap size={32} />
                 </div>
@@ -209,7 +207,7 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
 
               <div className="flex items-center gap-3">
                 {item.status === "applied" ? (
-                  <>
+                  <div className="flex gap-2">
                     <button 
                       onClick={() => updateStatus(item.id, "accepted")}
                       aria-label={`Terima pendaftaran ${item.profiles?.full_name}`}
@@ -224,10 +222,10 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
                     >
                       Tolak
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <span className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase ${item.status === 'accepted' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                    {item.status === 'accepted' ? 'Diterima' : 'Ditolak'}
+                    {item.status === 'accepted' ? 'Status: Diterima' : 'Status: Ditolak'}
                   </span>
                 )}
                 <a 
@@ -241,19 +239,19 @@ export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrack
             </div>
           )) : (
             <div className="rounded-[3rem] border-4 border-dashed border-slate-100 py-32 text-center">
-              <p className="text-xl font-black uppercase italic text-slate-200 italic">Belum ada data ditemukan</p>
+              <p className="text-xl font-black uppercase italic text-slate-200">Belum ada data ditemukan</p>
             </div>
           )}
         </div>
       )}
 
-      {/* FOOTER & ACCESSIBLE QUOTES */}
-      <div className="rounded-3xl bg-slate-900 p-6 text-white flex items-start gap-4 border-b-8 border-blue-600 shadow-2xl">
+      <div className="flex items-start gap-4 border-b-8 border-blue-600 bg-slate-900 p-6 text-white shadow-2xl rounded-3xl">
         <Info className="shrink-0 text-blue-400" />
-        <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest opacity-80 text-left">
-          Petunjuk: Gunakan fitur Cetak Daftar Hadir setelah memfilter status menjadi Diterima 
-          pada satu program tertentu agar format tabel PDF menjadi rapi dan profesional.
-        </p>
+        <div className="space-y-1 text-left">
+          <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest opacity-80">
+            Petunjuk: Gunakan fitur **Cetak Daftar Hadir** setelah memfilter status menjadi **Diterima** pada satu program tertentu agar format tabel PDF menjadi rapi dan profesional.
+          </p>
+        </div>
       </div>
     </div>
   );
