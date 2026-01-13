@@ -161,7 +161,7 @@ return (
           <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-6">
               <div>
-                <label htmlFor="portfolio_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"URL Portofolio"}</label>
+                <label htmlFor="portfolio_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"URL Portofolio (website, blog, atau link Google Drive)"}</label>
                 <input id="portfolio_url" type="url" placeholder="https://..." className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-purple-600" value={formData.portfolio_url} onChange={(e) => setFormData({...formData, portfolio_url: e.target.value})} />
               </div>
               <div>
@@ -177,7 +177,7 @@ return (
             </div>
             <div className="space-y-6">
               <div>
-                <label htmlFor="document_disability_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Link Bukti Disabilitas"}</label>
+                <label htmlFor="document_disability_url" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Surat Keterangan Disabilitas atau KTA Organisasi Disabilitas (link Google Drive)"}</label>
                 <input id="document_disability_url" type="url" placeholder="Link KTA / Surat Dokter" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-sm font-bold outline-none transition-all focus:border-purple-600" value={formData.document_disability_url} onChange={(e) => setFormData({...formData, document_disability_url: e.target.value})} />
               </div>
               <div>
