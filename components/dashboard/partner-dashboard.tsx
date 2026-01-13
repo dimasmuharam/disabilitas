@@ -16,7 +16,7 @@ import EnrollmentTracker from "./partner/enrollment-tracker";
 import TalentTracer from "./partner/talent-tracer";
 import ProfileEditor from "./partner/profile-editor";
 import AccountSettings from "./partner/account-settings";
-import InclusionCard from "./partner/inclusion-card"; // Modul Kartu Viral
+import InclusionCard from "./partner/inclusion-card"; 
 
 export default function PartnerDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -41,10 +41,12 @@ export default function PartnerDashboard({ user }: { user: any }) {
       if (error || !partnerData) return;
       setPartner(partnerData);
 
+      // LOGIKA KELENGKAPAN PROFIL (Restored)
       const fields = ["name", "description", "location", "website", "nib_number"];
       const filled = fields.filter(f => partnerData[f] && partnerData[f].length > 0).length;
       const acc = (partnerData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
       setProfileCompletion(Math.round(((filled + acc) / (fields.length + 1)) * 100));
+
     } catch (e) { 
       console.error("Dashboard Fetch Error:", e); 
     } finally { 
@@ -71,7 +73,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
 
   if (loading) return (
     <div role="status" className="flex min-h-screen items-center justify-center font-black uppercase italic text-slate-400 animate-pulse">
-      <Activity className="mr-2 animate-spin" /> Sinkronisasi Data Portal...
+      <Activity className="mr-2 animate-spin" /> Menghubungkan ke Portal Mitra...
     </div>
   );
 
@@ -106,13 +108,22 @@ export default function PartnerDashboard({ user }: { user: any }) {
             <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700">
               <ShieldCheck size={14} /> Skor Inklusi: {partner?.inclusion_score || 0}%
             </span>
-            <a href={`/partner/${partner?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 hover:border-slate-900 transition-all">
-              <ExternalLink size={14} /> Lihat Profil Publik
+            
+            {/* PROGRESS BAR KELENGKAPAN PROFIL (Restored) */}
+            <div className="flex items-center gap-3 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 shadow-sm">
+              <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${profileCompletion}%` }} />
+              </div>
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-tighter">Profil: {profileCompletion}%</span>
+            </div>
+
+            <a href={`/partner/${partner?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 hover:border-slate-900 transition-all shadow-sm">
+              <ExternalLink size={14} /> Profil Publik
             </a>
           </div>
         </div>
         
-        {/* MODUL KARTU VIRAL SEBAGAI PENGGANTI TOMBOL SHARE BIASA */}
+        {/* TOMBOL SHARE KARTU DAMPAK */}
         <div className="w-full md:w-auto">
           <InclusionCard partner={partner} stats={currentStats} />
         </div>
@@ -142,9 +153,8 @@ export default function PartnerDashboard({ user }: { user: any }) {
       <main id="main-content" className="min-h-[600px] outline-none">
         {activeTab === "overview" && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Ringkasan Performa Mitra</h2>
+            <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Ringkasan Capaian Pelatihan</h2>
             
-            {/* STATS CARD */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total {labelTalent}</p>
@@ -159,30 +169,29 @@ export default function PartnerDashboard({ user }: { user: any }) {
                 <p className="mt-1 text-5xl font-black tracking-tighter text-blue-600">{currentStats.rate}%</p>
               </div>
               <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl flex flex-col justify-center">
-                <p className="text-[9px] font-black uppercase tracking-widest opacity-60 italic text-left text-blue-400 leading-none">Impact Statistics</p>
-                <p className="text-3xl font-black italic tracking-tighter uppercase leading-tight mt-1">Capaian Mitra</p>
+                <p className="text-[9px] font-black uppercase tracking-widest opacity-60 italic text-left text-blue-400">Impact Data</p>
+                <p className="text-3xl font-black italic tracking-tighter uppercase leading-tight mt-1">Partner Impact</p>
               </div>
             </div>
 
-            {/* NARASI DAMPAK */}
             <section className="rounded-[3rem] border-2 border-slate-100 bg-slate-50 p-10 italic shadow-inner">
               <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-blue-600">
-                <Award size={16} /> Narasi Capaian Pelatihan
+                <Award size={16} /> Capaian Program Pelatihan
               </h3>
               <div className="max-w-5xl space-y-6 text-xl font-medium leading-relaxed text-slate-800 md:text-2xl">
                 <p>
                   Melalui kolaborasi di platform ini, <strong>{partner?.name}</strong> telah berhasil meningkatkan kapabilitas <strong>{currentStats.total} talenta disabilitas</strong>. 
-                  Mayoritas peserta berasal dari ragam <strong>{Object.entries(disMap).sort((a: any, b: any) => b[1] - a[1])[0]?.[0] || "Data..."}</strong>.
+                  Mayoritas peserta berasal dari ragam <strong>{Object.entries(disMap).sort((a: any, b: any) => b[1] - a[1])[0]?.[0] || "Data Demografi"}</strong>.
                 </p>
                 <p>
-                  Hingga periode saat ini, program Anda telah mencatatkan tingkat keterserapan kerja sebesar <strong>{currentStats.rate}%</strong> dari seluruh alumni.
+                  Hingga periode ini, efektivitas pelatihan menghasilkan keterserapan kerja sebesar <strong>{currentStats.rate}%</strong> dari seluruh lulusan.
                 </p>
               </div>
             </section>
 
-            {/* DEMOGRAFI & GENDER */}
+            {/* DEMOGRAFI & GENDER (Restored) */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2 text-left">
+              <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 shadow-sm">
                   <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
                     <Users className="text-purple-600" size={16} /> Peserta Per Ragam
@@ -197,7 +206,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
                           <div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: `${(count / (currentStats.total || 1)) * 100}%` }} />
                         </div>
                       </div>
-                    )) : <p className="text-[10px] font-bold text-slate-300 uppercase italic">Menunggu pendaftaran pertama...</p>}
+                    )) : <p className="text-[10px] font-bold text-slate-300 uppercase italic">Belum ada data pendaftar</p>}
                   </div>
                 </div>
 
@@ -206,32 +215,32 @@ export default function PartnerDashboard({ user }: { user: any }) {
                     <User className="text-blue-500" size={16} /> Distribusi Peserta
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="rounded-2xl bg-slate-50 p-4 border-l-4 border-blue-500">
+                    <div className="rounded-2xl bg-slate-50 p-4 border-l-4 border-blue-500 text-left">
                       <p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p>
                       <p className="mt-1 text-2xl font-black">{genMap.male || 0}</p>
                     </div>
-                    <div className="rounded-2xl bg-slate-50 p-4 border-l-4 border-pink-500">
+                    <div className="rounded-2xl bg-slate-50 p-4 border-l-4 border-pink-500 text-left">
                       <p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p>
                       <p className="mt-1 text-2xl font-black">{genMap.female || 0}</p>
                     </div>
                   </div>
-                  <div className="mt-8 rounded-2xl bg-blue-50 p-5 border-2 border-blue-100 text-left">
-                    <h4 className="mb-1 flex items-center gap-2 text-[10px] font-black uppercase text-blue-800 leading-none">
-                      <Timer size={14} /> Sinkronisasi Aktif
+                  <div className="mt-8 rounded-2xl bg-blue-50 p-5 border-2 border-blue-100">
+                    <h4 className="mb-1 flex items-center gap-2 text-[10px] font-black uppercase text-blue-800">
+                      <Timer size={14} /> Sinkronisasi
                     </h4>
-                    <p className="text-[9px] font-bold italic text-blue-600 leading-tight">Data disesuaikan secara otomatis saat Anda melakukan seleksi dan pembaruan tracer.</p>
+                    <p className="text-[9px] font-bold italic text-blue-600">Statistik otomatis diperbarui berdasarkan update tracer alumni.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[2.5rem] bg-blue-600 p-10 text-white shadow-2xl flex flex-col justify-between text-left">
+              <div className="rounded-[2.5rem] bg-blue-600 p-10 text-white shadow-2xl flex flex-col justify-between">
                 <div>
                   <Zap className="mb-6 text-blue-200" size={32} />
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70 italic leading-none">Visi Kesetaraan</p>
-                  <p className="mt-4 text-3xl font-black italic tracking-tighter uppercase leading-tight">Mencetak Lulusan Siap Kerja & Inklusif</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70 italic text-left">Visi Kesetaraan</p>
+                  <p className="mt-4 text-3xl font-black italic tracking-tighter uppercase leading-tight text-left">Mencetak Lulusan Siap Kerja & Inklusif</p>
                 </div>
                 <div className="mt-8 border-t border-white/10 pt-4">
-                   <p className="text-[9px] font-bold uppercase opacity-60">Certified Partner 2026</p>
+                   <p className="text-[9px] font-bold uppercase opacity-60 text-left text-slate-100">Verified Partner 2026</p>
                 </div>
               </div>
             </div>
@@ -239,36 +248,11 @@ export default function PartnerDashboard({ user }: { user: any }) {
         )}
 
         <div className="mt-2 text-left">
-           {activeTab === "programs" && (
-             <div className="outline-none">
-               <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Halaman Manajemen Kursus</h2>
-               <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />
-             </div>
-           )}
-           {activeTab === "selection" && (
-             <div className="outline-none">
-               <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Halaman Seleksi Pendaftar</h2>
-               <EnrollmentTracker partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />
-             </div>
-           )}
-           {activeTab === "tracer" && (
-             <div className="outline-none">
-               <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Halaman Tracer Alumni</h2>
-               <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />
-             </div>
-           )}
-           {activeTab === "profile" && (
-             <div className="outline-none">
-               <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Halaman Profil Mitra</h2>
-               <ProfileEditor partner={partner} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />
-             </div>
-           )}
-           {activeTab === "account" && (
-             <div className="outline-none">
-               <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Halaman Keamanan Akun</h2>
-               <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />
-             </div>
-           )}
+           {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+           {activeTab === "selection" && <EnrollmentTracker partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+           {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+           {activeTab === "profile" && <ProfileEditor partner={partner} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
+           {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
         </div>
       </main>
     </div>
