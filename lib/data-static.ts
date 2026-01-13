@@ -1,10 +1,11 @@
 // File: lib/data-static.ts
 // Deskripsi: Basis data statis komprehensif untuk sinkronisasi riset disabilitas.com
-// Aturan: Menggunakan format string bersih, menghindari tanda kutip ganda dalam teks narasi.
+
 
 export const USER_ROLES = {
   TALENT: "talent",
   COMPANY: "company",
+  CAMPUS: "campus",
   PARTNER: "partner",
   GOVERNMENT: "government",
   ADMIN: "admin", // Tetap tambahkan di sini untuk pengenalan sistem
@@ -13,7 +14,8 @@ export const USER_ROLES = {
 export const USER_ROLE_LABELS = [
   { id: USER_ROLES.TALENT, label: "Talenta Disabilitas" },
   { id: USER_ROLES.COMPANY, label: "Perusahaan / Pemberi Kerja" },
-  { id: USER_ROLES.PARTNER, label: "Kampus / Mitra Pelatihan" },
+  { id: USER_ROLES.CAMPUS, label: "Perguruan Tinggi" },
+  { id: USER_ROLES.PARTNER, label: "LMitra Pelatihan" },
   { id: USER_ROLES.GOVERNMENT, label: "Instansi Pemerintah" },
   { id: USER_ROLES.ADMIN, label: "Super Admin" },
  
@@ -70,13 +72,6 @@ export const EMPLOYER_CATEGORIES = [
   "Lainnya"
 ];
 
-export const TRAINING_ORGANIZER_CATEGORIES = [
-  "Pemerintah",
-  "Perguruan Tinggi",
-  "Mitra Pelatihan (LKP/LPK)",
-  "Organisasi / Komunitas Disabilitas",
-  "Lainnya"
-];
 export const COMPANY_SIZE_CATEGORIES = [
   "Mikro (1-10 Karyawan)",
   "Kecil (11-50 Karyawan)",
@@ -195,7 +190,7 @@ export const UNIVERSITIES = [
   "Universitas Gunadarma", "Universitas Kristen Satya Wacana (UKSW)", "Universitas Pasundan (Unpas)"
 ].sort();
 
-// LEMBAGA PELATIHAN & PEMERINTAH (TRAINING PARTNERS)
+// LEMBAGA PELATIHAN (TRAINING PARTNERS)
 export const TRAINING_PARTNERS = [
   "Kementerian Komunikasi dan Digital (Komdigi)",
   "BBPVP Bekasi (Cevest)",
@@ -207,6 +202,8 @@ export const TRAINING_PARTNERS = [
   "Ruangguru (Lembaga Kursus Swasta)",
   "Binar Academy",
   "Hacktiv8",
+  "Karya Tunanetra (Kartunet)",
+  "Persatuan Tunanetra Indonesia (Pertuni)",
   "Mitra Lembaga Latihan Kerja (LLK) Daerah"
 ].sort();
 
@@ -248,7 +245,7 @@ export const EDUCATION_BARRIERS = [
   "Faktor Lingkungan / Bullying"
 ].sort();
 
-// 1. AKOMODASI YANG DITERIMA DARI INSTITUSI (Pendidikan)
+// AKOMODASI YANG DITERIMA DARI INSTITUSI (Pendidikan)
 export const ACADEMIC_SUPPORT_RECEIVED = [
   "Penyediaan Juru Bahasa Isyarat oleh institusi pendidikan",
   "Pendampingan Khusus dari Unit Layanan Disabilitas (ULD)",
