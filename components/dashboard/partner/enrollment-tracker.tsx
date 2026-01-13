@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { 
-  Users, CheckCircle, XCircle, Search, 
-  Filter, ArrowLeft, GraduationCap, 
-  Mail, Phone, FileText, BadgeInfo
+  Users, CheckCircle, XCircle, GraduationCap, 
+  Mail, Phone, Download, Printer,
+  MessageCircle, Info, ChevronDown, FileText
 } from "lucide-react";
 
 interface EnrollmentTrackerProps {
@@ -15,145 +18,272 @@ interface EnrollmentTrackerProps {
 
 export default function EnrollmentTracker({ partnerId, onBack }: EnrollmentTrackerProps) {
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [trainings, setTrainings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("applied");
+  const [selectedTrainingId, setSelectedTrainingId] = useState<string>("all");
 
-  useEffect(() => {
-    fetchEnrollments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partnerId, filterStatus]);
+  // Fetch daftar program milik partner
+  const fetchFilterData = useCallback(async () => {
+    const { data } = await supabase
+      .from("trainings")
+      .select("id, title, start_date")
+      .eq("partner_id", partnerId);
+    if (data) setTrainings(data);
+  }, [partnerId]);
 
-  async function fetchEnrollments() {
+  // Fetch pendaftar dengan join profiles (termasuk gender & city)
+  const fetchEnrollments = useCallback(async () => {
     setLoading(true);
-    // Kita join ke tabel trainings untuk ambil judul program 
-    // dan ke tabel profiles untuk ambil data talenta
-    const { data, error } = await supabase
+    let query = supabase
       .from("trainees")
       .select(`
         *,
-        trainings (title, category),
-        profiles (full_name, email, phone, disability_type, scholarship_type, skills)
+        trainings!inner (id, title, partner_id, start_date),
+        profiles (full_name, email, phone, disability_type, gender, city)
       `)
-      .eq("partner_id", partnerId)
-      .eq("status", filterStatus)
-      .order("applied_at", { ascending: false });
+      .eq("trainings.partner_id", partnerId);
 
+    if (filterStatus !== "all") query = query.eq("status", filterStatus);
+    if (selectedTrainingId !== "all") query = query.eq("training_id", selectedTrainingId);
+
+    const { data, error } = await query.order("created_at", { ascending: false });
     if (data) setEnrollments(data);
     setLoading(false);
-  }
+  }, [partnerId, filterStatus, selectedTrainingId]);
+
+  useEffect(() => {
+    fetchFilterData();
+    fetchEnrollments();
+  }, [fetchEnrollments, fetchFilterData]);
+
+  // LOGIC: CETAK PDF DAFTAR HADIR PROFESIONAL
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    const activeTraining = trainings.find(t => t.id === selectedTrainingId);
+    const orgName = "FORUM ASN INKLUSIF"; // Nama organisasi utama sesuai context Mas Dimas
+
+    // Header dengan Logo (Placeholder - Mas bisa ganti dengan base64 logo.png nantinya)
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("DAFTAR HADIR PESERTA", 105, 20, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Penyelenggara: ${orgName}`, 105, 27, { align: "center" });
+    doc.text(`Program: ${activeTraining?.title || "Semua Program"}`, 105, 32, { align: "center" });
+    doc.text(`Tanggal: ${activeTraining?.start_date || "-"}`, 105, 37, { align: "center" });
+    
+    doc.line(20, 42, 190, 42); // Garis pemisah
+
+    // Mapping Data untuk Tabel
+    const tableRows = enrollments.map((item, index) => [
+      index + 1,
+      item.profiles?.full_name?.toUpperCase(),
+      item.profiles?.city || "-",
+      item.profiles?.gender === "Laki-laki" ? "L" : "P",
+      item.profiles?.disability_type,
+      `${index + 1}. .................` // Kolom Tanda Tangan
+    ]);
+
+    (doc as any).autoTable({
+      startY: 48,
+      head: [['NO', 'NAMA LENGKAP', 'ASAL DAERAH', 'L/P', 'RAGAM DISABILITAS', 'TANDA TANGAN']],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillGray: [40, 40, 40], textColor: 255, fontSize: 8, halign: 'center' },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 10, halign: 'center' },
+        4: { cellWidth: 40 },
+        5: { cellWidth: 40 }
+      },
+      styles: { fontSize: 8, cellPadding: 3 }
+    });
+
+    doc.save(`Daftar_Hadir_${activeTraining?.title || 'Program'}.pdf`);
+  };
+
+  // LOGIC: EXPORT EXCEL
+  const exportToExcel = () => {
+    const dataToExport = enrollments.map((item, index) => ({
+      No: index + 1,
+      Nama: item.profiles?.full_name,
+      Email: item.profiles?.email,
+      WhatsApp: item.profiles?.phone,
+      Gender: item.profiles?.gender,
+      Disabilitas: item.profiles?.disability_type,
+      Status: item.status
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Peserta");
+    XLSX.writeFile(workbook, "Data_Peserta.xlsx");
+  };
 
   async function updateStatus(id: string, newStatus: string) {
-    const { error } = await supabase
-      .from("trainees")
-      .update({ status: newStatus, updated_at: new Date() })
-      .eq("id", id);
-
+    const { error } = await supabase.from("trainees").update({ status: newStatus, updated_at: new Date() }).eq("id", id);
     if (!error) fetchEnrollments();
-  }
-
-  return (
-    <div className="space-y-8 duration-500 animate-in fade-in">
-      {/* HEADER & FILTER */}
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+  }return (
+    <div className="space-y-6" role="region" aria-label="Pelacakan Pendaftaran Peserta">
+      {/* HEADER & NAVIGASI */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-black pb-6">
         <div>
-          <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">Seleksi Pendaftar</h2>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Kelola pendaftaran talenta ke program Anda</p>
+          <button 
+            onClick={onBack}
+            className="mb-2 flex items-center gap-2 text-sm font-bold hover:underline"
+            aria-label="Kembali ke Dashboard Utama"
+          >
+            ← KEMBALI
+          </button>
+          <h1 className="text-3xl font-black uppercase tracking-tighter italic">
+            Manajemen Pendaftar
+          </h1>
         </div>
 
-        <div className="flex gap-2 rounded-2xl bg-slate-100 p-1">
-          {["applied", "accepted", "rejected"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
-              className={`rounded-xl px-6 py-2 text-[9px] font-black uppercase transition-all ${
-                filterStatus === s ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
-              }`}
-            >
-              {s === 'applied' ? 'Menunggu' : s === 'accepted' ? 'Diterima' : 'Ditolak'}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-3">
+          {/* Tombol Export Excel - Hanya aktif jika program dipilih */}
+          <button
+            onClick={exportToExcel}
+            disabled={selectedTrainingId === "all" || enrollments.length === 0}
+            className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
+            aria-label="Unduh data pendaftar ke file Excel"
+          >
+            <Download size={18} aria-hidden="true" /> EXPORT EXCEL
+          </button>
+
+          {/* Tombol Cetak PDF - Khusus untuk Daftar Hadir (Filter status 'accepted' otomatis disarankan di UI) */}
+          <button
+            onClick={generatePDF}
+            disabled={selectedTrainingId === "all" || enrollments.length === 0}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
+            aria-label="Cetak Daftar Hadir Format PDF"
+          >
+            <Printer size={18} aria-hidden="true" /> CETAK DAFTAR HADIR (PDF)
+          </button>
         </div>
       </div>
 
+      {/* FILTER PANEL */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-yellow-400 p-4 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="program-filter" className="font-bold uppercase text-sm">Pilih Program:</label>
+          <select 
+            id="program-filter"
+            value={selectedTrainingId}
+            onChange={(e) => setSelectedTrainingId(e.target.value)}
+            className="p-2 border-2 border-black font-bold focus:ring-4 focus:ring-black outline-none"
+          >
+            <option value="all">Semua Program (Preview Saja)</option>
+            {trainings.map(t => (
+              <option key={t.id} value={t.id}>{t.title}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="status-filter" className="font-bold uppercase text-sm">Status Kelulusan:</label>
+          <select 
+            id="status-filter"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="p-2 border-2 border-black font-bold focus:ring-4 focus:ring-black outline-none"
+          >
+            <option value="applied">Menunggu Review</option>
+            <option value="accepted">Diterima (Lulus)</option>
+            <option value="rejected">Ditolak</option>
+            <option value="all">Semua Status</option>
+          </select>
+        </div>
+      </div>
+
+      {/* DATA TABLE */}
       {loading ? (
-        <div className="animate-pulse p-20 text-center font-black uppercase italic text-slate-300">Memuat Pendaftar...</div>
+        <div className="p-10 text-center font-bold animate-pulse" aria-live="polite">Memuat data talenta...</div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {enrollments.length > 0 ? enrollments.map((item) => (
-            <div key={item.id} className="flex flex-col items-start gap-8 rounded-[3rem] border-2 border-slate-50 bg-white p-8 shadow-sm transition-all hover:border-slate-200 lg:flex-row lg:items-center">
-              
-              {/* Info Talenta & Program */}
-              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-blue-600 p-3 text-white">
-                    <GraduationCap size={20} />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-black uppercase italic leading-none tracking-tighter text-slate-900">
-                      {item.profiles?.full_name}
-                    </h4>
-                    <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-blue-600">
-                      Mendaftar: {item.trainings?.title}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Badge Riset: Beasiswa & Disabilitas */}
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[9px] font-black uppercase text-slate-600">
-                    {item.profiles?.disability_type}
-                  </span>
-                  <span className={`rounded-full border px-3 py-1 text-[9px] font-black uppercase ${
-                    item.profiles?.scholarship_type === 'Tanpa Beasiswa (Mandiri)' 
-                    ? "border-orange-100 bg-orange-50 text-orange-600" 
-                    : "border-emerald-100 bg-emerald-50 text-emerald-600"
-                  }`}>
-                    {item.profiles?.scholarship_type || "Bukan Penerima Beasiswa"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Data Kontak & Skills */}
-              <div className="hidden w-64 space-y-2 border-l border-slate-100 pl-8 xl:block">
-                 <p className="text-[9px] font-black uppercase text-slate-400">Kontak Talenta</p>
-                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                   <Mail size={12}/> {item.profiles?.email?.substring(0, 15)}...
-                 </div>
-                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                   <Phone size={12}/> {item.profiles?.phone || '-'}
-                 </div>
-              </div>
-
-              {/* Aksi Persetujuan */}
-              <div className="flex w-full items-center gap-2 border-t border-slate-100 pt-4 lg:w-auto lg:border-t-0 lg:pt-0">
-                {filterStatus === "applied" && (
-                  <>
-                    <button 
-                      onClick={() => updateStatus(item.id, "accepted")}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-4 text-[9px] font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-emerald-600 lg:flex-none"
-                    >
-                      <CheckCircle size={14} /> Terima
-                    </button>
-                    <button 
-                      onClick={() => updateStatus(item.id, "rejected")}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 bg-white px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all hover:border-red-100 hover:text-red-500 lg:flex-none"
-                    >
-                      <XCircle size={14} /> Tolak
-                    </button>
-                  </>
-                )}
-                {filterStatus !== "applied" && (
-                  <span className="text-[9px] font-black uppercase italic text-slate-300">Sudah Diproses pada {new Date(item.updated_at).toLocaleDateString('id-ID')}</span>
-                )}
-              </div>
-            </div>
-          )) : (
-            <div className="rounded-[4rem] border-4 border-dashed border-slate-100 p-20 text-center">
-              <p className="font-black uppercase italic tracking-tighter text-slate-300">Tidak ada pendaftar dalam kategori ini.</p>
-            </div>
-          )}
+        <div className="overflow-x-auto border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white">
+          <table className="w-full text-left border-collapse" aria-label="Tabel daftar pendaftar program">
+            <thead className="bg-black text-white uppercase text-sm">
+              <tr>
+                <th className="p-4 border-r border-white/20">Nama Talenta</th>
+                <th className="p-4 border-r border-white/20">Info Disabilitas</th>
+                <th className="p-4 border-r border-white/20">Program</th>
+                <th className="p-4">Aksi Strategis</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y-2 divide-black">
+              {enrollments.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="p-8 text-center font-bold text-gray-500">Tidak ada pendaftar ditemukan.</td>
+                </tr>
+              ) : (
+                enrollments.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4">
+                      <div className="font-black text-lg">{item.profiles?.full_name}</div>
+                      <div className="text-sm font-bold opacity-70 flex gap-2">
+                        <span>{item.profiles?.gender === "Laki-laki" ? "(L)" : "(P)"}</span>
+                        <span>•</span>
+                        <span>{item.profiles?.city || "Lokasi N/A"}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="bg-black text-white px-2 py-1 text-xs font-bold uppercase">
+                        {item.profiles?.disability_type}
+                      </span>
+                    </td>
+                    <td className="p-4 italic font-medium">
+                      {item.trainings?.title}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        {item.status === "applied" && (
+                          <>
+                            <button 
+                              onClick={() => updateStatus(item.id, "accepted")}
+                              className="bg-green-500 p-2 border-2 border-black hover:bg-green-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                              title="Terima Peserta"
+                              aria-label={`Terima ${item.profiles?.full_name}`}
+                            >
+                              <CheckCircle size={20} color="white" />
+                            </button>
+                            <button 
+                              onClick={() => updateStatus(item.id, "rejected")}
+                              className="bg-red-500 p-2 border-2 border-black hover:bg-red-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                              title="Tolak Peserta"
+                              aria-label={`Tolak ${item.profiles?.full_name}`}
+                            >
+                              <XCircle size={20} color="white" />
+                            </button>
+                          </>
+                        )}
+                        <a 
+                          href={`mailto:${item.profiles?.email}`}
+                          className="bg-white p-2 border-2 border-black hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                          aria-label={`Kirim email ke ${item.profiles?.full_name}`}
+                        >
+                          <Mail size={20} />
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       )}
+
+      {/* FOOTER INFO */}
+      <div className="bg-black text-white p-4 flex items-start gap-3 border-b-8 border-red-600">
+        <Info className="shrink-0" />
+        <p className="text-xs font-bold uppercase leading-tight">
+          Catatan: Gunakan fitur "Cetak Daftar Hadir" setelah Anda menyaring status pendaftar menjadi "Diterima" 
+          pada program tertentu untuk keperluan administratif lapangan.
+        </p>
+      </div>
     </div>
   );
 }
