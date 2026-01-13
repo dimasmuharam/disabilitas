@@ -133,7 +133,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           <GraduationCap className="text-emerald-600" size={36} /> Riwayat Akademik
         </h1>
         <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">
-          Data riset inklusi pendidikan nasional v2026
+          Lengkapi Profil Akademik Anda untuk Relevansi Karir Inklusif
         </p>
       </header>
 
@@ -255,7 +255,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         {/* SEKSI 3: DUKUNGAN & TOOLS (MULTI-CHECKBOX) */}
         <div className="grid gap-10 md:grid-cols-2">
           <fieldset className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
-            <legend className="sr-only">Dukungan dari Institusi</legend>
+            <legend className="sr-only">Dukungan dari Institusi Pendidikan selama masa Studi</legend>
             <h3 id="support-title" className="mb-6 flex items-center gap-3 text-xs font-black uppercase tracking-tight text-emerald-700 italic">
               <Handshake size={24} /> Dukungan dari Institusi
             </h3>
@@ -276,7 +276,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           </fieldset>
 
           <fieldset className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
-            <legend className="sr-only">Teknologi Asistif Mandiri</legend>
+            <legend className="sr-only">Teknologi Asistif semasa Studi</legend>
             <h3 id="tech-title" className="mb-6 flex items-center gap-3 text-xs font-black uppercase tracking-tight text-purple-700 italic">
               <Cpu size={24} /> Teknologi Asistif Mandiri
             </h3>
@@ -299,7 +299,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
 
         {/* SEKSI 4: HAMBATAN */}
         <fieldset className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(217,119,6,0.15)] text-left">
-          <legend className="sr-only">Hambatan Selama Pendidikan</legend>
+          <legend className="sr-only">Hambatan semasa Studi</legend>
           <h3 id="barrier-title" className="mb-6 flex items-center gap-4 text-xs font-black uppercase tracking-[0.2em] text-amber-600 italic">
             <AlertTriangle size={24} /> Hambatan Selama Pendidikan
           </h3>
