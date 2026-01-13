@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Lock, Mail, ShieldCheck, AlertTriangle, 
-  ArrowLeft, Eye, EyeOff, Save, KeyRound, LogOut
+  ArrowLeft, Eye, EyeOff, Save, KeyRound, LogOut,
+  CheckCircle2 // PERBAIKAN: Menambahkan impor yang hilang
 } from "lucide-react";
 
 interface AccountSettingsProps {
@@ -27,7 +28,6 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
   const handleUpdateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validasi Dasar
     if (!currentPassword) {
       setMessage({ text: "Masukkan password saat ini untuk memverifikasi perubahan.", isError: true });
       return;
@@ -42,7 +42,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
     setMessage({ text: "", isError: false });
 
     try {
-      // 1. Re-autentikasi / Verifikasi Password Saat Ini (Keamanan Ketat)
+      // 1. Verifikasi Password Saat Ini
       const { error: reauthError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword,
@@ -61,18 +61,17 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
         return;
       }
 
-      // 3. Eksekusi Update ke Supabase Auth
+      // 3. Eksekusi Update
       const { error: updateError } = await supabase.auth.updateUser(updateData);
       if (updateError) throw updateError;
 
       setMessage({ 
         text: email !== user.email 
-          ? "Akun diperbarui! Silakan cek email baru Anda untuk konfirmasi perubahan." 
+          ? "Akun diperbarui! Silakan konfirmasi email baru Anda melalui link yang dikirimkan." 
           : "Keamanan akun berhasil diperbarui!", 
         isError: false 
       });
       
-      // Reset field password setelah sukses
       setNewPassword("");
       setConfirmPassword("");
       setCurrentPassword("");
@@ -85,15 +84,13 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
   };
 
   const handleSignOutAll = async () => {
-    if (!confirm("Keluar dari semua perangkat yang terhubung? Anda harus login kembali di perangkat ini.")) return;
-    
+    if (!confirm("Keluar dari semua perangkat?")) return;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      if (error) throw error;
+      await supabase.auth.signOut({ scope: 'global' });
       window.location.href = "/masuk";
     } catch (error: any) {
-      alert("Gagal keluar: " + error.message);
+      alert("Gagal: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -109,13 +106,12 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
       </button>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-        {/* INFO PANEL */}
-        <div className="space-y-6">
+        <div className="space-y-6 text-left">
           <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
             <ShieldCheck className="mb-6 text-blue-400" size={32} />
             <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Otoritas Akun</h2>
             <p className="mt-4 text-[11px] font-medium leading-relaxed opacity-70">
-              Kelola akses masuk institusi Mitra Pelatihan Anda. Perubahan email atau password memerlukan verifikasi password saat ini.
+              Kelola kredensial akses institusi Mitra Pelatihan Anda.
             </p>
           </div>
 
@@ -125,23 +121,20 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
           >
             <div className="text-left">
               <p className="text-[10px] font-black uppercase text-slate-900 group-hover:text-red-600">Sesi Perangkat</p>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">Keluar dari semua perangkat</p>
+              <p className="text-[9px] font-bold text-slate-400 uppercase">Sign out global</p>
             </div>
             <LogOut size={20} className="text-slate-300 group-hover:text-red-600" />
           </button>
         </div>
 
-        {/* FORM PANEL */}
         <div className="lg:col-span-2">
           <form onSubmit={handleUpdateAccount} className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-10">
-            
-            {/* EMAIL SECTION */}
             <div className="space-y-4">
               <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-600 italic">
                 <Mail size={16} /> Identitas Login
               </h3>
               <div className="space-y-2">
-                <label className="ml-1 block text-[10px] font-black uppercase text-slate-400">Alamat Email Aktif</label>
+                <label className="ml-1 block text-[10px] font-black uppercase text-slate-400">Email Aktif</label>
                 <input
                   type="email"
                   value={email}
@@ -151,13 +144,10 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
               </div>
             </div>
 
-            {/* PASSWORD SECTION */}
             <div className="space-y-6 pt-4 border-t-2 border-slate-50">
               <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-600 italic">
                 <Lock size={16} /> Ganti Kata Sandi
               </h3>
-              <p className="text-[9px] font-bold uppercase text-slate-400 italic">*Biarkan kosong jika tidak ingin mengubah password.</p>
-              
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="ml-1 block text-[10px] font-black uppercase text-slate-400">Password Baru</label>
@@ -180,7 +170,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                 </div>
 
                 <div className="space-y-2">
-                  <label className="ml-1 block text-[10px] font-black uppercase text-slate-400">Konfirmasi Password Baru</label>
+                  <label className="ml-1 block text-[10px] font-black uppercase text-slate-400">Konfirmasi Baru</label>
                   <input
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}
@@ -192,21 +182,19 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
               </div>
             </div>
 
-            {/* VERIFIKASI KEAMANAN (WAJIB ISI) */}
-            <div className="rounded-3xl bg-blue-50 p-8 space-y-4 border-2 border-blue-100">
+            <div className="rounded-3xl bg-blue-50 p-8 space-y-4 border-2 border-blue-100 text-left">
                <div className="flex items-center gap-3 text-blue-800">
                   <KeyRound size={20} />
                   <h4 className="text-[10px] font-black uppercase tracking-widest leading-none">Konfirmasi Otoritas</h4>
                </div>
                <div className="space-y-2">
-                 <label className="ml-1 block text-[10px] font-black uppercase text-blue-600">Masukkan Password Saat Ini</label>
+                 <label className="ml-1 block text-[10px] font-black uppercase text-blue-600">Password Saat Ini</label>
                  <input
                    type="password"
                    required
                    value={currentPassword}
                    onChange={(e) => setCurrentPassword(e.target.value)}
-                   placeholder="Wajib diisi untuk simpan perubahan"
-                   className="block w-full rounded-2xl border-2 border-blue-200 bg-white p-4 font-bold outline-none focus:border-slate-900 shadow-sm"
+                   className="block w-full rounded-2xl border-2 border-blue-200 bg-white p-4 font-bold outline-none focus:border-slate-900"
                  />
                </div>
             </div>
@@ -221,13 +209,9 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 py-6 text-[11px] font-black uppercase italic tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-600 active:scale-[0.98] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 py-6 text-[11px] font-black uppercase italic tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-600 disabled:opacity-50"
             >
-              {loading ? "PROSES SINKRONISASI..." : (
-                <>
-                  <Save size={20} /> SIMPAN PERUBAHAN AKUN
-                </>
-              )}
+              {loading ? "SINKRONISASI..." : <><Save size={20} /> SIMPAN PERUBAHAN</>}
             </button>
           </form>
         </div>
