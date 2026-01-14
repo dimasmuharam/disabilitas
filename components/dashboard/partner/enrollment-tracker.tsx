@@ -36,7 +36,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
   const [announcement, setAnnouncement] = useState("");
   const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
-  // --- PERBAIKAN: PENAMBAHAN FUNGSI TOGGLE SELECT ---
+  // FUNGSI TOGGLE SELECT
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -105,7 +105,6 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
       setAnnouncement(successText);
       setStatusMessage({ type: 'success', text: successText });
       
-      // Hilangkan pesan sukses setelah 5 detik
       setTimeout(() => setStatusMessage(null), 5000);
       fetchEnrollments();
     } catch (err) {
@@ -119,7 +118,6 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
 
   return (
     <div className="space-y-8 text-left">
-      {/* ARIA LIVE REGION (Bisikan untuk Screen Reader) */}
       <div className="sr-only" aria-live="polite" role="status">
         {announcement}
       </div>
@@ -133,13 +131,22 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
           <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Seleksi Pendaftar</h1>
         </div>
         <div className="flex flex-wrap gap-3">
+          {/* TOMBOL CETAK DAFTAR HADIR - HANYA AKTIF JIKA TRAINING DIPILIH */}
+          <button 
+            disabled={selectedTrainingId === "all" || enrollments.length === 0}
+            onClick={() => generateEnrollmentPDF(enrollments, partnerName, trainings.find(t => t.id === selectedTrainingId)?.title)} 
+            className="flex items-center gap-2 rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 text-[10px] font-black uppercase text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-50 disabled:opacity-20 disabled:cursor-not-allowed"
+          >
+            <Printer size={18} /> Cetak Daftar Hadir
+          </button>
+          
           <button onClick={() => exportEnrollmentToExcel(enrollments, partnerName)} className="flex items-center gap-2 rounded-2xl border-4 border-slate-900 bg-emerald-500 px-6 py-4 text-[10px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-emerald-600">
             <Download size={18} /> Export Excel
           </button>
         </div>
       </div>
 
-      {/* NOTIFICATION BANNER (Gantinya Pop-up) */}
+      {/* NOTIFICATION BANNER */}
       {statusMessage && (
         <div 
           className={`flex animate-in fade-in slide-in-from-top-4 items-center gap-4 rounded-2xl border-4 p-6 ${
@@ -210,7 +217,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
         </div>
       </div>
 
-      {/* DATA LIST & SMART EMPTY STATES */}
+      {/* DATA LIST */}
       <div className="grid grid-cols-1 gap-4" role="list" aria-label="Daftar Pendaftar">
         {loading ? (
           <div className="py-32 text-center font-black uppercase italic text-slate-300 animate-pulse">Menghubungkan Database...</div>
@@ -273,11 +280,6 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
             <h3 className="text-2xl font-black uppercase italic text-slate-300 tracking-tighter">
               {filterStatus === 'applied' ? 'Semua Pendaftar Sudah Diproses' : 'Belum Ada Pendaftaran'}
             </h3>
-            <p className="mt-2 text-[10px] font-bold uppercase text-slate-200">
-              {filterStatus === 'applied' 
-                ? 'Tidak ada antrean baru saat ini. Silakan cek tab Lolos atau Gagal.' 
-                : 'Coba ubah filter atau pilih program pelatihan yang berbeda.'}
-            </p>
           </div>
         )}
       </div>
@@ -306,17 +308,6 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
           </button>
         </nav>
       )}
-
-      {/* FOOTER INFO */}
-      <div className="flex items-start gap-5 rounded-[2.5rem] border-b-8 border-blue-600 bg-slate-900 p-8 text-white shadow-2xl">
-        <Info className="shrink-0 text-blue-400" size={24} />
-        <div className="space-y-2 text-left">
-          <p className="text-[11px] font-black uppercase italic leading-none tracking-[0.2em] text-blue-400">Aksesibilitas Seleksi</p>
-          <p className="max-w-4xl text-xs font-bold leading-relaxed italic opacity-80">
-            Gunakan tombol <strong>Tab</strong> untuk berpindah antar pendaftar dengan cepat. Status pembaruan akan dibacakan secara otomatis oleh sistem pembaca layar tanpa mengganggu fokus Anda.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
