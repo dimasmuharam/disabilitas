@@ -4,90 +4,85 @@ import { supabase } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 /**
- * UPDATE PROFIL UTAMA (Tabel: public.profiles)
- * Fungsi ini menangani pembaruan data dasar, akademik, dan skill.
+ * UPDATE PROFIL UTAMA (Tabel: profiles)
+ * Menangani data dasar, akademik, dan keahlian.
+ * Data dikunci sesuai skema database dan data-static.ts.
  */
 export async function updateTalentProfile(userId: string, updates: any) {
   try {
-    // 1. Validasi ID
-    if (!userId) throw new Error("User ID tidak ditemukan.");
+    if (!userId) return { success: false, error: "User ID tidak ditemukan." };
 
-    // 2. Kerapihan Data: Buang field internal yang bukan kolom di tabel 'profiles'
-    // Masalah 'undefined' sering terjadi karena kita mengirim kolom yang tidak ada di SQL.
-    const { 
-      manual_university, 
-      manual_major, 
-      temp_skill, 
-      ...cleanUpdates 
-    } = updates;
-
-    // 3. Normalisasi Data sesuai Skema SQL Mas
-    const finalPayload = {
-      ...cleanUpdates,
-      // Pastikan kolom INTEGER tetap number atau null
-      graduation_date: cleanUpdates.graduation_date ? parseInt(cleanUpdates.graduation_date.toString()) : null,
-      expected_salary: cleanUpdates.expected_salary ? BigInt(cleanUpdates.expected_salary.toString()).toString() : null,
+    // 1. NORMALISASI DATA (Sinkronisasi dengan Skema SQL Mas)
+    // Memastikan tipe data yang dikirim sesuai dengan tipe kolom di PostgreSQL
+    const finalPayload: any = {
+      ...updates,
+      // graduation_date harus Integer (Skema: integer)
+      graduation_date: updates.graduation_date ? parseInt(updates.graduation_date.toString()) : null,
       
-      // Pastikan kolom ARRAY tidak bernilai undefined (Postgres butuh array kosong atau null)
-      education_barrier: Array.isArray(cleanUpdates.education_barrier) ? cleanUpdates.education_barrier : [],
-      academic_support_received: Array.isArray(cleanUpdates.academic_support_received) ? cleanUpdates.academic_support_received : [],
-      academic_assistive_tools: Array.isArray(cleanUpdates.academic_assistive_tools) ? cleanUpdates.academic_assistive_tools : [],
-      used_assistive_tools: Array.isArray(cleanUpdates.used_assistive_tools) ? cleanUpdates.used_assistive_tools : [],
-      preferred_accommodations: Array.isArray(cleanUpdates.preferred_accommodations) ? cleanUpdates.preferred_accommodations : [],
-      skills: Array.isArray(cleanUpdates.skills) ? cleanUpdates.skills : [],
+      // expected_salary harus ditangani sebagai string untuk menghindari BigInt Serialization Error
+      expected_salary: updates.expected_salary ? updates.expected_salary.toString() : null,
+
+      // Memastikan kolom ARRAY tidak undefined agar tidak ditolak PostgreSQL
+      education_barrier: Array.isArray(updates.education_barrier) ? updates.education_barrier : [],
+      academic_support_received: Array.isArray(updates.academic_support_received) ? updates.academic_support_received : [],
+      academic_assistive_tools: Array.isArray(updates.academic_assistive_tools) ? updates.academic_assistive_tools : [],
+      skills: Array.isArray(updates.skills) ? updates.skills : [],
       
       updated_at: new Date().toISOString(),
     };
 
-    // 4. Eksekusi ke Database
-    const { data, error } = await supabase
+    // 2. EKSEKUSI KE DATABASE
+    const { error } = await supabase
       .from("profiles")
       .update(finalPayload)
-      .eq("id", userId)
-      .select()
-      .single();
+      .eq("id", userId);
 
     if (error) {
-      console.error("Database Error Detail:", error.message);
+      console.error("Database Error:", error.message);
       return { success: false, error: error.message };
     }
 
-    // Refresh cache agar data terbaru langsung muncul di dashboard
-    revalidatePath("/dashboard");
+    // 3. REVALIDASI CACHE
+    // Memastikan UI mendapatkan data terbaru tanpa perlu reload manual
     revalidatePath("/profile");
+    revalidatePath("/dashboard");
 
-    return { success: true, data };
-  } catch (error: any) {
-    console.error("Critical Server Action Error:", error.message);
-    return { success: false, error: error.message || "Gagal menghubungi server." };
+    // 4. RETURN KONSISTEN
+    // PENTING: Jangan me-return objek 'data' hasil select karena bisa mengandung BigInt
+    // yang menyebabkan Next.js crash (undefined result).
+    return { success: true };
+
+  } catch (err: any) {
+    console.error("Server Action Crash Detail:", err.message);
+    // Jaminan agar 'result' di frontend tidak pernah bernilai undefined
+    return { success: false, error: err.message || "Terjadi kegagalan sistem server." };
   }
 }
 
 /**
- * MANAJEMEN RIWAYAT KERJA (Tabel: public.work_experiences)
+ * MANAJEMEN RIWAYAT KERJA (Tabel: work_experiences)
  */
 export async function upsertWorkExperience(experience: any) {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("work_experiences")
       .upsert({
         ...experience,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'id'
-      })
-      .select();
+      });
 
     if (error) throw error;
-    revalidatePath("/dashboard/career");
-    return { success: true, data };
+    revalidatePath("/profile");
+    return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
 
 /**
- * SINKRONISASI SERTIFIKAT (Trainees -> Certifications)
+ * SINKRONISASI SERTIFIKAT (Pelatihan -> Sertifikasi)
  */
 export async function syncOfficialCertifications(userId: string) {
   try {
@@ -116,10 +111,12 @@ export async function syncOfficialCertifications(userId: string) {
     })) || [];
 
     if (officialCerts.length > 0) {
-      await supabase.from("certifications").upsert(officialCerts, { onConflict: 'profile_id, training_id' });
+      await supabase.from("certifications").upsert(officialCerts, { 
+        onConflict: 'profile_id, training_id' 
+      });
     }
 
-    return { success: true, data: officialCerts };
+    return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
