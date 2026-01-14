@@ -6,17 +6,17 @@ import {
   Users, CheckCircle, XCircle, GraduationCap, 
   Mail, Download, Printer, ChevronDown, 
   FileText, ArrowLeft, BadgeCheck, Clock, User,
-  ExternalLink, Search
+  ExternalLink, Search, Info 
 } from "lucide-react";
 import Link from "next/link";
 
-// Import Fungsi Export dari file helper yang kita buat sebelumnya
+// Import Fungsi Export dari file helper
 import { generateEnrollmentPDF, exportEnrollmentToExcel } from "./enrollment-export-helper";
 
 interface EnrollmentTrackerProps {
   partnerId: string;
   onBack: () => void;
-  partnerName?: string; // Menangkap nama partner untuk kebutuhan KOP Surat
+  partnerName?: string;
 }
 
 export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mitra Pelatihan" }: EnrollmentTrackerProps) {
@@ -26,7 +26,6 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
   const [filterStatus, setFilterStatus] = useState("applied");
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>("all");
 
-  // 1. Ambil daftar program pelatihan milik partner untuk dropdown filter
   const fetchFilterData = useCallback(async () => {
     const { data } = await supabase
       .from("trainings")
@@ -35,7 +34,6 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
     if (data) setTrainings(data);
   }, [partnerId]);
 
-  // 2. Ambil data pendaftar (Trainees) dengan sinkronisasi ke tabel Profiles
   const fetchEnrollments = useCallback(async () => {
     setLoading(true);
     try {
@@ -53,22 +51,14 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
         `)
         .eq("partner_id", partnerId);
 
-      // Filter Status (Sesuai SOP: applied, accepted, rejected)
-      if (filterStatus !== "all") {
-        query = query.eq("status", filterStatus);
-      }
-      
-      // Filter per Program Pelatihan
-      if (selectedTrainingId !== "all") {
-        query = query.eq("training_id", selectedTrainingId);
-      }
+      if (filterStatus !== "all") query = query.eq("status", filterStatus);
+      if (selectedTrainingId !== "all") query = query.eq("training_id", selectedTrainingId);
 
       const { data, error } = await query.order("applied_at", { ascending: false });
-      
       if (error) throw error;
       setEnrollments(data || []);
     } catch (err) {
-      console.error("Fetch Enrollment Error:", err);
+      console.error("Fetch Error:", err);
     } finally {
       setLoading(false);
     }
@@ -79,36 +69,23 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
     fetchEnrollments();
   }, [fetchEnrollments, fetchFilterData]);
 
-  // 3. Fungsi untuk Update Status (Terima/Tolak)
   async function updateStatus(id: string, newStatus: string) {
     const { error } = await supabase
       .from("trainees")
-      .update({ 
-        status: newStatus, 
-        updated_at: new Date().toISOString() 
-      })
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq("id", id);
-    
-    if (!error) {
-      // Refresh data setelah update agar UI sinkron
-      fetchEnrollments();
-    } else {
-      console.error("Update Status Error:", error);
-    }
+    if (!error) fetchEnrollments();
   }
 
   return (
     <div className="space-y-8 text-left animate-in fade-in duration-500">
-      {/* HEADER: Navigasi dan Aksi Ekspor */}
+      {/* HEADER */}
       <div className="flex flex-col justify-between gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-end">
         <div>
-          <button 
-            onClick={onBack} 
-            className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"
-          >
+          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
             <ArrowLeft size={16} /> Kembali ke Dashboard
           </button>
-          <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">
+          <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none text-slate-900">
             Seleksi Pendaftar
           </h1>
         </div>
@@ -131,7 +108,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
         </div>
       </div>
 
-      {/* FILTER BAR: Program & Status */}
+      {/* FILTER BOX */}
       <div className="grid grid-cols-1 gap-6 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] md:grid-cols-2">
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
@@ -141,7 +118,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
             <select 
               value={selectedTrainingId} 
               onChange={(e) => setSelectedTrainingId(e.target.value)} 
-              className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 font-bold outline-none focus:border-slate-900 transition-all"
+              className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
             >
               <option value="all">Semua Program Pelatihan</option>
               {trainings.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
@@ -155,85 +132,53 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
             <BadgeCheck size={14} /> Status Seleksi
           </label>
           <div className="flex gap-2 rounded-2xl bg-slate-100 p-2">
-            {[
-              { id: 'applied', label: 'Antrean' },
-              { id: 'accepted', label: 'Diterima' },
-              { id: 'rejected', label: 'Ditolak' },
-              { id: 'all', label: 'Semua' }
-            ].map((s) => (
+            {['applied', 'accepted', 'rejected', 'all'].map((s) => (
               <button 
-                key={s.id} 
-                onClick={() => setFilterStatus(s.id)} 
-                className={`flex-1 rounded-xl py-3 text-[10px] font-black uppercase transition-all ${filterStatus === s.id ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"}`}
+                key={s} 
+                onClick={() => setFilterStatus(s)} 
+                className={`flex-1 rounded-xl py-3 text-[10px] font-black uppercase transition-all ${filterStatus === s ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"}`}
               >
-                {s.label}
+                {s === 'applied' ? 'Antrean' : s === 'accepted' ? 'Lolos' : s === 'rejected' ? 'Gagal' : 'Semua'}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* HASIL DATA */}
+      {/* LIST DATA */}
       {loading ? (
         <div className="py-32 text-center font-black uppercase italic text-slate-300 animate-pulse">Menghubungkan Data...</div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {enrollments.length > 0 ? enrollments.map((item) => (
-            <div key={item.id} className="group rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] hover:border-blue-600 transition-all">
+            <div key={item.id} className="group rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:border-blue-600">
               <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-                
-                {/* Info Talenta */}
                 <div className="flex flex-1 items-start gap-6">
-                  <div className="rounded-[2rem] bg-slate-100 p-6 text-slate-900 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <div className="rounded-[2rem] bg-slate-100 p-6 text-slate-900 shadow-inner transition-colors group-hover:bg-blue-600 group-hover:text-white">
                     <User size={32} />
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">
-                        {item.profiles?.full_name}
-                      </h3>
+                      <h3 className="text-3xl font-black uppercase italic leading-none tracking-tighter text-slate-900">{item.profiles?.full_name}</h3>
                       <span className={`text-[10px] font-black uppercase italic ${item.status === 'accepted' ? 'text-emerald-500' : item.status === 'rejected' ? 'text-red-500' : 'text-blue-500'}`}>
                         • {item.status}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-black uppercase text-slate-500 border border-slate-200">
-                        {item.profiles?.disability_type}
-                      </span>
-                      <span className="rounded-full bg-blue-50 px-4 py-1.5 text-[10px] font-black uppercase text-blue-600 italic">
-                        {item.trainings?.title}
-                      </span>
+                      <span className="rounded-full border border-slate-200 bg-slate-100 px-4 py-1.5 text-[10px] font-black uppercase text-slate-500">{item.profiles?.disability_type}</span>
+                      <span className="rounded-full bg-blue-50 px-4 py-1.5 text-[10px] font-black uppercase italic text-blue-600">{item.trainings?.title}</span>
                       <span className="flex items-center gap-1.5 rounded-full bg-slate-50 px-4 py-1.5 text-[10px] font-black uppercase text-slate-400">
                         <Clock size={12} /> {new Date(item.applied_at).toLocaleDateString('id-ID')}
                       </span>
                     </div>
-                    {/* RISET: Top Skills */}
-                    {item.top_skills?.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {item.top_skills.map((skill: string, i: number) => (
-                          <span key={i} className="text-[9px] font-bold uppercase text-slate-300">#{skill}</span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                {/* Tombol Aksi */}
                 <div className="flex w-full items-center gap-3 md:w-auto">
                   {item.status === "applied" ? (
                     <div className="flex flex-1 gap-2 md:flex-none">
-                      <button 
-                        onClick={() => updateStatus(item.id, "accepted")} 
-                        className="flex-1 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase text-white shadow-lg transition-all hover:bg-emerald-600 active:scale-95"
-                      >
-                        Terima
-                      </button>
-                      <button 
-                        onClick={() => updateStatus(item.id, "rejected")} 
-                        className="flex-1 rounded-2xl border-4 border-slate-900 bg-white px-8 py-5 text-[11px] font-black uppercase text-slate-900 transition-all hover:bg-red-50 hover:text-red-600 active:scale-95"
-                      >
-                        Tolak
-                      </button>
+                      <button onClick={() => updateStatus(item.id, "accepted")} className="flex-1 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase text-white shadow-lg transition-all hover:bg-emerald-600">Terima</button>
+                      <button onClick={() => updateStatus(item.id, "rejected")} className="flex-1 rounded-2xl border-4 border-slate-900 bg-white px-8 py-5 text-[11px] font-black uppercase text-slate-900 transition-all hover:bg-red-50 hover:text-red-600">Tolak</button>
                     </div>
                   ) : (
                     <div className={`flex flex-1 items-center gap-2 rounded-2xl px-8 py-5 text-[11px] font-black uppercase md:flex-none ${item.status === 'accepted' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
@@ -241,20 +186,14 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
                       {item.status === 'accepted' ? 'Diterima' : 'Ditolak'}
                     </div>
                   )}
-                  
-                  <Link 
-                    href={`/talent/${item.profiles?.id}`} 
-                    target="_blank" 
-                    className="rounded-2xl bg-slate-100 p-5 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                    title="Lihat Profil Lengkap"
-                  >
+                  <Link href={`/talent/${item.profiles?.id}`} target="_blank" className="rounded-2xl bg-slate-100 p-5 text-slate-400 shadow-sm transition-all hover:bg-blue-600 hover:text-white">
                     <ExternalLink size={22} />
                   </Link>
                 </div>
               </div>
             </div>
           )) : (
-            <div className="py-40 text-center rounded-[4rem] border-4 border-dashed border-slate-100">
+            <div className="rounded-[4rem] border-4 border-dashed border-slate-100 py-40 text-center">
               <Search className="mx-auto mb-4 text-slate-100" size={48} />
               <p className="text-2xl font-black uppercase italic text-slate-200">Data pendaftar tidak ditemukan</p>
             </div>
@@ -262,11 +201,11 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
         </div>
       )}
 
-      {/* FOOTER INFO: Sesuai instruksi untuk tidak membicarakan riset di platform */}
+      {/* FOOTER */}
       <div className="flex items-start gap-5 rounded-[2.5rem] border-b-8 border-blue-600 bg-slate-900 p-8 text-white shadow-2xl">
         <Info className="shrink-0 text-blue-400" size={24} />
-        <div className="space-y-2">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400 italic leading-none">Panduan Administrasi</p>
+        <div className="space-y-2 text-left">
+          <p className="text-[11px] font-black uppercase italic leading-none tracking-[0.2em] text-blue-400">Panduan Administrasi</p>
           <p className="max-w-4xl text-xs font-bold leading-relaxed opacity-80 italic">
             Gunakan fitur <strong>Export Arsip</strong> untuk mendownload data pendaftar lengkap dalam format Excel. Fitur <strong>Cetak Absensi</strong> (PDF) akan aktif otomatis saat Anda memfilter data berdasarkan satu program pelatihan yang spesifik.
           </p>
