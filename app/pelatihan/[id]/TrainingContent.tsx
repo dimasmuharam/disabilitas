@@ -48,7 +48,7 @@ export default function TrainingContent({ training, partner, accommodations, ski
           profile_id: userId,
           training_id: training.id,
           partner_id: training.partner_id, // Menghubungkan pendaftaran dengan Mitra terkait
-          status: "pending",
+          status: "applied",
           applied_at: new Date().toISOString() // Pencatatan waktu pendaftaran talenta
         }]);
 
