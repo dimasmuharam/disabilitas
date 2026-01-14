@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 import { 
   Users, BookOpen, BarChart3, Settings, 
   ShieldCheck, LayoutDashboard,
   Activity, Award, Lock, 
   Zap, User, Timer, ExternalLink, GraduationCap,
-  UserCheck 
+  UserCheck, Bell, MessageCircle, Share2, ArrowRight
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 // Import Modul Pendukung
 import ProgramManager from "./partner/program-manager";
@@ -16,7 +18,9 @@ import EnrollmentTracker from "./partner/enrollment-tracker";
 import TalentTracer from "./partner/talent-tracer";
 import ProfileEditor from "./partner/profile-editor";
 import AccountSettings from "./partner/account-settings";
-import InclusionCard from "./partner/inclusion-card"; 
+
+// Import Modular Share Helper
+import { handlePartnerNativeShare, handlePartnerWhatsAppShare } from "./partner/share-partner-helper";
 
 export default function PartnerDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -24,14 +28,15 @@ export default function PartnerDashboard({ user }: { user: any }) {
   const [loading, setLoading] = useState(true);
   const [announcement, setAnnouncement] = useState("");
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [pendingTraineesCount, setPendingTraineesCount] = useState(0);
 
   const moduleHeadingRef = useRef<HTMLHeadingElement>(null);
-  const labelTalent = "Peserta Pelatihan";
 
   const fetchDashboardData = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
+      // 1. Ambil Profil Partner
       const { data: partnerData, error } = await supabase
         .from("partners")
         .select("*")
@@ -41,7 +46,16 @@ export default function PartnerDashboard({ user }: { user: any }) {
       if (error || !partnerData) return;
       setPartner(partnerData);
 
-      // LOGIKA KELENGKAPAN PROFIL (Restored)
+      // 2. QUICK NOTIF: Hitung pendaftar yang statusnya masih 'pending'
+      const { count } = await supabase
+        .from("trainees")
+        .select("*", { count: "exact", head: true })
+        .eq("partner_id", partnerData.id)
+        .eq("status", "pending");
+      
+      setPendingTraineesCount(count || 0);
+
+      // 3. LOGIKA KELENGKAPAN PROFIL (Sesuai Kebutuhan Riset)
       const fields = ["name", "description", "location", "website", "nib_number"];
       const filled = fields.filter(f => partnerData[f] && partnerData[f].length > 0).length;
       const acc = (partnerData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
@@ -64,7 +78,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
 
   const navigateTo = (tabId: string, label: string) => {
     setActiveTab(tabId);
-    setAnnouncement(`Menampilkan halaman ${label}`);
+    setAnnouncement(`Menampilkan modul ${label}`);
     setTimeout(() => {
       if (moduleHeadingRef.current) moduleHeadingRef.current.focus();
       window.scrollTo(0, 0);
@@ -89,165 +103,124 @@ export default function PartnerDashboard({ user }: { user: any }) {
   const genMap = partner?.stats_gender_map || { male: 0, female: 0 };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900 text-left">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900 text-left font-sans">
       <div className="sr-only" aria-live="assertive">{announcement}</div>
 
-      {/* HEADER */}
+      {/* HEADER: Desain Bonafit */}
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 md:flex-row md:items-end">
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-blue-600 p-2 text-white shadow-lg">
-              <GraduationCap size={28} />
+          <div className="flex items-center gap-4">
+            <div className="rounded-[1.5rem] bg-blue-600 p-4 text-white shadow-xl border-2 border-slate-900">
+              <GraduationCap size={32} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 leading-none">Mitra Portal Pengembangan Talenta</p>
-              <h1 className="mt-1 text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name}</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 leading-none mb-1">Impact Ecosystem Partner</p>
+              <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name}</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700">
-              <ShieldCheck size={14} /> Skor Inklusi: {partner?.inclusion_score || 0}%
+              <ShieldCheck size={14} /> Inklusi: {partner?.inclusion_score || 0}%
             </span>
-            
-            {/* PROGRESS BAR KELENGKAPAN PROFIL (Restored) */}
             <div className="flex items-center gap-3 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 shadow-sm">
               <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
                 <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${profileCompletion}%` }} />
               </div>
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-tighter">Profil: {profileCompletion}%</span>
+              <span className="text-[10px] font-black uppercase text-slate-500">Profil: {profileCompletion}%</span>
             </div>
-
-            <a href={`/partner/${partner?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 hover:border-slate-900 transition-all shadow-sm">
-              <ExternalLink size={14} /> Profil Publik
-            </a>
           </div>
         </div>
         
-        {/* TOMBOL SHARE KARTU DAMPAK */}
-        <div className="w-full md:w-auto">
-          <InclusionCard partner={partner} stats={currentStats} />
+        {/* ACTION BUTTONS */}
+        <div className="flex flex-wrap gap-2">
+            <button 
+              onClick={() => handlePartnerNativeShare(partner, currentStats)}
+              className="flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-4 text-[10px] font-black uppercase italic text-white shadow-lg transition-all hover:bg-blue-600"
+            >
+              <Share2 size={16} /> Native Share
+            </button>
+            <button 
+              onClick={() => handlePartnerWhatsAppShare(partner, currentStats)}
+              className="flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-4 text-[10px] font-black uppercase italic text-white shadow-lg transition-all hover:opacity-90"
+            >
+              <MessageCircle size={16} /> WhatsApp
+            </button>
         </div>
       </header>
 
-      {/* NAV TABS */}
-      <nav className="no-scrollbar flex gap-2 overflow-x-auto" aria-label="Menu Utama Dashboard">
+      {/* NAVIGATION TABS WITH LIVE COUNTER */}
+      <nav className="no-scrollbar flex gap-3 overflow-x-auto pb-2" aria-label="Menu Dashboard Mitra">
         {[
-          { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-          { id: "programs", label: "Pelatihan", icon: BookOpen },
-          { id: "selection", label: "Seleksi Peserta", icon: UserCheck },
-          { id: "tracer", label: "Lacak Alumni", icon: BarChart3 },
-          { id: "profile", label: "Profil Mitra", icon: Settings },
-          { id: "account", label: "Akun", icon: Lock },
+          { id: "overview", label: "Overview", icon: LayoutDashboard, count: 0 },
+          { id: "programs", label: "Pelatihan", icon: BookOpen, count: 0 },
+          { id: "selection", label: "Pendaftar", icon: UserCheck, count: pendingTraineesCount },
+          { id: "tracer", label: "Alumni", icon: BarChart3, count: 0 },
+          { id: "profile", label: "Edit Profil", icon: Settings, count: 0 },
+          { id: "account", label: "Akun", icon: Lock, count: 0 },
         ].map((tab) => (
           <button 
             key={tab.id} 
             onClick={() => navigateTo(tab.id, tab.label)}
-            aria-current={activeTab === tab.id ? "page" : undefined}
-            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "bg-slate-900 text-white shadow-xl" : "bg-white border-2 border-slate-100 text-slate-400 hover:border-slate-900"}`}
+            className={`relative flex items-center gap-3 whitespace-nowrap rounded-[1.5rem] px-8 py-5 text-[10px] font-black uppercase transition-all ${
+              activeTab === tab.id 
+                ? "bg-slate-900 text-white shadow-2xl" 
+                : "bg-white border-2 border-slate-100 text-slate-400 hover:border-slate-900"
+            }`}
           >
-            <tab.icon size={16} aria-hidden="true" /> {tab.label}
+            <tab.icon size={18} /> 
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-[10px] text-white animate-bounce border-2 border-white font-bold">
+                {tab.count}
+              </span>
+            )}
           </button>
         ))}
       </nav>
 
-      <main id="main-content" className="min-h-[600px] outline-none">
+      <main id="main-content">
         {activeTab === "overview" && (
-          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-12 animate-in fade-in duration-700">
             <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Ringkasan Capaian Pelatihan</h2>
             
+            {/* IMPACT GRID */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total {labelTalent}</p>
-                <p className="mt-1 text-5xl font-black tracking-tighter">{currentStats.total}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Penerima Manfaat</p>
+                <p className="mt-2 text-5xl font-black tracking-tighter">{currentStats.total}</p>
               </div>
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-                <p className="text-[9px] font-black italic uppercase tracking-widest text-emerald-500">Penempatan Kerja</p>
-                <p className="mt-1 text-5xl font-black tracking-tighter text-emerald-600">{currentStats.hired}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Lulusan Bekerja</p>
+                <p className="mt-2 text-5xl font-black tracking-tighter text-emerald-600">{currentStats.hired}</p>
               </div>
               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-                <p className="text-[9px] font-black italic uppercase tracking-widest text-blue-500">Success Rate</p>
-                <p className="mt-1 text-5xl font-black tracking-tighter text-blue-600">{currentStats.rate}%</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-blue-600">Hired Rate</p>
+                <p className="mt-2 text-5xl font-black tracking-tighter text-blue-600">{currentStats.rate}%</p>
               </div>
-              <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl flex flex-col justify-center">
-                <p className="text-[9px] font-black uppercase tracking-widest opacity-60 italic text-left text-blue-400">Impact Data</p>
-                <p className="text-3xl font-black italic tracking-tighter uppercase leading-tight mt-1">Partner Impact</p>
+              <div className="group rounded-[2.5rem] bg-blue-600 p-8 text-white shadow-xl">
+                <p className="text-[9px] font-black uppercase tracking-widest text-blue-200">Perlu Tindakan</p>
+                <p className="mt-2 text-2xl font-black italic tracking-tighter leading-none uppercase">{pendingTraineesCount} Calon Peserta Baru</p>
+                <button onClick={() => setActiveTab("selection")} className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase underline hover:text-white transition-all">Review Pendaftaran <ArrowRight size={14}/></button>
               </div>
             </div>
 
-            <section className="rounded-[3rem] border-2 border-slate-100 bg-slate-50 p-10 italic shadow-inner">
-              <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-blue-600">
-                <Award size={16} /> Capaian Program Pelatihan
-              </h3>
-              <div className="max-w-5xl space-y-6 text-xl font-medium leading-relaxed text-slate-800 md:text-2xl">
+            {/* IMPACT NARRATIVE */}
+            <section className="rounded-[3rem] border-2 border-slate-100 bg-slate-50 p-12 italic shadow-inner">
+              <Award className="text-blue-600 mb-6" size={24} />
+              <div className="max-w-5xl space-y-6 text-2xl font-medium leading-relaxed text-slate-800 md:text-3xl">
                 <p>
-                  Melalui kolaborasi di platform ini, <strong>{partner?.name}</strong> telah berhasil meningkatkan kapabilitas <strong>{currentStats.total} talenta disabilitas</strong>. 
-                  Mayoritas peserta berasal dari ragam <strong>{Object.entries(disMap).sort((a: any, b: any) => b[1] - a[1])[0]?.[0] || "Data Demografi"}</strong>.
+                  Melalui kolaborasi strategis dengan disabilitas.com, <strong>{partner?.name}</strong> telah berhasil memberdayakan <strong>{currentStats.total} talenta disabilitas</strong> di seluruh Indonesia.
                 </p>
                 <p>
-                  Hingga periode ini, efektivitas pelatihan menghasilkan keterserapan kerja sebesar <strong>{currentStats.rate}%</strong> dari seluruh lulusan.
+                  Upaya inklusif ini menghasilkan dampak nyata dengan tingkat serapan kerja alumni mencapai <strong>{currentStats.rate}%</strong>, membuktikan kualitas program yang Anda kelola.
                 </p>
               </div>
             </section>
-
-            {/* DEMOGRAFI & GENDER (Restored) */}
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <div className="lg:col-span-2 grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 shadow-sm">
-                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
-                    <Users className="text-purple-600" size={16} /> Peserta Per Ragam
-                  </h4>
-                  <div className="space-y-4">
-                    {Object.entries(disMap).length > 0 ? Object.entries(disMap).map(([type, count]: [string, any]) => (
-                      <div key={type} className="space-y-1">
-                        <div className="flex justify-between text-[9px] font-black uppercase text-slate-500">
-                          <span>{type}</span><span>{count} Orang</span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                          <div className="h-full bg-purple-600 transition-all duration-1000" style={{ width: `${(count / (currentStats.total || 1)) * 100}%` }} />
-                        </div>
-                      </div>
-                    )) : <p className="text-[10px] font-bold text-slate-300 uppercase italic">Belum ada data pendaftar</p>}
-                  </div>
-                </div>
-
-                <div className="rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 shadow-sm">
-                  <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900">
-                    <User className="text-blue-500" size={16} /> Distribusi Peserta
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="rounded-2xl bg-slate-50 p-4 border-l-4 border-blue-500 text-left">
-                      <p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p>
-                      <p className="mt-1 text-2xl font-black">{genMap.male || 0}</p>
-                    </div>
-                    <div className="rounded-2xl bg-slate-50 p-4 border-l-4 border-pink-500 text-left">
-                      <p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p>
-                      <p className="mt-1 text-2xl font-black">{genMap.female || 0}</p>
-                    </div>
-                  </div>
-                  <div className="mt-8 rounded-2xl bg-blue-50 p-5 border-2 border-blue-100">
-                    <h4 className="mb-1 flex items-center gap-2 text-[10px] font-black uppercase text-blue-800">
-                      <Timer size={14} /> Sinkronisasi
-                    </h4>
-                    <p className="text-[9px] font-bold italic text-blue-600">Statistik otomatis diperbarui berdasarkan update tracer alumni.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[2.5rem] bg-blue-600 p-10 text-white shadow-2xl flex flex-col justify-between">
-                <div>
-                  <Zap className="mb-6 text-blue-200" size={32} />
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-70 italic text-left">Visi Kesetaraan</p>
-                  <p className="mt-4 text-3xl font-black italic tracking-tighter uppercase leading-tight text-left">Mencetak Lulusan Siap Kerja & Inklusif</p>
-                </div>
-                <div className="mt-8 border-t border-white/10 pt-4">
-                   <p className="text-[9px] font-bold uppercase opacity-60 text-left text-slate-100">Verified Partner 2026</p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
-        <div className="mt-2 text-left">
+        {/* MODUL SELECTOR */}
+        <div className="mt-2">
            {activeTab === "programs" && <ProgramManager partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
            {activeTab === "selection" && <EnrollmentTracker partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
            {activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
@@ -255,6 +228,37 @@ export default function PartnerDashboard({ user }: { user: any }) {
            {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
         </div>
       </main>
+
+      {/* HIDDEN BONAFIDE IMPACT CARD FOR CAPTURE */}
+      <div className="pointer-events-none absolute -z-50 overflow-hidden opacity-0" aria-hidden="true">
+        <div id="partner-impact-card" className="flex h-[500px] w-[900px] flex-col justify-between border-[24px] border-slate-900 bg-white p-16 font-sans text-slate-900">
+          <div className="flex items-center justify-between border-b-8 border-blue-600 pb-10">
+            <div className="space-y-1 text-left">
+              <h2 className="text-5xl font-black uppercase italic tracking-tighter text-blue-600 leading-none">disabilitas.com</h2>
+              <p className="text-xs font-black uppercase tracking-[0.5em] text-slate-400">Official Impact Partner 2026</p>
+            </div>
+            <div className="rounded-2xl bg-blue-600 px-10 py-5 text-lg font-black uppercase tracking-widest text-white shadow-xl">VERIFIED IMPACT</div>
+          </div>
+          <div className="flex flex-1 items-center justify-between py-12 text-left">
+            <div className="max-w-[60%] space-y-4">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400 italic">Mitra Terakreditasi:</p>
+              <h3 className="text-6xl font-black uppercase italic tracking-tighter leading-[0.9] text-slate-900">{partner?.name}</h3>
+              <p className="pt-4 text-sm font-bold uppercase leading-relaxed text-slate-500 italic">Aktif membangun masa depan kerja yang inklusif dan setara bagi semua talenta.</p>
+            </div>
+            <div className="flex flex-col gap-6 text-right">
+              <div className="space-y-1"><p className="text-[10px] font-black uppercase text-blue-600">Impact Reach</p><p className="text-6xl font-black italic leading-none">{currentStats.total}<span className="text-xl"> Talents</span></p></div>
+              <div className="space-y-1"><p className="text-[10px] font-black uppercase text-emerald-600">Success Rate</p><p className="text-6xl font-black italic leading-none">{currentStats.rate}<span className="text-xl">% Success</span></p></div>
+            </div>
+          </div>
+          <div className="flex items-end justify-between border-t-4 border-slate-100 pt-10 text-left">
+            <p className="max-w-[450px] text-[10px] font-bold uppercase leading-tight text-slate-400">Pengakuan resmi atas dedikasi mitra dalam menyediakan akses pengembangan kompetensi talenta disabilitas.</p>
+            <div className="flex flex-col items-center gap-3">
+              <div className="rounded-2xl border-4 border-slate-900 p-3 bg-white shadow-2xl"><QRCodeSVG value={`https://disabilitas.com/partner/${partner?.id}`} size={100} /></div>
+              <p className="text-[8px] font-black uppercase tracking-widest text-blue-600">Scan Profile Validasi</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
