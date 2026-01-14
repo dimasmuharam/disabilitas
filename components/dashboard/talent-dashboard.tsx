@@ -6,7 +6,8 @@ import Link from "next/link";
 import { 
   User, MapPin, Briefcase, GraduationCap, FileDown, BookOpen, Laptop, 
   ArrowRight, AlertCircle, CheckCircle2, Search, ChevronLeft, 
-  LayoutDashboard, Share2, ExternalLink, ShieldCheck, Clock, Timer, MessageCircle, Zap
+  LayoutDashboard, Share2, ExternalLink, ShieldCheck, Clock, Timer, MessageCircle, Zap,
+  BadgeCheck
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -81,7 +82,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       if (prof) {
         setProfile({ ...prof });
 
-        // --- SMART MATCH v2.2 (Hanya yang belum expired) ---
+        // --- SMART MATCH v2.3 (Hanya yang belum expired) ---
         const today = new Date().toISOString();
         const [recJobs, recTrains] = await Promise.all([
           supabase.from("jobs").select("*, companies(name)").eq("is_active", true).gt("expires_at", today).or(`location.ilike.%${prof.city}%,required_education_level.eq.${prof.education_level}`).limit(4),
@@ -91,9 +92,10 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
         setRecommendedTrainings(recTrains.data || []);
       }
 
+      // SINKRONISASI SERTIFIKAT DENGAN DATA JAM PELAJARAN (JP)
       const [worksRes, certsRes, appsRes, trainsRes] = await Promise.all([
         supabase.from("work_experiences").select("*").eq("profile_id", user.id).order('start_date', { ascending: false }),
-        supabase.from("certifications").select("*").eq("profile_id", user.id).order('year', { ascending: false }),
+        supabase.from("certifications").select("*, trainings(total_hours, syllabus)").eq("profile_id", user.id).order('year', { ascending: false }),
         supabase.from("applications").select("*, jobs(title, companies(name))").eq("applicant_id", user.id),
         supabase.from("trainees").select("*, trainings(title, partners(name))").eq("profile_id", user.id)
       ]);
@@ -137,12 +139,12 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
               <div className="flex size-20 shrink-0 items-center justify-center rounded-3xl bg-blue-600 text-3xl font-black italic text-white shadow-xl">{profile?.full_name?.charAt(0) || "T"}</div>
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900">{profile?.full_name || "Lengkapi Profil"}</h2>
+                  <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 leading-none">{profile?.full_name || "Lengkapi Profil"}</h2>
                   {completionData.percent === 100 && <CheckCircle2 className="text-emerald-500" size={24} />}
                 </div>
-                <p className="text-sm font-bold uppercase tracking-widest text-blue-600 italic">{profile?.disability_type || "Ragam Belum Diisi"}</p>
+                <p className="text-sm font-bold uppercase tracking-widest text-blue-600 italic leading-none">{profile?.disability_type || "Ragam Belum Diisi"}</p>
                 <div className="flex flex-wrap gap-6 pt-4 text-[10px] font-black uppercase text-slate-400">
-                  <span className="flex items-center gap-2"><MapPin size={14} className="text-blue-600"/> {profile?.city || "N/A"}</span>
+                  <span className="flex items-center gap-2"><MapPin size={14} className="text-blue-600"/> {profile?.city || "Lokasi N/A"}</span>
                   <span className="flex items-center gap-2"><Briefcase size={14} className="text-blue-600"/> {profile?.career_status || "Job Seeker"}</span>
                 </div>
               </div>
@@ -152,75 +154,88 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
           {/* TRACKING GRID */}
           <div className="grid gap-8 md:grid-cols-2 text-left">
             <div className="space-y-4">
-              <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-900"><Briefcase size={16} className="text-blue-600" /> Tracking Lamaran</h3>
-              <div className="min-h-[220px] rounded-[2.5rem] border-2 border-slate-100 bg-white overflow-hidden">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900"><Briefcase size={16} className="text-blue-600" /> Tracking Lamaran Kerja</h3>
+              <div className="min-h-[240px] rounded-[2.5rem] border-2 border-slate-100 bg-white overflow-hidden shadow-inner">
                 {appliedJobs.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
-                      <div key={app.id} className="flex items-center justify-between p-5 hover:bg-slate-50">
+                      <div key={app.id} className="flex items-center justify-between p-5 hover:bg-slate-50 transition-colors">
                         <div>
                           <p className="text-xs font-black uppercase text-slate-900">{app.jobs?.title}</p>
                           <p className="text-[9px] font-bold uppercase text-slate-400">{app.jobs?.companies?.name}</p>
                         </div>
-                        <span className="rounded-full bg-blue-50 px-3 py-1 text-[8px] font-black uppercase text-blue-600">{app.status}</span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="rounded-full bg-blue-50 px-3 py-1 text-[8px] font-black uppercase text-blue-600 border border-blue-100">{app.status}</span>
+                          {app.status === 'hired' && !ratedJobs.includes(app.id) && (
+                            <button onClick={() => setSelectedJobRating(app)} className="text-[8px] font-black text-emerald-600 underline">Beri Rating Inklusi</button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
-                ) : <div className="p-10 text-center text-[10px] font-bold uppercase italic text-slate-300">Belum ada lamaran terkirim.</div>}
+                ) : <div className="flex h-full flex-col items-center justify-center p-10 opacity-30 italic font-bold uppercase text-[10px]"><Briefcase size={32} className="mb-2"/> Belum ada lamaran.</div>}
               </div>
             </div>
 
             <div className="space-y-4">
-              <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-900"><BookOpen size={16} className="text-emerald-600" /> Tracking Pelatihan</h3>
-              <div className="min-h-[220px] rounded-[2.5rem] border-2 border-slate-100 bg-white overflow-hidden">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900"><BookOpen size={16} className="text-emerald-600" /> Tracking Pelatihan</h3>
+              <div className="min-h-[240px] rounded-[2.5rem] border-2 border-slate-100 bg-white overflow-hidden shadow-inner">
                 {appliedTrainings.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedTrainings.map((reg) => (
-                      <div key={reg.id} className="flex items-center justify-between p-5 hover:bg-slate-50">
+                      <div key={reg.id} className="flex items-center justify-between p-5 hover:bg-slate-50 transition-colors">
                         <div>
                           <p className="text-xs font-black uppercase text-slate-900">{reg.trainings?.title}</p>
                           <p className="text-[9px] font-bold uppercase text-slate-400">{reg.trainings?.partners?.name}</p>
                         </div>
-                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600">{reg.status}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`rounded-full px-3 py-1 text-[8px] font-black uppercase border ${
+                            reg.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'
+                          }`}>{reg.status}</span>
+                          {reg.status === 'completed' && <BadgeCheck size={16} className="text-emerald-500" />}
+                        </div>
                       </div>
                     ))}
                   </div>
-                ) : <div className="p-10 text-center text-[10px] font-bold uppercase italic text-slate-300">Belum ada pelatihan diikuti.</div>}
+                ) : <div className="flex h-full flex-col items-center justify-center p-10 opacity-30 italic font-bold uppercase text-[10px]"><BookOpen size={32} className="mb-2"/> Belum ada pelatihan.</div>}
               </div>
             </div>
           </div>
 
           {/* SMART MATCH */}
           <section className="space-y-6 border-t-2 border-slate-50 pt-10 text-left">
-            <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-slate-900"><Search size={16} className="text-blue-600" /> Rekomendasi Pintar</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-slate-900"><Zap size={16} className="text-amber-500" /> Rekomendasi Pintar (Smart-Match)</h3>
+              <span className="text-[8px] font-black uppercase text-slate-300 italic">Berdasarkan Domisili & Ragam Disabilitas</span>
+            </div>
             <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase text-slate-400">Lowongan Pekerjaan</p>
-                {recommendedJobs.map((j) => (
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Peluang Karir Lokal</p>
+                {recommendedJobs.length > 0 ? recommendedJobs.map((j) => (
                   <Link href={`/lowongan/${j.slug || j.id}`} key={j.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 hover:border-blue-600 transition-all shadow-sm">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <p className="text-xs font-black uppercase text-slate-900 group-hover:text-blue-600 leading-tight">{j.title}</p>
+                        <p className="text-xs font-black uppercase text-slate-900 group-hover:text-blue-600 leading-tight transition-colors">{j.title}</p>
                         <p className="text-[8px] font-bold uppercase text-slate-400">{j.companies?.name} | {j.location}</p>
                       </div>
-                      <ArrowRight size={14} className="text-slate-200 group-hover:text-blue-600" />
+                      <ArrowRight size={14} className="text-slate-200 group-hover:text-blue-600 transition-all" />
                     </div>
                   </Link>
-                ))}
+                )) : <div className="rounded-2xl bg-slate-50 p-4 text-[9px] font-bold uppercase text-slate-400 text-center italic">Tidak ada peluang lokal tersedia.</div>}
               </div>
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase text-slate-400">Program Pelatihan</p>
-                {recommendedTrainings.map((t) => (
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Pelatihan Relevan</p>
+                {recommendedTrainings.length > 0 ? recommendedTrainings.map((t) => (
                   <Link href={`/pelatihan/${t.slug || t.id}`} key={t.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 hover:border-emerald-600 transition-all shadow-sm">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <p className="text-xs font-black uppercase text-slate-900 group-hover:text-emerald-600 leading-tight">{t.title}</p>
+                        <p className="text-xs font-black uppercase text-slate-900 group-hover:text-emerald-600 leading-tight transition-colors">{t.title}</p>
                         <p className="text-[8px] font-bold uppercase text-slate-400">{t.partners?.name} | {t.location}</p>
                       </div>
-                      <ArrowRight size={14} className="text-slate-200 group-hover:text-emerald-600" />
+                      <ArrowRight size={14} className="text-slate-200 group-hover:text-emerald-600 transition-all" />
                     </div>
                   </Link>
-                ))}
+                )) : <div className="rounded-2xl bg-slate-50 p-4 text-[9px] font-bold uppercase text-slate-400 text-center italic">Tidak ada pelatihan relevan.</div>}
               </div>
             </div>
           </section>
@@ -229,7 +244,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     }
   };
 
-  if (loading) return <div className="p-20 text-center font-black italic tracking-widest text-slate-400 animate-pulse">SINKRONISASI DATA...</div>;
+  if (loading) return <div className="p-20 text-center font-black italic tracking-[0.2em] text-slate-400 animate-pulse uppercase">Menyinkronkan Portal Karir...</div>;
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans selection:bg-blue-100">
@@ -239,21 +254,21 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
         <section className="rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div className="text-left space-y-1">
-              <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Talent Dashboard</h1>
+              <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Talent Dashboard</h1>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Pusat Karir & Pengembangan Kompetensi</p>
             </div>
             <div className="flex w-full items-center gap-4 md:w-auto">
               <div className="h-4 flex-1 overflow-hidden rounded-full border border-slate-200 bg-slate-100 md:w-64" role="progressbar" aria-valuenow={completionData.percent} aria-valuemin={0} aria-valuemax={100}>
                 <div className={`h-full transition-all duration-1000 ${completionData.percent === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${completionData.percent}%` }}></div>
               </div>
-              <span className="text-3xl font-black italic text-slate-900" aria-live="polite">{`${completionData.percent}%`}</span>
+              <span className="text-3xl font-black italic text-slate-900 leading-none" aria-live="polite">{`${completionData.percent}%`}</span>
             </div>
           </div>
 
           {/* LIST ITEM BELUM TERISI (Aksesibilitas Tinggi) */}
           {activeTab === "overview" && completionData.missing.length > 0 && (
             <div className="mt-8 rounded-3xl border-2 border-amber-100 bg-amber-50/50 p-8 text-left" aria-live="polite">
-              <h2 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700">
+              <h2 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700 leading-none">
                 <AlertCircle size={14} /> Data Yang Perlu Dilengkapi:
               </h2>
               <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
@@ -266,27 +281,32 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
             </div>
           )}
 
-          {activeTab === "overview" && (
-            <nav className="mt-10 grid grid-cols-2 gap-4 border-t border-slate-100 pt-10 md:grid-cols-6">
-              {[
-                { label: "Identitas", id: "identity", icon: User },
-                { label: "Sarana", id: "tech", icon: Laptop },
-                { label: "Karir", id: "career", icon: Briefcase },
-                { label: "Akademik", id: "academic", icon: GraduationCap },
-                { label: "Skill", id: "skills", icon: BookOpen },
-                { label: "Akun", id: "settings", icon: ShieldCheck }
-              ].map((m) => (
-                <button key={m.id} onClick={() => setActiveTab(m.id)} aria-label={`Buka modul ${m.label}`} className="group rounded-3xl border-2 border-transparent bg-slate-50 p-5 text-center transition-all hover:border-blue-600 hover:bg-white shadow-sm hover:shadow-md">
-                  <m.icon className="mx-auto mb-2 text-slate-400 group-hover:text-blue-600 transition-colors" size={24} />
-                  <p className="text-[10px] font-black uppercase text-slate-900">{m.label}</p>
-                </button>
-              ))}
-            </nav>
-          )}
+          <nav className="mt-10 grid grid-cols-3 gap-4 border-t border-slate-100 pt-10 md:grid-cols-6">
+            {[
+              { label: "Identitas", id: "identity", icon: User },
+              { label: "Sarana", id: "tech", icon: Laptop },
+              { label: "Karir", id: "career", icon: Briefcase },
+              { label: "Akademik", id: "academic", icon: GraduationCap },
+              { label: "Skill", id: "skills", icon: BookOpen },
+              { label: "Akun", id: "settings", icon: ShieldCheck }
+            ].map((m) => (
+              <button 
+                key={m.id} 
+                onClick={() => setActiveTab(m.id)} 
+                aria-label={`Buka modul ${m.label}`} 
+                className={`group rounded-3xl border-2 p-5 text-center transition-all shadow-sm hover:shadow-md ${
+                  activeTab === m.id ? 'border-blue-600 bg-blue-50/50' : 'border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white'
+                }`}
+              >
+                <m.icon className={`mx-auto mb-2 transition-colors ${activeTab === m.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-600'}`} size={24} />
+                <p className={`text-[10px] font-black uppercase ${activeTab === m.id ? 'text-blue-600' : 'text-slate-900'}`}>{m.label}</p>
+              </button>
+            ))}
+          </nav>
 
           {activeTab !== "overview" && (
             <button onClick={() => setActiveTab("overview")} aria-label="Kembali ke overview dashboard" className="mt-8 flex items-center gap-2 text-xs font-black uppercase text-blue-600 hover:gap-3 transition-all">
-              <ChevronLeft size={16}/> Kembali ke Dashboard
+              <ChevronLeft size={16}/> Kembali ke Dashboard Utama
             </button>
           )}
         </section>
@@ -318,23 +338,35 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
 
             {/* RINGKASAN RISET */}
             <div className="rounded-[3rem] border-2 border-slate-200 bg-white p-8 shadow-sm">
-              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 italic tracking-widest"><LayoutDashboard size={14}/> Ringkasan Aktivitas</h3>
+              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 italic tracking-widest leading-none"><LayoutDashboard size={14}/> Ringkasan Aktivitas</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
                   <p className="text-3xl font-black text-slate-900 leading-none">{stats.jobs}</p>
-                  <p className="mt-2 text-[8px] font-black text-slate-400 uppercase italic">Lamaran</p>
+                  <p className="mt-2 text-[8px] font-black text-slate-400 uppercase italic leading-none">Lamaran</p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
                   <p className="text-3xl font-black text-slate-900 leading-none">{stats.trainings}</p>
-                  <p className="mt-2 text-[8px] font-black text-slate-400 uppercase italic">Pelatihan</p>
+                  <p className="mt-2 text-[8px] font-black text-slate-400 uppercase italic leading-none">Pelatihan</p>
                 </div>
               </div>
+            </div>
+
+            {/* VERIFICATION CARD */}
+            <div className="rounded-[2.5rem] border-2 border-blue-100 bg-blue-50/50 p-8 text-left">
+               <div className="flex items-center gap-3 text-blue-600 mb-4">
+                  <ShieldCheck size={20} />
+                  <p className="text-[10px] font-black uppercase tracking-widest leading-none">Verified Identity</p>
+               </div>
+               <div className="flex justify-center bg-white p-4 rounded-3xl border-2 border-blue-100 shadow-inner">
+                  <QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={120} />
+               </div>
+               <p className="mt-4 text-[8px] font-bold uppercase text-slate-400 text-center italic">Pindai untuk verifikasi profil resmi</p>
             </div>
           </aside>
         </div>
       </div>
 
-      {/* HIDDEN CAPTURE AREA */}
+      {/* HIDDEN CAPTURE AREA FOR ID CARD */}
       <div className="pointer-events-none absolute -z-50 overflow-hidden opacity-0" aria-hidden="true">
          <div id="inclusion-card-capture" className="flex h-[400px] w-[700px] flex-col justify-between border-[16px] border-slate-900 bg-white p-12 text-slate-900">
             <div className="flex items-center justify-between border-b-4 border-blue-600 pb-6 text-left">
@@ -345,7 +377,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                <div className="flex size-32 shrink-0 items-center justify-center rounded-3xl bg-slate-900 text-5xl font-black italic text-white shadow-2xl">{profile?.full_name?.charAt(0)}</div>
                <div className="space-y-2">
                   <p className="text-4xl font-black uppercase italic tracking-tighter leading-none">{profile?.full_name}</p>
-                  <p className="text-xl font-bold uppercase tracking-widest text-blue-600">{profile?.disability_type || 'Profesional Inklusif'}</p>
+                  <p className="text-xl font-bold uppercase tracking-widest text-blue-600 leading-none">{profile?.disability_type || 'Profesional Inklusif'}</p>
                   <div className="flex items-center gap-4 text-[10px] font-black uppercase text-slate-400 italic">
                      <span>{profile?.city || 'Lokasi N/A'}</span>
                      <span className="size-2 rounded-full bg-slate-200"></span>
@@ -355,7 +387,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
             </div>
             <div className="flex items-end justify-between border-t-2 border-slate-100 pt-6 text-left">
                <div className="space-y-1">
-                  <p className="text-[11px] font-black uppercase leading-none">Inclusion Identity Card 2026</p>
+                  <p className="text-[11px] font-black uppercase leading-none font-sans tracking-tight">Inclusion Identity Card 2026</p>
                   <p className="max-w-[300px] text-[8px] font-bold uppercase text-slate-400 leading-tight">Terdaftar dalam ekosistem pemberdayaan karir inklusif disabilitas.com</p>
                </div>
                <div className="rounded-2xl border-4 border-slate-900 p-2 shadow-xl bg-white"><QRCodeSVG value={`https://disabilitas.com/talent/${user.id}`} size={70} /></div>

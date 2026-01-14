@@ -47,17 +47,14 @@ export default function TrainingContent({ training, partner, accommodations, ski
         .insert([{
           profile_id: userId,
           training_id: training.id,
-          partner_id: training.partner_id, // Menghubungkan pendaftaran dengan Mitra terkait
+          partner_id: training.partner_id, 
           status: "applied",
-          applied_at: new Date().toISOString() // Pencatatan waktu pendaftaran talenta
+          applied_at: new Date().toISOString() 
         }]);
 
       if (error) throw error;
-      
-      // Jika berhasil, tampilkan state sukses (halaman instruksi)
       setShowSuccess(true);
     } catch (err: any) {
-      // Tampilkan pesan di UI secara aksesibel (bukan alert pop-up)
       setErrorMessage(err.message || "Terjadi kesalahan pada sistem pendaftaran.");
       setTimeout(() => {
         errorRef.current?.focus();
@@ -73,7 +70,7 @@ export default function TrainingContent({ training, partner, accommodations, ski
     }
   }, [showSuccess]);
 
-  // --- TAMPILAN 1: HALAMAN KONFIRMASI SUKSES & INSTRUKSI ---
+  // --- TAMPILAN 1: HALAMAN KONFIRMASI SUKSES ---
   if (showSuccess) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 p-6 text-center text-white font-sans selection:bg-emerald-500">
@@ -107,7 +104,7 @@ export default function TrainingContent({ training, partner, accommodations, ski
               <LayoutDashboard size={18} /> Kembali ke Dashboard
             </Link>
             <Link href="/pelatihan" className="flex items-center justify-center gap-3 rounded-[2rem] border-2 border-slate-700 py-6 text-xs font-black uppercase italic text-white transition-all hover:bg-slate-800">
-              Cari Pelatihan Lain
+               Cari Pelatihan Lain
             </Link>
           </div>
         </div>
@@ -115,7 +112,6 @@ export default function TrainingContent({ training, partner, accommodations, ski
     );
   }
 
-  // --- TAMPILAN 2: HALAMAN RINCIAN (NORMAL) ---
   const isExpired = training?.registration_deadline ? new Date(training.registration_deadline) < new Date() : false;
 
   return (
@@ -126,9 +122,15 @@ export default function TrainingContent({ training, partner, accommodations, ski
             <GraduationCap size={48} />
           </div>
           <div className="flex-1 space-y-6">
-            <span className="rounded-full bg-blue-50 border-2 border-blue-100 px-4 py-1 text-[10px] font-black uppercase text-blue-600 italic tracking-widest">
-              Program {training?.is_online ? "Daring (Online)" : "Luring (Offline)"}
-            </span>
+            <div className="flex flex-wrap gap-3">
+              <span className="rounded-full bg-blue-50 border-2 border-blue-100 px-4 py-1 text-[10px] font-black uppercase text-blue-600 italic tracking-widest">
+                Program {training?.is_online ? "Daring (Online)" : "Luring (Offline)"}
+              </span>
+              {/* TAMBAHAN: Tag JP di Header */}
+              <span className="rounded-full bg-slate-900 border-2 border-slate-900 px-4 py-1 text-[10px] font-black uppercase text-white italic tracking-widest flex items-center gap-2">
+                <Timer size={12} /> {training?.total_hours || 0} JP Pelatihan
+              </span>
+            </div>
             <h1 className="text-4xl font-black uppercase italic tracking-tighter md:text-6xl text-slate-900 leading-none">
               {training?.title}
             </h1>
@@ -236,18 +238,26 @@ export default function TrainingContent({ training, partner, accommodations, ski
 
           <section aria-labelledby="schedule-heading" className="rounded-[3.5rem] bg-blue-600 p-10 text-white shadow-xl space-y-8 text-left">
             <h3 id="schedule-heading" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest italic border-b border-blue-400 pb-4 leading-none">
-              <Timer size={16} /> Jadwal Pelaksanaan
+              <Timer size={16} /> Jadwal & Beban Belajar
             </h3>
             <div className="space-y-4">
               <p className="text-base font-black italic uppercase leading-tight">
                 {formatFullDate(training?.start_date)} - {formatFullDate(training?.end_date)}
               </p>
-              {training?.start_time && (
-                <div className="border-t border-blue-400 pt-4">
-                   <p className="text-[8px] font-black uppercase opacity-60 mb-1 leading-none italic">Waktu Belajar (WIB)</p>
-                   <p className="text-xl font-black italic">{training.start_time.substring(0, 5)} - {training.end_time?.substring(0, 5)}</p>
+              
+              <div className="grid grid-cols-2 gap-4 border-t border-blue-400 pt-4">
+                {training?.start_time && (
+                  <div>
+                    <p className="text-[8px] font-black uppercase opacity-60 mb-1 leading-none italic">Waktu (WIB)</p>
+                    <p className="text-lg font-black italic">{training.start_time.substring(0, 5)} - {training.end_time?.substring(0, 5)}</p>
+                  </div>
+                )}
+                {/* TAMBAHAN: Info Beban JP di Aside */}
+                <div>
+                  <p className="text-[8px] font-black uppercase opacity-60 mb-1 leading-none italic">Total Beban</p>
+                  <p className="text-lg font-black italic">{training?.total_hours || 0} JP</p>
                 </div>
-              )}
+              </div>
             </div>
           </section>
 

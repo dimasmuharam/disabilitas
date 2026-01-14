@@ -44,6 +44,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
     end_date: "",
     start_time: "", 
     end_time: "",   
+    total_hours: 0, // TAMBAHAN: Kolom Baru sesuai SOP Sertifikat
     registration_start: "", 
     registration_deadline: "", 
     location: "",
@@ -78,7 +79,10 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
   useEffect(() => { fetchPrograms(); }, [fetchPrograms]);
 
   const handleEdit = (prog: any) => {
-    setFormData(prog);
+    setFormData({
+      ...prog,
+      total_hours: prog.total_hours || 0 // Pastikan fallback ke 0 jika null
+    });
     if (prog.is_online && (prog.location === "Remote / Online" || !prog.location)) {
       setDeliveryMethod("Online");
     } else if (prog.is_online && prog.location && prog.location !== "Remote / Online") {
@@ -191,7 +195,8 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* BARIS BARU: WAKTU & TOTAL JP */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="space-y-2">
                   <label htmlFor="start_time" className="ml-1 text-[9px] font-black uppercase text-slate-400">Jam Mulai</label>
                   <input id="start_time" type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold" />
@@ -199,6 +204,13 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                 <div className="space-y-2">
                   <label htmlFor="end_time" className="ml-1 text-[9px] font-black uppercase text-slate-400">Jam Selesai</label>
                   <input id="end_time" type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="total_hours" className="ml-1 text-[9px] font-black uppercase text-blue-600">Beban Belajar (JP)</label>
+                  <div className="relative">
+                    <Timer className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300" size={18} />
+                    <input id="total_hours" type="number" required value={formData.total_hours} onChange={e => setFormData({...formData, total_hours: parseInt(e.target.value) || 0})} className="w-full rounded-2xl border-4 border-blue-100 bg-blue-50 p-4 pl-12 font-black text-blue-700 outline-none focus:border-blue-600" placeholder="Cth: 40" />
+                  </div>
                 </div>
               </div>
 
@@ -222,7 +234,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                     <input disabled value="Remote / Online" className="w-full rounded-2xl border-2 border-slate-100 bg-slate-100 p-4 font-bold italic text-slate-400" />
                   ) : !isCustomCity ? (
                     <div className="relative">
-                      <select id="loc-select" aria-label="Pilih kota pelaksanaan" value={formData.location} onChange={e => e.target.value === "LAINNYA" ? setIsCustomCity(true) : setFormData({...formData, location: e.target.value})} className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none">
+                      <select id="loc-select" aria-label="Pilih kota pelaksanaan" value={formData.location} onChange={e => e.target.value === "LAINNYA" ? setIsCustomCity(true) : setFormData({...formData, location: e.target.value})} className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900">
                         <option value="">-- Pilih Kota --</option>
                         {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                         <option value="LAINNYA">+ KOTA LAINNYA</option>
@@ -231,7 +243,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <input ref={manualCityRef} aria-label="Ketik nama kota manual" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-2xl border-2 border-blue-100 bg-blue-50 p-4 font-bold outline-none" placeholder="Ketik Kota..." />
+                      <input ref={manualCityRef} aria-label="Ketik nama kota manual" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-2xl border-2 border-blue-100 bg-blue-50 p-4 font-bold outline-none focus:border-blue-600" placeholder="Ketik Kota..." />
                       <button type="button" onClick={() => setIsCustomCity(false)} className="text-[9px] font-black uppercase text-blue-600 underline">Pilih Daftar</button>
                     </div>
                   )}
@@ -242,7 +254,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
                 <label htmlFor="quota" className="ml-1 text-[10px] font-black uppercase text-slate-400">Kuota Peserta (0 = Unlimited)</label>
                 <div className="relative max-w-[200px]">
                   <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                  <input id="quota" type="number" value={formData.max_quota} onChange={e => setFormData({...formData, max_quota: parseInt(e.target.value) || 0})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 pl-12 font-bold outline-none" />
+                  <input id="quota" type="number" value={formData.max_quota} onChange={e => setFormData({...formData, max_quota: parseInt(e.target.value) || 0})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 pl-12 font-bold outline-none focus:border-slate-900" />
                 </div>
               </div>
             </div>
@@ -253,18 +265,18 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
             <div className="space-y-6">
               <div className="space-y-2">
                 <label htmlFor="desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Deskripsi Singkat</label>
-                <textarea id="desc" rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none" />
+                <textarea id="desc" rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" />
               </div>
 
               <fieldset className="space-y-4">
-                <legend className="ml-1 text-[10px] font-black uppercase text-slate-400">Pilih Output Keahlian</legend>
+                <legend className="ml-1 text-[10px] font-black uppercase text-slate-400">Pilih Output Keahlian (Akan disinkronisasi ke Profil Talenta)</legend>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input type="text" aria-label="Cari keahlian" placeholder="Cari..." className="w-full rounded-xl border-2 border-slate-100 bg-slate-50 p-3 pl-12 text-xs font-bold outline-none" value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} />
                 </div>
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 max-h-48 overflow-y-auto rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 no-scrollbar">
                    {filteredSkills.map((skill) => (
-                      <label key={skill} className="flex cursor-pointer items-center gap-3 rounded-lg bg-white p-2">
+                      <label key={skill} className="flex cursor-pointer items-center gap-3 rounded-lg bg-white p-2 hover:bg-blue-50 transition-colors">
                         <input type="checkbox" checked={formData.provided_skills.includes(skill)} onChange={() => handleMultiToggle("provided_skills", skill)} className="size-4 accent-blue-600" />
                         <span className="text-[9px] font-black uppercase text-slate-600">{skill}</span>
                       </label>
@@ -273,19 +285,19 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
               </fieldset>
 
               <div className="space-y-2">
-                <label htmlFor="syllabus" className="ml-1 text-[10px] font-black uppercase text-slate-400">Silabus / Agenda</label>
-                <textarea id="syllabus" rows={3} value={formData.syllabus} onChange={e => setFormData({...formData, syllabus: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none" />
+                <label htmlFor="syllabus" className="ml-1 text-[10px] font-black uppercase text-slate-400">Silabus / Agenda (Akan tampil di Sertifikat)</label>
+                <textarea id="syllabus" rows={3} value={formData.syllabus} onChange={e => setFormData({...formData, syllabus: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" placeholder="Tuliskan materi pelatihan di sini..." />
               </div>
               <div className="space-y-2">
                 <label htmlFor="req" className="ml-1 text-[10px] font-black uppercase text-slate-400">Syarat Peserta</label>
-                <textarea id="req" rows={3} value={formData.participant_requirements} onChange={e => setFormData({...formData, participant_requirements: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none" />
+                <textarea id="req" rows={3} value={formData.participant_requirements} onChange={e => setFormData({...formData, participant_requirements: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none focus:border-slate-900" />
               </div>
             </div>
           </section>
 
           <section className="rounded-[3rem] border-4 border-slate-900 bg-blue-600 p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-white space-y-6">
             <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none text-left">Instruksi Pasca Daftar</h2>
-            <textarea id="reg_instructions" aria-label="Instruksi pendaftaran otomatis" rows={3} required value={formData.registration_instructions} onChange={e => setFormData({...formData, registration_instructions: e.target.value})} className="w-full rounded-2xl border-2 border-blue-400 bg-blue-700 p-6 font-bold text-white placeholder:text-blue-300 outline-none" />
+            <textarea id="reg_instructions" aria-label="Instruksi pendaftaran otomatis" rows={3} required value={formData.registration_instructions} onChange={e => setFormData({...formData, registration_instructions: e.target.value})} className="w-full rounded-2xl border-2 border-blue-400 bg-blue-700 p-6 font-bold text-white placeholder:text-blue-300 outline-none focus:border-white" />
           </section>
         </div>
 
@@ -343,10 +355,10 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
       <div className="mb-10 flex flex-col justify-between gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-end">
         <div>
           <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Program Manager</h2>
-          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 italic">Accessibility & Auto-Slug v3.1</p>
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 italic">Accessibility & Auto-Slug v3.2</p>
         </div>
         <button 
-          onClick={() => { setFormData({ id: "", title: "", slug: "", description: "", syllabus: "", participant_requirements: "", provided_skills: [], start_date: "", end_date: "", start_time: "", end_time: "", registration_start: "", registration_deadline: "", location: "", max_quota: 0, registration_instructions: "", is_online: false, is_published: true, target_disability: [], training_accommodations: [] }); setDeliveryMethod("Offline"); setIsEditing(true); }} 
+          onClick={() => { setFormData({ id: "", title: "", slug: "", description: "", syllabus: "", participant_requirements: "", provided_skills: [], start_date: "", end_date: "", start_time: "", end_time: "", total_hours: 0, registration_start: "", registration_deadline: "", location: "", max_quota: 0, registration_instructions: "", is_online: false, is_published: true, target_disability: [], training_accommodations: [] }); setDeliveryMethod("Offline"); setIsEditing(true); }} 
           aria-label="Tambah program pelatihan baru"
           className="flex items-center justify-center gap-3 rounded-[2rem] bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl hover:bg-slate-900 transition-all"
         >
@@ -373,7 +385,7 @@ export default function ProgramManager({ partnerId, onBack }: ProgramManagerProp
             <div className="mt-8 flex items-center justify-between border-t-2 border-slate-50 pt-6">
               <div className="flex flex-col gap-1 text-left">
                  <div className="flex items-center gap-1 text-[9px] font-black uppercase text-slate-500"><MapPin size={12} className="text-blue-600" /> {prog.location}</div>
-                 <div className="flex items-center gap-1 text-[8px] font-bold uppercase text-slate-300 italic">Deadline: {prog.registration_deadline}</div>
+                 <div className="flex items-center gap-1 text-[8px] font-bold uppercase text-blue-600 italic"><Timer size={12} /> {prog.total_hours || 0} JP</div>
               </div>
               <button onClick={() => handleEdit(prog)} aria-label={`Lihat detail ${prog.title}`} className="text-[10px] font-black uppercase italic text-blue-600 underline underline-offset-4">Edit</button>
             </div>
