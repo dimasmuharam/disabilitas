@@ -55,7 +55,7 @@ export default function LoginPage() {
           document.activeElement.blur();
         }
 
-        setMsg("Otentikasi Berhasil. Menghubungkan ke Portal Riset Disabilitas...");
+        setMsg("Otentikasi Berhasil. Menghubungkan ke Portal Dashboard...");
         setIsError(false)
 
         // Pindahkan fokus ke pengumuman sukses
@@ -95,7 +95,7 @@ export default function LoginPage() {
           {"Akses Portal"}
         </h1>
         <p className="mt-3 text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
-          {"Platform Riset & Pengembangan Talenta"}
+          {"Platform Karir Talenta Inklusif"}
         </p>
       </div>
 
