@@ -36,6 +36,13 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
   const [announcement, setAnnouncement] = useState("");
   const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
+  // --- PERBAIKAN: PENAMBAHAN FUNGSI TOGGLE SELECT ---
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
   const fetchFilterData = useCallback(async () => {
     const { data } = await supabase
       .from("trainings")
@@ -120,7 +127,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
       {/* HEADER */}
       <div className="flex flex-col justify-between gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-end">
         <div>
-          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 focus:ring-2 focus:ring-blue-600 outline-none">
+          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none transition-all hover:text-slate-900 focus:ring-2 focus:ring-blue-600">
             <ArrowLeft size={16} /> Kembali
           </button>
           <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Seleksi Pendaftar</h1>
@@ -135,23 +142,23 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
       {/* NOTIFICATION BANNER (Gantinya Pop-up) */}
       {statusMessage && (
         <div 
-          className={`flex items-center gap-4 rounded-2xl p-6 border-4 animate-in fade-in slide-in-from-top-4 ${
-            statusMessage.type === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-red-50 border-red-500 text-red-800'
+          className={`flex animate-in fade-in slide-in-from-top-4 items-center gap-4 rounded-2xl border-4 p-6 ${
+            statusMessage.type === 'success' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-red-500 bg-red-50 text-red-800'
           }`}
           role="alert"
         >
           {statusMessage.type === 'success' ? <CheckCircle size={24}/> : <AlertCircle size={24}/>}
-          <p className="font-bold uppercase italic text-sm">{statusMessage.text}</p>
+          <p className="text-sm font-bold uppercase italic">{statusMessage.text}</p>
         </div>
       )}
 
       {/* BULK CONTROL BAR */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] bg-slate-900 p-6 text-white shadow-xl">
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-3 text-[10px] font-black uppercase italic cursor-pointer select-none">
+          <label className="flex cursor-pointer items-center gap-3 text-[10px] font-black uppercase italic select-none">
             <input 
               type="checkbox" 
-              className="h-6 w-6 rounded border-2 border-white bg-transparent accent-blue-500"
+              className="size-6 rounded border-2 border-white bg-transparent accent-blue-500"
               checked={selectedIds.length === enrollments.length && enrollments.length > 0}
               onChange={() => setSelectedIds(selectedIds.length === enrollments.length ? [] : enrollments.map(e => e.id))}
               aria-label="Pilih semua pendaftar di halaman ini"
@@ -163,14 +170,14 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
           <button 
             disabled={selectedIds.length === 0 || processing}
             onClick={() => handleUpdateStatus(selectedIds, "accepted")}
-            className="rounded-xl bg-emerald-600 px-6 py-3 text-[10px] font-black uppercase shadow-lg hover:bg-emerald-500 disabled:opacity-20 flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-[10px] font-black uppercase shadow-lg transition-all hover:bg-emerald-500 disabled:opacity-20"
           >
             {processing ? <Loader2 className="animate-spin" size={14}/> : 'Terima Terpilih'}
           </button>
           <button 
             disabled={selectedIds.length === 0 || processing}
             onClick={() => handleUpdateStatus(selectedIds, "rejected")}
-            className="rounded-xl bg-red-600 px-6 py-3 text-[10px] font-black uppercase shadow-lg hover:bg-red-500 disabled:opacity-20"
+            className="rounded-xl bg-red-600 px-6 py-3 text-[10px] font-black uppercase shadow-lg transition-all hover:bg-red-500 disabled:opacity-20"
           >
             Tolak Terpilih
           </button>
@@ -181,7 +188,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
       <div className="grid grid-cols-1 gap-6 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] md:grid-cols-2">
         <div className="space-y-3">
           <label htmlFor="training-filter" className="text-[10px] font-black uppercase text-slate-400">Program Pelatihan</label>
-          <select id="training-filter" value={selectedTrainingId} onChange={(e) => {setSelectedTrainingId(e.target.value); setCurrentPage(1);}} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 font-bold outline-none focus:border-slate-900 focus:bg-white transition-all">
+          <select id="training-filter" value={selectedTrainingId} onChange={(e) => {setSelectedTrainingId(e.target.value); setCurrentPage(1);}} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white">
             <option value="all">Semua Program</option>
             {trainings.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
           </select>
@@ -219,13 +226,13 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
               <input 
                 type="checkbox" 
                 aria-label={`Pilih ${item.profiles?.full_name}`}
-                className="h-8 w-8 cursor-pointer rounded-lg border-2 border-slate-900 accent-blue-600 focus:ring-4 focus:ring-blue-100"
+                className="size-8 cursor-pointer rounded-lg border-2 border-slate-900 accent-blue-600 focus:ring-4 focus:ring-blue-100"
                 checked={selectedIds.includes(item.id)}
                 onChange={() => toggleSelect(item.id)}
               />
               <div className="flex flex-1 flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div className="text-left">
-                  <h3 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">{item.profiles?.full_name}</h3>
+                  <h3 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 leading-none uppercase">{item.profiles?.full_name}</h3>
                   <p className="mt-1 text-[10px] font-black uppercase text-slate-400 italic">
                     {item.profiles?.disability_type} • <span className="text-blue-600 underline">{item.trainings?.title}</span>
                   </p>
@@ -235,25 +242,25 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
                     <div className="flex gap-2">
                       <button 
                         onClick={() => handleUpdateStatus([item.id], "accepted")} 
-                        className="rounded-xl bg-slate-900 px-6 py-3 text-[10px] font-black uppercase text-white hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-100 transition-all"
+                        className="rounded-xl bg-slate-900 px-6 py-3 text-[10px] font-black uppercase text-white transition-all hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-100"
                       >
                         Terima
                       </button>
                       <button 
                         onClick={() => handleUpdateStatus([item.id], "rejected")} 
-                        className="rounded-xl border-2 border-slate-900 bg-white px-6 py-3 text-[10px] font-black uppercase text-slate-900 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all"
+                        className="rounded-xl border-2 border-slate-900 bg-white px-6 py-3 text-[10px] font-black uppercase text-slate-900 transition-all hover:border-red-600 hover:bg-red-50 hover:text-red-600"
                       >
                         Tolak
                       </button>
                     </div>
                   ) : (
                     <div className={`rounded-xl px-6 py-3 text-[10px] font-black uppercase italic ${
-                      item.status === 'accepted' ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'
+                      item.status === 'accepted' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
                     }`}>
                       {item.status === 'accepted' ? 'Diterima' : 'Ditolak'}
                     </div>
                   )}
-                  <Link href={`/talent/${item.profiles?.id}`} target="_blank" className="rounded-xl bg-slate-100 p-3 text-slate-400 hover:text-blue-600 transition-all" aria-label="Buka profil lengkap talenta">
+                  <Link href={`/talent/${item.profiles?.id}`} target="_blank" className="rounded-xl bg-slate-100 p-3 text-slate-400 transition-all hover:text-blue-600" aria-label="Buka profil lengkap talenta">
                     <ExternalLink size={20}/>
                   </Link>
                 </div>
@@ -261,7 +268,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-[4rem] border-4 border-dashed border-slate-100 py-40 text-center animate-in zoom-in duration-500">
+          <div className="flex animate-in zoom-in flex-col items-center justify-center rounded-[4rem] border-4 border-dashed border-slate-100 py-40 text-center duration-500">
             <Search size={64} className="mb-6 text-slate-100" />
             <h3 className="text-2xl font-black uppercase italic text-slate-300 tracking-tighter">
               {filterStatus === 'applied' ? 'Semua Pendaftar Sudah Diproses' : 'Belum Ada Pendaftaran'}
@@ -281,7 +288,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
           <button 
             disabled={currentPage === 1}
             onClick={() => {setCurrentPage(prev => prev - 1); setAnnouncement(`Pindah ke halaman ${currentPage - 1}`);}}
-            className="rounded-2xl border-4 border-slate-900 bg-white p-5 text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] disabled:opacity-20 hover:bg-slate-50 transition-all"
+            className="rounded-2xl border-4 border-slate-900 bg-white p-5 text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-50 disabled:opacity-20"
             aria-label="Halaman sebelumnya"
           >
             <ChevronLeft size={24} />
@@ -292,7 +299,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
           <button 
             disabled={currentPage === totalPages}
             onClick={() => {setCurrentPage(prev => prev + 1); setAnnouncement(`Pindah ke halaman ${currentPage + 1}`);}}
-            className="rounded-2xl border-4 border-slate-900 bg-white p-5 text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] disabled:opacity-20 hover:bg-slate-50 transition-all"
+            className="rounded-2xl border-4 border-slate-900 bg-white p-5 text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-50 disabled:opacity-20"
             aria-label="Halaman selanjutnya"
           >
             <ChevronRight size={24} />
@@ -305,7 +312,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
         <Info className="shrink-0 text-blue-400" size={24} />
         <div className="space-y-2 text-left">
           <p className="text-[11px] font-black uppercase italic leading-none tracking-[0.2em] text-blue-400">Aksesibilitas Seleksi</p>
-          <p className="max-w-4xl text-xs font-bold leading-relaxed opacity-80 italic">
+          <p className="max-w-4xl text-xs font-bold leading-relaxed italic opacity-80">
             Gunakan tombol <strong>Tab</strong> untuk berpindah antar pendaftar dengan cepat. Status pembaruan akan dibacakan secara otomatis oleh sistem pembaca layar tanpa mengganggu fokus Anda.
           </p>
         </div>
