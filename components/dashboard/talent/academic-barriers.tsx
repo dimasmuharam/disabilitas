@@ -6,7 +6,7 @@ import { updateTalentProfile } from "@/lib/actions/talent";
 import { 
   GraduationCap, School, AlertTriangle, Save, 
   CheckCircle2, AlertCircle, Handshake, Cpu, Workflow,
-  ChevronDown, Loader2
+  ChevronDown, Loader2, BookOpenCheck
 } from "lucide-react";
 
 import { 
@@ -31,11 +31,12 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [isCustomUni, setIsCustomUni] = useState(false);
+  const [isCustomMajor, setIsCustomMajor] = useState(false);
   
   const manualUniRef = useRef<HTMLInputElement>(null);
+  const manualMajorRef = useRef<HTMLInputElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
 
-  // Initialize form dengan data profile atau default value kosong
   const [formData, setFormData] = useState({
     education_level: profile?.education_level || "",
     education_model: profile?.education_model || "",
@@ -47,7 +48,8 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     academic_support_received: Array.isArray(profile?.academic_support_received) ? profile.academic_support_received : [],
     academic_assistive_tools: Array.isArray(profile?.academic_assistive_tools) ? profile.academic_assistive_tools : [],
     study_relevance: profile?.study_relevance || "",
-    manual_university: "" 
+    manual_university: "",
+    manual_major: ""
   });
 
   const isCollegeLevel = [
@@ -57,13 +59,17 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     "Doktor (S3)"
   ].includes(formData.education_level);
 
+  // Efek untuk mendeteksi data manual dari database saat load pertama
   useEffect(() => {
-    // Deteksi jika universitas yang tersimpan adalah input manual (tidak ada di list statis)
-    if (formData.university && !UNIVERSITIES.includes(formData.university)) {
+    if (profile?.university && !UNIVERSITIES.includes(profile.university)) {
       setIsCustomUni(true);
       setFormData(prev => ({ ...prev, university: "LAINNYA", manual_university: profile.university }));
     }
-  }, [profile.university]);
+    if (profile?.major && !UNIVERSITY_MAJORS.includes(profile.major)) {
+      setIsCustomMajor(true);
+      setFormData(prev => ({ ...prev, major: "LAINNYA", manual_major: profile.major }));
+    }
+  }, [profile]);
 
   const handleMultiToggle = (field: string, value: string) => {
     setFormData((prev: any) => {
@@ -82,46 +88,44 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
 
     try {
       const finalUniversity = formData.university === "LAINNYA" ? formData.manual_university : formData.university;
+      const finalMajor = formData.major === "LAINNYA" ? formData.manual_major : formData.major;
 
-      // Log manual input untuk riset super admin (Kerapihan Data)
-      if (formData.university === "LAINNYA" && formData.manual_university) {
-        await supabase.from("manual_input_logs").insert([{
-          field_name: "university_name_manual",
-          input_value: formData.manual_university
-        }]);
-      }
-
-      // PREPARASI PAYLOAD (SINKRONISASI SKEMA public.profiles)
+      // Persiapan Payload - Harus sinkron dengan kolom public.profiles
       const payload = {
         education_level: formData.education_level || null,
         education_model: formData.education_model || null,
         university: finalUniversity || null,
-        major: formData.major || null,
+        major: finalMajor || null,
         graduation_date: formData.graduation_date ? parseInt(formData.graduation_date.toString()) : null,
         scholarship_type: formData.scholarship_type || null,
         education_barrier: formData.education_barrier,
         academic_support_received: formData.academic_support_received,
         academic_assistive_tools: formData.academic_assistive_tools,
         study_relevance: formData.study_relevance || null,
-        updated_at: new Date().toISOString()
+        // Pastikan tidak ada manual_university atau manual_major dikirim ke profiles
       };
 
-      // Eksekusi Server Action
-      const result: any = await updateTalentProfile(user.id, payload);
-      
-      // Jika action gagal mengembalikan respons sukses, lempar error
-      if (result?.error) throw new Error(result.error);
+      // Logging untuk riset super admin
+      if (formData.university === "LAINNYA" && formData.manual_university) {
+        await supabase.from("manual_input_logs").insert([{ field_name: "university_name", input_value: formData.manual_university }]);
+      }
+      if (formData.major === "LAINNYA" && formData.manual_major) {
+        await supabase.from("manual_input_logs").insert([{ field_name: "major_name", input_value: formData.manual_major }]);
+      }
 
-      setMessage({ type: "success", text: "Profil akademik Anda telah berhasil diperbarui!" });
+      // Gunakan server action yang sudah diperbaiki (cleanUpdates)
+      const result = await updateTalentProfile(user.id, payload);
       
-      // Berikan fokus ke feedback message agar dibaca Screen Reader
+      if (!result.success) throw new Error(result.error);
+
+      setMessage({ type: "success", text: "Integrasi Profil Akademik Berhasil Disinkronkan!" });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => feedbackRef.current?.focus(), 100);
-
       if (onSuccess) setTimeout(onSuccess, 2000);
 
     } catch (error: any) {
-      console.error("Gagal sinkronisasi data akademik:", error);
-      setMessage({ type: "error", text: `Gagal menyimpan: ${error.message || "Periksa koneksi internet Anda."}` });
+      console.error("Critical Sync Error:", error);
+      setMessage({ type: "error", text: `Gagal: ${error.message}` });
       setTimeout(() => feedbackRef.current?.focus(), 100);
     } finally {
       setLoading(false);
@@ -130,107 +134,114 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
 
   return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900 selection:bg-emerald-100">
-      <datalist id="major-list">
-        {UNIVERSITY_MAJORS.map((m, i) => <option key={i} value={m} />)}
-      </datalist>
-
       <header className="mb-10 px-4 text-left">
         <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">
           <GraduationCap className="text-emerald-600" size={36} /> Riwayat Akademik
         </h1>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">
-          Data hambatan & dukungan akademik sangat penting untuk validasi riset inklusi
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 italic">
+          Sinkronisasi Data Hambatan & Dukungan Pendidikan untuk Riset Inklusi
         </p>
       </header>
 
-      {/* FEEDBACK NOTIFICATION (AKSESIBEL) */}
-      <div 
-        ref={feedbackRef}
-        tabIndex={-1}
-        role="status"
-        aria-live="polite"
-        className="px-4 outline-none"
-      >
+      {/* FEEDBACK AKSESIBEL */}
+      <div ref={feedbackRef} tabIndex={-1} aria-live="polite" className="px-4 outline-none">
         {message.text && (
           <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-4 p-6 animate-in slide-in-from-top-2 ${
             message.type === "success" ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-red-500 bg-red-50 text-red-800"
           }`}>
             {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-            <p className="text-sm font-black uppercase italic">{message.text}</p>
+            <p className="text-sm font-black uppercase italic leading-none">{message.text}</p>
           </div>
         )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
         
-        {/* SEKSI 1: INSTITUSI */}
-        <section className="space-y-8 rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+        {/* SEKSI 1: IDENTITAS */}
+        <section className="space-y-8 rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
           <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-600 italic">
-            <School size={18} /> Identitas Pendidikan Terakhir
+            <School size={18} /> Institusi & Pendidikan
           </h2>
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="space-y-2 text-left">
-              <label htmlFor="edu_level" className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Jenjang Pendidikan</label>
+          <div className="grid gap-8 md:grid-cols-2 text-left">
+            <div className="space-y-2">
+              <label htmlFor="edu_level" className="ml-2 text-[10px] font-black uppercase text-slate-400">Jenjang</label>
               <select id="edu_level" required value={formData.education_level} onChange={(e) => setFormData({...formData, education_level: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-50 transition-all">
-                <option value="">-- Pilih Jenjang --</option>
+                <option value="">-- Pilih --</option>
                 {EDUCATION_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
 
-            <div className="space-y-2 text-left">
-              <label htmlFor="edu_model" className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Model Pendidikan</label>
-              <select id="edu_model" required value={formData.education_model} onChange={(e) => setFormData({...formData, education_model: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-50 transition-all">
-                <option value="">-- Pilih Model --</option>
+            <div className="space-y-2">
+              <label htmlFor="edu_model" className="ml-2 text-[10px] font-black uppercase text-slate-400">Model Pendidikan</label>
+              <select id="edu_model" required value={formData.education_model} onChange={(e) => setFormData({...formData, education_model: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600 transition-all">
+                <option value="">-- Pilih --</option>
                 {EDUCATION_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
 
             {isCollegeLevel && (
               <>
-                <div className="space-y-2 text-left animate-in fade-in slide-in-from-left-2">
-                  <label htmlFor="uni" className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Perguruan Tinggi</label>
+                {/* KAMPUS COMBOBOX */}
+                <div className="space-y-2">
+                  <label htmlFor="uni" className="ml-2 text-[10px] font-black uppercase text-slate-400">Nama Kampus</label>
                   {!isCustomUni ? (
                     <div className="relative">
-                      <select id="uni" required={isCollegeLevel} value={formData.university} 
+                      <select id="uni" required value={formData.university} 
                         onChange={(e) => {
-                          if (e.target.value === "LAINNYA") {
-                            setIsCustomUni(true);
-                            setFormData({...formData, university: "LAINNYA", manual_university: ""});
-                            setTimeout(() => manualUniRef.current?.focus(), 100);
-                          } else {
-                            setFormData({...formData, university: e.target.value});
-                          }
+                          if (e.target.value === "LAINNYA") { setIsCustomUni(true); setFormData({...formData, university: "LAINNYA"}); setTimeout(() => manualUniRef.current?.focus(), 100); }
+                          else setFormData({...formData, university: e.target.value});
                         }} 
                         className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600"
                       >
                         <option value="">-- Pilih Kampus --</option>
                         {UNIVERSITIES.map(u => <option key={u} value={u}>{u}</option>)}
-                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ KAMPUS LAINNYA</option>
+                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ KAMPUS TIDAK ADA DI LIST</option>
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                     </div>
                   ) : (
                     <div className="space-y-2 animate-in zoom-in-95">
-                      <input ref={manualUniRef} required={isCollegeLevel && isCustomUni} placeholder="Ketik Nama Kampus..." value={formData.manual_university} onChange={(e) => setFormData({...formData, manual_university: e.target.value})} className="w-full rounded-2xl border-2 border-emerald-600 bg-white p-4 font-bold outline-none shadow-inner" />
-                      <button type="button" onClick={() => setIsCustomUni(false)} className="text-[9px] font-black uppercase text-blue-600 underline hover:text-slate-900 transition-colors">Kembali ke Daftar Resmi</button>
+                      <input ref={manualUniRef} required placeholder="Ketik Nama Kampus..." value={formData.manual_university} onChange={(e) => setFormData({...formData, manual_university: e.target.value})} className="w-full rounded-2xl border-2 border-emerald-600 bg-white p-4 font-bold outline-none shadow-inner" />
+                      <button type="button" onClick={() => setIsCustomUni(false)} className="text-[9px] font-black text-blue-600 underline uppercase italic">Buka Daftar Kampus Resmi</button>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2 text-left animate-in fade-in slide-in-from-right-2">
-                  <label htmlFor="major" className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Program Studi / Jurusan</label>
-                  <input id="major" list="major-list" required={isCollegeLevel} placeholder="Cth: Manajemen Informatika" value={formData.major} onChange={(e) => setFormData({...formData, major: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600" />
+                {/* JURUSAN COMBOBOX */}
+                <div className="space-y-2">
+                  <label htmlFor="major" className="ml-2 text-[10px] font-black uppercase text-slate-400">Program Studi</label>
+                  {!isCustomMajor ? (
+                    <div className="relative">
+                      <select id="major" required value={formData.major} 
+                        onChange={(e) => {
+                          if (e.target.value === "LAINNYA") { setIsCustomMajor(true); setFormData({...formData, major: "LAINNYA"}); setTimeout(() => manualMajorRef.current?.focus(), 100); }
+                          else setFormData({...formData, major: e.target.value});
+                        }} 
+                        className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600"
+                      >
+                        <option value="">-- Pilih Jurusan --</option>
+                        {UNIVERSITY_MAJORS.map(m => <option key={m} value={m}>{m}</option>)}
+                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ JURUSAN TIDAK ADA DI LIST</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2 animate-in zoom-in-95">
+                      <input ref={manualMajorRef} required placeholder="Ketik Nama Jurusan..." value={formData.manual_major} onChange={(e) => setFormData({...formData, manual_major: e.target.value})} className="w-full rounded-2xl border-2 border-emerald-600 bg-white p-4 font-bold outline-none shadow-inner" />
+                      <button type="button" onClick={() => setIsCustomMajor(false)} className="text-[9px] font-black text-blue-600 underline uppercase italic">Buka Daftar Jurusan Umum</button>
+                    </div>
+                  )}
                 </div>
               </>
             )}
 
-            <div className="space-y-2 text-left">
-              <label htmlFor="grad_year" className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Tahun Lulus (Format: 2024)</label>
-              <input id="grad_year" required type="number" min="1950" max="2030" placeholder="2024" value={formData.graduation_date} onChange={(e) => setFormData({...formData, graduation_date: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600" />
+            <div className="space-y-2">
+              <label htmlFor="grad_year" className="ml-2 text-[10px] font-black uppercase text-slate-400">Tahun Lulus</label>
+              <input id="grad_year" required type="number" placeholder="YYYY" value={formData.graduation_date} onChange={(e) => setFormData({...formData, graduation_date: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600" />
             </div>
 
-            <div className="space-y-2 text-left">
-              <label htmlFor="scholarship" className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Tipe Pembiayaan</label>
+            <div className="space-y-2">
+              <label htmlFor="scholarship" className="ml-2 text-[10px] font-black uppercase text-slate-400">Tipe Pembiayaan</label>
               <select id="scholarship" value={formData.scholarship_type} onChange={(e) => setFormData({...formData, scholarship_type: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-emerald-600">
                 <option value="">Biaya Mandiri / Keluarga</option>
                 {SCHOLARSHIP_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -239,68 +250,47 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           </div>
         </section>
 
-        {/* SEKSI 2: LINEARITAS (RADIO) */}
+        {/* SEKSI 2: LINEARITAS (RADIO) - FIELDSET UNTUK AKSESIBILITAS */}
         {isCollegeLevel && (
-          <fieldset className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] animate-in slide-in-from-bottom-2 text-left">
-            <legend className="sr-only">Linearitas Bidang Studi dan Karier Saat Ini</legend>
-            <h3 id="relevance-title" className="mb-6 flex items-center gap-4 text-xs font-black uppercase tracking-[0.2em] text-blue-600 italic">
-              <Workflow size={24} /> Relevansi Studi & Karier
-            </h3>
+          <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
+            <legend className="mb-6 flex items-center gap-4 px-2 text-xs font-black uppercase tracking-[0.2em] text-blue-600 italic leading-none">
+              <Workflow size={24} /> Linearitas Bidang Studi & Karier
+            </legend>
             <div className="grid grid-cols-1 gap-3">
-              {STUDY_RELEVANCE_LEVELS.map((level, idx) => (
+              {STUDY_RELEVANCE_LEVELS.map((level) => (
                 <label key={level} className={`flex cursor-pointer items-center gap-4 rounded-2xl border-2 p-5 transition-all focus-within:ring-4 focus-within:ring-blue-100 ${formData.study_relevance === level ? 'border-blue-600 bg-blue-50 shadow-md' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}>
-                  <input 
-                    type="radio" 
-                    name="relevance" 
-                    aria-labelledby={`relevance-opt-${idx}`}
-                    value={level} 
-                    checked={formData.study_relevance === level} 
-                    onChange={(e) => setFormData({...formData, study_relevance: e.target.value})} 
-                    className="size-5 accent-blue-600" 
-                  />
-                  <span id={`relevance-opt-${idx}`} className="text-sm font-black uppercase italic text-slate-800 leading-none">{level}</span>
+                  <input type="radio" name="relevance" value={level} checked={formData.study_relevance === level} onChange={(e) => setFormData({...formData, study_relevance: e.target.value})} className="size-5 accent-blue-600" />
+                  <span className="text-sm font-bold uppercase italic text-slate-800">{level}</span>
                 </label>
               ))}
             </div>
           </fieldset>
         )}
 
-        {/* SEKSI 3: MULTI-CHECKBOX (DUKUNGAN & TOOLS) */}
+        {/* SEKSI 3: DUKUNGAN & TOOLS (MULTI-CHECKBOX) */}
         <div className="grid gap-10 md:grid-cols-2">
-          <fieldset className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
-            <h3 id="support-title" className="mb-6 flex items-center gap-3 text-xs font-black uppercase tracking-tight text-emerald-700 italic">
-              <Handshake size={24} /> Dukungan Institusi
-            </h3>
+          <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
+            <legend className="mb-6 flex items-center gap-3 px-2 text-xs font-black uppercase tracking-tight text-emerald-700 italic leading-none">
+              <Handshake size={24} /> Dukungan dari Institusi
+            </legend>
             <div className="space-y-3">
-              {ACADEMIC_SUPPORT_RECEIVED.map((item, idx) => (
-                <label key={item} className="flex cursor-pointer items-start gap-4 rounded-xl border-2 border-transparent bg-slate-50 p-4 transition-all hover:bg-slate-100 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100">
-                  <input 
-                    type="checkbox" 
-                    aria-label={item}
-                    checked={formData.academic_support_received.includes(item)} 
-                    onChange={() => handleMultiToggle('academic_support_received', item)} 
-                    className="mt-1 size-5 rounded border-gray-300 accent-emerald-600" 
-                  />
+              {ACADEMIC_SUPPORT_RECEIVED.map((item) => (
+                <label key={item} className="flex cursor-pointer items-start gap-4 rounded-xl border-2 border-transparent bg-slate-50 p-4 transition-all hover:bg-slate-100 focus-within:border-emerald-600">
+                  <input type="checkbox" checked={formData.academic_support_received.includes(item)} onChange={() => handleMultiToggle('academic_support_received', item)} className="mt-1 size-5 accent-emerald-600" />
                   <span className="text-[10px] font-bold uppercase leading-tight text-slate-600 italic">{item}</span>
                 </label>
               ))}
             </div>
           </fieldset>
 
-          <fieldset className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
-            <h3 id="tech-title" className="mb-6 flex items-center gap-3 text-xs font-black uppercase tracking-tight text-purple-700 italic">
-              <Cpu size={24} /> Teknologi Asistif
-            </h3>
+          <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
+            <legend className="mb-6 flex items-center gap-3 px-2 text-xs font-black uppercase tracking-tight text-purple-700 italic leading-none">
+              <Cpu size={24} /> Teknologi Asistif Mandiri
+            </legend>
             <div className="space-y-3">
-              {ACADEMIC_ASSISTIVE_TOOLS.map((tool, idx) => (
-                <label key={tool} className="flex cursor-pointer items-start gap-4 rounded-xl border-2 border-transparent bg-slate-50 p-4 transition-all hover:bg-slate-100 focus-within:border-purple-600 focus-within:ring-2 focus-within:ring-purple-100">
-                  <input 
-                    type="checkbox" 
-                    aria-label={tool}
-                    checked={formData.academic_assistive_tools.includes(tool)} 
-                    onChange={() => handleMultiToggle('academic_assistive_tools', tool)} 
-                    className="mt-1 size-5 rounded border-gray-300 accent-purple-600" 
-                  />
+              {ACADEMIC_ASSISTIVE_TOOLS.map((tool) => (
+                <label key={tool} className="flex cursor-pointer items-start gap-4 rounded-xl border-2 border-transparent bg-slate-50 p-4 transition-all hover:bg-slate-100 focus-within:border-purple-600">
+                  <input type="checkbox" checked={formData.academic_assistive_tools.includes(tool)} onChange={() => handleMultiToggle('academic_assistive_tools', tool)} className="mt-1 size-5 accent-purple-600" />
                   <span className="text-[10px] font-bold uppercase leading-tight text-slate-600 italic">{tool}</span>
                 </label>
               ))}
@@ -309,21 +299,15 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         </div>
 
         {/* SEKSI 4: HAMBATAN */}
-        <fieldset className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(217,119,6,0.1)] text-left">
-          <h3 id="barrier-title" className="mb-6 flex items-center gap-4 text-xs font-black uppercase tracking-[0.2em] text-amber-600 italic">
-            <AlertTriangle size={24} /> Hambatan Selama Pendidikan
-          </h3>
+        <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(245,158,11,0.1)] text-left">
+          <legend className="mb-6 flex items-center gap-4 px-2 text-xs font-black uppercase tracking-[0.2em] text-amber-600 italic leading-none">
+            <AlertTriangle size={24} /> Hambatan Pendidikan
+          </legend>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {EDUCATION_BARRIERS.map((barrier, idx) => (
-              <label key={barrier} className="flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-transparent bg-slate-50 p-4 transition-all hover:bg-slate-100 focus-within:border-amber-600 focus-within:ring-2 focus-within:ring-amber-100">
-                <input 
-                  type="checkbox" 
-                  aria-label={barrier}
-                  checked={formData.education_barrier.includes(barrier)} 
-                  onChange={() => handleMultiToggle('education_barrier', barrier)} 
-                  className="size-5 rounded border-gray-300 accent-amber-600" 
-                />
-                <span className="text-[10px] font-black uppercase leading-tight text-slate-600 italic">{barrier}</span>
+            {EDUCATION_BARRIERS.map((barrier) => (
+              <label key={barrier} className="flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-transparent bg-slate-50 p-4 transition-all hover:bg-slate-100 focus-within:border-amber-600">
+                <input type="checkbox" checked={formData.education_barrier.includes(barrier)} onChange={() => handleMultiToggle('education_barrier', barrier)} className="size-5 accent-amber-600" />
+                <span className="text-[10px] font-bold uppercase leading-tight text-slate-600 italic">{barrier}</span>
               </label>
             ))}
           </div>
@@ -332,18 +316,9 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         <button 
           type="submit" 
           disabled={loading} 
-          className="w-full flex items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-8 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-emerald-600 disabled:opacity-50 active:translate-y-1"
+          className="w-full flex items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-8 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-emerald-600 disabled:opacity-50"
         >
-          {loading ? (
-            <>
-              <Loader2 className="animate-spin" size={20} />
-              MENYINKRONKAN DATA...
-            </>
-          ) : (
-            <>
-              <Save size={20} /> SIMPAN PROFIL AKADEMIK
-            </>
-          )}
+          {loading ? <><Loader2 className="animate-spin" size={24} /> MENYINKRONKAN DATA...</> : <><Save size={24} /> SIMPAN PROFIL RISET AKADEMIK</>}
         </button>
       </form>
     </div>
