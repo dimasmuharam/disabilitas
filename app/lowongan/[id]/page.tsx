@@ -1,255 +1,385 @@
-"use client"
+"use client";
 
-export const runtime = 'edge'
-
-import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabase"
-import Link from "next/link"
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 import { 
-  MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
-  CheckCircle, ExternalLink, Send, ShieldCheck, Info, 
-  Clock, DollarSign, Monitor, GraduationCap, Tag, 
-  Accessibility, AlertCircle, ListChecks
-} from "lucide-react"
-import { useRouter } from "next/navigation"
+  Plus, BookOpen, Calendar, MapPin, 
+  Trash2, Save, ArrowLeft, CheckCircle2, AlertCircle,
+  Zap, ListChecks, ChevronDown, Info, Users, X, 
+  Search, Laptop, Building, Globe, Clock, CalendarDays, Timer,
+  Link2
+} from "lucide-react";
+import { 
+  DISABILITY_TYPES, 
+  SKILLS_LIST, 
+  INDONESIA_CITIES,
+  ACCOMMODATION_TYPES
+} from "@/lib/data-static";
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
-  const [job, setJob] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [applying, setApplying] = useState(false)
-  const [hasApplied, setHasApplied] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [msg, setMsg] = useState("")
-  const [isSuccess, setIsSuccess] = useState(false)
-  const router = useRouter()
+interface ProgramManagerProps {
+  partnerId: string;
+  onBack: () => void;
+}
 
-  useEffect(() => {
-    async function init() {
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      setUser(authUser)
-      
-      try {
-        const isUuid = params.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
-        let query = supabase.from('jobs').select(`*, companies (*)`)
-        
-        if (isUuid) { 
-          query = query.eq('id', params.id) 
-        } else { 
-          query = query.eq('slug', params.id) 
-        }
+export default function ProgramManager({ partnerId, onBack }: ProgramManagerProps) {
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [statusMsg, setStatusMsg] = useState({ text: "", isError: false });
+  const [isCustomCity, setIsCustomCity] = useState(false);
+  const [skillSearch, setSkillSearch] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState("Offline");
 
-        const { data, error } = await query.single()
-        if (error) throw error
-        setJob(data)
+  const manualCityRef = useRef<HTMLInputElement>(null);
 
-        if (authUser && data) {
-          const { data: appData } = await supabase.from('applications')
-            .select('id')
-            .eq('job_id', data.id)
-            .eq('applicant_id', authUser.id)
-            .maybeSingle()
-          
-          if (appData) setHasApplied(true)
-        }
-      } catch (e) { 
-        console.error("Fetch Detail Error:", e) 
-      } finally { 
-        setLoading(false) 
-      }
+  const [formData, setFormData] = useState({
+    id: "",
+    title: "",
+    slug: "", 
+    description: "",
+    syllabus: "",
+    participant_requirements: "", 
+    provided_skills: [] as string[],
+    start_date: "",
+    end_date: "",
+    start_time: "", 
+    end_time: "",   
+    registration_start: "", 
+    registration_deadline: "", 
+    location: "",
+    max_quota: 0,
+    registration_instructions: "",
+    is_online: false,
+    is_published: true,
+    target_disability: [] as string[],
+    training_accommodations: [] as string[],
+  });
+
+  const generateSystemSlug = (text: string) => {
+    const baseSlug = text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '-');
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    return `${baseSlug}-${randomSuffix}`;
+  };
+
+  const fetchPrograms = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("trainings")
+      .select("*")
+      .eq("partner_id", partnerId)
+      .order("created_at", { ascending: false });
+    if (data) setPrograms(data);
+    setLoading(false);
+  }, [partnerId]);
+
+  useEffect(() => { fetchPrograms(); }, [fetchPrograms]);
+
+  const handleEdit = (prog: any) => {
+    setFormData(prog);
+    if (prog.is_online && (prog.location === "Remote / Online" || !prog.location)) {
+      setDeliveryMethod("Online");
+    } else if (prog.is_online && prog.location && prog.location !== "Remote / Online") {
+      setDeliveryMethod("Hybrid");
+    } else {
+      setDeliveryMethod("Offline");
     }
-    init()
-  }, [params.id])
+    setIsEditing(true);
+  };
 
-  // FUNGSI UTAMA MELAMAR (Updated with company_id sync)
-  const handleApply = async () => {
-    if (!user) {
-      router.push("/masuk")
-      return
-    }
+  const handleMultiToggle = (field: string, value: string) => {
+    setFormData((prev: any) => {
+      const current = prev[field] || [];
+      const updated = current.includes(value)
+        ? current.filter((v: string) => v !== value)
+        : [...current, value];
+      return { ...prev, [field]: updated };
+    });
+  };
 
-    setApplying(true)
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatusMsg({ text: "Sinkronisasi...", isError: false });
+
     try {
-      const { error } = await supabase
-        .from("applications")
-        .insert([
-          {
-            job_id: job.id,
-            applicant_id: user.id,
-            company_id: job.company_id, // POINT KRUSIAL: Menghubungkan lamaran langsung ke perusahaan
-            status: "applied"
-          }
-        ])
+      const finalSlug = formData.id ? formData.slug : generateSystemSlug(formData.title);
+      const finalPayload = {
+        ...formData,
+        slug: finalSlug,
+        partner_id: partnerId,
+        is_online: deliveryMethod === "Online" || deliveryMethod === "Hybrid",
+        location: deliveryMethod === "Online" ? "Remote / Online" : formData.location,
+        updated_at: new Date()
+      };
 
-      if (error) throw error
-
-      setIsSuccess(true)
-      setMsg("Lamaran berhasil terkirim. Mengarahkan Anda kembali ke dashboard dalam 3 detik.")
-      setHasApplied(true)
-
-      setTimeout(() => {
-        router.push("/dashboard?applied=true")
-      }, 3500)
-
-    } catch (error: any) {
-      console.error("Apply Error:", error)
-      alert("Gagal mengirim lamaran: " + error.message)
-    } finally {
-      setApplying(false)
-    }
-  }
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "Segera";
-    return new Date(dateStr).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' });
-  };
-
-  const parseToArray = (fieldData: any) => {
-    if (!fieldData) return [];
-    if (Array.isArray(fieldData)) return fieldData;
-    if (typeof fieldData === 'string') {
-      try {
-        const parsed = JSON.parse(fieldData);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        return fieldData.split(',').map((s: string) => s.trim()).filter((s: string) => s !== "");
+      let error;
+      if (formData.id) {
+        const { error: err } = await supabase.from("trainings").update(finalPayload).eq("id", formData.id);
+        error = err;
+      } else {
+        const { id, ...newPayload } = finalPayload;
+        const { error: err } = await supabase.from("trainings").insert([newPayload]);
+        error = err;
       }
+
+      if (error) throw error;
+      setStatusMsg({ text: "Berhasil Disimpan!", isError: false });
+      setTimeout(() => { setIsEditing(false); fetchPrograms(); }, 1500);
+    } catch (err: any) {
+      setStatusMsg({ text: `Gagal: ${err.message}`, isError: true });
+    } finally {
+      setLoading(false);
     }
-    return [];
   };
 
-  if (loading) return <div className="animate-pulse p-20 text-center font-black uppercase italic tracking-widest text-slate-400">Menyinkronkan Detail...</div>;
-  if (!job) return <div className="rounded-[3rem] border-2 border-dashed border-slate-100 p-20 text-center font-black uppercase italic tracking-widest text-slate-300">Data Lowongan Tidak Ditemukan</div>;
+  const filteredSkills = SKILLS_LIST.filter(s => s.toLowerCase().includes(skillSearch.toLowerCase())).slice(0, 15);
 
-  const seoTitle = `Lowongan Inklusif ${job.title} di ${job.companies?.name || 'Instansi Mitra'} - Batas: ${formatDate(job.expires_at)}`;
+  if (isEditing) return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
+      <button 
+        onClick={() => setIsEditing(false)} 
+        aria-label="Kembali ke daftar program"
+        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"
+      >
+        <ArrowLeft size={16} /> Batal & Kembali
+      </button>
 
-  return (
-    <main className="min-h-screen bg-[#FDFDFD] pb-24 pt-10 text-left font-sans selection:bg-blue-100 selection:text-blue-900">
-      
-      <title>{seoTitle}</title>
-      <link rel="canonical" href={`https://disabilitas.com/lowongan/${job.slug}`} />
-      <meta name="description" content={`Lamar posisi ${job.title} di ${job.companies?.name}. Pekerjaan inklusif dengan dukungan akomodasi: ${parseToArray(job.preferred_disability_tools).join(", ")}.`} />
-
-      <div className="mx-auto max-w-6xl px-6">
-        
-        <Link href="/lowongan" className="group mb-10 inline-flex items-center rounded-lg text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 outline-none transition-all hover:text-blue-600 focus:ring-2 focus:ring-blue-600">
-          <ArrowLeft className="mr-2 size-4 group-hover:-translate-x-1" /> KEMBALI KE PENCARIAN
-        </Link>
-
-        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-3">
-          
-          <div className="space-y-8 lg:col-span-2">
-            <article className="space-y-6 rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm md:p-12">
-              <div className="flex flex-wrap gap-3 text-[10px] font-black uppercase">
-                <span className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-1.5 italic text-blue-700">{job.job_type}</span>
-                <span className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-1.5 italic text-emerald-700">{job.work_mode}</span>
+      <form onSubmit={handleSave} className="grid grid-cols-1 gap-12 lg:grid-cols-3 text-left">
+        <div className="lg:col-span-2 space-y-10">
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
+            <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900">
+              <Zap className="text-blue-600" /> Informasi Utama
+            </h2>
+            
+            <div className="space-y-8">
+              <div className="space-y-2">
+                <label htmlFor="title" className="ml-1 text-[10px] font-black uppercase text-slate-400">Judul Pelatihan</label>
+                <input id="title" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900" placeholder="Contoh: Kursus Coding Disabilitas" />
+                {formData.slug && <p className="ml-2 text-[8px] font-black uppercase text-blue-500 italic flex items-center gap-1"><Link2 size={10}/> URL System: /{formData.slug}</p>}
               </div>
-              <h1 className="text-4xl font-black uppercase italic leading-none tracking-tighter text-slate-900 md:text-5xl">{job.title}</h1>
-              <Link href={`/perusahaan/${job.companies?.id}`} className="group inline-flex items-center gap-2 text-xl font-bold text-blue-600 decoration-4 underline-offset-4 hover:underline">
-                <Building2 className="size-6 text-slate-900 transition-colors group-hover:text-blue-600" /> {job.companies?.name}
-              </Link>
-              <div className="flex flex-wrap gap-8 border-t-2 border-slate-50 pt-8 text-[10px] font-black uppercase italic text-slate-400">
-                <span className="flex items-center gap-2"><MapPin size={16} className="text-red-500" /> {job.location}</span>
-                <span className="flex items-center gap-2"><DollarSign size={16} className="text-emerald-500" /> {job.salary_min > 0 ? `Rp ${(job.salary_min/1000000).toFixed(1)}jt - ${(job.salary_max/1000000).toFixed(1)}jt` : "Kompetitif"}</span>
-                <span className="flex items-center gap-2"><Clock size={16} className="text-orange-500" /> Tutup: {formatDate(job.expires_at)}</span>
-              </div>
-            </article>
 
-            <section className="grid gap-10 rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm md:grid-cols-2 md:p-12">
-              <div className="space-y-6">
-                <h2 className="flex items-center gap-2 text-[10px] font-black uppercase italic tracking-widest text-blue-600"><GraduationCap size={16}/> Pendidikan Minimal</h2>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="space-y-4 rounded-3xl border-2 border-blue-50 bg-blue-50/30 p-6">
+                  <h3 className="flex items-center gap-2 text-[11px] font-black uppercase italic text-blue-600"><Clock size={16} /> Pendaftaran</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label htmlFor="reg_start" className="ml-1 text-[9px] font-black uppercase text-slate-400">Buka</label>
+                      <input id="reg_start" type="date" required value={formData.registration_start} onChange={e => setFormData({...formData, registration_start: e.target.value})} className="w-full rounded-xl border-2 border-white bg-white p-3 text-xs font-bold" />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="reg_deadline" className="ml-1 text-[9px] font-black uppercase text-slate-400">Tutup</label>
+                      <input id="reg_deadline" type="date" required value={formData.registration_deadline} onChange={e => setFormData({...formData, registration_deadline: e.target.value})} className="w-full rounded-xl border-2 border-white bg-white p-3 text-xs font-bold" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-3xl border-2 border-emerald-50 bg-emerald-50/30 p-6">
+                  <h3 className="flex items-center gap-2 text-[11px] font-black uppercase italic text-emerald-600"><CalendarDays size={16} /> Pelaksanaan</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label htmlFor="start_date" className="ml-1 text-[9px] font-black uppercase text-slate-400">Tgl Mulai</label>
+                      <input id="start_date" type="date" required value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} className="w-full rounded-xl border-2 border-white bg-white p-3 text-xs font-bold" />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="end_date" className="ml-1 text-[9px] font-black uppercase text-slate-400">Tgl Selesai</label>
+                      <input id="end_date" type="date" required value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} className="w-full rounded-xl border-2 border-white bg-white p-3 text-xs font-bold" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                   <p className="text-2xl font-black uppercase italic text-slate-900">{job.required_education_level}</p>
-                   <div className="flex flex-wrap gap-x-2 text-[9px] font-black uppercase italic text-blue-500/70">
-                     {parseToArray(job.required_education_major).map((m: string, idx: number, arr: any[]) => (
-                       <span key={m}>{m}{idx < arr.length - 1 ? ", " : "."}</span>
-                     ))}
-                   </div>
+                  <label htmlFor="start_time" className="ml-1 text-[9px] font-black uppercase text-slate-400">Jam Mulai</label>
+                  <input id="start_time" type="time" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="end_time" className="ml-1 text-[9px] font-black uppercase text-slate-400">Jam Selesai</label>
+                  <input id="end_time" type="time" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold" />
                 </div>
               </div>
-              
-              <div className="space-y-6 border-t border-slate-50 pt-8 text-left md:border-l-2 md:border-t-0 md:pl-10 md:pt-0">
-                <h2 className="flex items-center gap-2 text-[10px] font-black uppercase italic tracking-widest text-emerald-600"><Tag size={16}/> Skill Utama</h2>
-                <div className="flex flex-wrap gap-2">
-                  {parseToArray(job.required_skills).length > 0 ? (
-                    parseToArray(job.required_skills).map((skill: string, idx: number, arr: any[]) => (
-                      <span key={skill} className="rounded-lg bg-slate-900 px-3 py-1 text-[9px] font-black uppercase italic text-white shadow-sm">
-                        {skill}{idx < arr.length - 1 ? ", " : "."}
-                      </span>
-                    ))
-                  ) : <span className="text-[10px] italic text-slate-300">Data skill tidak tersedia.</span>}
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <fieldset className="space-y-3">
+                  <legend className="ml-1 text-[10px] font-black uppercase text-slate-400">Metode</legend>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[{ id: 'Offline', icon: Building, label: 'Luring' }, { id: 'Online', icon: Laptop, label: 'Daring' }, { id: 'Hybrid', icon: Globe, label: 'Hybrid' }].map((m) => (
+                      <label key={m.id} className={`flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all ${deliveryMethod === m.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-slate-50'}`}>
+                        <input type="radio" name="method" value={m.id} checked={deliveryMethod === m.id} onChange={() => setDeliveryMethod(m.id)} className="sr-only" />
+                        <m.icon size={20} className={deliveryMethod === m.id ? "text-blue-600" : "text-slate-400"} />
+                        <span className="text-[9px] font-black uppercase">{m.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <div className="space-y-2">
+                  <label htmlFor="loc-select" className="ml-1 text-[10px] font-black uppercase text-slate-400">Lokasi</label>
+                  {deliveryMethod === "Online" ? (
+                    <input disabled value="Remote / Online" className="w-full rounded-2xl border-2 border-slate-100 bg-slate-100 p-4 font-bold italic text-slate-400" />
+                  ) : !isCustomCity ? (
+                    <div className="relative">
+                      <select id="loc-select" aria-label="Pilih kota pelaksanaan" value={formData.location} onChange={e => e.target.value === "LAINNYA" ? setIsCustomCity(true) : setFormData({...formData, location: e.target.value})} className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none">
+                        <option value="">-- Pilih Kota --</option>
+                        {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        <option value="LAINNYA">+ KOTA LAINNYA</option>
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input ref={manualCityRef} aria-label="Ketik nama kota manual" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-2xl border-2 border-blue-100 bg-blue-50 p-4 font-bold outline-none" placeholder="Ketik Kota..." />
+                      <button type="button" onClick={() => setIsCustomCity(false)} className="text-[9px] font-black uppercase text-blue-600 underline">Pilih Daftar</button>
+                    </div>
+                  )}
                 </div>
               </div>
-            </section>
 
-            <section className="space-y-10 rounded-[3rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm md:p-12">
-              <div className="space-y-4">
-                <h2 className="flex items-center gap-2 border-b pb-2 text-[10px] font-black uppercase italic text-slate-400"><Info size={14}/> Deskripsi Pekerjaan</h2>
-                <div className="whitespace-pre-line text-lg font-medium italic leading-relaxed text-slate-700">{job.description}</div>
-              </div>
-
-              {job.accessibility_note && (
-                <div className="space-y-4 border-t-2 border-dashed border-slate-50 pt-8">
-                  <h2 className="flex items-center gap-2 text-[11px] font-black uppercase italic text-emerald-600">
-                    <Accessibility size={18}/> Budaya Inklusi & Aksesibilitas
-                  </h2>
-                  <div className="rounded-[2.5rem] border-2 border-emerald-100 bg-emerald-50/30 p-8 shadow-inner">
-                    <p className="whitespace-pre-line text-lg font-bold italic leading-relaxed text-emerald-900">
-                      <strong>{job.accessibility_note}</strong>
-                    </p>
-                  </div>
+              <div className="space-y-2">
+                <label htmlFor="quota" className="ml-1 text-[10px] font-black uppercase text-slate-400">Kuota Peserta (0 = Unlimited)</label>
+                <div className="relative max-w-[200px]">
+                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                  <input id="quota" type="number" value={formData.max_quota} onChange={e => setFormData({...formData, max_quota: parseInt(e.target.value) || 0})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 pl-12 font-bold outline-none" />
                 </div>
-              )}
-            </section>
-          </div>
-
-          <aside className="sticky top-10 space-y-8 font-black uppercase tracking-tighter">
-            <div className="relative overflow-hidden rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl">
-              <h3 className="mb-8 flex items-center gap-2 border-b border-white/10 pb-4 text-[10px] italic tracking-widest text-blue-400"><Send size={14}/> Rekrutmen Panel</h3>
-              <div className="relative z-10 space-y-4">
-                
-                {isSuccess && (
-                  <div className="rounded-[2rem] border border-emerald-500/30 bg-emerald-500/10 p-6 text-[10px] font-black italic text-emerald-400 animate-in zoom-in-95">
-                    <strong>{msg}</strong>
-                  </div>
-                )}
-
-                {hasApplied ? (
-                  <div className="flex w-full flex-col items-center gap-3 rounded-3xl border border-emerald-500/30 bg-emerald-500/20 py-6 text-center text-xs italic text-emerald-400">
-                    <CheckCircle size={32}/> SUDAH MELAMAR
-                  </div>
-                ) : (
-                  <button 
-                    onClick={handleApply} 
-                    disabled={applying || isSuccess}
-                    className="flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 text-xs tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 disabled:bg-slate-800"
-                  >
-                    {applying ? "MEMPROSES DATA..." : isSuccess ? "BERHASIL TERKIRIM" : "KIRIM LAMARAN"}
-                    {!applying && !isSuccess && <Send size={16} />}
-                  </button>
-                )}
-                <p className="text-center text-[8px] italic leading-relaxed text-slate-500">
-                  Data profil Anda akan otomatis dilampirkan ke dalam lamaran ini.
-                </p>
               </div>
             </div>
+          </section>
 
-            <section className="space-y-6 rounded-[3rem] border-2 border-slate-900 bg-white p-10 text-left shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-              <h3 className="flex items-center gap-2 text-sm font-black uppercase italic text-slate-900"><ShieldCheck className="text-blue-600" size={20}/> Akomodasi Kantor</h3>
-              <div className="space-y-3">
-                {parseToArray(job.companies?.master_accommodations_provided).length > 0 ? (
-                  parseToArray(job.companies.master_accommodations_provided).map((acc: string, idx: number, arr: any[]) => (
-                    <div key={acc} className="flex items-start gap-3 text-[10px] text-slate-700">
-                      <CheckCircle size={14} className="mt-0.5 shrink-0 text-emerald-500" /> 
-                      <span>{acc}{idx < arr.length - 1 ? ", " : "."}</span>
-                    </div>
-                  ))
-                ) : <p className="text-[10px] italic text-slate-400">Rincian akomodasi fisik belum tersedia.</p>}
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
+            <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter text-slate-900"><BookOpen className="text-blue-600" /> Kurikulum & Output</h2>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label htmlFor="desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Deskripsi Singkat</label>
+                <textarea id="desc" rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none" />
               </div>
-            </section>
-          </aside>
 
+              <fieldset className="space-y-4">
+                <legend className="ml-1 text-[10px] font-black uppercase text-slate-400">Pilih Output Keahlian</legend>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input type="text" aria-label="Cari keahlian" placeholder="Cari..." className="w-full rounded-xl border-2 border-slate-100 bg-slate-50 p-3 pl-12 text-xs font-bold outline-none" value={skillSearch} onChange={(e) => setSkillSearch(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 max-h-48 overflow-y-auto rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 no-scrollbar">
+                   {filteredSkills.map((skill) => (
+                      <label key={skill} className="flex cursor-pointer items-center gap-3 rounded-lg bg-white p-2">
+                        <input type="checkbox" checked={formData.provided_skills.includes(skill)} onChange={() => handleMultiToggle("provided_skills", skill)} className="size-4 accent-blue-600" />
+                        <span className="text-[9px] font-black uppercase text-slate-600">{skill}</span>
+                      </label>
+                   ))}
+                </div>
+              </fieldset>
+
+              <div className="space-y-2">
+                <label htmlFor="syllabus" className="ml-1 text-[10px] font-black uppercase text-slate-400">Silabus / Agenda</label>
+                <textarea id="syllabus" rows={3} value={formData.syllabus} onChange={e => setFormData({...formData, syllabus: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none" />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="req" className="ml-1 text-[10px] font-black uppercase text-slate-400">Syarat Peserta</label>
+                <textarea id="req" rows={3} value={formData.participant_requirements} onChange={e => setFormData({...formData, participant_requirements: e.target.value})} className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium outline-none" />
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-blue-600 p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-white space-y-6">
+            <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none text-left">Instruksi Pasca Daftar</h2>
+            <textarea id="reg_instructions" aria-label="Instruksi pendaftaran otomatis" rows={3} required value={formData.registration_instructions} onChange={e => setFormData({...formData, registration_instructions: e.target.value})} className="w-full rounded-2xl border-2 border-blue-400 bg-blue-700 p-6 font-bold text-white placeholder:text-blue-300 outline-none" />
+          </section>
         </div>
+
+        <div className="space-y-8">
+          <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl text-left">
+            <legend className="sr-only">Ragam Disabilitas Sasaran</legend>
+            <h3 className="mb-6 text-[11px] font-black uppercase italic text-blue-400 flex items-center gap-2"><Users size={18}/> Ragam Sasaran</h3>
+            <div className="space-y-3">
+              {DISABILITY_TYPES.map((type) => (
+                <label key={type} className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-all ${formData.target_disability.includes(type) ? 'border-blue-500 bg-blue-600/20' : 'border-slate-800 bg-slate-800/50 hover:border-slate-700'}`}>
+                  <input type="checkbox" aria-label={`Sasaran ${type}`} checked={formData.target_disability.includes(type)} onChange={() => handleMultiToggle("target_disability", type)} className="size-5 accent-blue-500" />
+                  <span className="text-[10px] font-bold uppercase">{type}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl text-left">
+            <legend className="sr-only">Akomodasi Tersedia</legend>
+            <h3 className="mb-6 text-[11px] font-black uppercase italic text-emerald-400 flex items-center gap-2"><ListChecks size={18}/> Akomodasi</h3>
+            <div className="space-y-3">
+              {ACCOMMODATION_TYPES.map((acc) => (
+                <label key={acc} className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-all ${formData.training_accommodations.includes(acc) ? 'border-emerald-500 bg-emerald-600/20' : 'border-slate-800 bg-slate-800/50 hover:border-slate-700'}`}>
+                  <input type="checkbox" aria-label={`Tersedia ${acc}`} checked={formData.training_accommodations.includes(acc)} onChange={() => handleMultiToggle("training_accommodations", acc)} className="size-5 accent-emerald-500" />
+                  <span className="text-[10px] font-bold uppercase">{acc}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="space-y-4">
+            <label className="flex cursor-pointer items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+               <input type="checkbox" aria-label="Terbitkan ke publik" checked={formData.is_published} onChange={e => setFormData({...formData, is_published: e.target.checked})} className="size-5 accent-slate-900" />
+               <span className="text-[10px] font-black uppercase italic">Publish Program</span>
+            </label>
+
+            {statusMsg.text && (
+              <div aria-live="polite" className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase ${statusMsg.isError ? 'border-red-100 bg-red-50 text-red-600' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
+                {statusMsg.isError ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+                {statusMsg.text}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} aria-label="Simpan perubahan program" className="w-full flex items-center justify-center gap-3 rounded-[2rem] bg-slate-900 py-7 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50">
+              {loading ? "SINKRONISASI..." : <><Save size={20} /> SIMPAN PROGRAM</>}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+
+  return (
+    <div className="animate-in fade-in duration-500 text-left">
+      <div className="mb-10 flex flex-col justify-between gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-end">
+        <div>
+          <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Program Manager</h2>
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 italic">Accessibility & Auto-Slug v3.1</p>
+        </div>
+        <button 
+          onClick={() => { setFormData({ id: "", title: "", slug: "", description: "", syllabus: "", participant_requirements: "", provided_skills: [], start_date: "", end_date: "", start_time: "", end_time: "", registration_start: "", registration_deadline: "", location: "", max_quota: 0, registration_instructions: "", is_online: false, is_published: true, target_disability: [], training_accommodations: [] }); setDeliveryMethod("Offline"); setIsEditing(true); }} 
+          aria-label="Tambah program pelatihan baru"
+          className="flex items-center justify-center gap-3 rounded-[2rem] bg-blue-600 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl hover:bg-slate-900 transition-all"
+        >
+          <Plus size={20} /> Tambah Program
+        </button>
       </div>
-    </main>
+
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {programs.map(prog => (
+          <div key={prog.id} className="group relative flex flex-col justify-between rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+            <div className="space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <span className={`rounded-full px-3 py-1 text-[8px] font-black uppercase ${prog.is_published ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                  {prog.is_published ? "Published" : "Draft"}
+                </span>
+                <div className="flex gap-2">
+                   <button onClick={() => handleEdit(prog)} aria-label={`Edit program ${prog.title}`} className="text-slate-300 hover:text-blue-600 transition-all"><BookOpen size={16} /></button>
+                   <button onClick={async () => { if(confirm(`Hapus program ${prog.title}?`)) { await supabase.from("trainings").delete().eq("id", prog.id); fetchPrograms(); } }} aria-label={`Hapus program ${prog.title}`} className="text-slate-300 hover:text-red-600 transition-all"><Trash2 size={16} /></button>
+                </div>
+              </div>
+              <h3 className="text-2xl font-black uppercase italic leading-tight tracking-tighter text-slate-900">{prog.title}</h3>
+              <p className="text-[8px] font-black uppercase text-blue-500 italic flex items-center gap-1"><Link2 size={10}/> /{prog.slug || 'generating...'}</p>
+            </div>
+            <div className="mt-8 flex items-center justify-between border-t-2 border-slate-50 pt-6">
+              <div className="flex flex-col gap-1 text-left">
+                 <div className="flex items-center gap-1 text-[9px] font-black uppercase text-slate-500"><MapPin size={12} className="text-blue-600" /> {prog.location}</div>
+                 <div className="flex items-center gap-1 text-[8px] font-bold uppercase text-slate-300 italic">Deadline: {prog.registration_deadline}</div>
+              </div>
+              <button onClick={() => handleEdit(prog)} aria-label={`Lihat detail ${prog.title}`} className="text-[10px] font-black uppercase italic text-blue-600 underline underline-offset-4">Edit</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
