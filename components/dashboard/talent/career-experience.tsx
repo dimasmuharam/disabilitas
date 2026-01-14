@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
-  Briefcase, Save, Plus, Trash2, Linkedin, 
-  MapPin, DollarSign, CheckCircle2, AlertCircle, Info, AlignLeft, Building2, ShieldCheck
+  Briefcase, Save, Plus, Trash2, Building2, 
+  MapPin, CheckCircle2, AlertCircle, Info, AlignLeft, ShieldCheck,
+  ChevronDown, HelpCircle
 } from "lucide-react";
 
 import { 
@@ -28,6 +29,7 @@ interface CareerExperienceProps {
 export default function CareerExperience({ user, profile, onSuccess }: CareerExperienceProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [announcement, setAnnouncement] = useState("");
   const [experiences, setExperiences] = useState<any[]>([]);
 
   const [profileData, setProfileData] = useState({
@@ -45,11 +47,10 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
 
   useEffect(() => {
     fetchExperiences();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
 
   const parseDate = (dateStr: string | null) => {
-    if (!dateStr) return { month: "Januari", year: "" };
+    if (!dateStr) return { month: "Januari", year: new Date().getFullYear().toString() };
     const date = new Date(dateStr);
     return { month: months[date.getMonth()], year: date.getFullYear().toString() };
   };
@@ -65,7 +66,8 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
       const formatted = data.map(exp => ({
         ...exp,
         ui_start: parseDate(exp.start_date),
-        ui_end: parseDate(exp.end_date)
+        ui_end: parseDate(exp.end_date),
+        is_other_company: false // Flag untuk input manual
       }));
       setExperiences(formatted);
     }
@@ -84,13 +86,14 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
       company_location: "",
       employment_type: "Full-time",
       is_verified: false,
-      source_id: null // Data manual selalu null
+      source_id: null
     };
 
-    const { data } = await supabase.from("work_experiences").insert([newExp]).select();
+    const { data, error } = await supabase.from("work_experiences").insert([newExp]).select();
     if (data) {
-      const withUI = { ...data[0], ui_start: parseDate(data[0].start_date), ui_end: parseDate(null) };
+      const withUI = { ...data[0], ui_start: parseDate(data[0].start_date), ui_end: parseDate(null), is_other_company: false };
       setExperiences([withUI, ...experiences]);
+      setAnnouncement("Riwayat baru ditambahkan.");
     }
   };
 
@@ -108,21 +111,19 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
     }));
   };
 
-  const handleDeleteExp = async (id: string) => {
-    const { error } = await supabase.from("work_experiences").delete().eq("id", id);
-    if (!error) setExperiences(experiences.filter(exp => exp.id !== id));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
+    setAnnouncement("Memulai proses sinkronisasi data...");
 
     try {
-      await supabase.from("profiles").update(profileData).eq("id", user.id);
+      // 1. Update Profile (Atomic Step 1)
+      const { error: pError } = await supabase.from("profiles").update(profileData).eq("id", user.id);
+      if (pError) throw pError;
 
+      // 2. Loop Update Experiences
       for (const exp of experiences) {
-        // HANYA UPDATE DATA MANUAL (Yang tidak punya source_id)
         if (!exp.source_id) {
           const startIdx = months.indexOf(exp.ui_start.month) + 1;
           const s_date = `${exp.ui_start.year || '2000'}-${startIdx.toString().padStart(2, '0')}-01`;
@@ -132,7 +133,7 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
             e_date = `${exp.ui_end.year}-${endIdx.toString().padStart(2, '0')}-01`;
           }
 
-          await supabase.from("work_experiences").update({
+          const { error: eError } = await supabase.from("work_experiences").update({
             company_name: exp.company_name,
             position: exp.position,
             company_location: exp.company_location,
@@ -143,168 +144,213 @@ export default function CareerExperience({ user, profile, onSuccess }: CareerExp
             end_date: e_date,
             is_current_work: exp.is_current_work
           }).eq("id", exp.id);
+          
+          if (eError) throw eError;
+
+          // LOGIKA RISET: Jika input manual, catat ke manual_input_logs
+          const listToSearch = exp.employer_category === "Instansi Pemerintah (ASN)" ? GOVERNMENT_AGENCIES_LIST :
+                               exp.employer_category === "BUMN dan BUMD" ? STATE_ENTERPRISES_LIST :
+                               exp.employer_category === "Perusahaan Swasta" ? PRIVATE_COMPANIES_LIST : NONPROFIT_ORG_LIST;
+          
+          if (exp.company_name && !listToSearch.includes(exp.company_name)) {
+            await supabase.rpc('log_manual_input', { 
+              f_name: 'company_name', 
+              i_value: exp.company_name 
+            });
+          }
         }
       }
 
-      setMessage({ type: "success", text: "Data Berhasil Disimpan. Mengalihkan ke Overview..." });
+      setMessage({ type: "success", text: "Data Karir & Pengalaman Berhasil Disinkronkan!" });
+      setAnnouncement("Sukses. Data Anda telah diperbarui di pangkalan data.");
       setTimeout(() => onSuccess(), 2000);
-    } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
+    } catch (err: any) {
+      setMessage({ type: "error", text: `Gagal Sinkron: ${err.message}` });
+      setAnnouncement(`Terjadi kesalahan: ${err.message}`);
+    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="mx-auto max-w-4xl pb-20 font-sans text-slate-900 duration-500 animate-in fade-in">
-      <datalist id="gov-list">{GOVERNMENT_AGENCIES_LIST.map(a => <option key={a} value={a} />)}</datalist>
-      <datalist id="state-list">{STATE_ENTERPRISES_LIST.map(b => <option key={b} value={b} />)}</datalist>
-      <datalist id="private-list">{PRIVATE_COMPANIES_LIST.map(s => <option key={s} value={s} />)}</datalist>
-      <datalist id="city-list">{INDONESIA_CITIES.map(city => <option key={city} value={city} />)}</datalist>
-      <datalist id="nonprofit-list">{NONPROFIT_ORG_LIST.map(n => <option key={n} value={n} />)}</datalist>
+      {/* Hidden Announcement for Screen Readers */}
+      <div className="sr-only" aria-live="polite">{announcement}</div>
 
       <header className="mb-10 px-4">
         <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter">
-          <Briefcase className="text-blue-600" size={36} /> {"Karir & Pengalaman"}
+          <Briefcase className="text-blue-600" size={36} /> Karir & Pengalaman
         </h1>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">{"Lengkapi data kerja Anda untuk tampil makin meyakinkan di hadapan recruter."}</p>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Pusat Sinkronisasi Riwayat Profesional Anda</p>
       </header>
 
-      <div aria-live="polite" className="px-4">
-        {message.text && (
-          <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-2 p-6 ${
-            message.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
-          }`}>
-            {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-            <p className="text-sm font-black uppercase italic tracking-tight">{message.text}</p>
-          </div>
-        )}
-      </div>
+      {message.text && (
+        <div className={`mx-4 mb-8 flex items-center gap-4 rounded-[2rem] border-4 p-6 ${
+          message.type === "success" ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-red-500 bg-red-50 text-red-800"
+        }`}>
+          {message.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+          <p className="text-sm font-black uppercase italic tracking-tight">{message.text}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-10 px-4">
-        {/* SEKSI PROFIL */}
-        <section className="space-y-8 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
-          <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-blue-600"><Info size={16} /> {"Status & Preferensi"}</h2>
-          <div className="grid gap-6 text-sm font-bold md:grid-cols-2">
+        {/* SECTION: STATUS PROFIL */}
+        <section className="space-y-8 rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+          <h2 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-blue-600 italic">
+            <Info size={16} /> Status & Preferensi
+          </h2>
+          <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="career_status" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Status Karir"}</label>
-              <select id="career_status" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={profileData.career_status} onChange={(e) => setProfileData({...profileData, career_status: e.target.value})}>
-                {CAREER_STATUSES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+              <label className="ml-2 text-[10px] font-black uppercase text-slate-400">Status Karir Saat Ini</label>
+              <div className="relative">
+                <select 
+                  className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 focus:bg-white transition-all"
+                  value={profileData.career_status}
+                  onChange={(e) => setProfileData({...profileData, career_status: e.target.value})}
+                >
+                  {CAREER_STATUSES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+              </div>
             </div>
             <div className="space-y-2">
-              <label htmlFor="work_pref" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Preferensi Model Kerja"}</label>
-              <select id="work_pref" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={profileData.work_preference} onChange={(e) => setProfileData({...profileData, work_preference: e.target.value})}>
+              <label className="ml-2 text-[10px] font-black uppercase text-slate-400">Preferensi Model Kerja</label>
+              <select className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={profileData.work_preference} onChange={(e) => setProfileData({...profileData, work_preference: e.target.value})}>
                 {WORK_MODES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="salary" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Ekspektasi Gaji"}</label>
-              <input id="salary" type="number" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold" value={profileData.expected_salary} onChange={(e) => setProfileData({...profileData, expected_salary: parseInt(e.target.value) || 0})} />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="linkedin" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"LinkedIn URL"}</label>
-              <input id="linkedin" type="url" className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 font-bold" value={profileData.linkedin_url} onChange={(e) => setProfileData({...profileData, linkedin_url: e.target.value})} />
-            </div>
-          </div>
-          <div className="space-y-2 text-sm font-bold">
-            <label htmlFor="bio" className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Bio Profesional"}</label>
-            <textarea id="bio" rows={4} className="w-full rounded-[2rem] border-2 border-slate-100 bg-slate-50 p-6 font-bold italic outline-none" value={profileData.bio} onChange={(e) => setProfileData({...profileData, bio: e.target.value})} />
           </div>
         </section>
 
-        {/* DAFTAR PEKERJAAN */}
+        {/* SECTION: RIWAYAT KERJA */}
         <div className="flex items-center justify-between px-4">
-          <h2 className="text-xl font-black uppercase italic tracking-tighter">{"Daftar Riwayat Kerja"}</h2>
-          <button type="button" onClick={handleAddExperience} className="flex items-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-slate-900"><Plus size={20} /> {"Tambah Riwayat"}</button>
+          <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">Riwayat Pengalaman</h2>
+          <button type="button" onClick={handleAddExperience} className="flex items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 text-[10px] font-black uppercase text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:bg-slate-900 hover:text-white transition-all">
+            <Plus size={20} /> Tambah Data
+          </button>
         </div>
 
         <div className="space-y-8">
-          {experiences.map((exp, index) => {
-            const isFromSystem = !!exp.source_id; // Deteksi data sistem
+          {experiences.map((exp) => {
+            const isFromSystem = !!exp.source_id;
+            const currentList = exp.employer_category === "Instansi Pemerintah (ASN)" ? GOVERNMENT_AGENCIES_LIST :
+                               exp.employer_category === "BUMN dan BUMD" ? STATE_ENTERPRISES_LIST :
+                               exp.employer_category === "Perusahaan Swasta" ? PRIVATE_COMPANIES_LIST : NONPROFIT_ORG_LIST;
 
             return (
-              <section key={exp.id} aria-label={`Riwayat ${index + 1}`} className={`group relative space-y-8 rounded-[3rem] border-2 bg-white p-10 shadow-sm ${isFromSystem ? 'border-blue-200 bg-blue-50/10' : 'border-slate-100'}`}>
+              <div key={exp.id} className={`group relative space-y-8 rounded-[3rem] border-4 p-10 transition-all ${isFromSystem ? 'border-blue-600 bg-blue-50/30' : 'border-slate-900 bg-white shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]'}`}>
                 
                 {isFromSystem ? (
-                  <div className="absolute right-8 top-8 flex animate-pulse items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-[10px] font-black uppercase text-white shadow-lg">
-                    <ShieldCheck size={14} /> {"Hasil Penempatan Sistem"}
+                  <div className="absolute -top-4 right-10 rounded-full bg-blue-600 px-6 py-2 text-[10px] font-black uppercase italic text-white shadow-xl">
+                    <ShieldCheck size={14} className="inline mr-2" /> Data Penempatan Terverifikasi
                   </div>
                 ) : (
-                  <button type="button" onClick={() => handleDeleteExp(exp.id)} className="absolute right-8 top-8 text-slate-300 transition-colors hover:text-red-600"><Trash2 size={24} /></button>
+                  <button type="button" onClick={() => {if(confirm("Hapus riwayat ini?")) handleDeleteExp(exp.id)}} className="absolute right-8 top-8 text-slate-300 hover:text-red-600 transition-colors">
+                    <Trash2 size={24} />
+                  </button>
                 )}
 
-                <div className="grid gap-8 text-sm font-bold text-slate-900 md:grid-cols-2">
+                <div className="grid gap-8 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label htmlFor={`cat-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Kategori Employer"}</label>
-                    <select disabled={isFromSystem} id={`cat-${exp.id}`} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 disabled:opacity-60" value={exp.employer_category} onChange={(e) => updateExpField(exp.id, "employer_category", e.target.value)}>
+                    <label className="ml-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">Kategori Pemberi Kerja</label>
+                    <select disabled={isFromSystem} className="w-full rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={exp.employer_category} onChange={(e) => updateExpField(exp.id, "employer_category", e.target.value)}>
                       {EMPLOYER_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`comp-${exp.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400"><Building2 size={12}/> {"Nama Instansi"}</label>
-                    <input disabled={isFromSystem} id={`comp-${exp.id}`} type="text" list={exp.employer_category === "Instansi Pemerintah (ASN)" ? "gov-list" : exp.employer_category === "BUMN dan BUMD" ? "state-list" : exp.employer_category === "Perusahaan Swasta" ? "private-list" : exp.employer_category === "Lembaga Nonprofit" ? "nonprofit-list" : ""} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 disabled:opacity-60" value={exp.company_name} onChange={(e) => updateExpField(exp.id, "company_name", e.target.value)} />
+                    <label className="ml-2 text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                      <Building2 size={12}/> Nama Instansi/Perusahaan
+                    </label>
+                    <div className="relative">
+                      {!exp.is_other_company ? (
+                        <select 
+                          disabled={isFromSystem}
+                          className="w-full appearance-none rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
+                          value={exp.company_name}
+                          onChange={(e) => {
+                            if (e.target.value === "LAINNYA") {
+                              updateExpField(exp.id, "is_other_company", true);
+                              updateExpField(exp.id, "company_name", "");
+                            } else {
+                              updateExpField(exp.id, "company_name", e.target.value);
+                            }
+                          }}
+                        >
+                          <option value="" disabled>-- Pilih dari Daftar --</option>
+                          {currentList.map(item => <option key={item} value={item}>{item}</option>)}
+                          <option value="LAINNYA" className="font-black text-blue-600"> + TIDAK ADA DI DAFTAR (INPUT MANUAL)</option>
+                        </select>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input 
+                            autoFocus
+                            type="text"
+                            placeholder="Ketik Nama Instansi..."
+                            className="w-full rounded-xl border-2 border-blue-600 bg-white p-4 font-bold outline-none"
+                            value={exp.company_name}
+                            onChange={(e) => updateExpField(exp.id, "company_name", e.target.value)}
+                          />
+                          <button type="button" onClick={() => updateExpField(exp.id, "is_other_company", false)} className="rounded-xl bg-slate-100 px-4 text-[10px] font-black uppercase">Batal</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`pos-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Jabatan"}</label>
-                    <input disabled={isFromSystem} id={`pos-${exp.id}`} type="text" className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.position} onChange={(e) => updateExpField(exp.id, "position", e.target.value)} />
+                    <label className="ml-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">Jabatan / Posisi</label>
+                    <input disabled={isFromSystem} type="text" className="w-full rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={exp.position} onChange={(e) => updateExpField(exp.id, "position", e.target.value)} />
                   </div>
 
                   <div className="space-y-2">
-  <label htmlFor={`loc-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Lokasi (Kota/Kabupaten)"}</label>
-  <div className="relative">
-    <MapPin className="absolute left-4 top-4 text-slate-400" size={16} aria-hidden="true" />
-    <input 
-      disabled={isFromSystem}
-      id={`loc-${exp.id}`} 
-      type="text" 
-      list="city-list" // <--- Ini kunci penghubungnya
-      placeholder="Cari Kota/Kabupaten..."
-      className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 pl-12 font-bold outline-none focus:border-blue-600 disabled:opacity-60" 
-      value={exp.company_location} 
-      onChange={(e) => updateExpField(exp.id, "company_location", e.target.value)} 
-    />
-  </div>
-</div>
-                  <div className="space-y-2">
-                    <label htmlFor={`type-${exp.id}`} className="ml-2 text-[10px] font-bold uppercase text-slate-400">{"Ikatan Kerja"}</label>
-                    <select disabled={isFromSystem} id={`type-${exp.id}`} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.employment_type} onChange={(e) => updateExpField(exp.id, "employment_type", e.target.value)}>
-                      {EMPLOYMENT_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                    <label className="ml-2 text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2"><MapPin size={12}/> Lokasi Kerja</label>
+                    <select disabled={isFromSystem} className="w-full rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600" value={exp.company_location} onChange={(e) => updateExpField(exp.id, "company_location", e.target.value)}>
+                      <option value="">-- Pilih Kota --</option>
+                      {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                     </select>
                   </div>
-
-                  <fieldset className="m-0 grid grid-cols-2 gap-4 border-none p-0">
-                    <legend className="mb-2 ml-2 text-[10px] font-bold uppercase text-slate-400">{"Waktu Mulai"}</legend>
-                    <select aria-label="Bulan Mulai" disabled={isFromSystem} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.ui_start.month} onChange={(e) => updateUIDate(exp.id, 'start', 'month', e.target.value)}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
-                    <input aria-label="Tahun Mulai" type="number" disabled={isFromSystem} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-60" value={exp.ui_start.year} onChange={(e) => updateUIDate(exp.id, 'start', 'year', e.target.value)} />
-                  </fieldset>
-
-                  <fieldset className="m-0 grid grid-cols-2 gap-4 border-none p-0">
-                    <legend className="mb-2 ml-2 text-[10px] font-bold uppercase text-slate-400">{"Waktu Selesai"}</legend>
-                    <select aria-label="Bulan Selesai" disabled={exp.is_current_work} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-30" value={exp.ui_end.month} onChange={(e) => updateUIDate(exp.id, 'end', 'month', e.target.value)}>{months.map(m => <option key={m} value={m}>{m}</option>)}</select>
-                    <input aria-label="Tahun Selesai" type="number" disabled={exp.is_current_work} className="w-full rounded-xl border-2 border-transparent bg-slate-50 p-4 font-bold disabled:opacity-30" value={exp.ui_end.year} onChange={(e) => updateUIDate(exp.id, 'end', 'year', e.target.value)} />
-                  </fieldset>
                 </div>
 
-                <div className="space-y-6 pt-4">
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input type="checkbox" checked={exp.is_current_work} onChange={(e) => updateExpField(exp.id, "is_current_work", e.target.checked)} className="size-6 accent-blue-600" />
-                    <span className="text-[11px] font-black uppercase italic text-blue-600">{"Masih aktif bekerja"} {isFromSystem && "(Dapat diselesaikan jika berhenti)"}</span>
-                  </label>
-                  <div className="space-y-2 text-sm font-bold">
-                    <label htmlFor={`desc-${exp.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400"><AlignLeft size={14} /> {"Rincian Pekerjaan"}</label>
-                    <textarea disabled={isFromSystem} id={`desc-${exp.id}`} rows={4} className="w-full rounded-[2rem] border-2 border-transparent bg-slate-50 p-6 font-bold outline-none focus:border-blue-600 disabled:opacity-60" value={exp.description} onChange={(e) => updateExpField(exp.id, "description", e.target.value)} />
+                <div className="flex flex-col gap-8 pt-4 md:flex-row md:items-end">
+                  <fieldset className="flex-1 space-y-3 border-none p-0">
+                    <legend className="ml-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">Periode Mulai</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select className="rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 text-xs" value={exp.ui_start.month} onChange={(e) => updateUIDate(exp.id, 'start', 'month', e.target.value)}>
+                        {months.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <input type="number" className="rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 text-xs" value={exp.ui_start.year} onChange={(e) => updateUIDate(exp.id, 'start', 'year', e.target.value)} />
+                    </div>
+                  </fieldset>
+
+                  <fieldset className="flex-1 space-y-3 border-none p-0">
+                    <legend className="ml-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">Periode Selesai</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select disabled={exp.is_current_work} className="rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 text-xs disabled:opacity-30" value={exp.ui_end.month} onChange={(e) => updateUIDate(exp.id, 'end', 'month', e.target.value)}>
+                        {months.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <input disabled={exp.is_current_work} type="number" className="rounded-xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600 text-xs disabled:opacity-30" value={exp.ui_end.year} onChange={(e) => updateUIDate(exp.id, 'end', 'year', e.target.value)} />
+                    </div>
+                  </fieldset>
+
+                  <div className="pb-2">
+                    <label className="flex cursor-pointer items-center gap-3">
+                      <input type="checkbox" checked={exp.is_current_work} onChange={(e) => updateExpField(exp.id, "is_current_work", e.target.checked)} className="h-6 w-6 rounded border-4 border-slate-900 accent-blue-600" />
+                      <span className="text-[10px] font-black uppercase italic text-blue-600">Masih Aktif</span>
+                    </label>
                   </div>
                 </div>
-              </section>
-            )
+              </div>
+            );
           })}
         </div>
 
-        <div className="flex justify-end pt-4">
-          <button type="submit" disabled={loading} className="flex items-center gap-4 rounded-[2rem] bg-slate-900 px-12 py-5 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50">
-            {loading ? "Menyimpan..." : <><Save size={20} /> {"Simpan Profil Karir"}</>}
+        <div className="flex justify-center pt-10">
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="group flex items-center gap-6 rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 px-16 py-6 text-sm font-black uppercase italic tracking-[0.2em] text-white shadow-[10px_10px_0px_0px_rgba(37,99,235,1)] transition-all hover:bg-blue-600 hover:border-blue-600 active:scale-95 disabled:opacity-50"
+          >
+            {loading ? "Menyinkronkan..." : <><Save size={24} className="group-hover:animate-bounce" /> Simpan Data Profesional</>}
           </button>
         </div>
       </form>

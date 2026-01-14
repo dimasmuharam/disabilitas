@@ -141,6 +141,7 @@ export const PRIVATE_COMPANIES_LIST = [
   "Siloam Hospitals",
   "Burgreens",
   "Thisable Enterprise",
+"PT Dimaster Education Berprestasi",
   "Bank Danamon",
   "Maybank Indonesia",
   "Microsoft Indonesia",
