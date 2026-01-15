@@ -114,10 +114,19 @@ export default function ApplicantTracker({ company }: { company: any }) {
           <option value="interview">INTERVIEW</option>
           <option value="hired">DITERIMA KERJA</option>
         </select>
-        <select aria-label="Filter lowongan" onChange={(e) => setFilterJob(e.target.value)} className="rounded-xl border-2 border-slate-100 bg-white px-6 py-3 text-[10px] font-black uppercase">
-          <option value="all">SEMUA LOWONGAN</option>
-          {[...new Set(applicants.map(a => a.jobs?.title))].map(t => <option key={t as string} value={t as string}>{t as string}</option>)}
-        </select>
+<select 
+  aria-label="Filter lowongan"
+  onChange={(e) => setFilterJob(e.target.value)} 
+  className="rounded-xl border-2 border-slate-100 bg-white px-6 py-3 text-[10px] font-black uppercase"
+>
+  <option value="all">SEMUA LOWONGAN</option>
+  {/* Perbaikan: Menggunakan Array.from untuk kompatibilitas build */}
+  {Array.from(new Set(applicants.map(a => a.jobs?.title))).filter(Boolean).map(t => (
+    <option key={t as string} value={t as string}>
+      {t as string}
+    </option>
+  ))}
+</select>
       </div>
 
       {/* Bulk Action Bar */}
