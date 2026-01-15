@@ -4,8 +4,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Users, Search, FileDown, ExternalLink, CheckCircle, XCircle, 
-  Clock, Activity, Download, CheckSquare, Square, Trash2, ShieldCheck
+  Clock, Activity, Download, CheckSquare, Square
 } from "lucide-react";
+
+// Import helper dari file terpisah
 import { exportApplicantsToExcel, generateProfessionalCV } from "./export-helpers";
 
 export default function ApplicantTracker({ company }: { company: any }) {
@@ -15,6 +17,8 @@ export default function ApplicantTracker({ company }: { company: any }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterJob, setFilterJob] = useState("all");
+  
+  // State untuk Toast Aksesibel & Modal
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | null }>({ msg: "", type: null });
   const [noteModal, setNoteModal] = useState({ isOpen: false, appId: "", name: "", status: "" });
   const [hrdNote, setHrdNote] = useState("");
@@ -23,10 +27,10 @@ export default function ApplicantTracker({ company }: { company: any }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("applications")
-      .select(`*, jobs(id, title), profiles(*, work_experiences(*), certifications(*))`)
+      .select(`*, jobs(id, title), profiles(*)`)
       .eq("company_id", company.id)
       .order("created_at", { ascending: false });
-    
+
     if (!error) setApplicants(data || []);
     setLoading(false);
   }, [company?.id]);
@@ -45,14 +49,12 @@ export default function ApplicantTracker({ company }: { company: any }) {
       .from("applications")
       .update({ status: newStatus, hrd_notes: note || null })
       .eq("id", appId);
-    
+      
     if (!error) {
-      showToast(`Berhasil: Pelamar kini berada di tahap ${newStatus}`, "success");
+      showToast(`Berhasil memperbarui status ke ${newStatus}`, "success");
       setNoteModal({ isOpen: false, appId: "", name: "", status: "" });
       setHrdNote("");
       fetchApplicants();
-    } else {
-      showToast("Gagal memperbarui status", "error");
     }
   };
 
@@ -61,7 +63,7 @@ export default function ApplicantTracker({ company }: { company: any }) {
       .from("applications")
       .update({ status: newStatus })
       .in("id", selectedIds);
-    
+      
     if (!error) {
       showToast(`${selectedIds.length} pelamar berhasil diperbarui`, "success");
       setSelectedIds([]);
@@ -80,11 +82,12 @@ export default function ApplicantTracker({ company }: { company: any }) {
     return matchSearch && matchStatus && matchJob;
   });
 
-  if (loading) return <div role="status" className="p-20 text-center font-black animate-pulse text-slate-400">MENYINKRONKAN DATA RISET...</div>;
+  if (loading) return <div role="status" className="p-20 text-center font-black animate-pulse text-slate-400 uppercase italic">Menyinkronkan Data Riset...</div>;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 pb-32 text-left">
-      {/* ARIA-LIVE REGION UNTUK SCREEN READER */}
+      
+      {/* ARIA-LIVE REGION: Memungkinkan screen reader membacakan notifikasi secara otomatis */}
       <div aria-live="polite" role="status" className="fixed bottom-10 right-10 z-[100]">
         {toast.msg && (
           <div className={`rounded-3xl border-4 p-6 font-black uppercase italic shadow-2xl animate-in slide-in-from-right-10 ${
@@ -102,40 +105,31 @@ export default function ApplicantTracker({ company }: { company: any }) {
         </h2>
         <button 
           onClick={() => exportApplicantsToExcel(filteredApplicants, company.name)}
-          aria-label="Unduh data komparasi pelamar dalam format CSV"
+          aria-label="Unduh daftar komparasi pelamar dalam format CSV"
           className="rounded-2xl bg-slate-900 px-8 py-4 text-[10px] font-black uppercase italic text-white hover:bg-blue-600 transition-all focus:ring-4 focus:ring-blue-300"
         >
-          <Download size={16} className="mr-2 inline" aria-hidden="true" /> Export Komparasi (CSV)
+          <Download size={16} className="mr-2 inline" /> Export Komparasi (CSV)
         </button>
       </div>
 
       {/* Filter Bar */}
       <div className="grid gap-4 rounded-[2.5rem] border-2 border-slate-100 bg-white p-6 md:grid-cols-3">
         <div className="relative">
-          <label htmlFor="search-talent" className="sr-only">Cari Nama Talenta</label>
           <input 
-            id="search-talent"
-            placeholder="CARI NAMA TALENTA..." 
+            aria-label="Cari nama talenta"
+            placeholder="CARI NAMA..." 
             className="w-full rounded-xl border-2 border-slate-50 bg-slate-50 px-6 py-3 text-[10px] font-black outline-none focus:border-slate-900"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select 
-          aria-label="Filter berdasarkan status lamaran" 
-          onChange={(e) => setFilterStatus(e.target.value)} 
-          className="rounded-xl border-2 border-slate-100 bg-white px-6 py-3 text-[10px] font-black uppercase outline-none focus:border-slate-900"
-        >
+        <select aria-label="Filter status" onChange={(e) => setFilterStatus(e.target.value)} className="rounded-xl border-2 border-slate-100 bg-white px-6 py-3 text-[10px] font-black uppercase">
           <option value="all">SEMUA STATUS</option>
           <option value="applied">BARU MASUK</option>
           <option value="interview">INTERVIEW</option>
           <option value="hired">DITERIMA KERJA</option>
           <option value="rejected">DITOLAK</option>
         </select>
-        <select 
-          aria-label="Filter berdasarkan judul lowongan"
-          onChange={(e) => setFilterJob(e.target.value)} 
-          className="rounded-xl border-2 border-slate-100 bg-white px-6 py-3 text-[10px] font-black uppercase outline-none focus:border-slate-900"
-        >
+        <select aria-label="Filter lowongan" onChange={(e) => setFilterJob(e.target.value)} className="rounded-xl border-2 border-slate-100 bg-white px-6 py-3 text-[10px] font-black uppercase">
           <option value="all">SEMUA LOWONGAN</option>
           {Array.from(new Set(applicants.map(a => a.jobs?.title))).filter(Boolean).map(t => (
             <option key={t as string} value={t as string}>{t as string}</option>
@@ -161,23 +155,19 @@ export default function ApplicantTracker({ company }: { company: any }) {
           const skills = Array.isArray(p?.skills) ? p.skills : [];
           
           return (
-            <article 
-              key={app.id} 
-              className={`group flex flex-col items-start gap-6 rounded-[3rem] border-2 p-8 transition-all md:flex-row md:items-center ${selectedIds.includes(app.id) ? 'border-blue-600 bg-blue-50/50' : 'border-slate-100 bg-white hover:border-slate-900'}`}
-            >
-              {/* ACCESSIBLE CHECKBOX */}
-              <div className="relative flex items-center shrink-0">
+            <article key={app.id} className={`flex flex-col items-start gap-6 rounded-[3rem] border-2 p-8 transition-all md:flex-row md:items-center ${selectedIds.includes(app.id) ? 'border-blue-600 bg-blue-50/50 shadow-md' : 'border-slate-100 bg-white hover:border-slate-900'}`}>
+              <div className="flex items-center shrink-0">
                 <input 
                   type="checkbox"
-                  id={`select-${app.id}`}
+                  id={`check-${app.id}`}
                   checked={selectedIds.includes(app.id)}
                   onChange={() => toggleSelect(app.id)}
                   className="peer sr-only"
                 />
                 <label 
-                  htmlFor={`select-${app.id}`}
-                  className="cursor-pointer text-slate-200 peer-checked:text-blue-600 transition-colors"
+                  htmlFor={`check-${app.id}`}
                   aria-label={`Pilih ${p?.full_name} untuk aksi massal`}
+                  className="cursor-pointer text-slate-200 peer-checked:text-blue-600 transition-colors"
                 >
                   {selectedIds.includes(app.id) ? <CheckSquare size={28} /> : <Square size={28} />}
                 </label>
@@ -190,57 +180,23 @@ export default function ApplicantTracker({ company }: { company: any }) {
                     {app.status}
                   </span>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">POSISI: {app.jobs?.title}</p>
-                
-                {/* NARASI LENGKAP SINKRON SKEMA */}
-                <div className="mt-4 rounded-2xl border border-slate-50 bg-slate-50/50 p-6 text-sm font-medium italic leading-relaxed text-slate-700">
-                  <p>Lulusan <strong>{p?.education_level || "Pendidikan"} {p?.major || ""}</strong> dari <strong>{p?.university || "Institusi"}</strong> tahun <strong>{p?.graduation_date || "-"}</strong>.</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">{app.jobs?.title}</p>
+                <div className="mt-4 rounded-2xl bg-slate-50 p-5 text-sm font-medium italic text-slate-700">
+                  <p>Lulusan <strong>{p?.education_level} {p?.major}</strong> dari <strong>{p?.university}</strong> tahun <strong>{p?.graduation_date || "-"}</strong>.</p>
                   <p className="mt-1">Berdomisili di <strong>{p?.city || "Lokasi tidak diketahui"}</strong>.</p>
-                  {skills.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {skills.slice(0, 5).map((s: string, i: number) => (
-                        <span key={i} className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[9px] font-bold uppercase not-italic text-slate-500">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {skills.length > 0 && <p className="mt-2 text-[10px] uppercase not-italic opacity-60">Keahlian: {skills.join(", ")}</p>}
                 </div>
               </div>
 
-              {/* ACTION BUTTONS DENGAN REJECT */}
               <div className="flex w-full flex-wrap gap-2 md:w-auto md:flex-col">
                 <div className="flex gap-2">
-                  <button 
-                    onClick={() => setNoteModal({ isOpen: true, appId: app.id, name: p?.full_name, status: 'interview' })} 
-                    aria-label={`Jadwalkan interview untuk ${p?.full_name}`}
-                    className="flex-1 rounded-xl bg-orange-50 px-4 py-3 text-[9px] font-black uppercase text-orange-600 hover:bg-orange-600 hover:text-white transition-all"
-                  >INTERVIEW</button>
-                  <button 
-                    onClick={() => setNoteModal({ isOpen: true, appId: app.id, name: p?.full_name, status: 'hired' })} 
-                    aria-label={`Terima ${p?.full_name} sebagai karyawan`}
-                    className="flex-1 rounded-xl bg-emerald-50 px-4 py-3 text-[9px] font-black uppercase text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
-                  >HIRE</button>
-                  <button 
-                    onClick={() => setNoteModal({ isOpen: true, appId: app.id, name: p?.full_name, status: 'rejected' })} 
-                    aria-label={`Tolak lamaran ${p?.full_name}`}
-                    className="flex-1 rounded-xl bg-red-50 px-4 py-3 text-[9px] font-black uppercase text-red-500 hover:bg-red-600 hover:text-white transition-all"
-                  >REJECT</button>
+                  <button onClick={() => setNoteModal({ isOpen: true, appId: app.id, name: p?.full_name, status: 'interview' })} aria-label={`Jadwalkan interview untuk ${p?.full_name}`} className="flex-1 rounded-xl bg-orange-50 px-4 py-3 text-[9px] font-black uppercase text-orange-600 hover:bg-orange-600 hover:text-white transition-all">INTERVIEW</button>
+                  <button onClick={() => setNoteModal({ isOpen: true, appId: app.id, name: p?.full_name, status: 'hired' })} aria-label={`Terima ${p?.full_name}`} className="flex-1 rounded-xl bg-emerald-50 px-4 py-3 text-[9px] font-black uppercase text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all">HIRE</button>
+                  <button onClick={() => setNoteModal({ isOpen: true, appId: app.id, name: p?.full_name, status: 'rejected' })} aria-label={`Tolak ${p?.full_name}`} className="flex-1 rounded-xl bg-red-50 px-4 py-3 text-[9px] font-black uppercase text-red-500 hover:bg-red-600 hover:text-white transition-all">REJECT</button>
                 </div>
                 <div className="flex gap-2">
-                  <button 
-                    onClick={() => generateProfessionalCV(app, company)} 
-                    aria-label={`Unduh CV Audit ${p?.full_name}`}
-                    className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-3 text-slate-400 hover:text-blue-600 hover:bg-white transition-all"
-                    title="Unduh CV Audit"
-                  ><FileDown size={20} className="mx-auto" /></button>
-                  <a 
-                    href={`/talent/${p?.id}`} 
-                    target="_blank" 
-                    aria-label={`Buka profil lengkap ${p?.full_name} di tab baru`}
-                    className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-3 text-slate-400 hover:text-slate-900 hover:bg-white transition-all"
-                    title="Lihat Profil"
-                  ><ExternalLink size={20} className="mx-auto" /></a>
+                  <button onClick={() => generateProfessionalCV(app, company)} aria-label={`Unduh CV Audit ${p?.full_name}`} className="flex-1 rounded-xl bg-slate-50 p-3 text-slate-400 hover:text-blue-600 transition-all"><FileDown size={20} className="mx-auto" /></button>
+                  <a href={`/talent/${p?.id}`} target="_blank" aria-label={`Profil lengkap ${p?.full_name}`} className="flex-1 rounded-xl bg-slate-50 p-3 text-slate-400 hover:text-slate-900 transition-all"><ExternalLink size={20} className="mx-auto" /></a>
                 </div>
               </div>
             </article>
@@ -250,20 +206,20 @@ export default function ApplicantTracker({ company }: { company: any }) {
 
       {/* MODAL NOTE (Aksesibel Dialog) */}
       {noteModal.isOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-2xl">
-            <h2 id="modal-title" className="text-xl font-black uppercase italic tracking-tighter">Proses: {noteModal.status}</h2>
-            <p className="mt-2 text-[10px] font-black uppercase italic text-slate-400">Target Pelamar: {noteModal.name}</p>
+            <h2 className="text-xl font-black uppercase italic">Konfirmasi: {noteModal.status}</h2>
+            <p className="mt-2 text-[10px] font-black uppercase italic text-slate-400">Target: {noteModal.name}</p>
             <textarea 
               autoFocus 
-              className="mt-6 h-32 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-6 text-sm font-medium italic outline-none focus:border-blue-600" 
-              placeholder="Berikan catatan HRD (Notes) untuk riset internal..." 
+              className="mt-6 h-32 w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 text-sm font-medium italic outline-none focus:border-blue-600" 
+              placeholder="Catatan HRD (Opsional)..." 
               value={hrdNote} 
               onChange={(e) => setHrdNote(e.target.value)} 
             />
             <div className="mt-6 flex gap-3">
-              <button onClick={() => setNoteModal({ isOpen: false, appId: "", name: "", status: "" })} className="flex-1 rounded-xl border-2 border-slate-100 py-4 text-[10px] font-black uppercase">BATAL</button>
-              <button onClick={() => handleUpdateStatus(noteModal.appId, noteModal.status, hrdNote)} className="flex-1 rounded-xl bg-slate-900 py-4 text-[10px] font-black uppercase italic text-white hover:bg-blue-600 transition-colors">KONFIRMASI</button>
+              <button onClick={() => setNoteModal({ isOpen: false, appId: "", name: "", status: "" })} className="flex-1 rounded-xl border-2 border-slate-100 py-3 text-[10px] font-black uppercase">BATAL</button>
+              <button onClick={() => handleUpdateStatus(noteModal.appId, noteModal.status, hrdNote)} className="flex-1 rounded-xl bg-slate-900 py-3 text-[10px] font-black uppercase italic text-white hover:bg-blue-600">KONFIRMASI</button>
             </div>
           </div>
         </div>
