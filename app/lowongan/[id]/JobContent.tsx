@@ -107,7 +107,7 @@ export default function JobContent({ job, skills, majors, accommodations }: any)
           
           <div className="grid gap-6 md:grid-cols-2">
             <Link 
-              href="/dashboard/talent" 
+              href="/dashboard/" 
               className="flex items-center justify-center gap-3 rounded-2xl bg-slate-900 py-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-blue-600 active:scale-95"
             >
               <LayoutDashboard size={18} /> Dashboard Saya
