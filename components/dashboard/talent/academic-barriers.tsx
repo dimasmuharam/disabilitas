@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { updateTalentProfile } from "@/lib/actions/talent";
 import { 
   GraduationCap, School, AlertTriangle, Save, 
@@ -30,6 +30,15 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const feedbackRef = useRef<HTMLDivElement>(null);
+
+  // Menambahkan Canonical Link secara dinamis
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'canonical';
+    link.href = window.location.origin + window.location.pathname;
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
 
   const [formData, setFormData] = useState({
     education_level: profile?.education_level || "",
@@ -79,38 +88,40 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
 
     try {
       /**
-       * EXPLICIT PAYLOAD: Hanya mengirim kolom yang ada di tabel profiles.
-       * Ini mencegah error 'undefined' akibat pengiriman variabel UI ke database.
+       * PERBAIKAN: Mapping data agar sesuai dengan tipe data PostgreSQL.
+       * 1. String kosong diubah jadi null agar tidak bentrok dengan constraint.
+       * 2. Graduation date dipastikan Integer.
+       * 3. Array dipastikan tidak bernilai undefined.
        */
       const payload = {
-        education_level: formData.education_level,
-        education_model: formData.education_model,
-        university: formData.university,
-        major: formData.major,
+        education_level: formData.education_level || null,
+        education_model: formData.education_model || null,
+        university: formData.university || null,
+        major: formData.major || null,
         graduation_date: formData.graduation_date ? parseInt(formData.graduation_date.toString()) : null,
-        scholarship_type: formData.scholarship_type,
-        education_barrier: formData.education_barrier,
-        academic_support_received: formData.academic_support_received,
-        academic_assistive_tools: formData.academic_assistive_tools,
-        study_relevance: formData.study_relevance,
+        scholarship_type: formData.scholarship_type || null,
+        education_barrier: Array.isArray(formData.education_barrier) ? formData.education_barrier : [],
+        academic_support_received: Array.isArray(formData.academic_support_received) ? formData.academic_support_received : [],
+        academic_assistive_tools: Array.isArray(formData.academic_assistive_tools) ? formData.academic_assistive_tools : [],
+        study_relevance: formData.study_relevance || null,
       };
 
       const result = await updateTalentProfile(user.id, payload);
       
       if (!result || !result.success) {
+        // Mengangkat error dari database (termasuk jika trigger gagal secara internal)
         throw new Error(result?.error || "Gagal menyinkronkan data ke server.");
       }
 
       setMessage({ type: "success", text: "Data Akademik Berhasil Disinkronkan!" });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       
-      // Fokus ke feedback untuk Screen Reader
       setTimeout(() => feedbackRef.current?.focus(), 100);
-      
       if (onSuccess) setTimeout(onSuccess, 2000);
 
     } catch (error: any) {
-      setMessage({ type: "error", text: `Gagal: ${error.message}` });
+      // Menampilkan pesan error yang lebih deskriptif untuk debugging
+      setMessage({ type: "error", text: `Gagal: ${error.message.toUpperCase()}` });
       setTimeout(() => feedbackRef.current?.focus(), 100);
     } finally {
       setLoading(false);
@@ -119,7 +130,6 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
 
   return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900">
-      {/* DATALIST UNTUK SEARCHABLE COMBOBOX */}
       <datalist id="uni-list">
         {UNIVERSITIES.map((u, i) => <option key={i} value={u} />)}
       </datalist>
@@ -136,7 +146,6 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         </p>
       </header>
 
-      {/* NOTIFIKASI STATUS */}
       <div ref={feedbackRef} tabIndex={-1} aria-live="polite" className="px-4 outline-none">
         {message.text && (
           <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-4 p-6 ${
@@ -149,8 +158,6 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
-        
-        {/* IDENTITAS PENDIDIKAN */}
         <section className="space-y-8 rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
           <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-600 italic">
             <School size={18} aria-hidden="true" /> Institusi & Pendidikan
@@ -213,7 +220,6 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           </div>
         </section>
 
-        {/* LINEARITAS */}
         {isCollegeLevel && (
           <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
             <legend className="mb-6 flex items-center gap-4 px-2 text-xs font-black uppercase tracking-[0.2em] text-blue-600 italic leading-none">
@@ -230,7 +236,6 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           </fieldset>
         )}
 
-        {/* DUKUNGAN & TOOLS */}
         <div className="grid gap-10 md:grid-cols-2">
           <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
             <legend className="mb-6 flex items-center gap-3 px-2 text-xs font-black uppercase tracking-tight text-emerald-700 italic leading-none">
@@ -261,7 +266,6 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
           </fieldset>
         </div>
 
-        {/* HAMBATAN */}
         <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(245,158,11,0.1)] text-left">
           <legend className="mb-6 flex items-center gap-4 px-2 text-xs font-black uppercase tracking-[0.2em] text-amber-600 italic leading-none">
             <AlertTriangle size={24} aria-hidden="true" /> Hambatan Pendidikan
