@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { 
-  MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
+  MapPin, Loader2, Briefcase, Building2, Calendar, ArrowLeft, 
   CheckCircle, Send, ShieldCheck, Info, 
   Clock, DollarSign, GraduationCap, Tag, 
   Accessibility, LayoutDashboard, Share2, Search,
