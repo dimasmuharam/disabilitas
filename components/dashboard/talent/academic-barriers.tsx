@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { updateTalentProfile } from "@/lib/actions/talent";
+import { supabase } from "@/lib/supabase"; // Import langsung client untuk Next.js 13
 import { 
   GraduationCap, School, AlertTriangle, Save, 
   CheckCircle2, AlertCircle, Handshake, Cpu, Workflow,
@@ -31,13 +31,12 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
   const [message, setMessage] = useState({ type: "", text: "" });
   const feedbackRef = useRef<HTMLDivElement>(null);
 
-  // Canonical Link
+  // Standar: Tambahkan Canonical Link secara dinamis
   useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'canonical';
-    link.href = window.location.origin + window.location.pathname;
-    document.head.appendChild(link);
-    return () => { if (document.head.contains(link)) document.head.removeChild(link); };
+    const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    link.setAttribute("href", window.location.origin + window.location.pathname);
+    if (!document.head.contains(link)) document.head.appendChild(link);
   }, []);
 
   const [formData, setFormData] = useState({
@@ -70,21 +69,20 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     });
   };
 
-// Cari bagian handleSubmit di dalam academic-barriers.tsx dan ganti dengan ini:
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
 
-    // Cek apakah ID User ada, jika tidak, langsung beri peringatan yang bisa dibaca screen reader
+    // Validasi Dasar Aksesibilitas
     if (!user?.id) {
       setLoading(false);
-      setMessage({ type: "error", text: "KESALAHAN SISTEM: ID PENGGUNA TIDAK DITEMUKAN. MOHON COBA LOGIN ULANG." });
+      setMessage({ type: "error", text: "ID PENGGUNA TIDAK DITEMUKAN. SILAKAN LOGIN ULANG." });
       return;
     }
 
     try {
+      // Mapping Payload agar sinkron dengan kolom database (Postgres)
       const payload = {
         education_level: formData.education_level || null,
         education_model: isCollegeLevel ? "Reguler" : (formData.education_model || null),
@@ -96,29 +94,30 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         academic_support_received: formData.academic_support_received,
         academic_assistive_tools: formData.academic_assistive_tools,
         study_relevance: isCollegeLevel ? formData.study_relevance : null,
+        updated_at: new Date().toISOString(),
       };
 
-      const result = await updateTalentProfile(user.id, payload);
-      
-      // Jika result.success FALSE, kita ambil pesan error aslinya (result.error)
-      if (!result || !result.success) {
-        const errorDetail = result?.error || "Koneksi terputus atau respon server kosong";
-        throw new Error(errorDetail);
-      }
+      // UPDATE LANGSUNG KE SUPABASE (Standar Next.js 13 yang paling stabil)
+      const { error } = await supabase
+        .from("profiles")
+        .update(payload)
+        .eq("id", user.id);
+
+      if (error) throw error;
 
       setMessage({ type: "success", text: "DATA AKADEMIK BERHASIL DISINKRONKAN!" });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       
-      // Fokus ke elemen pesan agar screen reader langsung membacanya
+      // Fokus ke elemen pesan agar Screen Reader langsung membacanya
       setTimeout(() => feedbackRef.current?.focus(), 200);
       if (onSuccess) setTimeout(onSuccess, 2000);
 
     } catch (error: any) {
-      // Menampilkan pesan error asli dari database (misal: RLS violation, atau constraint error)
-      const systemMessage = error.message.toUpperCase();
+      console.error("Critical Sync Error:", error);
+      // Menampilkan pesan error asli sistem untuk kebutuhan debugging Mas Dimas
       setMessage({ 
         type: "error", 
-        text: `GAGAL DISIMPAN. DETAIL SYSTEM: ${systemMessage}` 
+        text: `GAGAL DISIMPAN. DETAIL SYSTEM: ${error.message.toUpperCase()}` 
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => feedbackRef.current?.focus(), 200);
@@ -126,6 +125,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
       setLoading(false);
     }
   };
+
   return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900">
       <datalist id="uni-list">
@@ -144,6 +144,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         </p>
       </header>
 
+      {/* Kontainer Pesan Feedback dengan ARIA-LIVE Assertive untuk Tunanetra */}
       <div ref={feedbackRef} tabIndex={-1} aria-live="assertive" className="px-4 outline-none">
         {message.text && (
           <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-4 p-6 ${
@@ -224,6 +225,7 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
         )}
 
         <div className="grid gap-10 md:grid-cols-2">
+          {/* Dukungan Institusi dengan Aria-Describedby untuk Screen Reader */}
           <fieldset className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
             <legend id="legend-support" className="mb-6 flex items-center gap-3 px-2 text-xs font-black uppercase tracking-tight text-emerald-700 italic leading-none">
               <Handshake size={24} aria-hidden="true" /> Dukungan Institusi
