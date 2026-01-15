@@ -9,7 +9,7 @@ import {
   Clock, DollarSign, GraduationCap, Tag, 
   Accessibility, LayoutDashboard, Search,
   PartyPopper, ChevronRight
-} from "lucide-center"; // Sesuaikan jika icon pack Mas berbeda
+} from "lucide-react"; 
 import { useRouter } from "next/navigation";
 
 export default function JobContent({ job, skills, majors, accommodations }: any) {
