@@ -70,23 +70,18 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     });
   };
 
+// Cari bagian handleSubmit di dalam academic-barriers.tsx dan ganti dengan ini:
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
 
-    // Validasi Universitas & Prodi
-    if (isCollegeLevel) {
-      if (formData.university && !UNIVERSITIES.includes(formData.university)) {
-        setLoading(false);
-        setMessage({ type: "error", text: "Pilih Universitas dari daftar yang disediakan." });
-        return;
-      }
-      if (formData.major && !UNIVERSITY_MAJORS.includes(formData.major)) {
-        setLoading(false);
-        setMessage({ type: "error", text: "Pilih Program Studi dari daftar yang disediakan." });
-        return;
-      }
+    // Cek apakah ID User ada, jika tidak, langsung beri peringatan yang bisa dibaca screen reader
+    if (!user?.id) {
+      setLoading(false);
+      setMessage({ type: "error", text: "KESALAHAN SISTEM: ID PENGGUNA TIDAK DITEMUKAN. MOHON COBA LOGIN ULANG." });
+      return;
     }
 
     try {
@@ -105,29 +100,32 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
 
       const result = await updateTalentProfile(user.id, payload);
       
+      // Jika result.success FALSE, kita ambil pesan error aslinya (result.error)
       if (!result || !result.success) {
-        // Tampilkan error spesifik dari Postgres/Trigger
-        throw new Error(result?.error || "DATABASE_SYNC_FAILED");
+        const errorDetail = result?.error || "Koneksi terputus atau respon server kosong";
+        throw new Error(errorDetail);
       }
 
-      setMessage({ type: "success", text: "Data Akademik Berhasil Disinkronkan!" });
+      setMessage({ type: "success", text: "DATA AKADEMIK BERHASIL DISINKRONKAN!" });
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => feedbackRef.current?.focus(), 100);
+      
+      // Fokus ke elemen pesan agar screen reader langsung membacanya
+      setTimeout(() => feedbackRef.current?.focus(), 200);
       if (onSuccess) setTimeout(onSuccess, 2000);
 
     } catch (error: any) {
-      console.error("Critical Sync Error:", error);
+      // Menampilkan pesan error asli dari database (misal: RLS violation, atau constraint error)
+      const systemMessage = error.message.toUpperCase();
       setMessage({ 
         type: "error", 
-        text: `SISTEM ERROR: ${error.message.toUpperCase()}. HUBUNGI ADMIN JIKA TERUS BERLANJUT.` 
+        text: `GAGAL DISIMPAN. DETAIL SYSTEM: ${systemMessage}` 
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => feedbackRef.current?.focus(), 100);
+      setTimeout(() => feedbackRef.current?.focus(), 200);
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900">
       <datalist id="uni-list">
