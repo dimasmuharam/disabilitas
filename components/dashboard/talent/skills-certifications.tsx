@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
-import { updateTalentProfile } from "@/lib/actions/talent";
+import { supabase } from "@/lib/supabase"; 
+// JANGAN ADA IMPORT DARI @/lib/actions/talent DI SINI
 import { 
   Award, Cpu, CheckCircle2, AlertCircle, Save, 
   Plus, X, Zap, Trash2, Link as LinkIcon, ChevronDown, BadgeCheck,
-  Download, ExternalLink, Lock, Loader2
+  Download, Loader2, Lock
 } from "lucide-react";
 import { generateGraduationCertificate } from "../partner/certificate-helper";
 
@@ -106,25 +106,30 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
     setMessage({ type: "", text: "" });
 
     try {
-      // 1. Update Profile (Skills) - Menggunakan payload bersih
-      const resProfile = await updateTalentProfile(user.id, { 
-        skills: globalSkills 
-      });
-      if (!resProfile.success) throw new Error(resProfile.error);
+      // 1. UPDATE PROFILE (SKILLS) - DIRECT CALL
+      const { error: pError } = await supabase
+        .from("profiles")
+        .update({ 
+          skills: globalSkills,
+          updated_at: new Date().toISOString() 
+        })
+        .eq("id", user.id);
 
-      // 2. Update/Insert Certifications (Hanya yang tidak verified)
+      if (pError) throw pError;
+
+      // 2. UPDATE/INSERT CERTIFICATIONS
       for (const cert of certs) {
         if (cert.is_verified) continue; 
 
         const isTemp = cert.id.toString().startsWith("temp-");
         const finalOrganizer = cert.organizer_name === "LAINNYA" ? cert.manual_organizer : cert.organizer_name;
         
-        // Log manual input untuk Kerapihan Data Riset
+        // Log manual input via RPC (Cara modul Career)
         if (cert.organizer_name === "LAINNYA" && cert.manual_organizer) {
-          await supabase.from("manual_input_logs").insert([{
-            field_name: "organizer_manual",
-            input_value: cert.manual_organizer
-          }]);
+          await supabase.rpc('log_manual_input', { 
+            f_name: 'organizer_manual', 
+            i_value: cert.manual_organizer 
+          });
         }
 
         const payload = { 
@@ -146,8 +151,10 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => feedbackRef.current?.focus(), 100);
       if (onSuccess) setTimeout(onSuccess, 1500);
+
     } catch (error: any) {
-      setMessage({ type: "error", text: `Gagal menyimpan: ${error.message}` });
+      setMessage({ type: "error", text: `GAGAL DISIMPAN. DETAIL: ${error.message.toUpperCase()}` });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => feedbackRef.current?.focus(), 100);
     } finally {
       setLoading(false);
@@ -160,13 +167,12 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
         <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter leading-none">
           <Zap className="text-purple-600" size={36} /> Keahlian & Pelatihan
         </h1>
-        <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400 italic">
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">
           Data kompetensi untuk memperkuat relevansi karir dalam ekosistem riset
         </p>
       </header>
 
-      {/* FEEDBACK AKSESIBEL */}
-      <div ref={feedbackRef} tabIndex={-1} aria-live="polite" className="px-4 outline-none">
+      <div ref={feedbackRef} tabIndex={-1} aria-live="assertive" className="px-4 outline-none">
         {message.text && (
           <div className={`mb-8 flex items-center gap-4 rounded-[2rem] border-4 p-6 ${
             message.type === "success" ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-red-500 bg-red-50 text-red-800"
@@ -178,20 +184,20 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
-        {/* SKILLS SECTION */}
         <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-6">
           <div className="flex items-center gap-3 text-purple-600">
             <Cpu size={24} aria-hidden="true" />
-            <h2 className="text-xs font-black uppercase tracking-[0.2em]">Keahlian Utama</h2>
+            <h2 id="skills-heading" className="text-xs font-black uppercase tracking-[0.2em]">Keahlian Utama</h2>
           </div>
           
           <div className="space-y-6">
             <div className="flex flex-col gap-2">
-              <label htmlFor="skill-selector" className="ml-2 text-[10px] font-black uppercase text-slate-400">Pilih Keahlian untuk Ditambahkan</label>
+              <label htmlFor="skill-selector" className="ml-2 text-[10px] font-black uppercase text-slate-400">Tambah Keahlian</label>
               <div className="flex gap-3">
                 <div className="relative flex-1">
                   <select 
                     id="skill-selector"
+                    aria-describedby="skills-heading"
                     className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-purple-600"
                     value={selectedSkillFromList}
                     onChange={(e) => setSelectedSkillFromList(e.target.value)}
@@ -203,7 +209,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                 </div>
                 <button 
                   type="button"
-                  aria-label="Tambahkan keahlian yang dipilih"
+                  aria-label="Klik untuk menambahkan keahlian yang dipilih"
                   onClick={() => addSkill(selectedSkillFromList)}
                   className="rounded-2xl bg-purple-600 px-8 text-white shadow-lg transition-all hover:bg-slate-900 focus:ring-4 focus:ring-purple-100"
                 >
@@ -232,10 +238,9 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           </div>
         </section>
 
-        {/* CERTIFICATIONS SECTION */}
         <div className="space-y-6">
           <div className="flex items-center justify-between px-4">
-            <h2 className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em]">
+            <h2 id="certs-heading" className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em]">
               <Award className="text-amber-500" size={20} /> Sertifikasi & Pelatihan
             </h2>
             <button 
@@ -243,7 +248,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
               onClick={addCertsItem} 
               className="flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-[10px] font-black uppercase text-white shadow-xl hover:bg-slate-900 transition-all focus:ring-4 focus:ring-blue-100"
             >
-              <Plus size={16} /> Tambah Sertifikat Manual
+              <Plus size={16} /> Tambah Manual
             </button>
           </div>
 
@@ -256,54 +261,36 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                 }`}
               >
                 <legend className="sr-only">Data Sertifikat #{certs.length - index}</legend>
-                
-                {/* Header Card */}
                 <div className="flex items-center justify-between border-b-2 border-slate-50 pb-4">
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-black uppercase italic text-slate-300">Item #{certs.length - index}</span>
-                    {cert.is_verified ? (
+                    {cert.is_verified && (
                       <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600 border border-emerald-100">
-                        <BadgeCheck size={12} /> Terverifikasi Platform
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-[8px] font-black uppercase text-slate-400">
-                        Input Manual
+                        <BadgeCheck size={12} /> Terverifikasi
                       </span>
                     )}
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    {cert.is_verified && cert.training_id && (
-                      <button 
-                        type="button"
-                        onClick={() => generateGraduationCertificate({ ...cert, profiles: profile }, cert.organizer_name)}
-                        className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-[9px] font-black uppercase text-white hover:bg-blue-600 transition-all"
-                      >
-                        <Download size={14} /> Cetak Sertifikat (JP)
-                      </button>
-                    )}
-                    {!cert.is_verified && (
-                      <button 
-                        type="button" 
-                        aria-label={`Hapus item sertifikat ${index + 1}`}
-                        onClick={() => removeCert(cert.id, cert.is_verified)} 
-                        className="text-slate-300 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    )}
-                  </div>
+                  {!cert.is_verified && (
+                    <button 
+                      type="button" 
+                      aria-label={`Hapus sertifikat ${index + 1}`}
+                      onClick={() => removeCert(cert.id, cert.is_verified)} 
+                      className="text-slate-300 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  )}
                 </div>
 
-                {/* Form Fields */}
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2 md:col-span-2">
                     <label htmlFor={`cert-name-${cert.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
-                      Judul Pelatihan/Sertifikasi {cert.is_verified && <Lock size={10} />}
+                      Judul Pelatihan {cert.is_verified && <Lock size={10} />}
                     </label>
                     <input 
                       id={`cert-name-${cert.id}`}
                       disabled={cert.is_verified}
+                      aria-describedby="certs-heading"
                       ref={(el) => { certNameRefs.current[cert.id] = el; }}
                       value={cert.name}
                       onChange={(e) => updateCertField(cert.id, "name", e.target.value)}
@@ -325,14 +312,14 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                         {ALL_INSTITUTIONS.map(inst => (
                           <option key={inst} value={inst}>{inst}</option>
                         ))}
-                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ LEMBAGA LAINNYA</option>
+                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ LAINNYA (INPUT MANUAL)</option>
                       </select>
                       {!cert.is_verified && <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`cert-year-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Tahun Terbit</label>
+                    <label htmlFor={`cert-year-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Tahun</label>
                     <input 
                       id={`cert-year-${cert.id}`}
                       disabled={cert.is_verified}
@@ -345,29 +332,13 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
 
                   {cert.organizer_name === "LAINNYA" && !cert.is_verified && (
                     <div className="space-y-2 md:col-span-2 animate-in zoom-in-95">
-                      <label htmlFor={`cert-manual-${cert.id}`} className="ml-2 text-[10px] font-black uppercase italic text-blue-600">Input Lembaga Baru</label>
+                      <label htmlFor={`cert-manual-${cert.id}`} className="ml-2 text-[10px] font-black uppercase italic text-blue-600">Nama Lembaga Baru</label>
                       <input 
                         id={`cert-manual-${cert.id}`}
                         value={cert.manual_organizer}
                         onChange={(e) => updateCertField(cert.id, "manual_organizer", e.target.value)}
                         className="w-full rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 font-bold outline-none focus:border-blue-600 shadow-inner"
-                        placeholder="Ketik nama lengkap lembaga..."
-                      />
-                    </div>
-                  )}
-
-                  {!cert.is_verified && (
-                    <div className="space-y-2 md:col-span-2">
-                      <label htmlFor={`cert-url-${cert.id}`} className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 italic">
-                        <LinkIcon size={12} /> Tautan Sertifikat (Opsional)
-                      </label>
-                      <input 
-                        id={`cert-url-${cert.id}`}
-                        type="url"
-                        value={cert.certificate_url}
-                        onChange={(e) => updateCertField(cert.id, "certificate_url", e.target.value)}
-                        placeholder="https://google-drive-link-sertifikat.com"
-                        className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-blue-600"
+                        placeholder="Ketik nama lengkap..."
                       />
                     </div>
                   )}
@@ -387,9 +358,9 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
           className="flex w-full items-center justify-center gap-4 rounded-[2.5rem] bg-slate-900 py-8 text-sm font-black uppercase italic tracking-widest text-white shadow-2xl transition-all hover:bg-emerald-600 disabled:opacity-50"
         >
           {loading ? (
-            <><Loader2 className="animate-spin" size={24} /> Menghubungkan Database...</>
+            <><Loader2 className="animate-spin" size={24} /> MENYINKRONKAN DATA...</>
           ) : (
-            <><Save size={24} /> Simpan Seluruh Perubahan</>
+            <><Save size={24} /> SIMPAN SEMUA PERUBAHAN</>
           )}
         </button>
       </form>
