@@ -7,7 +7,8 @@ import {
   MapPin, Briefcase, Building2, Calendar, ArrowLeft, 
   CheckCircle, Send, ShieldCheck, Info, 
   Clock, DollarSign, GraduationCap, Tag, 
-  Accessibility, LayoutDashboard, Share2
+  Accessibility, LayoutDashboard, Share2, Search,
+  PartyPopper, ChevronRight
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -18,6 +19,14 @@ export default function JobContent({ job, skills, majors, accommodations }: any)
   const [isSuccess, setIsSuccess] = useState(false);
   const successRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Canonical Link standar Mas Dimas
+  useEffect(() => {
+    const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    link.setAttribute("href", window.location.origin + window.location.pathname);
+    if (!document.head.contains(link)) document.head.appendChild(link);
+  }, []);
 
   useEffect(() => {
     async function checkUser() {
@@ -40,15 +49,21 @@ export default function JobContent({ job, skills, majors, accommodations }: any)
         job_id: job.id,
         applicant_id: user.id,
         company_id: job.company_id,
-        status: "applied"
+        status: "applied",
+        applied_at: new Date().toISOString()
       }]);
+      
       if (error) throw error;
+      
       setIsSuccess(true);
       setHasApplied(true);
-      setTimeout(() => { successRef.current?.focus(); }, 100);
-      setTimeout(() => { router.push("/dashboard/talent?applied=true"); }, 4000);
+      
+      // Aksesibilitas: Gulung ke atas dan fokus ke pesan sukses
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => { successRef.current?.focus(); }, 500);
+
     } catch (e: any) {
-      alert("Gagal: " + e.message);
+      alert("Gagal mengirim lamaran: " + e.message);
     } finally {
       setApplying(false);
     }
@@ -58,6 +73,47 @@ export default function JobContent({ job, skills, majors, accommodations }: any)
     if (!dateStr) return "Segera";
     return new Date(dateStr).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' });
   };
+
+  // TAMPILAN KONFIRMASI BERHASIL (Aksesibel & Jelas)
+  if (isSuccess) {
+    return (
+      <main className="flex min-h-[80vh] items-center justify-center bg-[#FDFDFD] px-6 py-20 font-sans">
+        <div 
+          ref={successRef} 
+          tabIndex={-1} 
+          role="alert"
+          className="w-full max-w-2xl rounded-[4rem] border-4 border-slate-900 bg-white p-12 text-center shadow-[16px_16px_0px_0px_rgba(16,185,129,1)] outline-none"
+        >
+          <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <PartyPopper size={48} />
+          </div>
+          <h1 className="mb-4 text-4xl font-black uppercase italic tracking-tighter text-slate-900 md:text-5xl">Lamaran Berhasil Dikirim!</h1>
+          <p className="mb-10 text-lg font-bold italic text-slate-500 uppercase tracking-tight">
+            Data profil dan CV digital Anda telah masuk ke sistem rekrutmen <span className="text-blue-600 underline">{job.companies?.name}</span>.
+          </p>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link 
+              href="/dashboard/talent" 
+              className="flex items-center justify-center gap-3 rounded-2xl bg-slate-900 py-6 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-slate-800 active:scale-95"
+            >
+              <LayoutDashboard size={18} /> Ke Dashboard Saya
+            </Link>
+            <Link 
+              href="/lowongan" 
+              className="flex items-center justify-center gap-3 rounded-2xl border-4 border-slate-900 bg-white py-6 text-xs font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-slate-50 active:scale-95"
+            >
+              <Search size={18} /> Cari Lowongan Lain
+            </Link>
+          </div>
+          
+          <p className="mt-8 text-[10px] font-black uppercase italic text-slate-300">
+            Pemberitahuan otomatis akan dikirim jika ada perubahan status lamaran.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#FDFDFD] pb-24 pt-10 text-left font-sans">
@@ -94,17 +150,17 @@ export default function JobContent({ job, skills, majors, accommodations }: any)
                 </div>
               </div>
               <div className="space-y-4 md:border-l-2 md:border-slate-50 md:pl-10">
-                <h2 className="flex items-center gap-2 text-[10px] font-black uppercase italic tracking-widest text-emerald-600"><Tag size={16}/> Skill</h2>
+                <h2 className="flex items-center gap-2 text-[10px] font-black uppercase italic tracking-widest text-emerald-600"><Tag size={16}/> Keahlian Dibutuhkan</h2>
                 <div className="flex flex-wrap gap-2">
                   {skills.map((s: string) => <span key={s} className="rounded-lg bg-slate-900 px-3 py-1 text-[9px] font-black uppercase italic text-white">{s}</span>)}
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 md:p-12 space-y-10">
+            <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 md:p-12 space-y-10 text-slate-700">
               <div className="space-y-4">
                 <h2 className="flex items-center gap-2 border-b pb-2 text-[10px] font-black uppercase italic text-slate-400"><Info size={14}/> Deskripsi Pekerjaan</h2>
-                <div className="whitespace-pre-line text-lg font-medium italic leading-relaxed text-slate-700">{job.description}</div>
+                <div className="whitespace-pre-line text-lg font-medium italic leading-relaxed">{job.description}</div>
               </div>
               {job.accessibility_note && (
                 <div className="rounded-[2.5rem] border-2 border-emerald-100 bg-emerald-50/30 p-8">
@@ -119,36 +175,40 @@ export default function JobContent({ job, skills, majors, accommodations }: any)
             <div className="rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl space-y-8">
               <h3 className="border-b border-white/10 pb-4 text-[10px] font-black uppercase italic tracking-widest text-blue-400">Panel Rekrutmen</h3>
               
-              {isSuccess && (
-                <div ref={successRef} tabIndex={-1} role="alert" className="rounded-2xl bg-emerald-500/20 border border-emerald-500/50 p-6 text-[10px] font-black uppercase italic text-emerald-400 outline-none">
-                  Lamaran Berhasil! Mengalihkan ke Dashboard...
-                </div>
-              )}
-
               {hasApplied ? (
-                <div className="flex w-full flex-col items-center gap-3 rounded-2xl bg-emerald-500/10 py-8 text-xs font-black italic text-emerald-400">
-                  <CheckCircle size={32}/> SUDAH MELAMAR
+                <div className="flex w-full flex-col items-center gap-3 rounded-2xl bg-emerald-500/10 py-8 text-xs font-black italic text-emerald-400 border border-emerald-500/20">
+                  <CheckCircle size={32}/> LAMARAN TERKIRIM
                 </div>
               ) : (
                 <button 
-                  onClick={handleApply} disabled={applying || isSuccess}
+                  onClick={handleApply} disabled={applying}
                   aria-label={applying ? "Sedang memproses lamaran" : "Klik untuk kirim lamaran kerja"}
-                  className="h-16 w-full rounded-2xl bg-blue-600 text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-blue-700 transition-all disabled:bg-slate-800"
+                  className="group h-16 w-full rounded-2xl bg-blue-600 text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-blue-700 transition-all disabled:bg-slate-800"
                 >
-                  {applying ? "MEMPROSES..." : "KIRIM LAMARAN"}
+                  {applying ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="animate-spin" size={18} /> MEMPROSES...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      KIRIM LAMARAN <ChevronRight className="group-hover:translate-x-1 transition-transform" size={16} />
+                    </span>
+                  )}
                 </button>
               )}
-              <p className="text-center text-[8px] font-bold uppercase text-slate-500 leading-relaxed">Profil Anda akan otomatis dilampirkan sebagai CV digital.</p>
+              <p className="text-center text-[8px] font-bold uppercase text-slate-500 leading-relaxed italic">
+                Sistem akan melampirkan Profil Karir, Riwayat Pendidikan, dan Keahlian Anda secara otomatis.
+              </p>
             </div>
 
             <section className="rounded-[3rem] border-2 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] space-y-6">
-              <h3 className="flex items-center gap-2 text-sm font-black uppercase italic text-slate-900"><ShieldCheck className="text-blue-600" size={20}/> Akomodasi</h3>
+              <h3 className="flex items-center gap-2 text-sm font-black uppercase italic text-slate-900"><ShieldCheck className="text-blue-600" size={20}/> Akomodasi Tersedia</h3>
               <div className="space-y-3">
                 {accommodations.length > 0 ? accommodations.map((acc: string) => (
                   <div key={acc} className="flex items-start gap-3 text-[10px] font-bold text-slate-700 uppercase italic">
                     <CheckCircle size={14} className="mt-0.5 shrink-0 text-emerald-500" /> {acc}
                   </div>
-                )) : <p className="text-[10px] italic text-slate-300">Data belum tersedia.</p>}
+                )) : <p className="text-[10px] italic text-slate-300 uppercase font-bold">Data akomodasi belum ditentukan.</p>}
               </div>
             </section>
           </aside>
