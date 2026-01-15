@@ -168,7 +168,7 @@ export const NONPROFIT_ORG_LIST = [
 
 // PERGURUAN TINGGI
 export const UNIVERSITIES = [
-  "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
+  "Universitas Kehidupan", "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
   "Institut Pertanian Bogor (IPB)", "Universitas Brawijaya (UB)", "Universitas Airlangga (UNAIR)", 
   "Universitas Padjadjaran (UNPAD)", "Universitas Diponegoro (UNDIP)", "Institut Teknologi Sepuluh Nopember (ITS)", 
   "Universitas Sebelas Maret (UNS)", "Universitas Hasanuddin (UNHAS)", "Universitas Sumatera Utara (USU)", 
