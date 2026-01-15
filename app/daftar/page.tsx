@@ -1,11 +1,11 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
-import { UserPlus, User, Building2, GraduationCap, CheckCircle2, AlertCircle } from "lucide-react"
+import { UserPlus, User, Building2, GraduationCap, School, CheckCircle2, AlertCircle } from "lucide-react"
 import { USER_ROLES, USER_ROLE_LABELS } from "@/lib/data-static"
 
 export default function RegisterPage() {
@@ -20,7 +20,22 @@ export default function RegisterPage() {
   const [turnstileToken, setTurnstileToken] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const PUBLIC_ROLES = [USER_ROLES.TALENT, USER_ROLES.COMPANY, USER_ROLES.PARTNER];
+  // Tambahkan Meta Canonical sesuai standar project
+  useEffect(() => {
+    const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    link.setAttribute("href", "https://disabilitas.com/daftar");
+    if (!document.head.contains(link)) document.head.appendChild(link);
+  }, []);
+
+  // Memasukkan Campus ke dalam list role yang bisa diakses publik
+  const PUBLIC_ROLES = [
+    USER_ROLES.TALENT, 
+    USER_ROLES.COMPANY, 
+    USER_ROLES.PARTNER, 
+    USER_ROLES.CAMPUS // Tambahkan Role Campus di sini
+  ];
+  
   const filteredRoles = USER_ROLE_LABELS.filter(r => PUBLIC_ROLES.includes(r.id as any));
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -37,7 +52,6 @@ export default function RegisterPage() {
     setIsError(false)
 
     const normalizedEmail = email.toLowerCase().trim()
-    // HARDCODE URL untuk menjamin kecocokan dengan Whitelist Supabase
     const finalRedirect = "https://www.disabilitas.com/konfirmasi"
 
     try {
@@ -93,6 +107,9 @@ export default function RegisterPage() {
         <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">
           Daftar Akun Baru
         </h1>
+        <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+          Bergabung dalam Ekosistem Inklusif
+        </p>
       </div>
 
       <div className="mt-8 px-4 sm:mx-auto sm:w-full sm:max-w-md">
@@ -126,13 +143,14 @@ export default function RegisterPage() {
                     {role === USER_ROLES.TALENT && <User size={18} />}
                     {role === USER_ROLES.COMPANY && <Building2 size={18} />}
                     {role === USER_ROLES.PARTNER && <GraduationCap size={18} />}
+                    {role === USER_ROLES.CAMPUS && <School size={18} className="text-blue-600" />}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="full_name" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Nama Lengkap atau Instansi
+                  {role === USER_ROLES.CAMPUS ? "Nama Perguruan Tinggi" : "Nama Lengkap atau Instansi"}
                 </label>
                 <input 
                   id="full_name"
@@ -140,14 +158,14 @@ export default function RegisterPage() {
                   required 
                   value={fullName} 
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Nama sesuai identitas..."
+                  placeholder={role === USER_ROLES.CAMPUS ? "Contoh: Universitas Indonesia" : "Nama sesuai identitas..."}
                   className="block w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-600" 
                 />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="email" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Alamat Email Aktif
+                  Alamat Email {role === USER_ROLES.CAMPUS ? "Resmi Kampus" : "Aktif"}
                 </label>
                 <input 
                   id="email"
@@ -204,7 +222,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <p className="text-lg font-black uppercase italic tracking-tighter">Pendaftaran Berhasil</p>
                 <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest">
-                  <strong>{msg}</strong>
+                  {msg}
                 </p>
               </div>
               <div className="pt-4">
@@ -219,6 +237,7 @@ export default function RegisterPage() {
                 Sudah punya akun? Masuk di sini
               </Link>
           </nav>
+          
         </div>
       </div>
     </main>
