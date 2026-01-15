@@ -1,399 +1,308 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
-  Building2, Briefcase, Users, Star, 
-  TrendingUp, AlertCircle, CheckCircle2, 
-  LayoutDashboard, FileText, Settings, Search,
-  ShieldCheck, LogOut, MapPin, Zap, ExternalLink, Share2,
-  MessageSquare, Quote, Accessibility
+  Building2, Briefcase, Users, Star, TrendingUp, AlertCircle, CheckCircle2, 
+  LayoutDashboard, FileText, Settings, Search, ShieldCheck, MapPin, Zap, 
+  ExternalLink, Share2, PieChart, GraduationCap, ArrowRight, Accessibility
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import html2canvas from "html2canvas";
 
-// SINKRONISASI ACTIONS
-import { getCompanyStats } from "@/lib/actions/company";
-import { getCompanyRatingAggregate } from "@/lib/actions/ratings";
-
-// IMPORT MODUL ANAK
+// Modul Anak
 import ProfileEditor from "./company/profile-editor";
 import JobManager from "./company/job-manager";
 import ApplicantTracker from "./company/applicant-tracker";
 import RecruitmentSimulator from "./company/recruitment-simulator";
 import AccountSettings from "./company/account-settings";
 
+// Helper & Actions
+import { handleShareInclusionCard } from "./company/share-helper";
+import { getCompanyStats } from "@/lib/actions/company";
+import { getCompanyRatingAggregate } from "@/lib/actions/ratings";
+
 export default function CompanyDashboard({ user, company: initialCompany }: { user: any, company: any }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [company, setCompany] = useState(initialCompany);
-  const [stats, setStats] = useState({ jobCount: 0, applicantCount: 0 });
+  const [stats, setStats] = useState({ jobCount: 0, applicantCount: 0, pendingAction: 0 });
   const [ratings, setRatings] = useState<any>(null);
-  const [anonReviews, setAnonReviews] = useState<any[]>([]);
   const [trendingSkills, setTrendingSkills] = useState<{skill: string, count: number}[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  
   const [announcement, setAnnouncement] = useState("");
+  
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (user?.id) fetchDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   async function fetchDashboardData() {
     setLoading(true);
     try {
-      const targetId = user?.id;
-      if (!targetId) return;
-
-      // 1. Ambil Profil Terbaru (Direct Database Sync)
-      const { data: latestComp } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("id", targetId)
-        .single();
-
+      // 1. Ambil Profil & Data Agregat Baru (Sync dengan Trigger SQL)
+      const { data: latestComp } = await supabase.from("companies").select("*").eq("id", user.id).single();
       if (latestComp) setCompany(latestComp);
 
-      // 2. Ambil Statistik & Rating
-      const [statsData, ratingData] = await Promise.all([
-        getCompanyStats(targetId),
-        getCompanyRatingAggregate(targetId)
+      // 2. Ambil Statistik Operasional & Ratings
+      const [statsData, ratingData, { count: pendingCount }] = await Promise.all([
+        getCompanyStats(user.id),
+        getCompanyRatingAggregate(user.id),
+        supabase.from("applications").select("*", { count: 'exact', head: true }).eq("company_id", user.id).eq("status", "applied")
       ]);
-      setStats(statsData || { jobCount: 0, applicantCount: 0 });
+      
+      setStats({ ...statsData, pendingAction: pendingCount || 0 });
       setRatings(ratingData);
 
-      // 3. Feedback Anonim
-      const { data: reviews } = await supabase
-        .from("inclusion_ratings")
-        .select("comment_anonymous, created_at")
-        .eq("company_id", targetId)
-        .not("comment_anonymous", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(3);
-      setAnonReviews(reviews || []);
+      // 3. Trending Skills Berbasis Lokasi (Filter Kota)
+      const { data: talentSkills } = await supabase.from("profiles").select("skills").eq("city", latestComp?.location).limit(50);
+      const finalSkills = talentSkills?.length && talentSkills.length > 3 ? talentSkills : (await supabase.from("profiles").select("skills").limit(50)).data;
 
-      // 4. Insight Talenta Sekitar
-      const { data: talentSkills } = await supabase
-        .from("profiles")
-        .select("skills")
-        .eq("city", latestComp?.location || "Jakarta Selatan");
-      
-      if (talentSkills) {
-        const skillCounts: Record<string, number> = {};
-        talentSkills.forEach(t => {
-          t.skills?.forEach((s: string) => {
-            skillCounts[s] = (skillCounts[s] || 0) + 1;
-          });
-        });
-        const sorted = Object.entries(skillCounts)
-          .map(([skill, count]) => ({ skill, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 3);
-        setTrendingSkills(sorted);
+      if (finalSkills) {
+        const counts: Record<string, number> = {};
+        finalSkills.forEach(t => t.skills?.forEach((s: string) => counts[s] = (counts[s] || 0) + 1));
+        setTrendingSkills(Object.entries(counts).map(([skill, count]) => ({ skill, count })).sort((a,b) => b.count - a.count).slice(0, 3));
       }
-    } catch (error) {
-      console.error("Dashboard Fetch Error:", error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) {
+      console.error("Dashboard Sync Error:", err);
+    } finally { setLoading(false); }
   }
 
-  const handleActionSuccess = async (msg: string) => {
-    setAnnouncement(msg);
-    setTimeout(async () => {
-      await fetchDashboardData();
-      setActiveTab("overview");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 300);
-  };
-  // --- LOGIKA PROGRESS KELENGKAPAN PROFIL (UNTUK DATA RISET) ---
-  const calculateCompletion = () => {
-    if (!company || company.is_placeholder) return { score: 0, missing: ["Profil Belum Dibuat"] };
-    
+  // --- LOGIKA 1: KELENGKAPAN PROFIL (RISET) ---
+  const completionData = useMemo(() => {
     const checklist = [
-      { key: 'name', label: 'Nama Instansi', weight: 20 },
-      { key: 'industry', label: 'Sektor Industri', weight: 15 },
-      { key: 'category', label: 'Kategori Instansi', weight: 15 },
-      { key: 'location', label: 'Lokasi/Kota', weight: 15 },
-      { key: 'description', label: 'Deskripsi/Visi Inklusi', weight: 15 },
-      { key: 'master_accommodations_provided', label: 'Data Akomodasi Master', weight: 20 }
+      { key: 'name', weight: 20 }, { key: 'industry', weight: 15 },
+      { key: 'category', weight: 15 }, { key: 'location', weight: 15 },
+      { key: 'description', weight: 15 }, { key: 'master_accommodations_provided', weight: 20 }
     ];
-
     let score = 0;
-    let missing: string[] = [];
-
     checklist.forEach(item => {
-      const value = company[item.key];
-      const isEmpty = !value || (Array.isArray(value) && value.length === 0) || value === "";
-      
-      if (!isEmpty) {
-        score += item.weight;
-      } else {
-        missing.push(item.label);
-      }
+      const val = company?.[item.key];
+      if (val && (Array.isArray(val) ? val.length > 0 : val.trim() !== "")) score += item.weight;
     });
+    return score;
+  }, [company]);
 
-    return { score, missing };
-  };
-
-  // SINKRONISASI DATABASE: Ambil skor langsung dari kolom database Mas
-  const accScore = company?.inclusion_score || 0;
-  const { score: completionScore, missing: missingItems } = calculateCompletion();
-
-  const gap = (() => {
+  // --- LOGIKA 2: KUOTA INKLUSI 1% (REGULASI) ---
+  const inclusionQuota = useMemo(() => {
     const total = company?.total_employees || 0;
     const dis = company?.total_employees_with_disability || 0;
     const mandateMin = Math.ceil(total * 0.01);
     return { 
       percent: total > 0 ? ((dis / total) * 100).toFixed(1) : "0.0", 
-      need: mandateMin > dis ? mandateMin - dis : 0 
+      need: mandateMin > dis ? mandateMin - dis : 0,
+      isCompliant: dis >= mandateMin && total > 0
     };
-  })();
+  }, [company]);
 
-  const handleShareCard = async () => {
-    if (!cardRef.current || isProcessing) return;
-    setIsProcessing(true);
-    setAnnouncement("Sedang memproses kartu inklusi...");
-
-    try {
-      const canvas = await html2canvas(cardRef.current, { 
-        scale: 2, 
-        useCORS: true, 
-        backgroundColor: "#ffffff",
-        logging: false 
-      });
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-      
-      const url = `https://disabilitas.com/perusahaan/${company?.id}`;
-      const score = ratings?.totalAvg ? ratings.totalAvg.toFixed(1) : "0.0";
-      const caption = `Bangga! Instansi kami memiliki Indeks Inklusi ${score}/5.0. Cek profil kami: ${url} #InklusiBisa #DisabilitasBisaWork`;
-
-      if (blob && navigator.share) {
-        const file = new File([blob], `Inclusion_Card_${company?.name || 'Instansi'}.png`, { type: "image/png" });
-        await navigator.share({ title: "Inclusion Identity Card", text: caption, files: [file] });
-      } else {
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`, '_blank');
-      }
-    } catch (err) {
-      console.error("Share failed", err);
-      setAnnouncement("Gagal memproses gambar.");
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleTabChange = (id: string) => {
+    setActiveTab(id);
+    setAnnouncement(`Membuka modul ${id}`);
+    if (headerRef.current) headerRef.current.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const renderOverview = () => (
-    <div className="space-y-8 duration-500 animate-in fade-in">
+    <div className="space-y-8 animate-in fade-in duration-500 text-left">
       
-      {/* 1. PROGRESS WIDGETS (PROFIL & AKSESIBILITAS) */}
+      {/* SECTION 1: KELENGKAPAN & SKOR AKSESIBILITAS */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Widget Kelengkapan Profil */}
-        <section className="rounded-[2.5rem] border-2 border-amber-900/10 bg-amber-50 p-8 shadow-sm">
+        <section className="rounded-[2.5rem] border-2 border-amber-100 bg-amber-50 p-8 shadow-sm">
           <div className="flex items-center gap-6">
-            <div className="relative flex size-20 shrink-0 items-center justify-center">
-              <svg className="size-full -rotate-90">
-                <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-amber-100" />
-                <circle cx="40" cy="40" r="35" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray={219.9} strokeDashoffset={219.9 - (219.9 * completionScore) / 100} className="text-amber-600 transition-all duration-1000" />
-              </svg>
-              <span className="absolute text-sm font-black text-amber-900">{completionScore}%</span>
+            <div className="relative size-20 flex items-center justify-center rounded-full bg-white border-4 border-amber-200 text-xl font-black text-amber-600 italic">
+              {completionData}%
             </div>
             <div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-amber-900">{"Kelengkapan Profil"}</h3>
-              <p className="mt-1 text-[9px] font-bold uppercase text-amber-800/60">{"Data riset instansi"}</p>
-              {completionScore < 100 && (
-                <button onClick={() => setActiveTab("profile")} className="mt-3 text-[9px] font-black uppercase text-amber-700 underline">{"Lengkapi Data"}</button>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-amber-900">Kelengkapan Profil Riset</h3>
+              <p className="text-[9px] font-bold uppercase text-amber-700/60 leading-tight">Data instansi memengaruhi validasi riset nasional.</p>
+              {completionData < 100 && (
+                <button onClick={() => setActiveTab("profile")} className="mt-2 text-[9px] font-black uppercase text-amber-700 underline decoration-2 underline-offset-4">Lengkapi Sekarang</button>
               )}
             </div>
           </div>
         </section>
 
-        {/* Widget Accessibility Score (AMBIL DARI DATABASE) */}
-        <section className="rounded-[2.5rem] border-2 border-blue-900/10 bg-blue-50 p-8 shadow-sm">
+        <section className="rounded-[2.5rem] border-2 border-blue-100 bg-blue-50 p-8 shadow-sm">
           <div className="flex items-center gap-6">
-            <div className="rounded-3xl border-2 border-blue-100 bg-white p-5 text-blue-600">
-              <Accessibility size={32} />
-            </div>
+            <div className="p-5 bg-white rounded-3xl text-blue-600 border-2 border-blue-100 shadow-inner"><Accessibility size={32} /></div>
             <div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-900">{"Accessibility Score"}</h3>
-              <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-black text-blue-600">{accScore}</p>
-                <p className="text-[9px] font-bold uppercase text-blue-400">{"/ 100 Points"}</p>
-              </div>
-              <p className="mt-1 text-[8px] font-bold uppercase tracking-tighter text-blue-800/40">{"Skor Otomatis dari Database"}</p>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-900">Inclusion Score</h3>
+              <p className="text-4xl font-black text-blue-600 italic leading-none mt-1">{company?.inclusion_score || 0}<span className="text-sm text-blue-300">/100</span></p>
+              <p className="text-[8px] font-bold uppercase text-blue-400 mt-1">Berdasarkan penilaian audit sistem</p>
             </div>
           </div>
         </section>
       </div>
 
-      {/* 2. ACTION BUTTONS */}
-      <div className="flex flex-wrap gap-4">
-        <a href={`/perusahaan/${company?.id}`} target="_blank" className="flex flex-1 items-center justify-center gap-3 rounded-2xl border-2 border-slate-900 bg-white px-8 py-4 text-[10px] font-black uppercase shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-50 md:flex-none">
-          <ExternalLink size={18} /> {"Lihat Profil Publik"}
-        </a>
-        <button onClick={handleShareCard} disabled={isProcessing || !company?.id} className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-emerald-600 px-8 py-4 text-[10px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(5,150,105,0.3)] transition-all hover:bg-emerald-700 md:flex-none">
-          <Share2 size={18} /> {isProcessing ? "Memproses..." : "Share Inclusion Card"}
+      {/* SECTION 2: ACTIONABLE PENDING APPLICATIONS */}
+      {stats.pendingAction > 0 && (
+        <button 
+          onClick={() => handleTabChange("applicants")} 
+          className="w-full group flex items-center justify-between rounded-[2.5rem] border-2 border-blue-600 bg-blue-50 p-8 shadow-md hover:bg-blue-100 transition-all"
+          aria-label={`${stats.pendingAction} lamaran baru menunggu. Klik untuk proses.`}
+        >
+          <div className="flex items-center gap-6">
+            <div className="size-16 flex items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg"><AlertCircle size={32} /></div>
+            <div>
+              <h2 className="text-xl font-black uppercase italic text-blue-900 tracking-tighter">Ada {stats.pendingAction} Lamaran Menunggu</h2>
+              <p className="text-[10px] font-bold uppercase text-blue-700/60 tracking-widest">Segera review talenta baru di modul Applicants</p>
+            </div>
+          </div>
+          <ArrowRight className="text-blue-600 group-hover:translate-x-2 transition-transform" />
         </button>
-      </div>
-      {/* 3. TRENDING & RATING INDEX */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        <section className="relative overflow-hidden rounded-[3rem] border-2 border-slate-800 bg-slate-900 p-10 text-white shadow-xl lg:col-span-2">
-          <div className="relative z-10 space-y-6">
-            <div className="flex w-fit items-center gap-2 rounded-full border border-blue-600/30 bg-blue-600/20 px-4 py-1 text-blue-400">
-              <Zap size={14} fill="currentColor" />
-              <p className="text-[9px] font-black uppercase tracking-widest">{"Trending Talent Insight"}</p>
-            </div>
-            <h2 className="text-3xl font-black uppercase italic leading-none tracking-tighter">{"Talenta di Lokasi Anda"}</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {trendingSkills.length > 0 ? trendingSkills.map((s, i) => (
-                <div key={i} className="rounded-2xl border border-white/5 bg-white/5 p-4 text-center">
-                  <p className="mb-1 text-[8px] font-black uppercase text-slate-400">{s.skill}</p>
-                  <p className="text-xl font-black text-blue-400">{s.count}</p>
-                </div>
-              )) : (
-                <p className="text-[10px] italic text-slate-500">{"Mencari data talenta sekitar..."}</p>
-              )}
-            </div>
+      )}
+
+      {/* SECTION 3: AGREGAT AFILIASI (DATA RISET BARU) & KUOTA 1% */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* Total & Gender */}
+        <section className="rounded-[2.5rem] border-2 border-slate-900 bg-slate-900 p-8 text-white shadow-xl">
+          <h3 className="text-[9px] font-black uppercase tracking-widest text-blue-400 opacity-60">Afiliasi Talenta</h3>
+          <p className="text-5xl font-black italic tracking-tighter leading-none mt-2">{company?.total_employees_with_disability || 0}</p>
+          <div className="mt-4 flex gap-4 text-[9px] font-black uppercase text-blue-400">
+            <span className="flex items-center gap-1"><Zap size={10} fill="currentColor"/> M: {company?.stats_talent_gender_map?.male || 0}</span>
+            <span className="flex items-center gap-1"><Zap size={10} fill="currentColor"/> F: {company?.stats_talent_gender_map?.female || 0}</span>
           </div>
         </section>
 
-        <div className="flex flex-col justify-center rounded-[3rem] border-2 border-slate-900 bg-white p-10 text-center shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-          <p className="mb-2 text-[10px] font-black uppercase text-slate-400">{"Inclusion Index"}</p>
-          <h3 className="text-6xl font-black text-slate-900">{ratings ? ratings.totalAvg.toFixed(1) : "0.0"}</h3>
-          <div className="mt-4 flex justify-center gap-1">
-            {[1, 2, 3, 4, 5].map(s => <Star key={s} size={16} className={ratings?.totalAvg >= s ? "fill-amber-500 text-amber-500" : "text-slate-100"} />)}
+        {/* Status Kuota 1% */}
+        <section className={`rounded-[2.5rem] border-2 p-8 shadow-sm ${inclusionQuota.isCompliant ? 'border-emerald-100 bg-emerald-50' : 'border-amber-100 bg-amber-50'}`}>
+          <div className="flex justify-between items-start">
+            <h3 className={`text-[9px] font-black uppercase tracking-widest ${inclusionQuota.isCompliant ? 'text-emerald-600' : 'text-amber-600'}`}>Status Kuota 1%</h3>
+            {inclusionQuota.isCompliant ? <CheckCircle2 size={16} className="text-emerald-600" /> : <AlertCircle size={16} className="text-amber-600" />}
           </div>
-        </div>
+          <p className="text-4xl font-black text-slate-900 mt-1 italic">{inclusionQuota.percent}%</p>
+          <div className="mt-3">
+            {inclusionQuota.need > 0 ? (
+              <p className="text-[9px] font-bold uppercase text-amber-700 leading-tight">Butuh <span className="text-sm font-black underline">{inclusionQuota.need}</span> talenta lagi.</p>
+            ) : (
+              <p className="text-[9px] font-bold uppercase text-emerald-700 leading-tight italic">Kuota Terpenuhi.</p>
+            )}
+          </div>
+        </section>
+
+        {/* Ragam Disabilitas */}
+        <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-6 shadow-sm overflow-hidden">
+          <h3 className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-4 flex items-center gap-2"><PieChart size={14}/> Ragam</h3>
+          <div className="space-y-1 max-h-[85px] overflow-y-auto pr-2 custom-scrollbar">
+            {Object.entries(company?.stats_talent_disability_map || {}).map(([k, v]: any) => (
+              <div key={k} className="flex justify-between text-[10px] font-bold border-b border-slate-50 py-1 uppercase"><span className="text-slate-400">{k}</span><span className="text-slate-900">{v}</span></div>
+            ))}
+          </div>
+        </section>
+
+        {/* Rating Index */}
+        <section className="rounded-[2.5rem] border-2 border-slate-900 bg-white p-6 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] text-center flex flex-col justify-center">
+          <h3 className="text-[9px] font-black uppercase text-slate-400">Inclusion Index</h3>
+          <p className="text-5xl font-black text-slate-900 mt-1">{ratings?.totalAvg?.toFixed(1) || "0.0"}</p>
+          <div className="mt-2 flex justify-center gap-1">{[1,2,3,4,5].map(s => <Star key={s} size={12} className={ratings?.totalAvg >= s ? "fill-amber-400 text-amber-400" : "text-slate-100"} />)}</div>
+        </section>
       </div>
 
-      {/* 4. STATS GRID & LOGIKA KUOTA INKLUSIF (1% MANDATE) */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <div className="flex items-center gap-5 rounded-[2rem] border-2 border-slate-100 bg-white p-6 shadow-sm">
-          <div className="rounded-2xl bg-blue-50 p-4 text-blue-600"><Briefcase size={24} /></div>
+      {/* SECTION 4: TRENDING SKILLS */}
+      <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
+        <div className="mb-8 flex items-center gap-4">
+          <div className="rounded-2xl bg-amber-50 p-3 text-amber-500"><Zap size={24} /></div>
           <div>
-            <p className="text-[9px] font-black uppercase text-slate-400">{"Lowongan"}</p>
-            <p className="text-2xl font-black text-slate-900">{stats.jobCount}</p>
+            <h3 className="text-xl font-black uppercase italic tracking-tighter">Trending Skills di {company?.location || 'Sekitar Anda'}</h3>
+            <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em]">Keahlian talenta disabilitas yang paling banyak tersedia saat ini</p>
           </div>
         </div>
-
-        <div className="flex items-center gap-5 rounded-[2rem] border-2 border-slate-100 bg-white p-6 shadow-sm">
-          <div className="rounded-2xl bg-emerald-50 p-4 text-emerald-600"><Users size={24} /></div>
-          <div>
-            <p className="text-[9px] font-black uppercase text-slate-400">{"Pelamar"}</p>
-            <p className="text-2xl font-black text-slate-900">{stats.applicantCount}</p>
-          </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+          {trendingSkills.map((s, i) => (
+            <div key={i} className="rounded-3xl bg-slate-50 p-8 text-center border-2 border-transparent hover:border-blue-600 hover:bg-white transition-all group">
+              <p className="mb-1 text-[10px] font-black uppercase text-slate-400 group-hover:text-blue-600">{s.skill}</p>
+              <p className="text-4xl font-black text-slate-900">{s.count}</p>
+              <p className="text-[8px] font-bold uppercase text-slate-300">Talenta Tersedia</p>
+            </div>
+          ))}
         </div>
-
-        {/* LOGIKA KUOTA 1% YANG DIPERBAIKI */}
-        <div className="flex items-center gap-5 rounded-[2rem] border-2 border-slate-100 bg-white p-6 shadow-sm md:col-span-2">
-          <div className={`rounded-2xl p-4 ${gap.need <= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-            {gap.need <= 0 ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-          </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-black uppercase text-slate-400">{"Status Kuota Inklusi (Min. 1%)"}</p>
-            <div className="flex items-center justify-between">
-              <p className="text-xl font-black text-slate-900">
-                {gap.need <= 0 ? "Sudah Terpenuhi" : `Butuh ${gap.need} Talenta Lagi`}
-              </p>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-[9px] font-bold uppercase text-slate-600">
-                {gap.percent}% Disabilitas
-              </span>
-            </div>
-            <p className="mt-1 text-[8px] font-bold uppercase italic tracking-tighter text-slate-400">
-              {gap.need <= 0 
-                ? "Bagus! Teruskan rekrutmen melampaui batas minimum untuk inklusivitas total." 
-                : "Ayo capai ambang batas 1% sebagai langkah awal kepatuhan inklusi."}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* HIDDEN INCLUSION CARD - HANYA UNTUK GENERATE GAMBAR SHARE */}
-      <div className="pointer-events-none fixed left-[-9999px] top-[-9999px] opacity-0" aria-hidden="true">
-        <div ref={cardRef} className="flex h-[450px] w-[800px] flex-col justify-between rounded-[4rem] border-[16px] border-slate-900 bg-white p-12 font-sans">
-          <div className="flex items-center justify-between border-b-4 border-blue-600 pb-6">
-            <div className="flex items-center gap-4">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-slate-900 text-xl font-black italic text-white">{"D"}</div>
-              <h2 className="text-2xl font-black uppercase italic tracking-tighter text-blue-600">{"disabilitas.com"}</h2>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="rounded-full bg-blue-600 px-5 py-1.5 text-[10px] font-black uppercase text-white">{"Acc. Score: "}{accScore}</span>
-              <span className="rounded-full bg-emerald-500 px-5 py-1.5 text-[10px] font-black uppercase text-white">{"Verified Partner"}</span>
-            </div>
-          </div>
-          <div className="flex flex-1 items-center justify-between py-10">
-            <div className="space-y-2">
-              <p className="text-4xl font-black uppercase leading-none tracking-tighter text-slate-900">{company?.name || "Instansi"}</p>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">{company?.industry || "Sektor Industri"}</p>
-              <div className="mt-8 flex gap-10">
-                <div><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{"Inclusion Index"}</p><p className="text-3xl font-black">{ratings?.totalAvg.toFixed(1) || "0.0"}</p></div>
-                <div><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{"Quota Status"}</p><p className="text-3xl font-black">{gap.percent}{"%"}</p></div>
-              </div>
-            </div>
-            <div className="rounded-[2rem] border-4 border-slate-100 bg-slate-50 p-5 shadow-sm">
-              {company?.id && <QRCodeSVG value={`https://disabilitas.com/perusahaan/${company.id}`} size={120} />}
-            </div>
-          </div>
-          <div className="flex items-center justify-between border-t-2 border-slate-100 pt-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
-            <p>{"Inclusion Identity Card — © 2026"}</p>
-            <p className="italic text-blue-600">{"#InklusiBisa #DisabilitasBisaWork"}</p>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
 
-  if (loading) return (
-    <div className="flex flex-col items-center gap-4 p-20 text-center">
-      <div className="size-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-      <p className="animate-pulse text-[10px] font-black uppercase italic tracking-widest text-slate-400">{"MENGHUBUNGKAN DATA RISET..."}</p>
-    </div>
-  );
+  if (loading) return <div role="status" className="p-40 text-center font-black animate-pulse text-slate-400 uppercase italic tracking-widest">Sinkronisasi Pusat Riset Instansi...</div>;
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-20 font-sans text-slate-900">
+    <div className="min-h-screen bg-[#FDFDFD] pb-24 text-slate-900">
       <div className="mx-auto max-w-7xl space-y-8 px-4 pt-8">
         <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
-        <header className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-2 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] lg:flex-row">
-          <div className="flex items-center gap-6">
-            <div className="flex size-20 shrink-0 items-center justify-center rounded-3xl bg-slate-900 text-white shadow-lg"><Building2 size={36} /></div>
+        {/* Header Dashboard */}
+        <header className="flex flex-col items-center justify-between gap-10 rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:flex-row">
+          <div className="flex items-center gap-8 text-left">
+            <div className="flex size-24 shrink-0 items-center justify-center rounded-[2rem] bg-slate-900 text-white shadow-2xl"><Building2 size={48} /></div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 ref={headerRef} tabIndex={-1} className="text-2xl font-black uppercase italic tracking-tighter focus:outline-none">
-                  {company?.name || "Instansi Baru"}
-                </h1>
-                {company?.is_verified && <CheckCircle2 className="text-blue-600" size={20} />}
+                <h1 ref={headerRef} tabIndex={-1} className="text-3xl font-black uppercase italic tracking-tighter focus:outline-none">{company?.name || "Instansi"}</h1>
+                {company?.is_verified && <CheckCircle2 className="text-blue-600" size={24} />}
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">{company?.industry || "Menunggu Data Profil"}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 mt-1">{company?.industry} | {company?.location}</p>
             </div>
           </div>
-          <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] border border-slate-100 bg-slate-50 p-2 shadow-inner">
+          <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] bg-slate-50 p-2 shadow-inner border-2 border-slate-100" aria-label="Menu Utama">
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
-              { id: "simulator", label: "Simulator", icon: Search },
-              { id: "jobs", label: "Jobs", icon: FileText },
               { id: "applicants", label: "Applicants", icon: Users },
+              { id: "jobs", label: "Jobs", icon: FileText },
+              { id: "simulator", label: "Simulator", icon: Search },
               { id: "profile", label: "Profile", icon: Settings },
               { id: "settings", label: "Account", icon: ShieldCheck },
-            ].map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-3 rounded-2xl px-6 py-3 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'scale-105 bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-white hover:text-slate-900'}`}>
-                {<tab.icon size={16} />} {tab.label}
+            ].map(tab => (
+              <button key={tab.id} onClick={() => handleTabChange(tab.id)} aria-current={activeTab === tab.id ? "page" : undefined}
+                className={`flex items-center gap-3 rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-white'}`}>
+                <tab.icon size={16} /> {tab.label}
+                {tab.id === "applicants" && stats.pendingAction > 0 && <span className="ml-2 flex size-5 items-center justify-center rounded-full bg-blue-600 text-[8px] text-white animate-pulse">{stats.pendingAction}</span>}
               </button>
             ))}
           </nav>
         </header>
 
-        <main className="min-h-[70vh]">
+        {/* Main Area */}
+        <main id="main-content" className="min-h-[60vh]">
           {activeTab === "overview" && renderOverview()}
-          {activeTab === "simulator" && <RecruitmentSimulator company={company} />}
-          {activeTab === "jobs" && <JobManager company={company} onSuccess={() => handleActionSuccess(`{"Lowongan diperbarui!"}`)} />}
           {activeTab === "applicants" && <ApplicantTracker company={company} />}
-          {activeTab === "profile" && <ProfileEditor company={company} user={user} onSuccess={() => handleActionSuccess(`{"Profil diperbarui!"}`)} />}
-          {activeTab === "settings" && <AccountSettings user={user} onSuccess={() => handleActionSuccess(`{"Akun diperbarui!"}`)} />}
+          {activeTab === "jobs" && <JobManager company={company} onSuccess={fetchDashboardData} />}
+          {activeTab === "simulator" && <RecruitmentSimulator company={company} />}
+          {activeTab === "profile" && <ProfileEditor company={company} user={user} onSuccess={fetchDashboardData} />}
+          {activeTab === "settings" && <AccountSettings user={user} onSuccess={fetchDashboardData} />}
         </main>
+
+        {/* Floating Share Button */}
+        {activeTab === "overview" && (
+          <div className="fixed bottom-10 right-10 z-50">
+            <button onClick={() => handleShareInclusionCard(cardRef, company, ratings, setIsProcessing, setAnnouncement)} disabled={isProcessing}
+              className="group flex items-center gap-4 rounded-full bg-emerald-600 p-2 pr-8 text-white shadow-2xl hover:bg-slate-900 transition-all active:scale-95 disabled:opacity-50">
+              <div className="size-14 flex items-center justify-center rounded-full bg-white text-emerald-600 shadow-inner group-hover:text-slate-900"><Share2 size={24} /></div>
+              <div className="text-left"><p className="text-[10px] font-black uppercase leading-none">Share Card</p><p className="text-[8px] font-bold uppercase opacity-60">Inclusion Identity</p></div>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Hidden Capture Area for Share Card */}
+      <div className="pointer-events-none fixed left-[-9999px] top-[-9999px] opacity-0" aria-hidden="true">
+        <div ref={cardRef} className="flex h-[450px] w-[800px] flex-col justify-between border-[16px] border-slate-900 bg-white p-12 text-left font-sans">
+            <div className="flex items-center justify-between border-b-4 border-blue-600 pb-6">
+              <h2 className="text-3xl font-black uppercase italic text-blue-600 tracking-tighter leading-none">disabilitas.com</h2>
+              <span className="rounded-full bg-emerald-500 px-5 py-2 text-[10px] font-black uppercase text-white shadow-lg">Verified Partner</span>
+            </div>
+            <div className="flex flex-1 items-center gap-10 py-10">
+              <div className="flex size-32 shrink-0 items-center justify-center rounded-[2rem] bg-slate-900 text-5xl font-black italic text-white shadow-2xl">{company?.name?.charAt(0)}</div>
+              <div className="space-y-2 text-left">
+                <p className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">{company?.name}</p>
+                <p className="text-lg font-bold uppercase tracking-widest text-blue-600 leading-none">{company?.industry}</p>
+                <div className="mt-6 flex gap-10 text-left">
+                  <div><p className="text-[10px] font-black uppercase text-slate-400">Inclusion Index</p><p className="text-3xl font-black">{ratings?.totalAvg?.toFixed(1) || "0.0"}</p></div>
+                  <div><p className="text-[10px] font-black uppercase text-slate-400">Affiliation</p><p className="text-3xl font-black">{company?.total_employees_with_disability || 0}</p></div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between border-t-2 border-slate-100 pt-6">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Inclusion Card — 2026</p>
+              <div className="rounded-2xl border-4 border-slate-900 bg-white p-1 shadow-lg"><QRCodeSVG value={`https://disabilitas.com/perusahaan/${company?.id}`} size={60} /></div>
+            </div>
+        </div>
       </div>
     </div>
   );
