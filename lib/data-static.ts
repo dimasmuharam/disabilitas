@@ -15,7 +15,7 @@ export const USER_ROLE_LABELS = [
   { id: USER_ROLES.TALENT, label: "Talenta Disabilitas" },
   { id: USER_ROLES.COMPANY, label: "Perusahaan / Pemberi Kerja" },
   { id: USER_ROLES.CAMPUS, label: "Perguruan Tinggi" },
-  { id: USER_ROLES.PARTNER, label: "LMitra Pelatihan" },
+  { id: USER_ROLES.PARTNER, label: "Mitra Pelatihan" },
   { id: USER_ROLES.GOVERNMENT, label: "Instansi Pemerintah" },
   { id: USER_ROLES.ADMIN, label: "Super Admin" },
  
