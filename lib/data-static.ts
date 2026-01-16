@@ -295,21 +295,26 @@ export const STUDY_RELEVANCE_LEVELS = [
   "Belum Bekerja"
 ];
 export const ACCOMMODATION_TYPES = [
-  "Aksesibilitas Fisik (Ramp, Lift, Selasar Luas)",
-  "Toilet Aksesibel & Parkir Prioritas Disabilitas",
-  "Jalur Pemandu (Guiding Block) & Penanda Tekstur",
-  "Dokumen Digital Aksesibel (Screen Reader Friendly)",
-  "Software Alat Bantu (Screen Reader, Magnifier, STT)",
-  "Materi Format Braille, Audio, atau Cetak Besar",
-  "Layanan Juru Bahasa Isyarat (JBI) atau Notulensi Real-time",
-  "Sistem Pengumuman Visual & Audio (Prosedur Darurat/HSE)",
-  "Jam Kerja Fleksibel (Untuk Terapi atau Kondisi Kesehatan)",
-  "Waktu Kerja atau Pengerjaan Tugas Tambahan",
-  "Modifikasi Deskripsi Tugas (Job Carving) atau Kurikulum",
-  "Pendampingan Kerja (Job Coach, Buddy, atau Mentoring)",
-  "Ruang Kerja/Belajar Tenang (Sensory-friendly Room)",
-  "Lampu Penerangan Tinggi & Kontras (Dukungan Low Vision)"
-].sort();
+  // KLASTER 1: AKSESIBILITAS FISIK (BOBOT 30%)
+  "Ramp, Lift, dan Jalur Mobilitas Aksesibel",
+  "Toilet Khusus Disabilitas yang Standar",
+  "Jalur Pemandu (Guiding Block) dan Penanda Tekstur",
+  "Area Parkir dan Drop-off Prioritas Disabilitas",
+  "Ruang Belajar Tenang dan Pencahayaan Kontras",
+
+  // KLASTER 2: AKSESIBILITAS DIGITAL (BOBOT 40% - SALES TRIGGER)
+  "Website Portal Kampus Standar WCAG 2.1",
+  "LMS (Learning Management System) Aksesibel",
+  "Dokumen Digital Kuliah Format EPUB/Tagged-PDF",
+  "Lisensi Software Alat Bantu (Screen Reader/Magnifier)",
+  "Sistem Informasi Pengumuman Visual dan Audio",
+
+  // KLASTER 3: AKOMODASI AKADEMIK & OUTPUT (BOBOT 30%)
+  "Unit Layanan Disabilitas (ULD) Resmi Institusi",
+  "Layanan Juru Bahasa Isyarat dan Notulensi Real-time",
+  "Modifikasi Kurikulum dan Metode Ujian Fleksibel",
+  "Pendampingan Karir dan Transisi Kerja (Job Coach)"
+];
 
 export const DISABILITY_TOOLS = [
   "Screen Reader - NVDA",
