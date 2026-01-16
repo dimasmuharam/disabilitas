@@ -76,22 +76,26 @@ export default function CampusDashboard({ user }: { user: any }) {
   };
 
 const handleShare = () => {
-  const data = {
-    name: campus?.name || "Institusi",
-    total: currentStats.total,
-    rate: currentStats.rate,
-    score: campus?.inclusion_score || 0,
-    url: `https://disabilitas.com/campus/${campus?.id}`
-  };
+    const data = {
+      name: campus?.name || "Institusi",
+      total: currentStats.total,
+      rate: currentStats.rate,
+      score: campus?.inclusion_score || 0,
+      url: `https://disabilitas.com/campus/${campus?.id}`
+    };
 
-  // Perbaikan Kritis: Cek ketersediaan window/navigator untuk lingkungan Next.js
-  if (typeof window !== "undefined" && navigator.share) {
-    shareNative(data);
-  } else {
-    shareToWhatsApp(data);
-  }
-};
-  if (loading) return (
+    // Solusi Type-Safe untuk menghapus error build:
+    const canNativeShare = typeof window !== "undefined" && 
+                           typeof navigator !== "undefined" && 
+                           Boolean(navigator.share);
+
+    if (canNativeShare) {
+      shareNative(data);
+    } else {
+      shareToWhatsApp(data);
+    }
+  };
+if (loading) return (
     <div role="status" aria-live="polite" className="flex min-h-screen flex-col items-center justify-center font-black uppercase italic tracking-tighter text-slate-400 animate-pulse">
       <Activity className="mb-4 animate-spin text-emerald-500" size={48} />
       Sinkronisasi Data Almamater...
