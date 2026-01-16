@@ -1,15 +1,15 @@
 import html2canvas from "html2canvas";
 
 /**
- * LOGIKA GENERATE & SHARE INCLUSION CARD
- * Memisahkan proses rendering gambar dari komponen UI Utama
+ * LOGIKA BERBAGI KARTU INKLUSI (SMART & VIRAL)
  */
 export const handleShareInclusionCard = async (
   cardRef: React.RefObject<HTMLDivElement>, 
   company: any, 
   ratings: any,
   setIsProcessing: (val: boolean) => void,
-  setAnnouncement: (msg: string) => void
+  setAnnouncement: (msg: string) => void,
+  mode: "native" | "whatsapp" = "native"
 ) => {
   if (!cardRef.current) return;
   
@@ -28,24 +28,24 @@ export const handleShareInclusionCard = async (
     
     const url = `https://disabilitas.com/perusahaan/${company?.id}`;
     const score = ratings?.totalAvg ? ratings.totalAvg.toFixed(1) : "0.0";
-    const caption = `Bangga! Instansi kami memiliki Indeks Inklusi ${score}/5.0 di Disabilitas.com. Cek profil kami: ${url} #InklusiBisa #DisabilitasBisaWork`;
+    const caption = `Bangga! Instansi kami ${company?.name} memiliki Indeks Inklusi ${score}/5.0. Kami berkomitmen menciptakan ruang kerja yang aksesibel bagi semua talenta. Cek profil resmi kami di: ${url} #InklusiBisa #DisabilitasBisaWork #AksesibilitasTotal`;
 
-    if (blob && navigator.share) {
-      const file = new File([blob], `Inclusion_Card_${company?.name || 'Instansi'}.png`, { type: "image/png" });
+    if (mode === "native" && blob && navigator.share) {
+      const file = new File([blob], `Inclusion_Card_${company?.name}.png`, { type: "image/png" });
       await navigator.share({ 
         title: "Inclusion Identity Card", 
         text: caption, 
         files: [file] 
       });
-      setAnnouncement("Berhasil membuka menu berbagi.");
     } else {
-      // Fallback ke WhatsApp jika navigator.share tidak didukung
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`, '_blank');
-      setAnnouncement("Membuka WhatsApp untuk berbagi.");
+      // Fallback/Direct WhatsApp (Sangat berguna untuk Desktop)
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(caption)}`;
+      window.open(waUrl, '_blank');
+      setAnnouncement("Membuka WhatsApp untuk berbagi profil.");
     }
   } catch (err) {
     console.error("Share failed", err);
-    setAnnouncement("Gagal memproses gambar kartu inklusi.");
+    setAnnouncement("Gagal memproses kartu inklusi.");
   } finally {
     setIsProcessing(false);
   }
