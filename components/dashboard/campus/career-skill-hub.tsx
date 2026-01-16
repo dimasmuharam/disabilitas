@@ -217,17 +217,5 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
         </section>
       </div>
 
-      {/* STRATEGIC RESEARCH NOTE (BRIN PERSPECTIVE) */}
-      <footer className="mt-10 rounded-[2.5rem] border-2 border-dashed border-slate-200 p-10 text-center">
-        <div className="mx-auto max-w-2xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">Advanced Research Infrastructure</p>
-          <p className="mt-4 text-xs italic font-medium text-slate-400 leading-relaxed">
-            Modul ini melacak efektivitas kolaborasi antara Perguruan Tinggi dan Mitra Industri. 
-            Data yang dikumpulkan akan menjadi basis riset nasional mengenai "Masa Tunggu Kerja (Waiting Period)" 
-            alumni disabilitas berdasarkan intervensi ULD.
-          </p>
-        </div>
-      </footer>
-    </div>
   );
 }
