@@ -1,4 +1,4 @@
-import { ImageResponse } from 'next/og';
+import { ImageResponse } from '@vercel/og';
 import { supabase } from '@/lib/supabase';
 
 export const runtime = 'edge';
