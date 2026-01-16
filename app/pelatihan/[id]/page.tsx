@@ -52,10 +52,10 @@ export default async function TrainingPage({ params }: PageProps) {
   const skills = parseArray(training.provided_skills);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans text-left">
+    <div className="min-h-screen bg-[#FDFDFD] pb-24 text-left font-sans">
       <nav className="sticky top-0 z-50 border-b-2 border-slate-100 bg-white/90 p-4 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
-          <Link href="/pelatihan" className="flex items-center gap-2 text-[10px] font-black uppercase italic text-slate-400 hover:text-blue-600 transition-all">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <Link href="/pelatihan" className="flex items-center gap-2 text-[10px] font-black uppercase italic text-slate-400 transition-all hover:text-blue-600">
             <ArrowLeft size={16} /> Kembali ke Pelatihan
           </Link>
         </div>

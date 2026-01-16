@@ -134,7 +134,7 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 text-left">
+    <div className="space-y-8 text-left duration-500 animate-in fade-in">
       {/* SCREEN READER ANNOUNCEMENT */}
       <div className="sr-only" aria-live="polite">
         {announcement}
@@ -146,7 +146,7 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
           <button onClick={onBack} className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 transition-all hover:text-slate-900 focus:outline-blue-600">
             <ArrowLeft size={16} /> Kembali
           </button>
-          <h1 ref={headingRef} tabIndex={-1} className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 outline-none leading-none">
+          <h1 ref={headingRef} tabIndex={-1} className="text-3xl font-black uppercase italic leading-none tracking-tighter text-slate-900 outline-none">
             Tracer Impact & Kelulusan
           </h1>
         </div>
@@ -170,7 +170,7 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
             statusMessage.type === 'success' ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-red-500 bg-red-50 text-red-900'
           }`}
         >
-          <div className="flex items-center gap-3 font-black uppercase italic text-sm">
+          <div className="flex items-center gap-3 text-sm font-black uppercase italic">
             {statusMessage.type === 'success' ? <CheckCircle2 size={24}/> : <AlertCircle size={24}/>}
             {statusMessage.text}
           </div>
@@ -181,10 +181,10 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
       {/* BULK CONTROL BAR */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] bg-slate-900 p-6 text-white shadow-xl">
         <div className="flex items-center gap-4">
-          <label className="flex cursor-pointer select-none items-center gap-3 text-[10px] font-black italic uppercase">
+          <label className="flex cursor-pointer select-none items-center gap-3 text-[10px] font-black uppercase italic">
             <input 
               type="checkbox" 
-              className="size-8 rounded-lg border-2 border-white bg-transparent accent-blue-500 cursor-pointer"
+              className="size-8 cursor-pointer rounded-lg border-2 border-white bg-transparent accent-blue-500"
               checked={selectedIds.length === filteredTrainees.filter(t => t.status === 'accepted').length && filteredTrainees.length > 0}
               onChange={() => {
                 const candidates = filteredTrainees.filter(t => t.status === 'accepted').map(t => t.id);
@@ -197,7 +197,7 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
         <button 
           disabled={selectedIds.length === 0 || processing}
           onClick={handleBulkGraduation}
-          className="flex items-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-[10px] font-black uppercase shadow-lg transition-all hover:bg-emerald-400 disabled:opacity-20 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 rounded-xl bg-emerald-500 px-8 py-4 text-[10px] font-black uppercase shadow-lg transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-20"
         >
           {processing ? <Loader2 className="animate-spin" size={14}/> : <Award size={14}/>}
           Tandai Lulus & Terbitkan Sertifikat
@@ -207,7 +207,7 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
       {/* LIST DATA TALENTA */}
       <div className="space-y-4">
         {loading ? (
-          <div className="py-20 text-center font-black uppercase italic text-slate-300 animate-pulse">Menghubungkan Database...</div>
+          <div className="animate-pulse py-20 text-center font-black uppercase italic text-slate-300">Menghubungkan Database...</div>
         ) : filteredTrainees.length > 0 ? filteredTrainees.map((item) => (
           <div 
             key={item.id} 
@@ -231,12 +231,12 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
               )}
               
               <div className="space-y-1">
-                <h3 className="text-2xl font-black italic leading-none uppercase tracking-tighter text-slate-900">{item.profiles?.full_name}</h3>
+                <h3 className="text-2xl font-black uppercase italic leading-none tracking-tighter text-slate-900">{item.profiles?.full_name}</h3>
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-[9px] font-black italic uppercase text-blue-600">{item.trainings?.title}</span>
+                  <span className="text-[9px] font-black uppercase italic text-blue-600">{item.trainings?.title}</span>
                   <span className="border-l-2 border-slate-200 pl-3 text-[9px] font-bold uppercase text-slate-400">{item.profiles?.disability_type}</span>
                 </div>
-                <div className="mt-2 inline-block rounded-lg bg-slate-100 px-3 py-1 text-[8px] font-black italic uppercase text-slate-500">
+                <div className="mt-2 inline-block rounded-lg bg-slate-100 px-3 py-1 text-[8px] font-black uppercase italic text-slate-500">
                   Status Karir: <strong className={item.profiles?.career_status === "Job Seeker" ? "text-orange-600" : "text-emerald-600"}>{item.profiles?.career_status}</strong>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
             </div>
           </div>
         )) : (
-          <div className="rounded-[3rem] border-4 border-dashed border-slate-100 py-32 text-center text-slate-200 uppercase font-black italic">
+          <div className="rounded-[3rem] border-4 border-dashed border-slate-100 py-32 text-center font-black uppercase italic text-slate-200">
             <Info className="mx-auto mb-4 opacity-20" size={48}/>
             Data alumni tidak ditemukan
           </div>
@@ -273,7 +273,7 @@ export default function TalentTracer({ partnerId, partnerName, onBack }: TalentT
 
       <div className="flex items-start gap-4 rounded-3xl bg-blue-600 p-6 text-white shadow-2xl">
         <ShieldCheck className="shrink-0 text-blue-200" />
-        <p className="text-left text-[10px] font-bold uppercase leading-relaxed tracking-widest opacity-90 italic">
+        <p className="text-left text-[10px] font-bold uppercase italic leading-relaxed tracking-widest opacity-90">
           <strong>SOP Riset:</strong> Menandai lulus akan otomatis mensinkronisasi data ke profil talenta dan menerbitkan sertifikat digital yang sah dalam ekosistem.
         </p>
       </div>

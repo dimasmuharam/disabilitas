@@ -94,26 +94,26 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
     <div className="mx-auto max-w-5xl space-y-10 pb-20 duration-500 animate-in fade-in">
       {/* HEADER NAV */}
       <div className="mb-10 flex items-center justify-between border-b-4 border-slate-900 pb-6">
-        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
+        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-slate-900">
           <ArrowLeft size={16} /> Batal & Kembali
         </button>
         <div className="text-right text-slate-900">
-          <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Profil Institusi Mitra</h2>
+          <h2 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Profil Institusi Mitra</h2>
           <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-blue-600">Lengkapi Profil Institusi untuk Menjangkau Talenta Inklusif yang Terafiliasi dengan Anda</p>
         </div>
       </div>
 
       <form onSubmit={handleSave} className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2 text-left">
+        <div className="space-y-8 text-left lg:col-span-2">
           {/* IDENTITAS UTAMA */}
-          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8">
-            <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-600 italic">
+          <section className="space-y-8 rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+            <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-blue-600">
               <Building2 size={20} /> Kredensial Resmi
             </h3>
             
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               {/* NAMA PENYELENGGARA */}
-              <div className="md:col-span-2 space-y-3">
+              <div className="space-y-3 md:col-span-2">
                 <label id="inst-name-label" htmlFor="inst-name" className="ml-1 text-[10px] font-black uppercase text-slate-400">Nama Lembaga Pelatihan (List Resmi)</label>
                 {!isCustomName ? (
                   <div className="relative">
@@ -135,9 +135,9 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                     >
                       <option value="">-- Pilih Lembaga --</option>
                       {TRAINING_PARTNERS.map(inst => <option key={inst} value={inst}>{inst}</option>)}
-                      <option value="LAINNYA" className="text-blue-600 font-black italic">+ TAMBAHKAN NAMA BARU</option>
+                      <option value="LAINNYA" className="font-black italic text-blue-600">+ TAMBAHKAN NAMA BARU</option>
                     </select>
-                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
+                    <ChevronDown className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                   </div>
                 ) : (
                   <div className="space-y-3 animate-in zoom-in-95">
@@ -150,7 +150,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                       onChange={(e) => setFormData({...formData, manual_name: e.target.value})}
                       required
                     />
-                    <button type="button" onClick={() => setIsCustomName(false)} className="text-[9px] font-black uppercase text-blue-600 underline ml-1">
+                    <button type="button" onClick={() => setIsCustomName(false)} className="ml-1 text-[9px] font-black uppercase text-blue-600 underline">
                       Pilih dari Daftar Resmi
                     </button>
                   </div>
@@ -158,7 +158,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
               </div>
 
               {/* WEBSITE RESMI (FIX: SEBELUMNYA TIDAK ADA) */}
-              <div className="md:col-span-2 space-y-3">
+              <div className="space-y-3 md:col-span-2">
                 <label htmlFor="inst-website" className="ml-1 text-[10px] font-black uppercase text-slate-400">Website Resmi Institusi</label>
                 <div className="relative">
                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
@@ -188,7 +188,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                     <option value="">Pilih Kota</option>
                     {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
                   </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
+                  <ChevronDown className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 </div>
               </div>
 
@@ -205,7 +205,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
               </div>
 
               {/* VISI/DESKRIPSI */}
-              <div className="md:col-span-2 space-y-3">
+              <div className="space-y-3 md:col-span-2">
                 <label htmlFor="inst-desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Mengenai Institusi Anda</label>
                 <textarea 
                   id="inst-desc"
@@ -224,10 +224,10 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
         <div className="space-y-8">
           <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
             <legend className="sr-only">Akomodasi Aksesibilitas yang Tersedia</legend>
-            <h3 id="audit-title" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-blue-400">
+            <h3 id="audit-title" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase italic tracking-widest text-blue-400">
               <ShieldCheck size={18} /> Akomodasi Aksesibilitas yang Tersedia
             </h3>
-            <div className="max-h-[380px] space-y-3 overflow-y-auto pr-2 no-scrollbar">
+            <div className="no-scrollbar max-h-[380px] space-y-3 overflow-y-auto pr-2">
               {ACCOMMODATION_TYPES.map((item, idx) => {
                 const isSelected = formData.master_accommodations_provided.includes(item);
                 return (
@@ -242,7 +242,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                     <span id={`opt-acc-${idx}`} className={`text-[9px] font-black uppercase leading-tight tracking-widest ${isSelected ? "text-white" : "text-slate-500"}`}>
                       {item}
                     </span>
-                    {isSelected && <CheckCircle2 className="shrink-0 text-blue-400 ml-auto" size={14} />}
+                    {isSelected && <CheckCircle2 className="ml-auto shrink-0 text-blue-400" size={14} />}
                   </label>
                 );
               })}
@@ -260,7 +260,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
             <button 
               type="submit" 
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 disabled:opacity-50 active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? "SINKRONISASI..." : (
                 <>

@@ -13,7 +13,7 @@ export default function KampusLandingPage() {
               <div className="inline-block rounded-xl border-4 border-slate-900 bg-yellow-400 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                 Institutional Partnership
               </div>
-              <h1 className="text-5xl font-black uppercase italic tracking-tighter sm:text-6xl md:text-7xl leading-none">
+              <h1 className="text-5xl font-black uppercase italic leading-none tracking-tighter sm:text-6xl md:text-7xl">
                 Digitalisasi Unit Layanan Disabilitas
               </h1>
               <p className="max-w-xl text-lg font-bold uppercase tracking-widest text-emerald-50">
@@ -47,17 +47,17 @@ export default function KampusLandingPage() {
       </section>
 
       {/* SECTION RANKING PREVIEW (The Hook) */}
-      <section className="bg-slate-50 py-20 border-b-4 border-slate-100">
+      <section className="border-b-4 border-slate-100 bg-slate-50 py-20">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-white p-12 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:flex-row">
             <div className="text-left md:w-2/3">
               <h2 className="text-3xl font-black uppercase italic tracking-tighter">National Inclusion Index 2026</h2>
-              <p className="mt-4 text-lg font-medium text-slate-500 italic leading-relaxed">
+              <p className="mt-4 text-lg font-medium italic leading-relaxed text-slate-500">
                 Cek posisi Universitas Anda dalam standar inklusivitas nasional. Kami mengukur aksesibilitas fisik, kualitas infrastruktur digital, dan keterserapan kerja alumni.
               </p>
             </div>
             <Link href="/kampus/ranking" className="group flex items-center gap-4 rounded-2xl bg-emerald-600 px-8 py-5 text-sm font-black uppercase italic text-white transition-all hover:bg-slate-900">
-              Buka Leaderboard <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+              Buka Leaderboard <ArrowRight className="transition-transform group-hover:translate-x-2" />
             </Link>
           </div>
         </div>
@@ -93,9 +93,9 @@ export default function KampusLandingPage() {
               }
             ].map((f, i) => (
               <div key={i} className="group flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
-                <f.icon className={`mb-6 size-14 text-${f.color}-600`} />
+                <f.icon className={`text- mb-6 size-14${f.color}-600`} />
                 <h3 className="mb-4 text-2xl font-black uppercase italic tracking-tighter">{f.title}</h3>
-                <p className="flex-1 text-sm font-bold leading-relaxed text-slate-500 italic">
+                <p className="flex-1 text-sm font-bold italic leading-relaxed text-slate-500">
                   {f.desc}
                 </p>
               </div>
@@ -105,7 +105,7 @@ export default function KampusLandingPage() {
       </section>
 
       {/* TARGET MITRA */}
-      <section className="bg-slate-900 py-24 text-white overflow-hidden relative">
+      <section className="relative overflow-hidden bg-slate-900 py-24 text-white">
           <div className="container relative z-10 mx-auto max-w-7xl px-4">
             <h3 className="mb-12 text-left text-3xl font-black uppercase italic tracking-tighter">Siapa yang kami dampingi?</h3>
             <div className="grid gap-6 md:grid-cols-2">
@@ -113,20 +113,20 @@ export default function KampusLandingPage() {
                   <div className="rounded-2xl bg-emerald-500 p-4 text-slate-900 shadow-xl shadow-emerald-500/20"><GraduationCap size={32}/></div>
                   <div className="text-left">
                      <h4 className="text-xl font-black uppercase italic">Perguruan Tinggi</h4>
-                     <p className="text-xs font-medium text-slate-400 opacity-80 uppercase tracking-widest">ULD & Pusat Karir Universitas</p>
+                     <p className="text-xs font-medium uppercase tracking-widest text-slate-400 opacity-80">ULD & Pusat Karir Universitas</p>
                   </div>
                </div>
                <div className="flex items-center gap-6 rounded-[2rem] border-2 border-white/10 bg-white/5 p-8 backdrop-blur-md">
                   <div className="rounded-2xl bg-blue-500 p-4 text-white shadow-xl shadow-blue-500/20"><Building2 size={32}/></div>
                   <div className="text-left">
                      <h4 className="text-xl font-black uppercase italic">Lembaga Pelatihan</h4>
-                     <p className="text-xs font-medium text-slate-400 opacity-80 uppercase tracking-widest">BLK, Bootcamp & DTS Komdigi</p>
+                     <p className="text-xs font-medium uppercase tracking-widest text-slate-400 opacity-80">BLK, Bootcamp & DTS Komdigi</p>
                   </div>
                </div>
             </div>
           </div>
           {/* Decorative Pattern */}
-          <div className="absolute -right-20 -bottom-20 opacity-5">
+          <div className="absolute -bottom-20 -right-20 opacity-5">
             <GraduationCap size={400} />
           </div>
       </section>
@@ -135,7 +135,7 @@ export default function KampusLandingPage() {
       <section className="py-24">
         <div className="mx-auto max-w-5xl px-4 text-center">
           <div className="rounded-[4rem] border-8 border-slate-900 bg-yellow-400 p-16 shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
-              <h2 className="text-4xl font-black uppercase italic tracking-tighter md:text-6xl leading-none">
+              <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter md:text-6xl">
                 Tingkatkan Valuasi Institusi Anda
               </h2>
               <p className="mx-auto mt-8 max-w-2xl text-lg font-bold uppercase tracking-widest text-slate-900/70">
@@ -144,7 +144,7 @@ export default function KampusLandingPage() {
               <div className="mt-12 flex flex-col justify-center gap-4 sm:flex-row">
                 <Link 
                   href="/mitra"
-                  className="rounded-2xl bg-slate-900 px-12 py-6 text-sm font-black uppercase italic tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-emerald-600 hover:-translate-y-1 active:translate-y-0"
+                  className="rounded-2xl bg-slate-900 px-12 py-6 text-sm font-black uppercase italic tracking-[0.2em] text-white shadow-2xl transition-all hover:-translate-y-1 hover:bg-emerald-600 active:translate-y-0"
                 >
                   Registrasi Lembaga (Gratis)
                 </Link>

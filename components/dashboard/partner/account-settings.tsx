@@ -97,10 +97,10 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
+    <div className="text-left duration-500 animate-in fade-in slide-in-from-bottom-4">
       <button 
         onClick={onBack}
-        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors hover:text-slate-900"
       >
         <ArrowLeft size={16} /> Kembali ke Dashboard
       </button>
@@ -109,7 +109,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
         <div className="space-y-6 text-left">
           <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
             <ShieldCheck className="mb-6 text-blue-400" size={32} />
-            <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Otoritas Akun</h2>
+            <h2 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Otoritas Akun</h2>
             <p className="mt-4 text-[11px] font-medium leading-relaxed opacity-70">
               Kelola kredensial akses institusi Mitra Pelatihan Anda.
             </p>
@@ -121,16 +121,16 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
           >
             <div className="text-left">
               <p className="text-[10px] font-black uppercase text-slate-900 group-hover:text-red-600">Sesi Perangkat</p>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">Sign out global</p>
+              <p className="text-[9px] font-bold uppercase text-slate-400">Sign out global</p>
             </div>
             <LogOut size={20} className="text-slate-300 group-hover:text-red-600" />
           </button>
         </div>
 
         <div className="lg:col-span-2">
-          <form onSubmit={handleUpdateAccount} className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-10">
+          <form onSubmit={handleUpdateAccount} className="space-y-10 rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
             <div className="space-y-4">
-              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-600 italic">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-blue-600">
                 <Mail size={16} /> Identitas Login
               </h3>
               <div className="space-y-2">
@@ -144,8 +144,8 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
               </div>
             </div>
 
-            <div className="space-y-6 pt-4 border-t-2 border-slate-50">
-              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-600 italic">
+            <div className="space-y-6 border-t-2 border-slate-50 pt-4">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-blue-600">
                 <Lock size={16} /> Ganti Kata Sandi
               </h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -182,10 +182,10 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
               </div>
             </div>
 
-            <div className="rounded-3xl bg-blue-50 p-8 space-y-4 border-2 border-blue-100 text-left">
+            <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-8 text-left">
                <div className="flex items-center gap-3 text-blue-800">
                   <KeyRound size={20} />
-                  <h4 className="text-[10px] font-black uppercase tracking-widest leading-none">Konfirmasi Otoritas</h4>
+                  <h4 className="text-[10px] font-black uppercase leading-none tracking-widest">Konfirmasi Otoritas</h4>
                </div>
                <div className="space-y-2">
                  <label className="ml-1 block text-[10px] font-black uppercase text-blue-600">Password Saat Ini</label>

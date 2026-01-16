@@ -164,10 +164,10 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
   return (
     <div className="mx-auto max-w-4xl pb-20 text-slate-900">
       <header className="mb-10 px-4 text-left">
-        <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic tracking-tighter leading-none">
+        <h1 className="flex items-center gap-4 text-4xl font-black uppercase italic leading-none tracking-tighter">
           <Zap className="text-purple-600" size={36} /> Keahlian & Pelatihan
         </h1>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">
+        <p className="mt-2 text-[10px] font-bold uppercase italic tracking-widest text-slate-400">
           Data kompetensi untuk memperkuat relevansi karir dalam ekosistem riset
         </p>
       </header>
@@ -184,7 +184,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-12 px-4">
-        <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-6">
+        <section className="space-y-6 rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
           <div className="flex items-center gap-3 text-purple-600">
             <Cpu size={24} aria-hidden="true" />
             <h2 id="skills-heading" className="text-xs font-black uppercase tracking-[0.2em]">Keahlian Utama</h2>
@@ -246,7 +246,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
             <button 
               type="button" 
               onClick={addCertsItem} 
-              className="flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-[10px] font-black uppercase text-white shadow-xl hover:bg-slate-900 transition-all focus:ring-4 focus:ring-blue-100"
+              className="flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-[10px] font-black uppercase text-white shadow-xl transition-all hover:bg-slate-900 focus:ring-4 focus:ring-blue-100"
             >
               <Plus size={16} /> Tambah Manual
             </button>
@@ -256,7 +256,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
             {certs.length > 0 ? certs.map((cert, index) => (
               <fieldset 
                 key={cert.id} 
-                className={`relative rounded-[3rem] border-4 p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] space-y-8 animate-in slide-in-from-top-4 ${
+                className={`relative space-y-8 rounded-[3rem] border-4 p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] animate-in slide-in-from-top-4 ${
                   cert.is_verified ? 'border-emerald-500 bg-white' : 'border-slate-900 bg-white'
                 }`}
               >
@@ -265,7 +265,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-black uppercase italic text-slate-300">Item #{certs.length - index}</span>
                     {cert.is_verified && (
-                      <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600 border border-emerald-100">
+                      <span className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600">
                         <BadgeCheck size={12} /> Terverifikasi
                       </span>
                     )}
@@ -275,7 +275,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                       type="button" 
                       aria-label={`Hapus sertifikat ${index + 1}`}
                       onClick={() => removeCert(cert.id, cert.is_verified)} 
-                      className="text-slate-300 hover:text-red-600 transition-colors"
+                      className="text-slate-300 transition-colors hover:text-red-600"
                     >
                       <Trash2 size={20} />
                     </button>
@@ -299,7 +299,7 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`cert-org-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Penyelenggara</label>
+                    <label htmlFor={`cert-org-${cert.id}`} className="ml-2 text-[10px] font-black uppercase italic text-slate-400">Penyelenggara</label>
                     <div className="relative">
                       <select 
                         id={`cert-org-${cert.id}`}
@@ -312,14 +312,14 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                         {ALL_INSTITUTIONS.map(inst => (
                           <option key={inst} value={inst}>{inst}</option>
                         ))}
-                        <option value="LAINNYA" className="text-blue-600 font-black italic">+ LAINNYA (INPUT MANUAL)</option>
+                        <option value="LAINNYA" className="font-black italic text-blue-600">+ LAINNYA (INPUT MANUAL)</option>
                       </select>
                       {!cert.is_verified && <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor={`cert-year-${cert.id}`} className="ml-2 text-[10px] font-black uppercase text-slate-400 italic">Tahun</label>
+                    <label htmlFor={`cert-year-${cert.id}`} className="ml-2 text-[10px] font-black uppercase italic text-slate-400">Tahun</label>
                     <input 
                       id={`cert-year-${cert.id}`}
                       disabled={cert.is_verified}
@@ -331,13 +331,13 @@ export default function SkillsCertifications({ user, profile, onSuccess }: Skill
                   </div>
 
                   {cert.organizer_name === "LAINNYA" && !cert.is_verified && (
-                    <div className="space-y-2 md:col-span-2 animate-in zoom-in-95">
+                    <div className="space-y-2 animate-in zoom-in-95 md:col-span-2">
                       <label htmlFor={`cert-manual-${cert.id}`} className="ml-2 text-[10px] font-black uppercase italic text-blue-600">Nama Lembaga Baru</label>
                       <input 
                         id={`cert-manual-${cert.id}`}
                         value={cert.manual_organizer}
                         onChange={(e) => updateCertField(cert.id, "manual_organizer", e.target.value)}
-                        className="w-full rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 font-bold outline-none focus:border-blue-600 shadow-inner"
+                        className="w-full rounded-2xl border-2 border-blue-200 bg-blue-50 p-4 font-bold shadow-inner outline-none focus:border-blue-600"
                         placeholder="Ketik nama lengkap..."
                       />
                     </div>

@@ -88,10 +88,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col justify-center bg-white py-12 font-sans text-slate-900 sm:px-6 lg:px-8">
       
       <div className="px-4 text-center sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-[1.5rem] bg-slate-900 text-white shadow-2xl">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl bg-slate-900 text-white shadow-2xl">
             <ShieldCheck size={32} />
         </div>
-        <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
+        <h1 className="text-4xl font-black uppercase italic leading-none tracking-tighter">
           {"Akses Portal"}
         </h1>
         <p className="mt-3 text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
@@ -124,7 +124,7 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-400">
                   {"Kata Sandi"}
                 </label>
-                <Link href="/lupa-password" internal-title="Reset Access" className="text-[9px] font-black uppercase text-blue-600 hover:underline decoration-2 underline-offset-4">
+                <Link href="/lupa-password" internal-title="Reset Access" className="text-[9px] font-black uppercase text-blue-600 decoration-2 underline-offset-4 hover:underline">
                   {"Lupa Sandi?"}
                 </Link>
               </div>

@@ -115,33 +115,33 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       case "skills": return <SkillsCertifications user={user} profile={profile} onSuccess={fetchLatestData} />;
       case "settings": return <AccountSettings user={user} onSuccess={fetchLatestData} />;
       default: return (
-        <div className="space-y-10 animate-in fade-in duration-500">
+        <div className="space-y-10 duration-500 animate-in fade-in">
           {/* TRACKING GRID */}
-          <div className="grid gap-8 md:grid-cols-2 text-left">
+          <div className="grid gap-8 text-left md:grid-cols-2">
             {/* JOBS TRACKING */}
             <div className="space-y-4">
               <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900">
                 <Briefcase size={16} className="text-blue-600" /> Tracking Lamaran Kerja
               </h3>
-              <div className="min-h-[300px] rounded-[2.5rem] border-2 border-slate-100 bg-white overflow-hidden shadow-inner">
+              <div className="min-h-[300px] overflow-hidden rounded-[2.5rem] border-2 border-slate-100 bg-white shadow-inner">
                 {appliedJobs.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
-                      <div key={app.id} className="p-6 hover:bg-slate-50 transition-colors">
+                      <div key={app.id} className="p-6 transition-colors hover:bg-slate-50">
                         <div className="flex items-start justify-between gap-4">
                           <Link href={`/lowongan/${app.jobs?.slug || app.jobs?.id}`} className="group flex-1">
-                            <p className="text-sm font-black uppercase text-slate-900 group-hover:text-blue-600 transition-colors">{app.jobs?.title}</p>
+                            <p className="text-sm font-black uppercase text-slate-900 transition-colors group-hover:text-blue-600">{app.jobs?.title}</p>
                             <p className="text-[10px] font-bold uppercase text-slate-400">{app.jobs?.companies?.name}</p>
                           </Link>
-                          <span className={`rounded-full px-3 py-1 text-[8px] font-black uppercase border ${
-                            app.status === 'hired' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                            app.status === 'rejected' ? 'bg-red-50 text-red-500 border-red-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                          <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
+                            app.status === 'hired' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 
+                            app.status === 'rejected' ? 'border-red-100 bg-red-50 text-red-500' : 'border-blue-100 bg-blue-50 text-blue-600'
                           }`}>{app.status}</span>
                         </div>
                         
                         {/* HRD NOTES & SCHEDULE (Sinkronisasi dengan Tracker HRD) */}
                         {app.hrd_notes && (
-                          <div className="mt-4 flex items-start gap-3 rounded-2xl bg-amber-50/50 p-4 border border-amber-100">
+                          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
                             <Clock size={14} className="mt-0.5 shrink-0 text-amber-600" />
                             <div className="space-y-1">
                               <p className="text-[9px] font-black uppercase text-amber-700">Pesan dari HRD / Jadwal:</p>
@@ -158,7 +158,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                       </div>
                     ))}
                   </div>
-                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 opacity-30 italic font-bold uppercase text-[10px]"><Briefcase size={32} className="mb-2"/> Belum ada lamaran.</div>}
+                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 text-[10px] font-bold uppercase italic opacity-30"><Briefcase size={32} className="mb-2"/> Belum ada lamaran.</div>}
               </div>
             </div>
 
@@ -167,24 +167,24 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
               <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900">
                 <BookOpen size={16} className="text-emerald-600" /> Tracking Pelatihan
               </h3>
-              <div className="min-h-[300px] rounded-[2.5rem] border-2 border-slate-100 bg-white overflow-hidden shadow-inner">
+              <div className="min-h-[300px] overflow-hidden rounded-[2.5rem] border-2 border-slate-100 bg-white shadow-inner">
                 {appliedTrainings.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedTrainings.map((reg) => (
-                      <div key={reg.id} className="p-6 hover:bg-slate-50 transition-colors">
+                      <div key={reg.id} className="p-6 transition-colors hover:bg-slate-50">
                         <div className="flex items-start justify-between gap-4">
                           <Link href={`/pelatihan/${reg.trainings?.slug || reg.trainings?.id}`} className="group flex-1">
-                            <p className="text-sm font-black uppercase text-slate-900 group-hover:text-emerald-600 transition-colors">{reg.trainings?.title}</p>
+                            <p className="text-sm font-black uppercase text-slate-900 transition-colors group-hover:text-emerald-600">{reg.trainings?.title}</p>
                             <p className="text-[10px] font-bold uppercase text-slate-400">{reg.trainings?.partners?.name}</p>
                           </Link>
-                          <span className={`rounded-full px-3 py-1 text-[8px] font-black uppercase border ${
-                            reg.status === 'accepted' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'
+                          <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
+                            reg.status === 'accepted' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 'border-slate-100 bg-slate-50 text-slate-400'
                           }`}>{reg.status}</span>
                         </div>
 
                         {/* TRAINING SCHEDULE INFO */}
                         {reg.status === 'accepted' && reg.trainings?.start_date && (
-                          <div className="mt-4 flex items-center gap-3 rounded-2xl bg-emerald-50/50 p-4 border border-emerald-100">
+                          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
                             <Calendar size={14} className="shrink-0 text-emerald-600" />
                             <div className="space-y-1">
                               <p className="text-[9px] font-black uppercase text-emerald-700">Jadwal Pelaksanaan:</p>
@@ -194,14 +194,14 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                         )}
                         
                         {reg.status === 'completed' && (
-                          <div className="mt-3 flex items-center gap-2 text-emerald-600 text-[10px] font-black uppercase">
+                          <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase text-emerald-600">
                             <BadgeCheck size={16} /> Sertifikat Tersedia di Modul Skill
                           </div>
                         )}
                       </div>
                     ))}
                   </div>
-                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 opacity-30 italic font-bold uppercase text-[10px]"><BookOpen size={32} className="mb-2"/> Belum ada pelatihan.</div>}
+                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 text-[10px] font-bold uppercase italic opacity-30"><BookOpen size={32} className="mb-2"/> Belum ada pelatihan.</div>}
               </div>
             </div>
           </div>
@@ -215,32 +215,32 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
             </div>
             <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Peluang Karir Lokal</p>
+                <p className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Peluang Karir Lokal</p>
                 {recommendedJobs.length > 0 ? recommendedJobs.map((j) => (
-                  <Link href={`/lowongan/${j.slug || j.id}`} key={j.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 hover:border-blue-600 transition-all shadow-sm">
+                  <Link href={`/lowongan/${j.slug || j.id}`} key={j.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-blue-600">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <p className="text-xs font-black uppercase text-slate-900 group-hover:text-blue-600 leading-tight transition-colors">{j.title}</p>
+                        <p className="text-xs font-black uppercase leading-tight text-slate-900 transition-colors group-hover:text-blue-600">{j.title}</p>
                         <p className="text-[8px] font-bold uppercase text-slate-400">{j.companies?.name} | {j.location}</p>
                       </div>
-                      <ArrowRight size={14} className="text-slate-200 group-hover:text-blue-600 transition-all" />
+                      <ArrowRight size={14} className="text-slate-200 transition-all group-hover:text-blue-600" />
                     </div>
                   </Link>
-                )) : <div className="rounded-2xl bg-slate-50 p-4 text-[9px] font-bold uppercase text-slate-400 text-center italic">Tidak ada peluang lokal tersedia.</div>}
+                )) : <div className="rounded-2xl bg-slate-50 p-4 text-center text-[9px] font-bold uppercase italic text-slate-400">Tidak ada peluang lokal tersedia.</div>}
               </div>
               <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Pelatihan Relevan</p>
+                <p className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Pelatihan Relevan</p>
                 {recommendedTrainings.length > 0 ? recommendedTrainings.map((t) => (
-                  <Link href={`/pelatihan/${t.slug || t.id}`} key={t.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 hover:border-emerald-600 transition-all shadow-sm">
+                  <Link href={`/pelatihan/${t.slug || t.id}`} key={t.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-emerald-600">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <p className="text-xs font-black uppercase text-slate-900 group-hover:text-emerald-600 leading-tight transition-colors">{t.title}</p>
+                        <p className="text-xs font-black uppercase leading-tight text-slate-900 transition-colors group-hover:text-emerald-600">{t.title}</p>
                         <p className="text-[8px] font-bold uppercase text-slate-400">{t.partners?.name} | {t.location}</p>
                       </div>
-                      <ArrowRight size={14} className="text-slate-200 group-hover:text-emerald-600 transition-all" />
+                      <ArrowRight size={14} className="text-slate-200 transition-all group-hover:text-emerald-600" />
                     </div>
                   </Link>
-                )) : <div className="rounded-2xl bg-slate-50 p-4 text-[9px] font-bold uppercase text-slate-400 text-center italic">Tidak ada pelatihan relevan.</div>}
+                )) : <div className="rounded-2xl bg-slate-50 p-4 text-center text-[9px] font-bold uppercase italic text-slate-400">Tidak ada pelatihan relevan.</div>}
               </div>
             </div>
           </section>
@@ -249,7 +249,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     }
   };
 
-  if (loading) return <div role="status" className="p-20 text-center font-black italic tracking-[0.2em] text-slate-400 animate-pulse uppercase">Menyinkronkan Portal Karir...</div>;
+  if (loading) return <div role="status" className="animate-pulse p-20 text-center font-black uppercase italic tracking-[0.2em] text-slate-400">Menyinkronkan Portal Karir...</div>;
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-24 selection:bg-blue-100">
@@ -258,15 +258,15 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
         {/* HEADER PROGRESS */}
         <section className="rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-            <div className="text-left space-y-1">
-              <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Talent Dashboard</h1>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Pusat Karir & Pengembangan Kompetensi</p>
+            <div className="space-y-1 text-left">
+              <h1 className="text-3xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Talent Dashboard</h1>
+              <p className="text-[10px] font-bold uppercase italic tracking-widest text-slate-400">Pusat Karir & Pengembangan Kompetensi</p>
             </div>
             <div className="flex w-full items-center gap-4 md:w-auto">
               <div className="h-4 flex-1 overflow-hidden rounded-full border border-slate-200 bg-slate-100 md:w-64" role="progressbar" aria-valuenow={completionData.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Progres Kelengkapan Profil">
                 <div className={`h-full transition-all duration-1000 ${completionData.percent === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${completionData.percent}%` }}></div>
               </div>
-              <span className="text-3xl font-black italic text-slate-900 leading-none" aria-live="polite">{`${completionData.percent}%`}</span>
+              <span className="text-3xl font-black italic leading-none text-slate-900" aria-live="polite">{`${completionData.percent}%`}</span>
             </div>
           </div>
 
@@ -284,7 +284,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                 onClick={() => setActiveTab(m.id)} 
                 aria-pressed={activeTab === m.id}
                 aria-label={`Buka pengaturan ${m.label}`} 
-                className={`group rounded-3xl border-2 p-5 text-center transition-all shadow-sm hover:shadow-md focus:ring-4 focus:ring-blue-200 outline-none ${
+                className={`group rounded-3xl border-2 p-5 text-center shadow-sm outline-none transition-all hover:shadow-md focus:ring-4 focus:ring-blue-200 ${
                   activeTab === m.id ? 'border-blue-600 bg-blue-50/50' : 'border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white'
                 }`}
               >
@@ -300,20 +300,20 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
           
           <aside className="space-y-8 text-left">
             {/* AKSI PROFESIONAL */}
-            <div className="rounded-[3rem] bg-slate-900 p-8 text-white shadow-2xl border-t-[12px] border-blue-600">
+            <div className="rounded-[3rem] border-t-[12px] border-blue-600 bg-slate-900 p-8 text-white shadow-2xl">
               <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-blue-400">Professional Hub</h3>
               <div className="space-y-3">
-                <Link href={`/talent/${user.id}`} target="_blank" className="flex items-center justify-center gap-3 rounded-2xl bg-white/10 p-4 text-[10px] font-black uppercase hover:bg-white/20 transition-all border border-white/5" aria-label="Lihat tampilan profil publik Anda">
+                <Link href={`/talent/${user.id}`} target="_blank" className="flex items-center justify-center gap-3 rounded-2xl border border-white/5 bg-white/10 p-4 text-[10px] font-black uppercase transition-all hover:bg-white/20" aria-label="Lihat tampilan profil publik Anda">
                   <ExternalLink size={18} aria-hidden="true" /> Lihat Profil Publik
                 </Link>
-                <button onClick={() => generateProfessionalCV(profile, workExps, certifications)} disabled={isProcessing} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-4 text-[10px] font-black uppercase text-slate-900 hover:bg-blue-50 transition-all shadow-lg" aria-label="Unduh CV dalam format PDF">
+                <button onClick={() => generateProfessionalCV(profile, workExps, certifications)} disabled={isProcessing} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-4 text-[10px] font-black uppercase text-slate-900 shadow-lg transition-all hover:bg-blue-50" aria-label="Unduh CV dalam format PDF">
                   <FileDown size={18} aria-hidden="true" /> {isProcessing ? "Menyusun PDF..." : "Cetak CV Profesional"}
                 </button>
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => handleNativeShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 p-4 text-[8px] font-black uppercase hover:bg-emerald-700 transition-all" aria-label="Bagikan profil melalui sistem perangkat">
+                  <button onClick={() => handleNativeShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 p-4 text-[8px] font-black uppercase transition-all hover:bg-emerald-700" aria-label="Bagikan profil melalui sistem perangkat">
                     <Share2 size={16} aria-hidden="true" /> Native Share
                   </button>
-                  <button onClick={() => handleWhatsAppShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] p-4 text-[8px] font-black uppercase hover:opacity-90 transition-all" aria-label="Bagikan profil melalui WhatsApp">
+                  <button onClick={() => handleWhatsAppShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] p-4 text-[8px] font-black uppercase transition-all hover:opacity-90" aria-label="Bagikan profil melalui WhatsApp">
                     <MessageCircle size={16} aria-hidden="true" /> WhatsApp
                   </button>
                 </div>
@@ -322,15 +322,15 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
 
             {/* RINGKASAN AKTIVITAS */}
             <div className="rounded-[3rem] border-2 border-slate-200 bg-white p-8 shadow-sm">
-              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 italic tracking-widest leading-none"><LayoutDashboard size={14}/> Ringkasan Aktivitas</h3>
+              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase italic leading-none tracking-widest text-slate-400"><LayoutDashboard size={14}/> Ringkasan Aktivitas</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
-                  <p className="text-3xl font-black text-slate-900 leading-none">{stats.jobs}</p>
-                  <p className="mt-2 text-[8px] font-black text-slate-400 uppercase italic leading-none">Lamaran</p>
+                <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-3xl font-black leading-none text-slate-900">{stats.jobs}</p>
+                  <p className="mt-2 text-[8px] font-black uppercase italic leading-none text-slate-400">Lamaran</p>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
-                  <p className="text-3xl font-black text-slate-900 leading-none">{stats.trainings}</p>
-                  <p className="mt-2 text-[8px] font-black text-slate-400 uppercase italic leading-none">Pelatihan</p>
+                <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-3xl font-black leading-none text-slate-900">{stats.trainings}</p>
+                  <p className="mt-2 text-[8px] font-black uppercase italic leading-none text-slate-400">Pelatihan</p>
                 </div>
               </div>
             </div>
