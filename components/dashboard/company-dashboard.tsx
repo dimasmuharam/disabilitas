@@ -41,7 +41,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   }, [user?.id]);
 
   async function fetchDashboardData() {
-    setLoading(true);
+    // Jangan set loading true jika hanya refresh data setelah simpan agar tidak flickr
     try {
       const { data: latestComp } = await supabase.from("companies").select("*").eq("id", user.id).single();
       if (latestComp) setCompany(latestComp);
@@ -67,13 +67,11 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
     } finally { setLoading(false); }
   }
 
-  // --- LOGIKA KUOTA INKLUSI (BERDASARKAN INPUT HRD - FAIR) ---
   const inclusionQuota = useMemo(() => {
     const total = company?.total_employees || 0;
     const dis = company?.total_employees_with_disability || 0;
     const category = company?.category?.toLowerCase();
     
-    // Mandat 1% untuk Swasta, 2% untuk Pemerintah/BUMN
     const mandateRate = (category?.includes('pemerintah') || category?.includes('bumn')) ? 0.02 : 0.01;
     const mandateMin = Math.ceil(total * mandateRate);
     const currentPercent = total > 0 ? (dis / total) * 100 : 0;
@@ -95,15 +93,15 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
   const renderOverview = () => (
     <div className="space-y-8 animate-in fade-in duration-500 text-left">
-      {/* SECTION 1: ACTIONABLE HEADING */}
+      {/* Actionable Row */}
       <div className="grid gap-6 md:grid-cols-2">
         {stats.pendingAction > 0 ? (
-          <button onClick={() => handleTabChange("applicants")} className="group flex items-center justify-between rounded-[2.5rem] border-2 border-blue-600 bg-blue-50 p-8 shadow-md">
-            <div className="flex items-center gap-6">
-              <div className="size-16 flex items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg animate-bounce"><AlertCircle size={32} /></div>
+          <button onClick={() => handleTabChange("applicants")} className="group flex items-center justify-between rounded-[2.5rem] border-2 border-blue-600 bg-blue-50 p-8 shadow-md transition-all hover:bg-blue-100">
+            <div className="flex items-center gap-6 text-left">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg animate-bounce"><AlertCircle size={32} /></div>
               <div>
-                <h2 className="text-xl font-black uppercase italic text-blue-900 leading-none">Review Talenta Baru</h2>
-                <p className="text-[10px] font-bold uppercase text-blue-700/60 mt-2">Ada {stats.pendingAction} lamaran yang butuh respon segera</p>
+                <h2 className="text-xl font-black uppercase italic tracking-tighter text-blue-900 leading-none">Review Talenta Baru</h2>
+                <p className="text-[10px] font-bold uppercase text-blue-700/60 mt-2">Ada {stats.pendingAction} lamaran menunggu tindakan</p>
               </div>
             </div>
             <ArrowRight className="text-blue-600 group-hover:translate-x-2 transition-transform" />
@@ -111,84 +109,84 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         ) : (
           <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
             <div className="flex items-center gap-6">
-              <div className="size-16 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><CheckCircle2 size={32} /></div>
-              <div>
-                <h2 className="text-xl font-black uppercase italic text-slate-900 leading-none">Semua Terkendali</h2>
-                <p className="text-[10px] font-bold uppercase text-slate-400 mt-2">Belum ada lamaran baru yang memerlukan tindakan</p>
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><CheckCircle2 size={32} /></div>
+              <div className="text-left">
+                <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Semua Terkendali</h2>
+                <p className="text-[10px] font-bold uppercase text-slate-400 mt-2">Belum ada lamaran baru saat ini</p>
               </div>
             </div>
           </section>
         )}
 
         <section className="rounded-[2.5rem] border-2 border-blue-100 bg-blue-50 p-8 shadow-sm">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 text-left">
             <div className="p-5 bg-white rounded-3xl text-blue-600 border-2 border-blue-100"><Accessibility size={32} /></div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-900">Inclusion Index</h3>
               <p className="text-4xl font-black text-blue-600 italic leading-none mt-1">{ratings?.totalAvg?.toFixed(1) || "0.0"}<span className="text-sm text-blue-300">/5.0</span></p>
-              <p className="text-[8px] font-bold uppercase text-blue-400 mt-1">Berdasarkan feedback talenta terafiliasi</p>
+              <p className="text-[8px] font-bold uppercase text-blue-400 mt-1 italic">Berdasarkan feedback nyata talenta</p>
             </div>
           </div>
         </section>
       </div>
 
-      {/* SECTION 2: STATUS PEMENUHAN KUOTA (LOGIKA HRD) */}
+      {/* Quota Compliance Row */}
       <section className={`rounded-[3rem] border-2 p-10 shadow-sm ${inclusionQuota.isCompliant ? 'border-emerald-100 bg-emerald-50/50' : 'border-amber-100 bg-amber-50/50'}`}>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="space-y-3 flex-1 text-center md:text-left">
-            <h3 className={`text-xs font-black uppercase tracking-widest ${inclusionQuota.isCompliant ? 'text-emerald-700' : 'text-amber-700'}`}>
-              <ShieldCheck className="inline mr-2" size={18}/> Status Kepatuhan Tenaga Kerja Inklusif
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8 text-left">
+          <div className="space-y-3 flex-1">
+            <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${inclusionQuota.isCompliant ? 'text-emerald-700' : 'text-amber-700'}`}>
+              <ShieldCheck className="inline mr-2" size={16}/> Status Kepatuhan Tenaga Kerja Inklusif
             </h3>
             {inclusionQuota.isCompliant ? (
-              <h4 className="text-3xl font-black text-slate-900 italic tracking-tighter leading-tight">
+              <h4 className="text-2xl font-black text-slate-900 italic tracking-tighter leading-tight">
                 Instansi Anda telah memenuhi ambang batas minimal {inclusionQuota.mandateRate}% karyawan disabilitas. 
-                <span className="block text-sm font-bold text-emerald-600 mt-2">Mari terus didorong untuk menciptakan ekosistem kerja yang sepenuhnya inklusif!</span>
+                <span className="block text-[11px] font-bold text-emerald-600 mt-2 uppercase tracking-widest">Mari terus dorong inklusivitas tanpa batas!</span>
               </h4>
             ) : (
-              <h4 className="text-3xl font-black text-slate-900 italic tracking-tighter leading-tight">
+              <h4 className="text-2xl font-black text-slate-900 italic tracking-tighter leading-tight">
                 Anda memerlukan <span className="underline text-amber-600">{inclusionQuota.need} talenta disabilitas</span> lagi untuk mencapai kuota minimal {inclusionQuota.mandateRate}%.
               </h4>
             )}
           </div>
-          <div className="size-32 shrink-0 flex items-center justify-center rounded-full bg-white border-8 border-slate-900 shadow-2xl">
+          <div className="size-28 shrink-0 flex flex-col items-center justify-center rounded-full bg-white border-8 border-slate-900 shadow-xl">
             <p className="text-2xl font-black italic">{inclusionQuota.percent}%</p>
+            <p className="text-[8px] font-black uppercase opacity-40">Capaian</p>
           </div>
         </div>
       </section>
 
-      {/* SECTION 3: STATISTIK TALENTA TERAFILIASI (NARASI HUMANIS) */}
+      {/* Impact Statistics */}
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Ringkasan Afiliasi */}
-        <section className="lg:col-span-2 rounded-[3rem] bg-slate-900 p-10 text-white shadow-2xl relative overflow-hidden">
+        <section className="lg:col-span-2 rounded-[3rem] bg-slate-900 p-10 text-white shadow-2xl relative overflow-hidden text-left">
           <div className="relative z-10">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-6 flex items-center gap-2">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-8 flex items-center gap-2">
               <Users size={16}/> Jejak Dampak Inklusi
             </h3>
-            <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter max-w-xl">
+            <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter max-w-2xl mb-12">
               Sebanyak <span className="text-blue-500">{company?.total_employees_with_disability || 0} Talenta</span> pernah atau sedang mendedikasikan karirnya di {company?.name}.
             </h2>
             
-            <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10">
-                <p className="text-[10px] font-black uppercase text-slate-400 mb-4">Komposisi Gender</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-bold uppercase"><span>Laki-Laki</span><span>{company?.stats_talent_gender_map?.male || 0}</span></div>
-                  <div className="flex justify-between text-xs font-bold uppercase"><span>Perempuan</span><span>{company?.stats_talent_gender_map?.female || 0}</span></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 rounded-[2.5rem] bg-white/5 border border-white/10">
+                <p className="text-[9px] font-black uppercase text-slate-400 mb-6 tracking-widest">Komposisi Gender</p>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-[11px] font-black uppercase"><span>Laki-Laki</span><span className="text-blue-400">{company?.stats_talent_gender_map?.male || 0}</span></div>
+                  <div className="flex justify-between text-[11px] font-black uppercase"><span>Perempuan</span><span className="text-blue-400">{company?.stats_talent_gender_map?.female || 0}</span></div>
                 </div>
               </div>
-              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10">
-                <p className="text-[10px] font-black uppercase text-slate-400 mb-4">Ragam Disabilitas</p>
-                <div className="space-y-1 max-h-[60px] overflow-y-auto custom-scrollbar text-[10px] font-bold uppercase">
+              <div className="p-6 rounded-[2.5rem] bg-white/5 border border-white/10">
+                <p className="text-[9px] font-black uppercase text-slate-400 mb-6 tracking-widest">Ragam Disabilitas</p>
+                <div className="space-y-2 max-h-[80px] overflow-y-auto custom-scrollbar text-[9px] font-black uppercase">
                   {Object.entries(company?.stats_talent_disability_map || {}).map(([k, v]: any) => (
-                    <div key={k} className="flex justify-between"><span>{k}</span><span>{v}</span></div>
+                    <div key={k} className="flex justify-between border-b border-white/5 pb-1"><span>{k}</span><span className="text-blue-400">{v}</span></div>
                   ))}
                 </div>
               </div>
-              <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10">
-                <p className="text-[10px] font-black uppercase text-slate-400 mb-4">Latar Pendidikan</p>
-                <div className="space-y-1 max-h-[60px] overflow-y-auto custom-scrollbar text-[10px] font-bold uppercase">
+              <div className="p-6 rounded-[2.5rem] bg-white/5 border border-white/10">
+                <p className="text-[9px] font-black uppercase text-slate-400 mb-6 tracking-widest">Latar Pendidikan</p>
+                <div className="space-y-2 max-h-[80px] overflow-y-auto custom-scrollbar text-[9px] font-black uppercase">
                   {Object.entries(company?.stats_talent_education_map || {}).map(([k, v]: any) => (
-                    <div key={k} className="flex justify-between"><span>{k}</span><span>{v}</span></div>
+                    <div key={k} className="flex justify-between border-b border-white/5 pb-1"><span>{k}</span><span className="text-blue-400">{v}</span></div>
                   ))}
                 </div>
               </div>
@@ -197,16 +195,15 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           <TrendingUp className="absolute -bottom-10 -right-10 size-64 text-white/5 rotate-12" />
         </section>
 
-        {/* QR & Profil Publik */}
         <section className="rounded-[3rem] border-2 border-slate-900 bg-white p-10 text-center shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] flex flex-col justify-between">
           <div>
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">Profil Publik Instansi</p>
             <div className="mx-auto flex justify-center p-6 bg-slate-50 rounded-[2.5rem] border-2 border-slate-100 shadow-inner">
-              <QRCodeSVG value={`https://disabilitas.com/perusahaan/${company?.id}`} size={120} />
+              <QRCodeSVG value={`https://disabilitas.com/perusahaan/${company?.id}`} size={100} />
             </div>
           </div>
-          <Link href={`/perusahaan/${company?.id}`} target="_blank" className="mt-8 flex items-center justify-center gap-3 rounded-2xl border-2 border-slate-900 py-4 text-[10px] font-black uppercase hover:bg-slate-50 transition-all">
-            <ExternalLink size={18} /> Kunjungi Halaman Publik
+          <Link href={`/perusahaan/${company?.id}`} target="_blank" className="mt-8 flex items-center justify-center gap-3 rounded-2xl border-2 border-slate-900 py-4 text-[9px] font-black uppercase hover:bg-slate-900 hover:text-white transition-all shadow-md">
+            <ExternalLink size={16} /> Kunjungi Halaman Publik
           </Link>
         </section>
       </div>
@@ -220,19 +217,18 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       <div className="mx-auto max-w-7xl space-y-8 px-4 pt-8">
         <div className="sr-only" aria-live="polite">{announcement}</div>
         
-        {/* Header Dashboard */}
         <header className="flex flex-col items-center justify-between gap-10 rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:flex-row">
           <div className="flex items-center gap-8 text-left">
             <div className="flex size-24 shrink-0 items-center justify-center rounded-[2.2rem] bg-slate-900 text-white shadow-2xl relative">
               <Building2 size={48} />
-              <div className="absolute -bottom-2 -right-2 size-10 rounded-full bg-blue-600 border-4 border-white flex items-center justify-center text-xs font-black italic">H1</div>
+              <div className="absolute -bottom-2 -right-2 size-10 rounded-full bg-blue-600 border-4 border-white flex items-center justify-center text-[10px] font-black italic">HQ</div>
             </div>
             <div>
               <div className="flex items-center gap-4">
                 <h1 ref={headerRef} tabIndex={-1} className="text-4xl font-black uppercase italic tracking-tighter focus:outline-none leading-none">{company?.name || "Dashboard"}</h1>
                 {company?.is_verified && <CheckCircle2 className="text-blue-600" size={28} />}
               </div>
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-blue-600 mt-2">{company?.industry} | {company?.location}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600 mt-2">{company?.industry} | {company?.location}</p>
             </div>
           </div>
           <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] bg-slate-50 p-2 shadow-inner border-2 border-slate-100">
@@ -256,11 +252,19 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
           {activeTab === "applicants" && <ApplicantTracker company={company} />}
           {activeTab === "jobs" && <JobManager company={company} onSuccess={fetchDashboardData} />}
           {activeTab === "simulator" && <RecruitmentSimulator company={company} />}
-          {activeTab === "profile" && <ProfileEditor company={company} user={user} onSuccess={fetchDashboardData} />}
+          {activeTab === "profile" && (
+            <ProfileEditor 
+              company={company} 
+              user={user} 
+              onSuccess={() => {
+                fetchDashboardData();
+                setActiveTab("overview"); // LOGIKA BALIK KE OVERVIEW
+              }} 
+            />
+          )}
           {activeTab === "settings" && <AccountSettings user={user} onSuccess={fetchDashboardData} />}
         </main>
 
-        {/* Dual Share Floating Buttons */}
         {activeTab === "overview" && (
           <div className="fixed bottom-10 right-10 flex flex-col gap-3 z-50">
             <button onClick={() => handleShareInclusionCard(cardRef, company, ratings, setIsProcessing, setAnnouncement, "native")} disabled={isProcessing}
@@ -277,7 +281,6 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         )}
       </div>
 
-      {/* Hidden Capture Area */}
       <div className="pointer-events-none fixed left-[-9999px] top-[-9999px] opacity-0" aria-hidden="true">
         <div ref={cardRef} className="flex h-[450px] w-[800px] flex-col justify-between border-[16px] border-slate-900 bg-white p-12 text-left font-sans">
             <div className="flex items-center justify-between border-b-4 border-blue-600 pb-6">
