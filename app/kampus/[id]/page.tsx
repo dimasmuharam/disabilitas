@@ -31,8 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: campus.name,
       description: campus.description,
-      images: [`https://disabilitas.com/api/og/campus?id=${params.id}`],
-    },
+images: [`https://disabilitas.com/api/og/campus?id=${params.id}`],    },
   };
 }
 
