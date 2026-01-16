@@ -114,7 +114,13 @@ export default function CampusDashboard({ user }: { user: any }) {
             Career & Skill Hub
           </button>
           <button 
-            onClick={() => shareNative({ name: campus?.name, score: campus?.inclusion_score })} 
+            onClick={() => shareNative({ 
+              name: campus?.name || '', 
+              score: campus?.inclusion_score || 0,
+              total: currentStats.total,
+              rate: currentStats.rate,
+              url: typeof window !== 'undefined' ? window.location.href : ''
+            })} 
             className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900"
             aria-label="Bagikan Profil"
           >
