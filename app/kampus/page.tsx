@@ -1,129 +1,158 @@
-import Link from "next/link"
-import { GraduationCap, BookOpen, Users, BarChart, ArrowRight, CheckCircle, Building } from "lucide-react"
+import Link from "next/link";
+import { GraduationCap, BookOpen, Users, BarChart3, ArrowRight, Building2, Trophy, ShieldCheck } from "lucide-react";
 
-export default function KampusPage() {
+export default function KampusLandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col bg-white text-slate-900 selection:bg-emerald-100">
       
-      {/* HERO SECTION */}
-      <section className="w-full bg-green-900 py-12 text-slate-50 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-12">
-            <div className="space-y-4">
-              <div className="inline-block rounded-lg bg-green-800 px-3 py-1 text-sm font-semibold text-green-100">
-                Untuk Kampus & Lembaga Pelatihan
+      {/* HERO SECTION - Neubrutalism Style */}
+      <section className="border-b-8 border-slate-900 bg-emerald-600 py-20 text-white lg:py-32">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div className="space-y-8 text-left">
+              <div className="inline-block rounded-xl border-4 border-slate-900 bg-yellow-400 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                Institutional Partnership
               </div>
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                Digitalisasi Unit Layanan & Alumni Disabilitas
+              <h1 className="text-5xl font-black uppercase italic tracking-tighter sm:text-6xl md:text-7xl leading-none">
+                Digitalisasi Unit Layanan Disabilitas
               </h1>
-              <p className="text-slate-200 md:text-xl">
-                Solusi manajemen data untuk Universitas dan Balai Pelatihan (BLK/Komdigi). Pantau karir alumni pelatihan Anda agar tidak sekadar lulus, tapi terserap kerja.
+              <p className="max-w-xl text-lg font-bold uppercase tracking-widest text-emerald-50">
+                Pantau karir alumni disabilitas Anda agar tidak sekadar lulus, tapi terserap secara profesional di pasar kerja global.
               </p>
-              <div className="flex flex-col gap-4 pt-4 sm:flex-row">
+              <div className="flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/mitra"
-                  className="inline-flex h-12 items-center justify-center rounded-md bg-white px-8 text-sm font-medium text-green-900 shadow transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                  className="flex h-16 items-center justify-center rounded-2xl border-4 border-slate-900 bg-white px-10 text-sm font-black uppercase italic text-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                 >
-                  Daftarkan Lembaga
+                  Daftarkan Institusi
                 </Link>
                 <Link
-                  href="#fitur"
-                  className="inline-flex h-12 items-center justify-center rounded-md border border-green-700 bg-transparent px-8 text-sm font-medium text-slate-100 shadow-sm transition-colors hover:bg-green-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                  href="/kampus/ranking"
+                  className="flex h-16 items-center justify-center gap-2 rounded-2xl border-4 border-slate-900 bg-slate-900 px-10 text-sm font-black uppercase italic text-white shadow-[6px_6px_0px_0px_rgba(16,185,129,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
                 >
-                  Pelajari Fitur
+                  <Trophy size={18} className="text-yellow-400" /> Lihat Ranking Nasional
                 </Link>
               </div>
             </div>
-            {/* Visual Ilustrasi */}
-            <div className="mx-auto flex aspect-video w-full max-w-[500px] items-center justify-center rounded-xl border border-green-700 bg-green-800/50">
-              <GraduationCap className="size-24 text-green-200/50" />
+            <div className="hidden lg:block">
+               <div className="relative mx-auto flex aspect-square w-full max-w-[450px] items-center justify-center rounded-[3rem] border-8 border-slate-900 bg-white shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
+                  <GraduationCap size={180} className="text-slate-900" />
+                  <div className="absolute -right-8 -top-8 animate-bounce rounded-3xl border-4 border-slate-900 bg-yellow-400 p-6 shadow-xl">
+                    <ShieldCheck size={40} className="text-slate-900" />
+                  </div>
+               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION FITUR */}
-      <section id="fitur" className="w-full bg-white py-12 dark:bg-slate-900 md:py-24">
-        <div className="container px-4 md:px-6">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">Mengapa Bergabung?</h2>
-            <p className="mt-2 text-slate-600 dark:text-slate-400">Solusi manajemen inklusi dari Hulu (Pendidikan) ke Hilir (Industri).</p>
+      {/* SECTION RANKING PREVIEW (The Hook) */}
+      <section className="bg-slate-50 py-20 border-b-4 border-slate-100">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-white p-12 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:flex-row">
+            <div className="text-left md:w-2/3">
+              <h2 className="text-3xl font-black uppercase italic tracking-tighter">National Inclusion Index 2026</h2>
+              <p className="mt-4 text-lg font-medium text-slate-500 italic leading-relaxed">
+                Cek posisi Universitas Anda dalam standar inklusivitas nasional. Kami mengukur aksesibilitas fisik, kualitas infrastruktur digital, dan keterserapan kerja alumni.
+              </p>
+            </div>
+            <Link href="/kampus/ranking" className="group flex items-center gap-4 rounded-2xl bg-emerald-600 px-8 py-5 text-sm font-black uppercase italic text-white transition-all hover:bg-slate-900">
+              Buka Leaderboard <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CORE FEATURES */}
+      <section id="fitur" className="py-24">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="mb-16 text-left">
+            <h2 className="text-4xl font-black uppercase italic tracking-tighter">Mengapa Kampus Harus Bergabung?</h2>
+            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600">Standardisasi Inklusi dari Hulu ke Hilir</p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
-            
-            {/* FITUR 1 */}
-            <div className="flex flex-col rounded-lg border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/50">
-              <BookOpen className="mb-4 size-10 text-green-600" />
-              <h3 className="mb-2 text-xl font-bold">Database Talent Pool</h3>
-              <p className="mb-4 flex-1 text-slate-600 dark:text-slate-400">
-                Kumpulkan data peserta pelatihan atau mahasiswa disabilitas dalam satu dashboard yang rapi dan standar industri.
-              </p>
-            </div>
-
-            {/* FITUR 2 */}
-            <div className="flex flex-col rounded-lg border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/50">
-              <BarChart className="mb-4 size-10 text-blue-600" />
-              <h3 className="mb-2 text-xl font-bold">Laporan Penyerapan (Tracer)</h3>
-              <p className="mb-4 flex-1 text-slate-600 dark:text-slate-400">
-                Bukti nyata kinerja lembaga Anda. Pantau berapa persen alumni yang sudah mendapat pekerjaan setelah lulus pelatihan.
-              </p>
-            </div>
-
-            {/* FITUR 3 */}
-            <div className="flex flex-col rounded-lg border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/50">
-              <Users className="mb-4 size-10 text-purple-600" />
-              <h3 className="mb-2 text-xl font-bold">Koneksi Industri Langsung</h3>
-              <p className="mb-4 flex-1 text-slate-600 dark:text-slate-400">
-                Jangan biarkan alumni bingung cari kerja. Hubungkan profil mereka langsung ke dashboard HRD mitra perusahaan kami.
-              </p>
-            </div>
-
+          <div className="grid gap-10 md:grid-cols-3">
+            {[
+              { 
+                icon: BookOpen, 
+                title: "Database Talent Pool", 
+                color: "emerald",
+                desc: "Kumpulkan data mahasiswa disabilitas dalam satu dashboard yang rapi dan standar industri."
+              },
+              { 
+                icon: BarChart3, 
+                title: "Automatic Tracer Study", 
+                color: "blue",
+                desc: "Pantau keterserapan kerja alumni secara real-time untuk kebutuhan akreditasi institusi."
+              },
+              { 
+                icon: Users, 
+                title: "Koneksi Industri", 
+                color: "purple",
+                desc: "Hubungkan profil lulusan Anda langsung ke dashboard HRD mitra perusahaan nasional."
+              }
+            ].map((f, i) => (
+              <div key={i} className="group flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
+                <f.icon className={`mb-6 size-14 text-${f.color}-600`} />
+                <h3 className="mb-4 text-2xl font-black uppercase italic tracking-tighter">{f.title}</h3>
+                <p className="flex-1 text-sm font-bold leading-relaxed text-slate-500 italic">
+                  {f.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* TARGET MITRA */}
-      <section className="w-full border-t border-slate-200 bg-slate-50 py-12 dark:border-slate-800 dark:bg-slate-950">
-         <div className="container px-4 md:px-6">
-            <h3 className="mb-8 text-center text-xl font-bold">Siapa yang cocok menggunakan fitur ini?</h3>
-            <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2">
-               <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900"><GraduationCap className="size-6 text-blue-600 dark:text-blue-300"/></div>
-                  <div>
-                     <h4 className="font-bold">Perguruan Tinggi (Kampus)</h4>
-                     <p className="text-sm text-slate-500">Unit Layanan Disabilitas (ULD) & Pusat Karir.</p>
+      <section className="bg-slate-900 py-24 text-white overflow-hidden relative">
+          <div className="container relative z-10 mx-auto max-w-7xl px-4">
+            <h3 className="mb-12 text-left text-3xl font-black uppercase italic tracking-tighter">Siapa yang kami dampingi?</h3>
+            <div className="grid gap-6 md:grid-cols-2">
+               <div className="flex items-center gap-6 rounded-[2rem] border-2 border-white/10 bg-white/5 p-8 backdrop-blur-md">
+                  <div className="rounded-2xl bg-emerald-500 p-4 text-slate-900 shadow-xl shadow-emerald-500/20"><GraduationCap size={32}/></div>
+                  <div className="text-left">
+                     <h4 className="text-xl font-black uppercase italic">Perguruan Tinggi</h4>
+                     <p className="text-xs font-medium text-slate-400 opacity-80 uppercase tracking-widest">ULD & Pusat Karir Universitas</p>
                   </div>
                </div>
-               <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <div className="rounded-full bg-orange-100 p-3 dark:bg-orange-900"><Building className="size-6 text-orange-600 dark:text-orange-300"/></div>
-                  <div>
-                     <h4 className="font-bold">Lembaga Pelatihan (BLK/Bootcamp)</h4>
-                     <p className="text-sm text-slate-500">Program pemerintah (DTS Komdigi, Prakerja) & Swasta.</p>
+               <div className="flex items-center gap-6 rounded-[2rem] border-2 border-white/10 bg-white/5 p-8 backdrop-blur-md">
+                  <div className="rounded-2xl bg-blue-500 p-4 text-white shadow-xl shadow-blue-500/20"><Building2 size={32}/></div>
+                  <div className="text-left">
+                     <h4 className="text-xl font-black uppercase italic">Lembaga Pelatihan</h4>
+                     <p className="text-xs font-medium text-slate-400 opacity-80 uppercase tracking-widest">BLK, Bootcamp & DTS Komdigi</p>
                   </div>
                </div>
             </div>
-         </div>
+          </div>
+          {/* Decorative Pattern */}
+          <div className="absolute -right-20 -bottom-20 opacity-5">
+            <GraduationCap size={400} />
+          </div>
       </section>
 
-      {/* CTA JOIN */}
-      <section className="w-full border-t border-slate-200 bg-white py-12 dark:border-slate-800 dark:bg-slate-900 md:py-24">
-        <div className="container px-4 text-center md:px-6">
-          <div className="mx-auto max-w-2xl space-y-4">
-              <h2 className="text-3xl font-bold tracking-tighter">Tingkatkan Valuasi Lembaga Anda</h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                Lembaga pendidikan dinilai dari kesuksesan alumninya. Mari pastikan alumni disabilitas Anda mendapatkan kesempatan yang setara.
+      {/* FINAL CTA */}
+      <section className="py-24">
+        <div className="mx-auto max-w-5xl px-4 text-center">
+          <div className="rounded-[4rem] border-8 border-slate-900 bg-yellow-400 p-16 shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
+              <h2 className="text-4xl font-black uppercase italic tracking-tighter md:text-6xl leading-none">
+                Tingkatkan Valuasi Institusi Anda
+              </h2>
+              <p className="mx-auto mt-8 max-w-2xl text-lg font-bold uppercase tracking-widest text-slate-900/70">
+                Mari pastikan alumni disabilitas Anda mendapatkan kesempatan karir yang setara melalui integrasi data yang valid.
               </p>
-              <Link 
-                href="/mitra"
-                className="inline-flex h-12 items-center justify-center rounded-md bg-green-900 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-green-800"
-              >
-                Buat Akun Lembaga Gratis
-              </Link>
+              <div className="mt-12 flex flex-col justify-center gap-4 sm:flex-row">
+                <Link 
+                  href="/mitra"
+                  className="rounded-2xl bg-slate-900 px-12 py-6 text-sm font-black uppercase italic tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-emerald-600 hover:-translate-y-1 active:translate-y-0"
+                >
+                  Registrasi Lembaga (Gratis)
+                </Link>
+              </div>
           </div>
         </div>
       </section>
 
     </div>
-  )
+  );
 }

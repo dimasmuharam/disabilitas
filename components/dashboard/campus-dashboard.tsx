@@ -75,21 +75,22 @@ export default function CampusDashboard({ user }: { user: any }) {
     window.scrollTo(0, 0);
   };
 
-  const handleShare = () => {
-    const data = {
-      name: campus?.name,
-      total: currentStats.total,
-      rate: currentStats.rate,
-      score: campus?.inclusion_score,
-      url: `https://disabilitas.com/campus/${campus?.id}`
-    };
-    if (navigator.share) {
-      shareNative(data);
-    } else {
-      shareToWhatsApp(data);
-    }
+const handleShare = () => {
+  const data = {
+    name: campus?.name || "Institusi",
+    total: currentStats.total,
+    rate: currentStats.rate,
+    score: campus?.inclusion_score || 0,
+    url: `https://disabilitas.com/campus/${campus?.id}`
   };
 
+  // Perbaikan Kritis: Cek ketersediaan window/navigator untuk lingkungan Next.js
+  if (typeof window !== "undefined" && navigator.share) {
+    shareNative(data);
+  } else {
+    shareToWhatsApp(data);
+  }
+};
   if (loading) return (
     <div role="status" aria-live="polite" className="flex min-h-screen flex-col items-center justify-center font-black uppercase italic tracking-tighter text-slate-400 animate-pulse">
       <Activity className="mb-4 animate-spin text-emerald-500" size={48} />
