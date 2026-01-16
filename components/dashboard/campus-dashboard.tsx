@@ -182,7 +182,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                   <Award size={18} /> Research Executive Summary
                 </h3>
                 <div className="text-2xl font-black italic tracking-tighter text-slate-800 leading-tight md:text-3xl">
-                  "{campus?.smart_narrative_summary || "Menganalisis data almamater..."}"
+                  "{campus?.smart_narrative_summary || Menganalisis data almamater...}"
                 </div>
                 <div className="mt-6 flex gap-4">
                   <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2 border-2 border-slate-100">
