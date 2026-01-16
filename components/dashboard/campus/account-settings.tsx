@@ -21,6 +21,13 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validasi Keamanan Riset
+    if (newPassword.length < 8) {
+      setMessage({ text: "Password minimal harus 8 karakter.", isError: true });
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setMessage({ text: "Konfirmasi password tidak cocok.", isError: true });
       return;
@@ -36,7 +43,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
 
       if (error) throw error;
 
-      setMessage({ text: "Password berhasil diperbarui!", isError: false });
+      setMessage({ text: "Kredensial institusi berhasil diperbarui!", isError: false });
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
@@ -47,41 +54,45 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
       {/* NAVIGATION BACK */}
       <button 
         onClick={onBack}
-        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all group"
       >
-        <ArrowLeft size={16} /> Kembali ke Dashboard
+        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Kembali ke Dashboard
       </button>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-        {/* INFO PANEL */}
+        {/* INFO PANEL (Left) */}
         <div className="space-y-6">
-          <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
-            <ShieldCheck className="mb-6 text-emerald-400" size={32} />
-            <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Keamanan Akun</h2>
-            <p className="mt-4 text-[11px] font-medium leading-relaxed opacity-70">
-              Kelola kredensial akses institusi Anda. Pastikan password Anda kuat dan rahasia untuk menjaga integritas data riset.
+          <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden">
+            <ShieldCheck className="relative z-10 mb-6 text-emerald-400" size={40} />
+            <h2 className="relative z-10 text-2xl font-black uppercase italic tracking-tighter leading-tight">Keamanan Akun Institusi</h2>
+            <p className="relative z-10 mt-4 text-[11px] font-medium leading-relaxed opacity-70 italic">
+              Kelola kredensial akses almamater Anda. Pastikan password Anda kuat untuk menjaga integritas data riset nasional.
             </p>
+            {/* Decorative Element */}
+            <Lock className="absolute -right-8 -bottom-8 opacity-10" size={120} />
           </div>
 
-          <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8">
+          <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
             <h3 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900">
-              <Mail size={14} className="text-blue-600" /> Email Terdaftar
+              <Mail size={14} className="text-blue-600" /> ID Email Akses
             </h3>
-            <p className="text-sm font-bold text-slate-600">{user?.email}</p>
-            <p className="mt-2 text-[9px] font-bold italic text-slate-400">
-              *Email sinkron dengan sistem otentikasi utama.
-            </p>
+            <p className="text-sm font-black text-slate-900 truncate">{user?.email}</p>
+            <div className="mt-4 rounded-xl bg-blue-50 p-4 border-2 border-blue-100">
+               <p className="text-[9px] font-black uppercase text-blue-600 leading-tight">
+                *Sinkronisasi Aktif dengan Database Utama
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* FORM PANEL */}
+        {/* FORM PANEL (Right) */}
         <div className="lg:col-span-2">
-          <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
-            <form onSubmit={handleUpdatePassword} className="space-y-8">
+          <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[15px_15px_0px_0px_rgba(15,23,42,1)]">
+            <form onSubmit={handleUpdatePassword} className="space-y-10">
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* NEW PASSWORD */}
                 <div className="space-y-3">
@@ -95,12 +106,13 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
+                      className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-4 flex items-center text-slate-300 hover:text-slate-900"
+                      className="absolute inset-y-0 right-4 flex items-center text-slate-300 hover:text-slate-900 transition-colors"
+                      aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
@@ -110,7 +122,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                 {/* CONFIRM PASSWORD */}
                 <div className="space-y-3">
                   <label className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    Konfirmasi Password
+                    Konfirmasi Ulang
                   </label>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -118,33 +130,41 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
+                    className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
                   />
                 </div>
               </div>
 
+              {/* Status Message with ARIA-Live */}
               {message.text && (
-                <div className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-[10px] font-black uppercase animate-in zoom-in-95 ${message.isError ? 'border-red-100 bg-red-50 text-red-600' : 'border-emerald-100 bg-emerald-50 text-emerald-600'}`}>
-                  {message.isError ? <AlertTriangle size={16} /> : <ShieldCheck size={16} />}
+                <div 
+                  role="alert" 
+                  aria-live="polite"
+                  className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase animate-in zoom-in-95 ${message.isError ? 'border-red-200 bg-red-50 text-red-600' : 'border-emerald-200 bg-emerald-50 text-emerald-600'}`}
+                >
+                  {message.isError ? <AlertTriangle size={18} /> : <ShieldCheck size={18} />}
                   {message.text}
                 </div>
               )}
 
-              <div className="flex flex-col items-center justify-between gap-6 pt-4 md:flex-row">
-                <div className="flex items-center gap-3 text-amber-600">
-                  <KeyRound size={20} />
-                  <p className="text-[9px] font-bold leading-tight uppercase italic opacity-80 text-left">
-                    Setelah update, Anda harus masuk kembali <br /> menggunakan password baru Anda.
-                  </p>
+              <div className="flex flex-col items-center justify-between gap-6 pt-4 border-t-2 border-slate-100 md:flex-row">
+                <div className="flex items-start gap-3 text-amber-600">
+                  <KeyRound size={24} className="mt-1" />
+                  <div className="text-left">
+                     <p className="text-[10px] font-black uppercase tracking-tight italic">Prosedur Keamanan:</p>
+                     <p className="text-[9px] font-bold leading-relaxed uppercase opacity-80">
+                        Anda akan otomatis keluar dan harus <br /> masuk kembali setelah pembaruan.
+                     </p>
+                  </div>
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 px-10 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-50 md:w-auto"
+                  className="group flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 px-12 py-6 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 md:w-auto"
                 >
-                  {loading ? "MEMPROSES..." : (
+                  {loading ? "MENYINKRONKAN..." : (
                     <>
-                      <Save size={18} /> UPDATE KREDENSIAL
+                      <Save size={18} className="group-hover:animate-bounce" /> UPDATE KREDENSIAL
                     </>
                   )}
                 </button>
@@ -152,15 +172,15 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
             </form>
           </div>
 
-          {/* DANGER ZONE */}
-          <div className="mt-10 rounded-[2.5rem] border-2 border-red-50 bg-red-50/30 p-8 text-left">
+          {/* DANGER ZONE (Ditarik lebih ke bawah untuk keamanan visual) */}
+          <div className="mt-10 rounded-[2.5rem] border-2 border-red-200 bg-red-50/20 p-8 text-left transition-all hover:bg-red-50/50">
             <div className="flex items-start gap-4 text-red-600">
-              <AlertTriangle className="shrink-0" size={24} />
+              <AlertTriangle className="shrink-0 animate-pulse" size={24} />
               <div>
-                <h4 className="text-[11px] font-black uppercase tracking-widest">Zona Berbahaya</h4>
-                <p className="mt-1 text-[10px] font-medium leading-relaxed opacity-70">
-                  Jika Anda ingin menghapus akun institusi ini secara permanen, harap hubungi Super Admin. <br />
-                  Penghapusan akun akan menghilangkan seluruh data riset yang terhubung secara otomatis.
+                <h4 className="text-[11px] font-black uppercase tracking-widest">Zona Pembatalan Akun</h4>
+                <p className="mt-2 text-[10px] font-bold leading-relaxed opacity-70 italic">
+                  Penghapusan akun institusi hanya dapat diproses melalui pengajuan resmi ke Super Admin. <br />
+                  Tindakan ini akan memutus seluruh validasi alumni yang telah dilakukan secara permanen.
                 </p>
               </div>
             </div>
