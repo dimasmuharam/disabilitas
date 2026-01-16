@@ -73,8 +73,8 @@ export default function TrainingContent({ training, partner, accommodations, ski
   // --- TAMPILAN 1: HALAMAN KONFIRMASI SUKSES ---
   if (showSuccess) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 p-6 text-center text-white font-sans selection:bg-emerald-500">
-        <div className="max-w-2xl space-y-10 animate-in fade-in zoom-in duration-500" role="alert" aria-live="assertive">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 p-6 text-center font-sans text-white selection:bg-emerald-500">
+        <div className="max-w-2xl space-y-10 duration-500 animate-in fade-in zoom-in" role="alert" aria-live="assertive">
           <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.4)]">
             <CheckCircle2 size={48} />
           </div>
@@ -87,14 +87,14 @@ export default function TrainingContent({ training, partner, accommodations, ski
             >
               Pendaftaran Berhasil!
             </h1>
-            <p className="text-sm font-bold uppercase tracking-widest text-emerald-400 italic">Program diselenggarakan oleh {partner?.name}</p>
+            <p className="text-sm font-bold uppercase italic tracking-widest text-emerald-400">Program diselenggarakan oleh {partner?.name}</p>
           </div>
 
-          <div className="rounded-[3rem] border-2 border-slate-700 bg-slate-800/50 p-10 text-left space-y-6 shadow-2xl">
+          <div className="space-y-6 rounded-[3rem] border-2 border-slate-700 bg-slate-800/50 p-10 text-left shadow-2xl">
             <h2 className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-blue-400">
               <MessageCircle size={18} /> Instruksi Pasca Pendaftaran:
             </h2>
-            <div className="text-xl font-medium leading-relaxed italic text-slate-200">
+            <div className="text-xl font-medium italic leading-relaxed text-slate-200">
               {training?.registration_instructions || "Silakan cek dashboard secara berkala untuk pembaruan status pendaftaran Anda."}
             </div>
           </div>
@@ -116,36 +116,36 @@ export default function TrainingContent({ training, partner, accommodations, ski
 
   return (
     <>
-      <header className="border-b-4 border-slate-900 bg-white px-6 pt-16 pb-20 text-left">
-        <div className="mx-auto max-w-6xl flex flex-col items-start gap-12 lg:flex-row lg:items-center">
-          <div className="flex size-28 items-center justify-center rounded-[2.5rem] bg-blue-600 text-white border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+      <header className="border-b-4 border-slate-900 bg-white px-6 pb-20 pt-16 text-left">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-12 lg:flex-row lg:items-center">
+          <div className="flex size-28 items-center justify-center rounded-[2.5rem] border-4 border-slate-900 bg-blue-600 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
             <GraduationCap size={48} />
           </div>
           <div className="flex-1 space-y-6">
             <div className="flex flex-wrap gap-3">
-              <span className="rounded-full bg-blue-50 border-2 border-blue-100 px-4 py-1 text-[10px] font-black uppercase text-blue-600 italic tracking-widest">
+              <span className="rounded-full border-2 border-blue-100 bg-blue-50 px-4 py-1 text-[10px] font-black uppercase italic tracking-widest text-blue-600">
                 Program {training?.is_online ? "Daring (Online)" : "Luring (Offline)"}
               </span>
               {/* TAMBAHAN: Tag JP di Header */}
-              <span className="rounded-full bg-slate-900 border-2 border-slate-900 px-4 py-1 text-[10px] font-black uppercase text-white italic tracking-widest flex items-center gap-2">
+              <span className="flex items-center gap-2 rounded-full border-2 border-slate-900 bg-slate-900 px-4 py-1 text-[10px] font-black uppercase italic tracking-widest text-white">
                 <Timer size={12} /> {training?.total_hours || 0} JP Pelatihan
               </span>
             </div>
-            <h1 className="text-4xl font-black uppercase italic tracking-tighter md:text-6xl text-slate-900 leading-none">
+            <h1 className="text-4xl font-black uppercase italic leading-none tracking-tighter text-slate-900 md:text-6xl">
               {training?.title}
             </h1>
             <div className="flex flex-wrap items-center gap-8 pt-2">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg"><Building2 size={18} /></div>
                 <div className="text-left">
-                  <p className="text-[8px] font-black uppercase text-slate-400 mb-1 leading-none">Penyelenggara</p>
+                  <p className="mb-1 text-[8px] font-black uppercase leading-none text-slate-400">Penyelenggara</p>
                   <span className="text-sm font-black uppercase italic">{partner?.name || "Mitra"}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin size={20} className="text-blue-600" />
                 <div className="text-left">
-                  <p className="text-[8px] font-black uppercase text-slate-400 mb-1 leading-none">Lokasi Pelaksanaan</p>
+                  <p className="mb-1 text-[8px] font-black uppercase leading-none text-slate-400">Lokasi Pelaksanaan</p>
                   <span className="text-sm font-black uppercase italic">{training?.is_online ? "Seluruh Indonesia (Remote)" : (training?.location || "Lokasi Global")}</span>
                 </div>
               </div>
@@ -154,26 +154,26 @@ export default function TrainingContent({ training, partner, accommodations, ski
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-20 text-left grid grid-cols-1 gap-16 lg:grid-cols-3 font-sans">
-        <div className="lg:col-span-2 space-y-20">
+      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-16 px-6 py-20 text-left font-sans lg:grid-cols-3">
+        <div className="space-y-20 lg:col-span-2">
           <section aria-labelledby="desc-heading" className="space-y-6">
-            <h2 id="desc-heading" className="flex items-center gap-4 text-2xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">
+            <h2 id="desc-heading" className="flex items-center gap-4 text-2xl font-black uppercase italic leading-none tracking-tighter text-slate-900">
               <FileText className="text-blue-600" size={32} /> Tentang Program
             </h2>
-            <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-xl font-medium italic leading-relaxed text-slate-700 shadow-sm whitespace-pre-line">
+            <div className="whitespace-pre-line rounded-[3rem] border-2 border-slate-100 bg-white p-10 text-xl font-medium italic leading-relaxed text-slate-700 shadow-sm">
               {training?.description}
             </div>
           </section>
 
           {skills?.length > 0 && (
             <section aria-labelledby="skill-heading" className="space-y-8">
-              <h2 id="skill-heading" className="flex items-center gap-4 text-2xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">
+              <h2 id="skill-heading" className="flex items-center gap-4 text-2xl font-black uppercase italic leading-none tracking-tighter text-slate-900">
                 <Target className="text-blue-600" size={32} /> Skill Yang Didapat
               </h2>
               <div className="flex flex-wrap gap-4">
                 {skills.map((s: string) => (
                   <div key={s} className="rounded-2xl border-2 border-slate-900 bg-white px-6 py-4 text-xs font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-transform hover:-translate-y-1">
-                    <Zap size={16} className="inline mr-2 text-blue-600 fill-blue-600" /> {s}
+                    <Zap size={16} className="mr-2 inline fill-blue-600 text-blue-600" /> {s}
                   </div>
                 ))}
               </div>
@@ -181,13 +181,13 @@ export default function TrainingContent({ training, partner, accommodations, ski
           )}
 
           <section aria-labelledby="syllabus-heading" className="space-y-8">
-            <h2 id="syllabus-heading" className="flex items-center gap-4 text-2xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">
+            <h2 id="syllabus-heading" className="flex items-center gap-4 text-2xl font-black uppercase italic leading-none tracking-tighter text-slate-900">
               <BookOpen className="text-blue-600" size={32} /> Kurikulum Pembelajaran
             </h2>
             <div className="grid gap-4">
               {training?.syllabus?.split('\n').filter((s: string) => s.trim() !== "").map((item: string, idx: number) => (
-                <div key={idx} className="flex items-center gap-6 rounded-3xl border-2 border-slate-50 bg-white p-6 hover:border-blue-600 transition-all group shadow-sm">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-black text-white group-hover:bg-blue-600 transition-colors">
+                <div key={idx} className="group flex items-center gap-6 rounded-3xl border-2 border-slate-50 bg-white p-6 shadow-sm transition-all hover:border-blue-600">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-black text-white transition-colors group-hover:bg-blue-600">
                     {idx + 1}
                   </span>
                   <p className="text-sm font-black uppercase italic text-slate-700">{item}</p>
@@ -198,8 +198,8 @@ export default function TrainingContent({ training, partner, accommodations, ski
         </div>
 
         <aside className="space-y-10">
-          <section aria-labelledby="reg-heading" className="rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl border-t-[12px] border-blue-600">
-            <h2 id="reg-heading" className="mb-8 flex items-center gap-2 border-b border-white/10 pb-4 text-[10px] font-black uppercase tracking-widest italic text-blue-400 leading-none">
+          <section aria-labelledby="reg-heading" className="rounded-[3.5rem] border-t-[12px] border-blue-600 bg-slate-900 p-10 text-white shadow-2xl">
+            <h2 id="reg-heading" className="mb-8 flex items-center gap-2 border-b border-white/10 pb-4 text-[10px] font-black uppercase italic leading-none tracking-widest text-blue-400">
               <Clock size={16} /> Panel Pendaftaran
             </h2>
             
@@ -213,9 +213,9 @@ export default function TrainingContent({ training, partner, accommodations, ski
 
               <div className="space-y-4">
                 <div className="text-left">
-                  <p className="text-[8px] font-black uppercase opacity-60 mb-1 italic leading-none">Masa Pendaftaran</p>
-                  <p className="text-[11px] font-bold text-emerald-400 leading-tight">BUKA: {formatFullDate(training?.registration_start)}</p>
-                  <p className="text-[11px] font-bold text-red-400 uppercase leading-tight">TUTUP: {formatFullDate(training?.registration_deadline)}</p>
+                  <p className="mb-1 text-[8px] font-black uppercase italic leading-none opacity-60">Masa Pendaftaran</p>
+                  <p className="text-[11px] font-bold leading-tight text-emerald-400">BUKA: {formatFullDate(training?.registration_start)}</p>
+                  <p className="text-[11px] font-bold uppercase leading-tight text-red-400">TUTUP: {formatFullDate(training?.registration_deadline)}</p>
                 </div>
 
                 {!isExpired ? (
@@ -228,7 +228,7 @@ export default function TrainingContent({ training, partner, accommodations, ski
                     {isSubmitting ? "MENYINKRONKAN..." : "DAFTAR SEKARANG"}
                   </button>
                 ) : (
-                  <div className="rounded-2xl bg-slate-800 p-6 text-center border border-white/10 italic">
+                  <div className="rounded-2xl border border-white/10 bg-slate-800 p-6 text-center italic">
                     <p className="text-[10px] font-black uppercase text-slate-500">Masa Pendaftaran Berakhir</p>
                   </div>
                 )}
@@ -236,40 +236,40 @@ export default function TrainingContent({ training, partner, accommodations, ski
             </div>
           </section>
 
-          <section aria-labelledby="schedule-heading" className="rounded-[3.5rem] bg-blue-600 p-10 text-white shadow-xl space-y-8 text-left">
-            <h3 id="schedule-heading" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest italic border-b border-blue-400 pb-4 leading-none">
+          <section aria-labelledby="schedule-heading" className="space-y-8 rounded-[3.5rem] bg-blue-600 p-10 text-left text-white shadow-xl">
+            <h3 id="schedule-heading" className="flex items-center gap-2 border-b border-blue-400 pb-4 text-[10px] font-black uppercase italic leading-none tracking-widest">
               <Timer size={16} /> Jadwal & Beban Belajar
             </h3>
             <div className="space-y-4">
-              <p className="text-base font-black italic uppercase leading-tight">
+              <p className="text-base font-black uppercase italic leading-tight">
                 {formatFullDate(training?.start_date)} - {formatFullDate(training?.end_date)}
               </p>
               
               <div className="grid grid-cols-2 gap-4 border-t border-blue-400 pt-4">
                 {training?.start_time && (
                   <div>
-                    <p className="text-[8px] font-black uppercase opacity-60 mb-1 leading-none italic">Waktu (WIB)</p>
+                    <p className="mb-1 text-[8px] font-black uppercase italic leading-none opacity-60">Waktu (WIB)</p>
                     <p className="text-lg font-black italic">{training.start_time.substring(0, 5)} - {training.end_time?.substring(0, 5)}</p>
                   </div>
                 )}
                 {/* TAMBAHAN: Info Beban JP di Aside */}
                 <div>
-                  <p className="text-[8px] font-black uppercase opacity-60 mb-1 leading-none italic">Total Beban</p>
+                  <p className="mb-1 text-[8px] font-black uppercase italic leading-none opacity-60">Total Beban</p>
                   <p className="text-lg font-black italic">{training?.total_hours || 0} JP</p>
                 </div>
               </div>
             </div>
           </section>
 
-          <section aria-labelledby="inclusion-heading" className="rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] space-y-8 text-left">
-            <h3 id="inclusion-heading" className="flex items-center gap-3 text-lg font-black uppercase tracking-tighter text-slate-900 leading-none">
+          <section aria-labelledby="inclusion-heading" className="space-y-8 rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 text-left shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
+            <h3 id="inclusion-heading" className="flex items-center gap-3 text-lg font-black uppercase leading-none tracking-tighter text-slate-900">
               <Accessibility className="text-blue-600" size={24} /> Fasilitas Inklusi
             </h3>
             <ul className="space-y-4" aria-label="Akomodasi yang disediakan oleh penyelenggara">
               {accommodations?.map((item: string, idx: number) => (
                 <li key={idx} className="flex items-start gap-4 rounded-2xl border-2 border-emerald-50 bg-emerald-50/20 p-4 shadow-sm transition-all hover:bg-white">
                   <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-500" />
-                  <span className="text-[11px] font-black uppercase text-emerald-950 italic leading-tight">{item}</span>
+                  <span className="text-[11px] font-black uppercase italic leading-tight text-emerald-950">{item}</span>
                 </li>
               ))}
             </ul>

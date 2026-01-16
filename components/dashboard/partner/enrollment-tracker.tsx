@@ -136,7 +136,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
           >
             <ArrowLeft size={16} /> Kembali
           </button>
-          <h1 className="text-4xl font-black italic leading-none uppercase tracking-tighter text-slate-900">Seleksi Pendaftar</h1>
+          <h1 className="text-4xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Seleksi Pendaftar</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           {/* TOMBOL CETAK - SINKRON DENGAN HELPER (4 PARAMETER) */}
@@ -160,20 +160,20 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
       {/* NOTIFIKASI */}
       {statusMessage && (
         <div 
-          className={`flex animate-in fade-in slide-in-from-top-4 items-center gap-4 rounded-2xl border-4 p-6 ${
+          className={`flex items-center gap-4 rounded-2xl border-4 p-6 animate-in fade-in slide-in-from-top-4 ${
             statusMessage.type === 'success' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-red-500 bg-red-50 text-red-800'
           }`}
           role="alert"
         >
           {statusMessage.type === 'success' ? <CheckCircle size={24}/> : <AlertCircle size={24}/>}
-          <p className="text-sm font-bold italic uppercase">{statusMessage.text}</p>
+          <p className="text-sm font-bold uppercase italic">{statusMessage.text}</p>
         </div>
       )}
 
       {/* BULK ACTION BAR */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] bg-slate-900 p-6 text-white shadow-xl">
         <div className="flex items-center gap-4">
-          <label className="flex cursor-pointer select-none items-center gap-3 text-[10px] font-black italic uppercase">
+          <label className="flex cursor-pointer select-none items-center gap-3 text-[10px] font-black uppercase italic">
             <input 
               type="checkbox" 
               className="size-6 rounded border-2 border-white bg-transparent accent-blue-500"
@@ -234,7 +234,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
       {/* LIST PENDAFTAR */}
       <div className="grid grid-cols-1 gap-4">
         {loading ? (
-          <div className="py-32 text-center font-black italic uppercase text-slate-300 animate-pulse">Menghubungkan Database...</div>
+          <div className="animate-pulse py-32 text-center font-black uppercase italic text-slate-300">Menghubungkan Database...</div>
         ) : enrollments.length > 0 ? (
           enrollments.map((item) => (
             <div 
@@ -251,8 +251,8 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
               />
               <div className="flex flex-1 flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div className="text-left">
-                  <h3 className="text-2xl font-black italic leading-none uppercase tracking-tighter text-slate-900">{item.profiles?.full_name}</h3>
-                  <p className="mt-1 text-[10px] font-black italic uppercase text-slate-400">
+                  <h3 className="text-2xl font-black uppercase italic leading-none tracking-tighter text-slate-900">{item.profiles?.full_name}</h3>
+                  <p className="mt-1 text-[10px] font-black uppercase italic text-slate-400">
                     {item.profiles?.disability_type} • <span className="text-blue-600 underline">{item.trainings?.title}</span>
                   </p>
                 </div>
@@ -273,7 +273,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
                       </button>
                     </div>
                   ) : (
-                    <div className={`rounded-xl px-6 py-3 text-[10px] font-black italic uppercase ${
+                    <div className={`rounded-xl px-6 py-3 text-[10px] font-black uppercase italic ${
                       item.status === 'accepted' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
                     }`}>
                       {item.status === 'accepted' ? 'Diterima' : 'Ditolak'}
@@ -291,9 +291,9 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
             </div>
           ))
         ) : (
-          <div className="flex animate-in zoom-in flex-col items-center justify-center rounded-[4rem] border-4 border-dashed border-slate-100 py-40 text-center">
+          <div className="flex flex-col items-center justify-center rounded-[4rem] border-4 border-dashed border-slate-100 py-40 text-center animate-in zoom-in">
             <Search size={64} className="mb-6 text-slate-100" />
-            <h3 className="text-2xl font-black italic tracking-tighter text-slate-300 uppercase">
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-slate-300">
               Data Tidak Ditemukan
             </h3>
           </div>
@@ -310,7 +310,7 @@ export default function EnrollmentTracker({ partnerId, onBack, partnerName = "Mi
           >
             <ChevronLeft size={24} />
           </button>
-          <span className="text-[14px] font-black italic tracking-widest text-slate-900 uppercase">
+          <span className="text-[14px] font-black uppercase italic tracking-widest text-slate-900">
             {currentPage} <span className="mx-2 text-slate-300">/</span> {totalPages}
           </span>
           <button 

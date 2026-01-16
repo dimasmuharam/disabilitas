@@ -82,13 +82,13 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
         <Sparkles className="mb-4 animate-spin text-emerald-500" size={40} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-center">Generating Market Insight...</p>
+        <p className="text-center text-[10px] font-black uppercase tracking-widest">Generating Market Insight...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10 text-left">
+    <div className="space-y-12 pb-10 text-left duration-700 animate-in fade-in slide-in-from-bottom-6">
       
       {/* SECTION A: SKILL GAP ANALYSIS */}
       <section className="relative overflow-hidden rounded-[3.5rem] border-4 border-slate-900 bg-white p-10 shadow-[15px_15px_0px_0px_rgba(15,23,42,1)]">
@@ -100,7 +100,7 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
               </div>
               <div>
                 <h2 className="text-3xl font-black uppercase italic leading-none tracking-tighter">Skill Gap Analysis</h2>
-                <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Market Insight Dashboard</p>
+                <p className="mt-1 text-[10px] font-black uppercase italic tracking-widest text-slate-400">Market Insight Dashboard</p>
               </div>
             </div>
             <div className="rounded-full bg-slate-900 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white">
@@ -141,12 +141,12 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
               <AlertTriangle size={48} className="shrink-0" />
               <div className="flex-1 space-y-1">
                 <h4 className="text-xl font-black uppercase italic tracking-tighter">Celah Kompetensi Terdeteksi!</h4>
-                <p className="text-sm font-bold leading-relaxed opacity-90 italic">
+                <p className="text-sm font-bold italic leading-relaxed opacity-90">
                   Industri sangat membutuhkan skill &quot;{skillAnalysis.gaps.join(", ")}&quot;, 
                   namun kurikulum internal Anda perlu penyesuaian untuk menjawab kebutuhan ini secara luas.
                 </p>
               </div>
-              <button className="whitespace-nowrap rounded-2xl bg-slate-900 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:scale-105 transition-all">
+              <button className="whitespace-nowrap rounded-2xl bg-slate-900 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:scale-105">
                 Intervensi Akademik
               </button>
             </div>
@@ -168,7 +168,7 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
             {partners.map((partner) => (
               <div key={partner.id} className="group rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-blue-500 hover:shadow-xl">
                 <div className="flex items-start justify-between">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-xl font-black text-slate-400 transition-all group-hover:bg-blue-600 group-hover:text-white">
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-slate-100 text-xl font-black text-slate-400 transition-all group-hover:bg-blue-600 group-hover:text-white">
                     {partner.name.charAt(0)}
                   </div>
                   <button className="rounded-full bg-blue-50 p-3 text-blue-600 transition-all hover:bg-blue-600 hover:text-white">
@@ -187,11 +187,11 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
         </section>
 
         {/* SECTION C: JOB FAIR MANAGER */}
-        <section className="relative overflow-hidden rounded-[3rem] bg-slate-900 p-10 text-white shadow-2xl transition-all group">
+        <section className="group relative overflow-hidden rounded-[3rem] bg-slate-900 p-10 text-white shadow-2xl transition-all">
           <div className="relative z-10">
             <Calendar className="mb-8 text-emerald-400 transition-all group-hover:rotate-12" size={48} />
             <h3 className="text-3xl font-black uppercase italic leading-none tracking-tighter">Exclusive Job Fair Manager</h3>
-            <p className="mt-6 text-sm font-medium leading-relaxed opacity-60 italic">
+            <p className="mt-6 text-sm font-medium italic leading-relaxed opacity-60">
               Ciptakan momentum karir bagi mahasiswa Anda. Undang mitra perusahaan pilihan untuk mengadakan rekrutmen eksklusif 
               khusus bagi talenta dari {campusName}.
             </p>
@@ -207,7 +207,7 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
             </button>
           </div>
 
-          <div className="absolute -right-20 -bottom-20 pointer-events-none opacity-10 transition-all group-hover:opacity-20">
+          <div className="pointer-events-none absolute -bottom-20 -right-20 opacity-10 transition-all group-hover:opacity-20">
             <Rocket size={300} />
           </div>
         </section>

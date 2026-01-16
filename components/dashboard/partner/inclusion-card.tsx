@@ -57,48 +57,48 @@ export default function InclusionCard({ partner, stats }: InclusionCardProps) {
       <div className="absolute -left-[9999px] top-0">
         <div 
           ref={cardRef}
-          className="relative h-[600px] w-[600px] overflow-hidden bg-slate-900 p-12 text-white"
+          className="relative size-[600px] overflow-hidden bg-slate-900 p-12 text-white"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
           {/* Efek Background */}
-          <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-blue-600/20 blur-[80px]" />
-          <div className="absolute -left-20 -bottom-20 h-80 w-80 rounded-full bg-emerald-600/20 blur-[80px]" />
+          <div className="absolute -right-20 -top-20 size-80 rounded-full bg-blue-600/20 blur-[80px]" />
+          <div className="absolute -bottom-20 -left-20 size-80 rounded-full bg-emerald-600/20 blur-[80px]" />
 
           {/* Header Kartu */}
-          <div className="flex justify-between items-start">
+          <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-xl bg-blue-600 p-2 text-white">
                 <GraduationCap size={32} />
               </div>
               <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 leading-none">Official Partner</p>
+                <p className="text-[10px] font-black uppercase leading-none tracking-[0.3em] text-blue-400">Official Partner</p>
                 <p className="mt-1 text-xs font-bold tracking-widest">disabilitas.com</p>
               </div>
             </div>
-            <div className="text-right border-2 border-white/20 px-4 py-2 rounded-2xl">
+            <div className="rounded-2xl border-2 border-white/20 px-4 py-2 text-right">
               <p className="text-[10px] font-black uppercase tracking-tighter">Impact Report</p>
-              <p className="text-[10px] font-bold text-emerald-400 uppercase leading-none">Periode 2026</p>
+              <p className="text-[10px] font-bold uppercase leading-none text-emerald-400">Periode 2026</p>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="mt-16 text-center space-y-4">
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-tight">
+          <div className="mt-16 space-y-4 text-center">
+            <h2 className="text-4xl font-black uppercase italic leading-tight tracking-tighter">
               {partner?.name}
             </h2>
-            <div className="h-1 w-20 bg-blue-500 mx-auto rounded-full" />
-            <p className="text-sm font-medium opacity-80 uppercase tracking-[0.2em]">Mencetak Talenta Inklusif & Mandiri</p>
+            <div className="mx-auto h-1 w-20 rounded-full bg-blue-500" />
+            <p className="text-sm font-medium uppercase tracking-[0.2em] opacity-80">Mencetak Talenta Inklusif & Mandiri</p>
           </div>
 
           {/* Statistik Besar */}
           <div className="mt-12 grid grid-cols-2 gap-8 border-y-2 border-white/10 py-10">
             <div className="text-center">
               <p className="text-5xl font-black tracking-tighter text-blue-400">{stats.total}</p>
-              <p className="mt-2 text-[10px] font-black uppercase tracking-widest opacity-60 italic text-left">Talenta Dilatih</p>
+              <p className="mt-2 text-left text-[10px] font-black uppercase italic tracking-widest opacity-60">Talenta Dilatih</p>
             </div>
             <div className="text-center">
               <p className="text-5xl font-black tracking-tighter text-emerald-400">{stats.rate}%</p>
-              <p className="mt-2 text-[10px] font-black uppercase tracking-widest opacity-60 italic text-left text-blue-400">Success Rate</p>
+              <p className="mt-2 text-left text-[10px] font-black uppercase italic tracking-widest text-blue-400 opacity-60">Success Rate</p>
             </div>
           </div>
 
@@ -109,7 +109,7 @@ export default function InclusionCard({ partner, stats }: InclusionCardProps) {
                 <ShieldCheck size={18} className="text-emerald-400" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Inclusion Verified</span>
               </div>
-              <p className="max-w-[300px] text-[10px] font-medium leading-relaxed opacity-60 italic">
+              <p className="max-w-[300px] text-[10px] font-medium italic leading-relaxed opacity-60">
                 Ayo bergabung membangun ekosistem kerja yang setara bagi semua di <strong>disabilitas.com</strong>
               </p>
             </div>

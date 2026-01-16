@@ -82,7 +82,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
   };
 
   if (loading) return (
-    <div role="status" className="flex min-h-screen items-center justify-center font-black italic uppercase text-slate-400 animate-pulse">
+    <div role="status" className="flex min-h-screen animate-pulse items-center justify-center font-black uppercase italic text-slate-400">
       <Activity className="mr-2 animate-spin" /> Menghubungkan ke Portal Mitra...
     </div>
   );
@@ -101,12 +101,12 @@ export default function PartnerDashboard({ user }: { user: any }) {
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 md:flex-row md:items-end">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="rounded-[1.5rem] border-2 border-slate-900 bg-blue-600 p-4 text-white shadow-xl">
+            <div className="rounded-3xl border-2 border-slate-900 bg-blue-600 p-4 text-white shadow-xl">
               <GraduationCap size={32} />
             </div>
             <div>
               <p className="mb-1 text-[10px] font-black uppercase leading-none tracking-[0.3em] text-blue-600">Impact Ecosystem Partner</p>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none">{partner?.name}</h1>
+              <h1 className="text-4xl font-black uppercase italic leading-none tracking-tighter">{partner?.name}</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -157,12 +157,12 @@ export default function PartnerDashboard({ user }: { user: any }) {
           <button 
             key={tab.id} 
             onClick={() => navigateTo(tab.id, tab.label)}
-            className={`relative flex items-center gap-3 whitespace-nowrap rounded-[1.5rem] px-8 py-5 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "bg-slate-900 text-white shadow-2xl" : "bg-white border-2 border-slate-100 text-slate-400 hover:border-slate-900"}`}
+            className={`relative flex items-center gap-3 whitespace-nowrap rounded-3xl px-8 py-5 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "bg-slate-900 text-white shadow-2xl" : "border-2 border-slate-100 bg-white text-slate-400 hover:border-slate-900"}`}
           >
             <tab.icon size={18} /> 
             {tab.label}
             {tab.count > 0 && (
-              <span className="absolute -right-1 -top-1 flex size-6 items-center justify-center rounded-full border-2 border-white bg-red-600 text-[10px] font-bold text-white animate-bounce shadow-lg">
+              <span className="absolute -right-1 -top-1 flex size-6 animate-bounce items-center justify-center rounded-full border-2 border-white bg-red-600 text-[10px] font-bold text-white shadow-lg">
                 {tab.count}
               </span>
             )}
@@ -172,7 +172,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
 
       <main id="main-content">
         {activeTab === "overview" && (
-          <div className="space-y-12 animate-in fade-in duration-700">
+          <div className="space-y-12 duration-700 animate-in fade-in">
             <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Ringkasan Statistik</h2>
             
             <div className="grid grid-cols-1 gap-6 text-left sm:grid-cols-2 lg:grid-cols-4">
@@ -190,7 +190,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
               </div>
               <div className="flex flex-col justify-center rounded-[2.5rem] bg-blue-600 p-8 text-white shadow-xl">
                 <p className="mb-1 text-[9px] font-black uppercase italic leading-none tracking-widest text-blue-200">Review Pendaftaran</p>
-                <p className="text-2xl font-black uppercase italic tracking-tighter leading-none">{pendingTraineesCount} Aplikasi Baru</p>
+                <p className="text-2xl font-black uppercase italic leading-none tracking-tighter">{pendingTraineesCount} Aplikasi Baru</p>
                 <button onClick={() => setActiveTab("selection")} className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase underline decoration-2 underline-offset-4">Buka Seleksi <ArrowRight size={14}/></button>
               </div>
             </div>
@@ -252,7 +252,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
                 <div>
                   <Zap className="mb-6 text-blue-400" size={32} />
                   <p className="mb-4 text-[10px] font-black uppercase italic tracking-widest opacity-70">Visi Kesetaraan</p>
-                  <p className="text-3xl font-black uppercase italic tracking-tighter leading-tight">Mencetak Lulusan Siap Kerja & Berdaya Saing</p>
+                  <p className="text-3xl font-black uppercase italic leading-tight tracking-tighter">Mencetak Lulusan Siap Kerja & Berdaya Saing</p>
                 </div>
                 <div className="mt-8 border-t border-white/10 pt-4">
                    <p className="text-[9px] font-black uppercase opacity-60">Verified Partner 2026</p>
@@ -275,15 +275,15 @@ export default function PartnerDashboard({ user }: { user: any }) {
         <div id="partner-impact-card" className="flex h-[500px] w-[900px] flex-col justify-between border-[24px] border-slate-900 bg-white p-16 font-sans text-slate-900">
           <div className="flex items-center justify-between border-b-8 border-blue-600 pb-10">
             <div className="space-y-1 text-left">
-              <h2 className="text-5xl font-black uppercase italic tracking-tighter text-blue-600 leading-none">disabilitas.com</h2>
+              <h2 className="text-5xl font-black uppercase italic leading-none tracking-tighter text-blue-600">disabilitas.com</h2>
               <p className="text-xs font-black uppercase leading-none tracking-[0.5em] text-slate-400">Official Impact Partner 2026</p>
             </div>
             <div className="rounded-2xl bg-blue-600 px-10 py-5 text-lg font-black uppercase tracking-widest text-white shadow-xl">VERIFIED IMPACT</div>
           </div>
           <div className="flex flex-1 items-center justify-between py-12 text-left">
             <div className="max-w-[60%] space-y-4">
-              <h3 className="text-6xl font-black uppercase italic tracking-tighter leading-[0.9] text-slate-900">{partner?.name}</h3>
-              <p className="pt-4 text-sm font-bold uppercase leading-relaxed text-slate-500 italic">Aktif membangun masa depan kerja yang inklusif dan setara bagi semua talenta.</p>
+              <h3 className="text-6xl font-black uppercase italic leading-[0.9] tracking-tighter text-slate-900">{partner?.name}</h3>
+              <p className="pt-4 text-sm font-bold uppercase italic leading-relaxed text-slate-500">Aktif membangun masa depan kerja yang inklusif dan setara bagi semua talenta.</p>
             </div>
             <div className="flex flex-col gap-6 text-right">
               <div className="space-y-1">

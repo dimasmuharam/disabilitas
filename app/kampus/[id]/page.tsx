@@ -78,7 +78,7 @@ export default async function CampusPublicProfile({ params }: Props) {
                 <School size={40} />
               </div>
               <div className="space-y-2">
-                <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-none lg:text-7xl">
+                <h1 className="text-5xl font-black uppercase italic leading-none tracking-tighter lg:text-7xl">
                   {campus.name}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-sm font-black uppercase tracking-widest text-slate-400">
@@ -99,7 +99,7 @@ export default async function CampusPublicProfile({ params }: Props) {
                 <span className="text-6xl font-black italic tracking-tighter text-emerald-600">{campus.inclusion_score}%</span>
                 <ShieldCheck size={48} className="text-emerald-500" />
               </div>
-              <p className="mt-4 text-[10px] font-bold leading-tight uppercase opacity-60 italic">
+              <p className="mt-4 text-[10px] font-bold uppercase italic leading-tight opacity-60">
                 Tingkat aksesibilitas dan kemandirian alumni tersertifikasi.
               </p>
             </div>
@@ -111,12 +111,12 @@ export default async function CampusPublicProfile({ params }: Props) {
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-3">
           
           {/* LEFT COLUMN: NARRATIVE & ACCOMMODATION */}
-          <div className="space-y-12 lg:col-span-2 text-left">
+          <div className="space-y-12 text-left lg:col-span-2">
             <section className="space-y-6">
               <h2 className="flex items-center gap-3 text-2xl font-black uppercase italic tracking-tighter">
                 <Heart className="text-pink-500" /> Komitmen Inklusi
               </h2>
-              <p className="text-xl font-medium leading-relaxed text-slate-700 md:text-2xl italic">
+              <p className="text-xl font-medium italic leading-relaxed text-slate-700 md:text-2xl">
                 {campus.description || `${campus.name} terus berupaya menciptakan ekosistem pendidikan yang setara bagi seluruh mahasiswa tanpa terkecuali.`}
               </p>
             </section>
@@ -166,7 +166,7 @@ export default async function CampusPublicProfile({ params }: Props) {
                   <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Populasi Mahasiswa</p>
                   <p className="text-5xl font-black italic tracking-tighter">{totalTalents}</p>
                 </div>
-                <div className="text-left border-l-4 border-emerald-500 pl-6">
+                <div className="border-l-4 border-emerald-500 pl-6 text-left">
                   <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Employability Rate</p>
                   <p className="text-5xl font-black italic tracking-tighter">{employmentRate}%</p>
                   <p className="mt-2 text-[10px] font-medium opacity-60">Alumni telah terserap industri profesional.</p>
@@ -180,11 +180,11 @@ export default async function CampusPublicProfile({ params }: Props) {
                 <Users size={16} /> Proporsi Gender
               </h3>
               <div className="flex gap-4">
-                <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-b-4 border-blue-500 text-left">
+                <div className="flex-1 rounded-2xl border-b-4 border-blue-500 bg-slate-50 p-4 text-left">
                   <p className="text-[8px] font-black uppercase text-slate-400">Laki-laki</p>
                   <p className="text-xl font-black">{genMap.male}</p>
                 </div>
-                <div className="flex-1 rounded-2xl bg-slate-50 p-4 border-b-4 border-pink-500 text-left">
+                <div className="flex-1 rounded-2xl border-b-4 border-pink-500 bg-slate-50 p-4 text-left">
                   <p className="text-[8px] font-black uppercase text-slate-400">Perempuan</p>
                   <p className="text-xl font-black">{genMap.female}</p>
                 </div>
@@ -221,7 +221,7 @@ export default async function CampusPublicProfile({ params }: Props) {
           <h2 className="text-3xl font-black uppercase italic tracking-tighter md:text-5xl">
             Wujudkan Kampus Inklusif
           </h2>
-          <p className="mx-auto mt-6 max-w-xl text-sm font-bold uppercase tracking-widest opacity-80 leading-relaxed">
+          <p className="mx-auto mt-6 max-w-xl text-sm font-bold uppercase leading-relaxed tracking-widest opacity-80">
             Bergabunglah dengan {campus.name} dan ribuan talenta lainnya untuk membangun karir yang mandiri.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">

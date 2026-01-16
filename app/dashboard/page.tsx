@@ -162,7 +162,7 @@ function DashboardContent() {
               <p>{"Log: "}{user?.email}</p>
               <p>{"Role: "}{role || "UNDEFINED"}</p>
             </div>
-            <button onClick={() => router.push("/masuk")} className="rounded-2xl bg-slate-900 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-blue-600 transition-colors">
+            <button onClick={() => router.push("/masuk")} className="rounded-2xl bg-slate-900 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white transition-colors hover:bg-blue-600">
               {"Otorisasi Ulang"}
             </button>
           </div>

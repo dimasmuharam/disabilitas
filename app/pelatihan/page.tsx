@@ -59,7 +59,7 @@ export default function TrainingExplorer() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 pt-32 pb-20 text-slate-900 selection:bg-blue-100">
+    <div className="min-h-screen bg-slate-50 px-4 pb-20 pt-32 text-slate-900 selection:bg-blue-100">
       <div className="mx-auto max-w-6xl space-y-12">
         {/* HEADER & SEARCH */}
         <header className="space-y-8 text-center">
@@ -70,7 +70,7 @@ export default function TrainingExplorer() {
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
             <input 
               placeholder="Cari kursus atau nama lembaga pelatihan..." 
-              className="w-full rounded-[2.5rem] border-4 border-slate-900 bg-white p-6 pl-16 text-sm font-bold shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] outline-none focus:border-blue-600 transition-all" 
+              className="w-full rounded-[2.5rem] border-4 border-slate-900 bg-white p-6 pl-16 text-sm font-bold shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] outline-none transition-all focus:border-blue-600" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
             />
@@ -87,20 +87,20 @@ export default function TrainingExplorer() {
           {/* Filter Ragam Disabilitas */}
           <div className="relative">
             <select 
-              className="appearance-none rounded-xl bg-slate-50 px-6 py-3 pr-10 text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-600 border-2 border-transparent transition-all" 
+              className="appearance-none rounded-xl border-2 border-transparent bg-slate-50 px-6 py-3 pr-10 text-[10px] font-black uppercase outline-none transition-all focus:ring-2 focus:ring-blue-600" 
               value={selectedDisability} 
               onChange={(e) => setSelectedDisability(e.target.value)}
             >
               <option value="">Semua Ragam Disabilitas</option>
               {DISABILITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <Filter size={12} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+            <Filter size={12} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
 
           {/* Filter Durasi (JP) */}
           <div className="relative">
             <select 
-              className="appearance-none rounded-xl bg-slate-50 px-6 py-3 pr-10 text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-emerald-600 border-2 border-transparent transition-all" 
+              className="appearance-none rounded-xl border-2 border-transparent bg-slate-50 px-6 py-3 pr-10 text-[10px] font-black uppercase outline-none transition-all focus:ring-2 focus:ring-emerald-600" 
               value={selectedDuration} 
               onChange={(e) => setSelectedDuration(e.target.value)}
             >
@@ -109,7 +109,7 @@ export default function TrainingExplorer() {
               <option value="medium">Intensif (20 - 40 JP)</option>
               <option value="long">Komprehensif (&gt; 40 JP)</option>
             </select>
-            <Clock size={12} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+            <Clock size={12} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
         </section>
 
@@ -117,7 +117,7 @@ export default function TrainingExplorer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             Array(6).fill(0).map((_, i) => (
-              <div key={i} className="h-64 animate-pulse rounded-[3rem] bg-slate-200 border-4 border-slate-100" />
+              <div key={i} className="h-64 animate-pulse rounded-[3rem] border-4 border-slate-100 bg-slate-200" />
             ))
           ) : filtered.length > 0 ? (
             filtered.map((t) => (
@@ -128,7 +128,7 @@ export default function TrainingExplorer() {
               >
                 <div className="space-y-4 text-left">
                   <div className="flex items-center justify-between">
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-[8px] font-black uppercase text-blue-600 tracking-widest border border-blue-100">
+                    <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[8px] font-black uppercase tracking-widest text-blue-600">
                       {t.is_online ? "Daring" : "Luring"}
                     </span>
                     <div className="flex items-center gap-1 text-emerald-600">
@@ -137,14 +137,14 @@ export default function TrainingExplorer() {
                     </div>
                   </div>
 
-                  <h3 className="text-2xl font-black uppercase italic leading-tight tracking-tighter text-slate-900 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-2xl font-black uppercase italic leading-tight tracking-tighter text-slate-900 transition-colors group-hover:text-blue-600">
                     {t.title}
                   </h3>
 
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                       <Building2 size={14} className="text-slate-400" />
-                      <span className="text-[10px] font-black uppercase italic text-slate-500 tracking-tight">
+                      <span className="text-[10px] font-black uppercase italic tracking-tight text-slate-500">
                         {(t.partners as any)?.name}
                       </span>
                     </div>
@@ -163,19 +163,19 @@ export default function TrainingExplorer() {
                     <div className="flex items-center gap-1 text-[9px] font-black uppercase text-slate-900">
                       <MapPin size={12} className="text-blue-600" /> {t.is_online ? "Seluruh Indonesia" : t.location}
                     </div>
-                    <p className="text-[8px] font-bold uppercase text-slate-400 italic">Deadline: {new Date(t.registration_deadline).toLocaleDateString('id-ID')}</p>
+                    <p className="text-[8px] font-bold uppercase italic text-slate-400">Deadline: {new Date(t.registration_deadline).toLocaleDateString('id-ID')}</p>
                   </div>
-                  <div className="flex size-10 items-center justify-center rounded-full bg-slate-900 text-white transition-all group-hover:-rotate-45 group-hover:bg-blue-600 shadow-lg">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg transition-all group-hover:-rotate-45 group-hover:bg-blue-600">
                     <ArrowRight size={18} />
                   </div>
                 </div>
               </Link>
             ))
           ) : (
-            <div className="col-span-full py-32 text-center rounded-[3rem] border-4 border-dashed border-slate-200">
+            <div className="col-span-full rounded-[3rem] border-4 border-dashed border-slate-200 py-32 text-center">
                <Activity size={64} className="mx-auto mb-6 text-slate-200" />
-               <h2 className="text-2xl font-black uppercase italic text-slate-300 tracking-tighter">Pelatihan Tidak Ditemukan</h2>
-               <p className="text-[10px] font-bold uppercase text-slate-400 mt-2 italic">Coba ubah kata kunci atau filter pencarian Anda</p>
+               <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-300">Pelatihan Tidak Ditemukan</h2>
+               <p className="mt-2 text-[10px] font-bold uppercase italic text-slate-400">Coba ubah kata kunci atau filter pencarian Anda</p>
             </div>
           )}
         </div>

@@ -116,14 +116,14 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
   };
 
   return (
-    <main className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
-      <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between border-b-4 border-slate-900 pb-6 gap-4">
-        <button onClick={onBack} aria-label="Batal dan kembali" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all group">
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Batal & Kembali
+    <main className="text-left duration-500 animate-in fade-in slide-in-from-bottom-4">
+      <header className="mb-10 flex flex-col justify-between gap-4 border-b-4 border-slate-900 pb-6 md:flex-row md:items-center">
+        <button onClick={onBack} aria-label="Batal dan kembali" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-slate-900">
+          <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Batal & Kembali
         </button>
         <div className="text-left md:text-right">
-          <h1 className="text-2xl font-black uppercase italic tracking-tighter leading-tight">Integrasi Profil Akademik</h1>
-          <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-600 italic tracking-[0.2em]">
+          <h1 className="text-2xl font-black uppercase italic leading-tight tracking-tighter">Integrasi Profil Akademik</h1>
+          <p className="text-[9px] font-bold uppercase italic tracking-[0.2em] text-emerald-600">
             Research Sync Protocol v0.0.3
           </p>
         </div>
@@ -131,54 +131,54 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-6 md:p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-6 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:p-10">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               
               {/* NAMA INSTITUSI */}
-              <div className="md:col-span-2 space-y-3">
+              <div className="space-y-3 md:col-span-2">
                 <label htmlFor="uni-select" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                   <Building2 size={14} /> Nama Institusi Terdaftar
                 </label>
                 <div className="relative">
-                  <select id="uni-select" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="block w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none focus:border-slate-900 transition-all" required>
+                  <select id="uni-select" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="block w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:border-slate-900" required>
                     <option value="">-- Pilih Universitas --</option>
                     {UNIVERSITIES.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
+                  <ChevronDown className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 </div>
               </div>
 
               {/* LOKASI */}
-              <div className="md:col-span-2 space-y-3">
+              <div className="space-y-3 md:col-span-2">
                 <label htmlFor="location-select" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                   <MapPin size={14} /> Lokasi Wilayah
                 </label>
                 <div className="relative">
-                  <select id="location-select" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="block w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none focus:border-slate-900 transition-all" required>
+                  <select id="location-select" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="block w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:border-slate-900" required>
                     <option value="">-- Pilih Kota --</option>
                     {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20} />
+                  <ChevronDown className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 </div>
               </div>
 
               {/* TRACER DATA (30% OUTPUT WEIGHT) */}
-              <div className="md:col-span-2 rounded-[2rem] border-4 border-slate-900 bg-slate-900 p-8 text-white space-y-6">
+              <div className="space-y-6 rounded-[2rem] border-4 border-slate-900 bg-slate-900 p-8 text-white md:col-span-2">
                 <div className="flex items-center gap-3">
                   <TrendingUp size={24} className="text-emerald-400" />
                   <div>
-                    <h3 className="text-lg font-black uppercase italic tracking-tighter leading-none">Snapshot Keterserapan Kerja</h3>
-                    <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-slate-400 italic">Mempengaruhi 15% dari Skor Inklusi Nasional</p>
+                    <h3 className="text-lg font-black uppercase italic leading-none tracking-tighter">Snapshot Keterserapan Kerja</h3>
+                    <p className="mt-1 text-[9px] font-bold uppercase italic tracking-widest text-slate-400">Mempengaruhi 15% dari Skor Inklusi Nasional</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                <div className="grid grid-cols-1 gap-6 text-left md:grid-cols-2">
                   <div className="space-y-3">
                     <label htmlFor="total-alumni" className="text-[10px] font-black uppercase text-slate-400">Total Mahasiswa Disabilitas</label>
-                    <input id="total-alumni" type="number" value={formData.stats_academic_total} onChange={(e) => setFormData({...formData, stats_academic_total: parseInt(e.target.value) || 0})} className="block w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 font-black text-emerald-400 outline-none focus:border-emerald-400 transition-all" />
+                    <input id="total-alumni" type="number" value={formData.stats_academic_total} onChange={(e) => setFormData({...formData, stats_academic_total: parseInt(e.target.value) || 0})} className="block w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 font-black text-emerald-400 outline-none transition-all focus:border-emerald-400" />
                   </div>
                   <div className="space-y-3">
                     <label htmlFor="hired-alumni" className="text-[10px] font-black uppercase text-slate-400">Lulusan Sudah Bekerja</label>
-                    <input id="hired-alumni" type="number" value={formData.stats_academic_hired} onChange={(e) => setFormData({...formData, stats_academic_hired: parseInt(e.target.value) || 0})} className="block w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 font-black text-emerald-400 outline-none focus:border-emerald-400 transition-all" />
+                    <input id="hired-alumni" type="number" value={formData.stats_academic_hired} onChange={(e) => setFormData({...formData, stats_academic_hired: parseInt(e.target.value) || 0})} className="block w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 font-black text-emerald-400 outline-none transition-all focus:border-emerald-400" />
                   </div>
                 </div>
               </div>
@@ -194,9 +194,9 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
               </div>
 
               {/* DESKRIPSI */}
-              <div className="md:col-span-2 space-y-3 text-left">
+              <div className="space-y-3 text-left md:col-span-2">
                 <label htmlFor="description-text" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400"><Info size={14} /> Deskripsi Layanan Inklusi</label>
-                <textarea id="description-text" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={4} className="block w-full rounded-[2rem] border-2 border-slate-100 bg-slate-50 px-6 py-5 font-medium outline-none focus:border-slate-900 leading-relaxed" />
+                <textarea id="description-text" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={4} className="block w-full rounded-[2rem] border-2 border-slate-100 bg-slate-50 px-6 py-5 font-medium leading-relaxed outline-none focus:border-slate-900" />
               </div>
             </div>
           </section>
@@ -204,19 +204,19 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
 
         {/* 14 INDIKATOR (30% FISIK + 40% DIGITAL + 15% KEBIJAKAN) */}
         <div className="space-y-8">
-          <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl overflow-hidden relative text-left">
-            <legend className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest italic text-emerald-400">
+          <fieldset className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
+            <legend className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase italic tracking-widest text-emerald-400">
               <ListChecks size={18} /> 14 Indikator Validasi
             </legend>
-            <div className="max-h-[600px] space-y-3 overflow-y-auto pr-2 custom-scrollbar relative z-10" role="group">
+            <div className="custom-scrollbar relative z-10 max-h-[600px] space-y-3 overflow-y-auto pr-2" role="group">
               {ACCOMMODATION_TYPES.map((item) => (
-                <label key={item} className="group flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10 focus-within:ring-2 focus-within:ring-emerald-500">
+                <label key={item} className="group flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all focus-within:ring-2 focus-within:ring-emerald-500 hover:bg-white/10">
                   <input type="checkbox" className="mt-1 size-5 rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-emerald-500" checked={formData.master_accommodations_provided.includes(item)} onChange={() => handleCheckboxChange(item)} />
-                  <span className="text-[10px] font-black leading-tight text-slate-300 uppercase group-hover:text-white transition-colors">{item}</span>
+                  <span className="text-[10px] font-black uppercase leading-tight text-slate-300 transition-colors group-hover:text-white">{item}</span>
                 </label>
               ))}
             </div>
-            <Building2 className="absolute -right-10 -bottom-10 text-white/5" size={200} />
+            <Building2 className="absolute -bottom-10 -right-10 text-white/5" size={200} />
           </fieldset>
 
           <div className="space-y-4">
@@ -228,7 +228,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
             <button type="submit" disabled={loading} className="group flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-xl transition-all hover:bg-emerald-600 active:scale-95 disabled:opacity-50">
               {loading ? "DATA SYNC IN PROGRESS..." : <><Save size={20} className="group-hover:animate-bounce" /> SIMPAN DATA & UPDATE INDEX</>}
             </button>
-            <p className="text-center text-[8px] font-bold uppercase tracking-widest text-slate-400 leading-relaxed italic">
+            <p className="text-center text-[8px] font-bold uppercase italic leading-relaxed tracking-widest text-slate-400">
               Data akan dihitung otomatis oleh system <br /> National Inclusion Score 2026.
             </p>
           </div>

@@ -95,13 +95,13 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
+    <div className="text-left duration-500 animate-in fade-in slide-in-from-bottom-4">
       <div className="mb-8 flex flex-col gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-end md:justify-between">
         <div>
-          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
+          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-slate-900">
             <ArrowLeft size={16} /> Dashboard Overview
           </button>
-          <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">Alumni Tracer Study</h2>
+          <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter">Alumni Tracer Study</h2>
           <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-emerald-600">
             Database Validasi Akademik: <span className="text-slate-900">{campusName}</span>
           </p>
@@ -109,7 +109,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
 
         <button 
           onClick={exportToCSV}
-          className="flex items-center justify-center gap-2 rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 text-[11px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+          className="flex items-center justify-center gap-2 rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 text-[11px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
         >
           <Download size={16} /> Export Data (.CSV)
         </button>
@@ -123,15 +123,15 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
             placeholder="Cari Nama Mahasiswa atau Jurusan..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-2xl border-4 border-slate-900 bg-white py-5 pl-14 pr-6 text-sm font-bold outline-none shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] focus:ring-4 focus:ring-emerald-100"
+            className="w-full rounded-2xl border-4 border-slate-900 bg-white py-5 pl-14 pr-6 text-sm font-bold shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] outline-none focus:ring-4 focus:ring-emerald-100"
           />
         </div>
         <div className="relative md:col-span-2">
-          <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+          <Filter className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full appearance-none rounded-2xl border-4 border-slate-900 bg-white py-5 pl-14 pr-6 text-sm font-black uppercase outline-none shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]"
+            className="w-full appearance-none rounded-2xl border-4 border-slate-900 bg-white py-5 pl-14 pr-6 text-sm font-black uppercase shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] outline-none"
           >
             <option value="all">Semua Mahasiswa</option>
             <option value="unverified">🚨 Butuh Verifikasi</option>
@@ -149,7 +149,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Identitas Talenta</th>
                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Program Studi</th>
                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Status & Verifikasi</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Aksi</th>
+                <th className="px-8 py-6 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y-4 divide-slate-900/5">
@@ -166,15 +166,15 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                   const isPending = !talent.campus_verifications?.[0]?.status || talent.campus_verifications?.[0]?.status === 'pending';
                   
                   return (
-                    <tr key={talent.id} className="group hover:bg-slate-50 transition-colors">
+                    <tr key={talent.id} className="group transition-colors hover:bg-slate-50">
                       <td className="px-8 py-6 text-left">
                         <div className="flex items-center gap-4">
-                          <div className="size-14 rounded-2xl border-2 border-slate-900 bg-slate-100 flex items-center justify-center font-black text-xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                          <div className="flex size-14 items-center justify-center rounded-2xl border-2 border-slate-900 bg-slate-100 text-xl font-black text-slate-400 transition-all group-hover:bg-slate-900 group-hover:text-white">
                             {talent.full_name?.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-black text-lg uppercase tracking-tight text-slate-900 leading-none">{talent.full_name}</p>
-                            <p className="mt-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">{talent.disability_type}</p>
+                            <p className="text-lg font-black uppercase leading-none tracking-tight text-slate-900">{talent.full_name}</p>
+                            <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-slate-400">{talent.disability_type}</p>
                           </div>
                         </div>
                       </td>
@@ -190,7 +190,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                             {isVerified ? <CheckCircle2 size={12}/> : <AlertCircle size={12}/>}
                             {isVerified ? "Terverifikasi" : "Belum Verifikasi"}
                           </div>
-                          <p className="text-[10px] font-bold text-slate-400 italic">Status: {talent.career_status}</p>
+                          <p className="text-[10px] font-bold italic text-slate-400">Status: {talent.career_status}</p>
                         </div>
                       </td>
                       <td className="px-8 py-6">
@@ -198,7 +198,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                           {isPending ? (
                             <button 
                               onClick={() => handleVerify(talent.id, 'verified')}
-                              className="rounded-xl bg-emerald-600 p-3 text-white shadow-lg hover:bg-slate-900 transition-all focus:ring-4 focus:ring-emerald-200"
+                              className="rounded-xl bg-emerald-600 p-3 text-white shadow-lg transition-all hover:bg-slate-900 focus:ring-4 focus:ring-emerald-200"
                               title="Verifikasi Mahasiswa"
                             >
                               <UserCheck size={20} />
@@ -207,7 +207,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                             <a 
                               href={`/talent/${talent.id}`} 
                               target="_blank"
-                              className="rounded-xl border-2 border-slate-200 p-3 text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"
+                              className="rounded-xl border-2 border-slate-200 p-3 text-slate-400 transition-all hover:border-slate-900 hover:text-slate-900"
                               aria-label="Lihat Profil Lengkap"
                             >
                               <ExternalLink size={20} />
@@ -223,7 +223,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                   <td colSpan={4} className="py-24 text-center">
                     <div className="flex flex-col items-center gap-4 opacity-20">
                       <ShieldCheck size={64} />
-                      <p className="font-black uppercase italic text-2xl tracking-tighter">Data Kosong</p>
+                      <p className="text-2xl font-black uppercase italic tracking-tighter">Data Kosong</p>
                     </div>
                   </td>
                 </tr>

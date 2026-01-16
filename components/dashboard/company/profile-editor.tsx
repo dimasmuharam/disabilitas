@@ -97,7 +97,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
   };
 
   return (
-    <div className="mx-auto max-w-6xl pb-20 animate-in slide-in-from-bottom-4 text-left">
+    <div className="mx-auto max-w-6xl pb-20 text-left animate-in slide-in-from-bottom-4">
       <div className="sr-only" aria-live="polite" role="status">{announcement}</div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -133,7 +133,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
               </div>
 
               {/* SEARCHABLE NAMA (SINKRON) */}
-              <div className="space-y-2 relative" ref={dropdownRef}>
+              <div className="relative space-y-2" ref={dropdownRef}>
                 <label htmlFor="comp-name-search" className="ml-2 text-[10px] font-black uppercase text-slate-400">{"Cari & Pilih Nama Resmi"}</label>
                 <div className="relative">
                   <input 
@@ -164,17 +164,17 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                           setIsDropdownOpen(false);
                           setAnnouncement(`Terpilih: ${item}`);
                         }}
-                        className="w-full rounded-xl p-3 text-left text-[10px] font-black uppercase hover:bg-blue-50 hover:text-blue-600 focus:bg-blue-50 outline-none transition-all"
+                        className="w-full rounded-xl p-3 text-left text-[10px] font-black uppercase outline-none transition-all hover:bg-blue-50 hover:text-blue-600 focus:bg-blue-50"
                       >
                         {item}
                       </button>
                     )) : (
-                      <div className="p-4 text-center text-[10px] font-bold text-slate-400 italic">{"Data tidak ditemukan"}</div>
+                      <div className="p-4 text-center text-[10px] font-bold italic text-slate-400">{"Data tidak ditemukan"}</div>
                     )}
                   </div>
                 )}
                 {formData.name && (
-                  <p className="flex items-center gap-1 ml-2 mt-1 text-[9px] font-black text-emerald-600 uppercase">
+                  <p className="ml-2 mt-1 flex items-center gap-1 text-[9px] font-black uppercase text-emerald-600">
                     <CheckCircle2 size={12} /> {formData.name}
                   </p>
                 )}

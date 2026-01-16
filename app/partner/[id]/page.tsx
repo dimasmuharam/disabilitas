@@ -91,7 +91,7 @@ export default async function PublicPartnerProfile({ params }: PageProps) {
   const providedAccommodations = (partner.master_accommodations_provided as string[]) || [];
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans text-slate-900 text-left leading-relaxed">
+    <div className="min-h-screen bg-[#FDFDFD] pb-24 text-left font-sans leading-relaxed text-slate-900">
       {/* HEADER */}
       <header className="border-b-2 border-slate-100 bg-white shadow-sm" role="banner">
         <div className="mx-auto max-w-7xl px-6 py-16">
@@ -111,7 +111,7 @@ export default async function PublicPartnerProfile({ params }: PageProps) {
                 <div className="flex flex-wrap justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-500 lg:justify-start">
                   <span className="flex items-center gap-2 italic"><MapPin size={16} className="text-blue-600" /> {partner.location || "Lokasi Global"}</span>
                   {partner.website && (
-                    <a href={partner.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-blue-600 transition-colors">
+                    <a href={partner.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 transition-colors hover:text-blue-600">
                       <Globe size={16} /> Website Resmi
                     </a>
                   )}
@@ -128,12 +128,12 @@ export default async function PublicPartnerProfile({ params }: PageProps) {
                     <h3 id="score-title" className="text-sm font-black uppercase leading-none tracking-tighter">{badgeConfig.label}</h3>
                     <span className="text-xs font-black italic">{score}%</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full border border-current/10 bg-white/50">
+                  <div className="border-current/10 h-2 w-full overflow-hidden rounded-full border bg-white/50">
                     <div className={`h-full ${badgeConfig.progressColor} transition-all duration-1000`} style={{ width: `${score}%` }}></div>
                   </div>
                 </div>
               </div>
-              <p className="border-t border-current/10 pt-3 text-[11px] font-bold italic leading-relaxed opacity-80">
+              <p className="border-current/10 border-t pt-3 text-[11px] font-bold italic leading-relaxed opacity-80">
                 {badgeConfig.description}
               </p>
             </section>
@@ -167,10 +167,10 @@ export default async function PublicPartnerProfile({ params }: PageProps) {
               <div className="grid gap-6">
                 {activeTrainings.length > 0 ? activeTrainings.map((t) => (
                   <a key={t.id} href={`/pelatihan/${t.id}`} className="group flex flex-col items-center justify-between gap-8 rounded-[3.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-slate-900 hover:shadow-2xl md:flex-row">
-                    <div className="flex-1 text-left space-y-2">
-                      <span className="inline-block rounded-full bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600 border border-emerald-100">Buka Pendaftaran</span>
+                    <div className="flex-1 space-y-2 text-left">
+                      <span className="inline-block rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[8px] font-black uppercase text-emerald-600">Buka Pendaftaran</span>
                       <h3 className="text-2xl font-black uppercase italic leading-tight tracking-tighter group-hover:text-blue-600">{t.title}</h3>
-                      <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase italic">
+                      <div className="flex items-center gap-4 text-[10px] font-bold uppercase italic text-slate-400">
                         <span className="flex items-center gap-1"><Calendar size={14} /> Akhir Pendaftaran: {t.registration_deadline}</span>
                       </div>
                     </div>
@@ -201,11 +201,11 @@ export default async function PublicPartnerProfile({ params }: PageProps) {
                 </div>
                 
                 <div className="space-y-4 rounded-[2rem] border border-white/10 bg-white/5 p-6">
-                   <div className="flex justify-between items-center text-[10px] font-black uppercase italic">
+                   <div className="flex items-center justify-between text-[10px] font-black uppercase italic">
                       <span className="text-blue-400">Pria: {genMap.male || 0}</span>
                       <span className="text-pink-400">Wanita: {genMap.female || 0}</span>
                    </div>
-                   <p className="text-[9px] font-bold leading-relaxed opacity-40 text-center">Data divalidasi sistem otomatis disabilitas.com 2026.</p>
+                   <p className="text-center text-[9px] font-bold leading-relaxed opacity-40">Data divalidasi sistem otomatis disabilitas.com 2026.</p>
                 </div>
               </div>
             </section>

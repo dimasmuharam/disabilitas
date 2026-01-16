@@ -54,35 +54,35 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
+    <div className="text-left duration-500 animate-in fade-in slide-in-from-bottom-4">
       {/* NAVIGATION BACK */}
       <button 
         onClick={onBack}
-        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all group"
+        className="group mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-slate-900"
       >
-        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Kembali ke Dashboard
+        <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Kembali ke Dashboard
       </button>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
         {/* INFO PANEL (Left) */}
         <div className="space-y-6">
-          <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden">
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
             <ShieldCheck className="relative z-10 mb-6 text-emerald-400" size={40} />
-            <h2 className="relative z-10 text-2xl font-black uppercase italic tracking-tighter leading-tight">Keamanan Akun Institusi</h2>
-            <p className="relative z-10 mt-4 text-[11px] font-medium leading-relaxed opacity-70 italic">
+            <h2 className="relative z-10 text-2xl font-black uppercase italic leading-tight tracking-tighter">Keamanan Akun Institusi</h2>
+            <p className="relative z-10 mt-4 text-[11px] font-medium italic leading-relaxed opacity-70">
               Kelola kredensial akses almamater Anda. Pastikan password Anda kuat untuk menjaga integritas data riset nasional.
             </p>
             {/* Decorative Element */}
-            <Lock className="absolute -right-8 -bottom-8 opacity-10" size={120} />
+            <Lock className="absolute -bottom-8 -right-8 opacity-10" size={120} />
           </div>
 
           <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
             <h3 className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900">
               <Mail size={14} className="text-blue-600" /> ID Email Akses
             </h3>
-            <p className="text-sm font-black text-slate-900 truncate">{user?.email}</p>
-            <div className="mt-4 rounded-xl bg-blue-50 p-4 border-2 border-blue-100">
-               <p className="text-[9px] font-black uppercase text-blue-600 leading-tight">
+            <p className="truncate text-sm font-black text-slate-900">{user?.email}</p>
+            <div className="mt-4 rounded-xl border-2 border-blue-100 bg-blue-50 p-4">
+               <p className="text-[9px] font-black uppercase leading-tight text-blue-600">
                 *Sinkronisasi Aktif dengan Database Utama
               </p>
             </div>
@@ -106,12 +106,12 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
+                      className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-4 flex items-center text-slate-300 hover:text-slate-900 transition-colors"
+                      className="absolute inset-y-0 right-4 flex items-center text-slate-300 transition-colors hover:text-slate-900"
                       aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -130,7 +130,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
+                    className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 font-bold outline-none transition-all focus:border-slate-900 focus:bg-white"
                   />
                 </div>
               </div>
@@ -147,12 +147,12 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                 </div>
               )}
 
-              <div className="flex flex-col items-center justify-between gap-6 pt-4 border-t-2 border-slate-100 md:flex-row">
+              <div className="flex flex-col items-center justify-between gap-6 border-t-2 border-slate-100 pt-4 md:flex-row">
                 <div className="flex items-start gap-3 text-amber-600">
                   <KeyRound size={24} className="mt-1" />
                   <div className="text-left">
-                     <p className="text-[10px] font-black uppercase tracking-tight italic">Prosedur Keamanan:</p>
-                     <p className="text-[9px] font-bold leading-relaxed uppercase opacity-80">
+                     <p className="text-[10px] font-black uppercase italic tracking-tight">Prosedur Keamanan:</p>
+                     <p className="text-[9px] font-bold uppercase leading-relaxed opacity-80">
                         Anda akan otomatis keluar dan harus <br /> masuk kembali setelah pembaruan.
                      </p>
                   </div>
@@ -160,7 +160,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 px-12 py-6 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 md:w-auto"
+                  className="group flex w-full items-center justify-center gap-3 rounded-[2rem] bg-slate-900 px-12 py-6 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:-translate-y-1 hover:bg-emerald-600 active:translate-y-0 disabled:opacity-50 md:w-auto"
                 >
                   {loading ? "MENYINKRONKAN..." : (
                     <>
@@ -178,7 +178,7 @@ export default function AccountSettings({ user, onBack }: AccountSettingsProps) 
               <AlertTriangle className="shrink-0 animate-pulse" size={24} />
               <div>
                 <h4 className="text-[11px] font-black uppercase tracking-widest">Zona Pembatalan Akun</h4>
-                <p className="mt-2 text-[10px] font-bold leading-relaxed opacity-70 italic">
+                <p className="mt-2 text-[10px] font-bold italic leading-relaxed opacity-70">
                   Penghapusan akun institusi hanya dapat diproses melalui pengajuan resmi ke Super Admin. <br />
                   Tindakan ini akan memutus seluruh validasi alumni yang telah dilakukan secara permanen.
                 </p>
