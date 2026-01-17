@@ -132,6 +132,19 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       case "settings": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Pengaturan Akun</h2><AccountSettings user={user} onSuccess={fetchLatestData} /></section>;
       default: return (
         <div className="space-y-10 duration-500 animate-in fade-in">
+{/* FITUR CEK KELENGKAPAN PROFIL */}
+{completionData.percent < 100 && (
+  <div className="mb-8 rounded-[2.5rem] border-2 border-amber-200 bg-amber-50 p-8 text-left" role="alert">
+    <h3 className="mb-2 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-amber-800">
+      <AlertCircle size={18} /> Bagian Yang Belum Lengkap:
+    </h3>
+    <ul className="list-inside list-disc space-y-1">
+      {completionData.missing.map((item, idx) => (
+        <li key={idx} className="text-xs font-bold text-amber-700">{item}</li>
+      ))}
+    </ul>
+  </div>
+)}
           {/* TRACKING GRID */}
           <div className="grid gap-8 text-left md:grid-cols-2">
             {/* JOBS TRACKING */}
@@ -144,11 +157,16 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                   <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
                       <div key={app.id} className="p-6 transition-colors hover:bg-slate-50">
-                        <div className="flex items-start justify-between gap-4">
-                          <Link href={`/lowongan/${app.jobs?.slug || app.jobs?.id}`} className="group flex-1">
-                            <p className="text-sm font-black uppercase text-slate-900 transition-colors group-hover:text-blue-600">{app.jobs?.title}</p>
-                            <p className="text-[10px] font-bold uppercase text-slate-400">{app.jobs?.companies?.name}</p>
-                          </Link>
+<div className="flex-1 text-left">
+  {/* Link ke Detail Lowongan */}
+  <Link href={`/lowongan/${app.jobs?.slug || app.jobs?.id}`} className="block text-sm font-black uppercase text-slate-900 hover:text-blue-600">
+    {app.jobs?.title}
+  </Link>
+  
+  {/* Link ke Public Profile Perusahaan */}
+  <Link href={`/company/${app.jobs?.companies?.id}`} className="text-[10px] font-bold uppercase text-slate-400 hover:text-blue-500 hover:underline">
+    {app.jobs?.companies?.name}
+  </Link>
                           <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
                             app.status === 'hired' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 
                             app.status === 'rejected' ? 'border-red-100 bg-red-50 text-red-500' : 'border-blue-100 bg-blue-50 text-blue-600'
@@ -185,11 +203,16 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                   <div className="divide-y divide-slate-50">
                     {appliedTrainings.map((reg) => (
                       <div key={reg.id} className="p-6 transition-colors hover:bg-slate-50">
-                        <div className="flex items-start justify-between gap-4">
-                          <Link href={`/pelatihan/${reg.trainings?.slug || reg.trainings?.id}`} className="group flex-1">
-                            <p className="text-sm font-black uppercase text-slate-900 transition-colors group-hover:text-emerald-600">{reg.trainings?.title}</p>
-                            <p className="text-[10px] font-bold uppercase text-slate-400">{reg.trainings?.partners?.name}</p>
-                          </Link>
+<div className="flex-1 text-left">
+  {/* Link ke Detail Pelatihan */}
+  <Link href={`/pelatihan/${reg.trainings?.slug || reg.trainings?.id}`} className="block text-sm font-black uppercase text-slate-900 hover:text-emerald-600">
+    {reg.trainings?.title}
+  </Link>
+  
+  {/* Link ke Public Profile Penyelenggara/Partner */}
+  <Link href={`/partner/${reg.trainings?.partners?.id}`} className="text-[10px] font-bold uppercase text-slate-400 hover:text-emerald-500 hover:underline">
+    {reg.trainings?.partners?.name}
+  </Link>
                           <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
                             reg.status === 'accepted' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 'border-slate-100 bg-slate-50 text-slate-400'
                           }`}>{reg.status}</span>
