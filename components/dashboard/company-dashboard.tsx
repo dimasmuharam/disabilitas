@@ -38,7 +38,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
   useEffect(() => {
     if (user?.id) fetchDashboardData();
-  }, [user?.id]);
+  }, [user?.id, fetchDashboardData]);
 
   async function fetchDashboardData() {
     // Jangan set loading true jika hanya refresh data setelah simpan agar tidak flickr

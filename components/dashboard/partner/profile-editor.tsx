@@ -41,7 +41,7 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
       setIsCustomName(true);
       setFormData(prev => ({ ...prev, manual_name: partner.name, name: "LAINNYA" }));
     }
-  }, [partner.name]);
+  }, [partner.name, formData.name]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();

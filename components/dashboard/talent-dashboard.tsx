@@ -69,7 +69,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
   useEffect(() => {
     if (autoOpenProfile) setActiveTab("identity");
     if (user?.id) fetchLatestData();
-  }, [user?.id, autoOpenProfile]);
+  }, [user?.id, autoOpenProfile, fetchLatestData]);
 
   // Efek Pindah Fokus saat Modul Dibuka
   useEffect(() => {
