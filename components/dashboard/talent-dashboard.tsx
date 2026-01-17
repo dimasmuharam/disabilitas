@@ -144,22 +144,11 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                   <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
                       <div key={app.id} className="p-6 transition-colors hover:bg-slate-50">
-<div className="flex-1 space-y-1">
-  {/* Link ke Detail Lowongan */}
-  <Link 
-    href={`/lowongan/${app.jobs?.slug || app.jobs?.id}`} 
-    className="block text-sm font-black uppercase text-slate-900 hover:text-blue-600"
-  >
-    {app.jobs?.title}
-  </Link>
-  
-  {/* Link ke Profil Perusahaan (Pakai ID sesuai skema DB) */}
-  <Link 
-    href={`/company/${app.jobs?.companies?.id}`} 
-    className="text-[10px] font-bold uppercase text-slate-400 hover:text-blue-500 hover:underline"
-  >
-    {app.jobs?.companies?.name}
-  </Link>
+                        <div className="flex items-start justify-between gap-4">
+                          <Link href={`/lowongan/${app.jobs?.slug || app.jobs?.id}`} className="group flex-1">
+                            <p className="text-sm font-black uppercase text-slate-900 transition-colors group-hover:text-blue-600">{app.jobs?.title}</p>
+                            <p className="text-[10px] font-bold uppercase text-slate-400">{app.jobs?.companies?.name}</p>
+                          </Link>
                           <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
                             app.status === 'hired' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 
                             app.status === 'rejected' ? 'border-red-100 bg-red-50 text-red-500' : 'border-blue-100 bg-blue-50 text-blue-600'
@@ -196,20 +185,11 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                   <div className="divide-y divide-slate-50">
                     {appliedTrainings.map((reg) => (
                       <div key={reg.id} className="p-6 transition-colors hover:bg-slate-50">
-<div className="flex-1 space-y-1">
-  <Link 
-    href={`/pelatihan/${reg.trainings?.slug || reg.trainings?.id}`} 
-    className="block text-sm font-black uppercase text-slate-900 hover:text-emerald-600"
-  >
-    {reg.trainings?.title}
-  </Link>
-  
-  <Link 
-    href={`/partner/${reg.trainings?.partners?.id}`} 
-    className="text-[10px] font-bold uppercase text-slate-400 hover:text-emerald-500 hover:underline"
-  >
-    {reg.trainings?.partners?.name}
-  </Link>
+                        <div className="flex items-start justify-between gap-4">
+                          <Link href={`/pelatihan/${reg.trainings?.slug || reg.trainings?.id}`} className="group flex-1">
+                            <p className="text-sm font-black uppercase text-slate-900 transition-colors group-hover:text-emerald-600">{reg.trainings?.title}</p>
+                            <p className="text-[10px] font-bold uppercase text-slate-400">{reg.trainings?.partners?.name}</p>
+                          </Link>
                           <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
                             reg.status === 'accepted' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 'border-slate-100 bg-slate-50 text-slate-400'
                           }`}>{reg.status}</span>
