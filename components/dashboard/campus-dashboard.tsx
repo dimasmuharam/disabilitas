@@ -6,11 +6,12 @@ import {
   Users, BarChart3, Settings, 
   ShieldCheck, Share2, LayoutDashboard,
   Activity, Award, Lock, 
-  Zap, School, Briefcase, TrendingUp
+  Zap, School, Briefcase, TrendingUp,
+  User, ExternalLink, MousePointerClick
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
-// Import Modul Pendukung
+// Import Modul Pendukung - Pastikan Path Benar
 import TalentTracer from "./campus/talent-tracer";
 import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
@@ -67,6 +68,17 @@ export default function CampusDashboard({ user }: { user: any }) {
     window.scrollTo(0, 0);
   };
 
+  const handleShare = () => {
+    const data = {
+      name: campus?.name || "Institusi",
+      total: currentStats.total,
+      rate: currentStats.rate,
+      score: campus?.inclusion_score || 0,
+      url: `https://disabilitas.com/kampus/${campus?.id}`
+    };
+    shareNative(data);
+  };
+
   if (loading) return (
     <div role="status" aria-live="polite" className="flex min-h-screen animate-pulse flex-col items-center justify-center font-black uppercase italic tracking-tighter text-slate-400">
       <Activity className="mb-4 animate-spin text-emerald-500" size={48} />
@@ -82,7 +94,7 @@ export default function CampusDashboard({ user }: { user: any }) {
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 text-left md:flex-row md:items-end">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-600 p-2 text-white shadow-lg" aria-hidden="true">
+            <div className="rounded-xl bg-emerald-600 p-2 text-white shadow-lg">
               <School size={28} />
             </div>
             <div>
@@ -92,16 +104,16 @@ export default function CampusDashboard({ user }: { user: any }) {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700">
-              <ShieldCheck size={14} /> National Inclusion Index: {campus?.inclusion_score || 0}%
+              <ShieldCheck size={14} /> Inclusion Score: {campus?.inclusion_score || 0}%
             </span>
-            {currentStats.unverified > 0 && (
-               <button 
-                onClick={() => navigateTo("tracer", "Talent Tracer")} 
-                className="flex animate-bounce items-center gap-1.5 rounded-full border-2 border-orange-500 bg-orange-50 px-4 py-1.5 text-[10px] font-black uppercase text-orange-700 transition-colors hover:bg-orange-100"
-               >
-                <Users size={14} /> {currentStats.unverified} Menunggu Verifikasi
-              </button>
-            )}
+            <a 
+              href={`/kampus/${campus?.id}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-600 transition-all hover:border-slate-900 hover:text-slate-900"
+            >
+              <ExternalLink size={14} /> Profil Publik
+            </a>
           </div>
         </div>
         
@@ -114,14 +126,8 @@ export default function CampusDashboard({ user }: { user: any }) {
             Career & Skill Hub
           </button>
           <button 
-            onClick={() => shareNative({ 
-              name: campus?.name || '', 
-              score: campus?.inclusion_score || 0,
-              total: currentStats.total,
-              rate: currentStats.rate,
-              url: typeof window !== 'undefined' ? window.location.href : ''
-            })} 
-            className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900"
+            onClick={handleShare} 
+            className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900 hover:bg-slate-50 active:scale-95"
             aria-label="Bagikan Profil"
           >
             <Share2 size={20} />
@@ -155,14 +161,12 @@ export default function CampusDashboard({ user }: { user: any }) {
         {activeTab === "overview" && (
           <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-bottom-4">
             
+            {/* RADAR & SMART NARRATIVE */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-              {/* Radar Chart */}
-              <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm lg:col-span-2">
-                <header className="mb-6 text-left">
-                  <h3 className="flex items-center gap-2 text-[11px] font-black uppercase leading-none tracking-widest text-slate-900">
-                    <Activity size={16} className="text-emerald-500" /> Keseimbangan Klaster
-                  </h3>
-                </header>
+              <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 shadow-sm lg:col-span-2 text-left">
+                <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900 leading-none">
+                  <Activity size={16} className="text-emerald-500" /> Keseimbangan Klaster
+                </h3>
                 <div className="h-[250px] w-full" aria-hidden="true">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
@@ -174,96 +178,100 @@ export default function CampusDashboard({ user }: { user: any }) {
                 </div>
               </section>
 
-              {/* Smart Narrative - FIXED QUOTES */}
               <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-3">
-                <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-600">
+                <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-600 leading-none">
                   <Award size={18} /> Research Executive Summary
                 </h3>
                 <div className="text-2xl font-black italic leading-tight tracking-tighter text-slate-800 md:text-3xl">
                   &quot;{campus?.smart_narrative_summary || "Menganalisis data almamater Anda..."}&quot;
                 </div>
                 <div className="mt-6 flex gap-4">
-                  <div className="flex items-center gap-2 rounded-xl border-2 border-slate-100 bg-slate-50 px-4 py-2">
+                  <div className="flex items-center gap-2 rounded-xl border-2 border-slate-100 bg-slate-50 px-4 py-2 shadow-sm">
                     <TrendingUp size={16} className="text-blue-500" />
-                    <span className="text-[10px] font-black uppercase text-slate-500">Employability: {campus?.inclusion_score_output || 0}%</span>
+                    <span className="text-[10px] font-black uppercase text-slate-500 leading-none">Employability: {campus?.inclusion_score_output || 0}%</span>
                   </div>
                 </div>
               </section>
             </div>
 
-            {/* KEY METRICS */}
-            <section aria-label="Metrik Kunci Akademik" className="grid grid-cols-1 gap-6 text-left sm:grid-cols-2 lg:grid-cols-3">
+            {/* QUICK STATS CARDS */}
+            <section className="grid grid-cols-1 gap-6 text-left sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Pilar Fisik (30%)", score: campus?.inclusion_score_physical, sub: "Mobilitas", color: "emerald" },
-                { label: "Pilar Digital (40%)", score: campus?.inclusion_score_digital, sub: "LMS & Portal", color: (campus?.inclusion_score_digital || 0) < 50 ? "orange" : "blue" },
-                { label: "Pilar Output (30%)", score: campus?.inclusion_score_output, sub: "Kerja Lulusan", color: "purple" }
-              ].map((item) => (
-                <div key={item.label} className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left shadow-sm">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
-                  <div className="mt-2 flex items-end justify-between">
-                    <p className="text-5xl font-black tracking-tighter">{item.score || 0}%</p>
-                    <span className={`rounded-lg bg-slate-50 px-3 py-1 text-[10px] font-black uppercase text-slate-600`}>{item.sub}</span>
-                  </div>
+                { label: "Total Talenta", val: currentStats.total, color: "slate" },
+                { label: "Lulusan Bekerja", val: currentStats.hired, color: "emerald" },
+                { label: "Hired Rate", val: `${currentStats.rate}%`, color: "blue" },
+                { label: "Pending Validasi", val: currentStats.unverified, color: "orange" }
+              ].map((s) => (
+                <div key={s.label} className="rounded-[2rem] border-2 border-slate-100 bg-white p-6 shadow-sm">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{s.label}</p>
+                  <p className={`text-4xl font-black tracking-tighter text-${s.color}-600`}>{s.val}</p>
                 </div>
               ))}
             </section>
 
-            {/* TRACER DATA */}
+            {/* DIVERSITY MAPS */}
             <div className="grid grid-cols-1 gap-8 text-left lg:grid-cols-3">
-               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-slate-50 p-10 lg:col-span-2">
-                  <div className="mb-8 flex items-start justify-between">
-                    <div>
-                      <h4 className="text-xl font-black uppercase italic tracking-tighter">Tracer Study Live Data</h4>
-                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Populasi Mahasiswa & Alumni</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-4xl font-black leading-none text-emerald-600">{currentStats.rate}%</p>
-                      <p className="mt-1 text-right text-[9px] font-black uppercase tracking-widest text-emerald-500">Hired Rate</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between text-[10px] font-black uppercase">
-                        <span>Total Mahasiswa</span>
-                        <span className="rounded-lg bg-white px-3 py-1 font-bold tracking-tight shadow-sm">{currentStats.total}</span>
+              {/* Ragam Disabilitas */}
+              <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 lg:col-span-2">
+                <h4 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest leading-none text-slate-900">
+                  <Users className="text-emerald-600" size={16} /> Sebaran Ragam Disabilitas
+                </h4>
+                <div className="space-y-4">
+                  {Object.entries(campus?.stats_disability_map || {}).map(([type, count]: [string, any]) => (
+                    <div key={type} className="space-y-1">
+                      <div className="flex justify-between text-[9px] font-black uppercase text-slate-500">
+                        <span>{type}</span><span>{count} Orang</span>
                       </div>
-                      <div className="h-4 overflow-hidden rounded-full bg-slate-200">
-                        <div className="h-full bg-slate-800" style={{ width: '100%' }} />
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div 
+                          className="h-full bg-emerald-600 transition-all duration-1000" 
+                          style={{ width: `${(count / (currentStats.total || 1)) * 100}%` }} 
+                        />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between text-[10px] font-black uppercase text-emerald-600">
-                        <span>Lulusan Bekerja</span>
-                        <span className="rounded-lg bg-white px-3 py-1 font-bold tracking-tight shadow-sm">{currentStats.hired}</span>
-                      </div>
-                      <div className="h-4 overflow-hidden rounded-full bg-slate-200">
-                        <div className="h-full bg-emerald-500" style={{ width: `${currentStats.rate}%` }} />
-                      </div>
-                    </div>
-                  </div>
-               </div>
+                  ))}
+                  {(!campus?.stats_disability_map || Object.keys(campus.stats_disability_map).length === 0) && (
+                    <p className="text-[10px] font-black italic text-slate-300">Belum ada data ragam talenta.</p>
+                  )}
+                </div>
+              </div>
 
-               {/* QUICK ACTION */}
-               <div className="relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 text-left text-white">
-                  <div className="relative z-10">
-                    <Zap className="mb-4 text-amber-400" size={32} />
-                    <h4 className="text-2xl font-black uppercase italic leading-tight tracking-tighter">Mulai Audit Inklusi</h4>
-                    <p className="mt-4 text-[11px] font-medium italic leading-relaxed opacity-60">
-                      Lengkapi 14 indikator untuk meningkatkan National Inclusion Index kampus Anda.
-                    </p>
+              {/* Gender & Action */}
+              <div className="space-y-6">
+                <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8">
+                  <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest leading-none text-slate-900">
+                    <User className="text-blue-500" size={16} /> Analisis Gender
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-2xl bg-blue-50 p-4 border-l-4 border-blue-500 text-center">
+                      <p className="text-[8px] font-black uppercase text-blue-400">Laki-laki</p>
+                      <p className="text-2xl font-black text-blue-900">{campus?.stats_gender_map?.male || 0}</p>
+                    </div>
+                    <div className="rounded-2xl bg-pink-50 p-4 border-l-4 border-pink-500 text-center">
+                      <p className="text-[8px] font-black uppercase text-pink-400">Perempuan</p>
+                      <p className="text-2xl font-black text-pink-900">{campus?.stats_gender_map?.female || 0}</p>
+                    </div>
                   </div>
+                </div>
+
+                <div className="rounded-[2.5rem] bg-emerald-600 p-8 text-white shadow-lg">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-80 leading-none">Manajemen Almamater</p>
+                  <p className="mt-3 text-xl font-black leading-tight italic tracking-tight uppercase">
+                    Ada {currentStats.unverified} lulusan menunggu verifikasi.
+                  </p>
                   <button 
-                    onClick={() => navigateTo("profile", "Audit Inklusi")}
-                    className="relative z-10 mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-emerald-400"
+                    onClick={() => navigateTo("tracer", "Talent Tracer")}
+                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-[10px] font-black uppercase text-emerald-700 transition-all hover:scale-105 active:scale-95"
                   >
-                    Buka Panel Audit <ChevronRight size={16} />
+                    Mulai Validasi <MousePointerClick size={16} />
                   </button>
-                  <School className="absolute -bottom-10 -right-10 opacity-10" size={200} aria-hidden="true" />
-               </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
+        {/* TAB COMPONENTS */}
         <div className="mt-2">
            {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
            {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
