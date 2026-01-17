@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
-// Import Modul Pendukung (Daftar Modul)
+// Import Modul Pendukung
 import TalentTracer from "./campus/talent-tracer";
 import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
@@ -78,7 +78,6 @@ export default function CampusDashboard({ user }: { user: any }) {
       const { data: campusData } = await supabase.from("campuses").select("*").eq("id", user.id).single();
       if (campusData) {
         setCampus(campusData);
-        // Logika Profile Completion (Fisik + Digital + Output)
         const fields = ["name", "description", "location", "website", "nib_number"];
         const filled = fields.filter(f => campusData[f] && campusData[f].length > 0).length;
         const acc = (campusData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
@@ -90,20 +89,17 @@ export default function CampusDashboard({ user }: { user: any }) {
 
   useEffect(() => { 
     fetchDashboardData(); 
-    // SEO & Canonical (Balik Lagi)
     const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
     link.setAttribute("rel", "canonical");
     link.setAttribute("href", "https://disabilitas.com/dashboard/campus");
     if (!document.head.contains(link)) document.head.appendChild(link);
 
-    // Realtime Channel Listener
     const channel = supabase.channel('realtime-campus')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campus_verifications', filter: `campus_id=eq.${user.id}` }, () => fetchRealtimeData())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, fetchDashboardData, fetchRealtimeData]);
 
-  // Logika Badge & Radar
   const badgeInfo = useMemo(() => {
     const score = campus?.inclusion_score || 0;
     if (score >= 80) return { label: "Platinum", color: "text-slate-900", bg: "bg-gradient-to-br from-slate-100 to-slate-300", icon: Sparkles };
@@ -117,7 +113,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     { subject: 'Output', A: campus?.inclusion_score_output || 0 },
   ], [campus]);
 
-const handleShare = () => {
+  const handleShare = () => {
     const data = {
       name: campus?.name || "Institusi",
       total: Number(campus?.stats_academic_total || 0),
@@ -126,14 +122,11 @@ const handleShare = () => {
       url: `https://disabilitas.com/kampus/${campus?.id}`
     };
 
-    // PERBAIKAN: Gunakan pengecekan yang aman untuk TypeScript
     if (typeof window !== "undefined" && window.navigator && window.navigator.share) {
       shareNative(data);
     } else {
       shareToWhatsApp(data);
     }
-  };
-    if (typeof navigator !== "undefined" && navigator.share) shareNative(data); else shareToWhatsApp(data);
   };
 
   const navigateTo = (tabId: string, label: string) => {
@@ -142,7 +135,11 @@ const handleShare = () => {
     window.scrollTo(0, 0);
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center font-black uppercase italic text-slate-400 animate-pulse">Menyiapkan Portal...</div>;
+  if (loading) return (
+    <div className="flex min-h-screen items-center justify-center font-black uppercase italic text-slate-400 animate-pulse">
+      Menyiapkan Portal...
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900 selection:bg-emerald-100 text-left">
@@ -176,7 +173,7 @@ const handleShare = () => {
         </div>
       </header>
 
-      {/* MODUL NAVIGATION TABS (UTUH) */}
+      {/* MODUL NAVIGATION TABS */}
       <nav className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist">
         {[
           { id: "overview", label: "Dashboard", icon: LayoutDashboard },
@@ -202,7 +199,15 @@ const handleShare = () => {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
               <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 lg:col-span-2">
                 <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest leading-none"><Activity size={16} className="text-emerald-500" /> Pilar Inklusi</h3>
-                <div className="h-[220px] w-full" aria-label="Grafik Radar Klaster Inklusi"><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid stroke="#f1f5f9" /><PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 800 }} /><Radar dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.6} /></RadarChart></ResponsiveContainer></div>
+                <div className="h-[220px] w-full" aria-label="Grafik Radar Klaster Inklusi">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart data={radarData}>
+                      <PolarGrid stroke="#f1f5f9" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 800 }} />
+                      <Radar dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
               </section>
               <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-3">
                 <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-emerald-600 leading-none"><Sparkles size={18} /> Narasi Strategis</h3>
@@ -210,7 +215,7 @@ const handleShare = () => {
               </section>
             </div>
 
-            {/* STATS SECTION (DUA DIMENSI DATA) */}
+            {/* STATS SECTION */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-10">
                 <h4 className="mb-6 text-xs font-black uppercase tracking-[0.2em] text-slate-400"><Settings size={16} /> Estimasi Internal (Input)</h4>
@@ -237,7 +242,7 @@ const handleShare = () => {
               </section>
             </div>
 
-            {/* VERIFIKASI ALERT BOX (REAL-TIME) */}
+            {/* VERIFIKASI ALERT BOX */}
             <section className="rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-8">
               <div className="relative z-10 space-y-2">
                 <div className="flex items-center gap-2 text-emerald-400"><AlertCircle size={20} /><p className="text-xs font-black uppercase tracking-widest leading-none">Konfirmasi Almamater</p></div>
@@ -249,11 +254,9 @@ const handleShare = () => {
           </div>
         )}
 
-        {/* DAFTAR MODUL UTUH (TAB COMPONENTS) */}
         <div className="mt-4">
           {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
           {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
-          {/* PROFILE EDITOR: Otomatis close via onUpdate */}
           {activeTab === "profile" && <ProfileEditor campus={campus} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
           {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
         </div>
