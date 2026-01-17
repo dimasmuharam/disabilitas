@@ -25,6 +25,8 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterDisability, setFilterDisability] = useState("all");
+  const [filterEmployment, setFilterEmployment] = useState("all");
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | null }>({ msg: "", type: null });
   
   // STATE PAGINATION & SELECTION
@@ -36,7 +38,6 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
   const fetchTalents = useCallback(async () => {
     setLoading(true);
     try {
-      // Query mengambil profil yang terafiliasi dengan campusId (UUID)
       let { data, error } = await supabase
         .from("profiles")
         .select(`
@@ -60,7 +61,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
 
   useEffect(() => { fetchTalents(); }, [fetchTalents]);
 
-  // 2. LOGIKA AKSI (VERIFY / REJECT) - BISA INDIVIDU MAUPUN MASSAL
+  // 2. LOGIKA AKSI (VERIFY / REJECT)
   const handleAction = async (ids: string[], status: 'verified' | 'rejected') => {
     try {
       const upserts = ids.map(id => ({
@@ -73,7 +74,6 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
       const { error } = await supabase.from("campus_verifications").upsert(upserts);
       if (error) throw error;
 
-      // Feedback Aksesibel (Screen Reader akan membacakan ini lewat aria-live)
       setToast({ 
         msg: `${ids.length} Talenta berhasil ${status === 'verified' ? 'diverifikasi' : 'ditolak'}`, 
         type: 'success' 
@@ -81,33 +81,36 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
       
       setSelectedIds([]);
       fetchTalents();
-      
       setTimeout(() => setToast({ msg: "", type: null }), 4000);
     } catch (err) {
       setToast({ msg: "Gagal memproses perubahan status", type: 'error' });
     }
   };
 
-  // 3. FILTER & PAGINATION LOGIC
+  // 3. FILTER LOGIC (DIPERLUAS)
   const filteredData = useMemo(() => {
     return talents.filter(t => {
       const status = t.campus_verifications?.[0]?.status || 'unverified';
-      const isWorking = !['Job Seeker', 'Belum Bekerja'].includes(t.career_status);
       const matchesSearch = t.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             t.major?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = filterStatus === "all" || 
+                           (filterStatus === "unverified" && (status === "pending" || status === "unverified")) ||
+                           (filterStatus === "verified" && status === "verified") ||
+                           (filterStatus === "rejected" && status === "rejected") ||
+                           (filterStatus === "working" && !['Job Seeker', 'Belum Bekerja'].includes(t.career_status));
 
-      if (filterStatus === "verified") return status === 'verified' && matchesSearch;
-      if (filterStatus === "unverified") return status === 'pending' && matchesSearch;
-      if (filterStatus === "rejected") return status === 'rejected' && matchesSearch;
-      if (filterStatus === "working") return isWorking && matchesSearch;
-      return matchesSearch;
+      const matchesDisability = filterDisability === "all" || t.disability_type === filterDisability;
+      const matchesEmployment = filterEmployment === "all" || t.career_status === filterEmployment;
+
+      return matchesSearch && matchesStatus && matchesDisability && matchesEmployment;
     });
-  }, [talents, searchTerm, filterStatus]);
+  }, [talents, searchTerm, filterStatus, filterDisability, filterEmployment]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // 4. SELECTION HELPERS
+  // 4. SELECTION HELPERS (AKSESIBEL)
   const toggleSelectAll = () => {
     if (selectedIds.length === paginatedData.length) setSelectedIds([]);
     else setSelectedIds(paginatedData.map(t => t.id));
@@ -128,7 +131,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
 
   return (
     <div className="text-left animate-in fade-in duration-700">
-      {/* ACCESSIBLE NOTIFICATION BOX */}
+      {/* TOAST NOTIFICATION */}
       <div aria-live="polite" className="sr-only">{toast.msg}</div>
       {toast.msg && (
         <div className={`fixed bottom-10 right-10 z-50 flex items-center gap-3 rounded-2xl border-4 border-slate-900 px-6 py-4 font-black uppercase italic shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] ${toast.type === 'success' ? 'bg-emerald-400' : 'bg-rose-400'}`}>
@@ -140,54 +143,52 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
       {/* HEADER SECTION */}
       <div className="mb-10 flex flex-col gap-8 border-b-4 border-slate-900 pb-10 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <button 
-            onClick={onBack} 
-            className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-600 transition-all"
-            aria-label="Kembali ke Dashboard Utama"
-          >
+          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-600 transition-all">
             <ArrowLeft size={16} /> Dashboard Overview
           </button>
           <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">Talent Tracer System</h2>
           <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-            Manajemen Alumni & Verifikasi Akademik <span className="text-slate-900 underline decoration-emerald-400 decoration-4 underline-offset-4">{campusName}</span>
+            Manajemen Alumni <span className="text-slate-900 underline decoration-emerald-400 decoration-4 underline-offset-4">{campusName}</span>
           </p>
         </div>
-
-        <div className="flex flex-wrap gap-4">
-          <button 
-            onClick={exportToCSV} 
-            className="flex items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-8 py-4 text-[11px] font-black uppercase italic shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
-          >
-            <Download size={18} /> Export Tracer (.CSV)
-          </button>
-        </div>
+        <button onClick={exportToCSV} className="flex items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-8 py-4 text-[11px] font-black uppercase italic shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+          <Download size={18} /> Export Tracer (.CSV)
+        </button>
       </div>
 
-      {/* SEARCH & FILTERS & BULK ACTIONS */}
-      <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-center">
-        <div className="relative flex-1">
-          <label htmlFor="search-talent" className="sr-only">Cari Nama atau Jurusan</label>
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input 
-            id="search-talent"
-            type="text" 
-            placeholder="Cari talenta atau program studi..."
-            value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full rounded-[2rem] border-4 border-slate-900 bg-white py-5 pl-16 pr-8 text-sm font-bold shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] outline-none focus:ring-4 focus:ring-emerald-100"
-          />
+      {/* SEARCH & FILTERS SECTION */}
+      <div className="mb-10 space-y-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <input 
+              id="search-talent"
+              type="text" 
+              placeholder="Cari talenta atau program studi..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="w-full rounded-[2rem] border-4 border-slate-900 bg-white py-5 pl-16 pr-8 text-sm font-bold shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] outline-none focus:ring-4 focus:ring-emerald-100"
+            />
+          </div>
+
+          {selectedIds.length > 0 && (
+            <div className="flex items-center gap-3 animate-in fade-in zoom-in duration-300">
+              <button onClick={() => handleAction(selectedIds, 'verified')} className="bg-emerald-600 text-white px-5 py-3 rounded-xl font-black uppercase text-[10px] shadow-lg hover:bg-slate-900 transition-all">
+                Verifikasi {selectedIds.length} Orang
+              </button>
+              <button onClick={() => handleAction(selectedIds, 'rejected')} className="bg-rose-500 text-white px-5 py-3 rounded-xl font-black uppercase text-[10px] shadow-lg hover:bg-slate-900 transition-all">
+                Tolak
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative min-w-[200px]">
+        {/* TRIPLE FILTERS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="relative">
             <Filter className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <select 
-              aria-label="Filter berdasarkan status"
-              value={filterStatus}
-              onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
-              className="w-full appearance-none rounded-2xl border-4 border-slate-900 bg-white py-4 pl-14 pr-10 text-[10px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]"
-            >
-              <option value="all">Semua Status</option>
+            <select aria-label="Filter Status Verifikasi" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }} className="w-full appearance-none rounded-2xl border-4 border-slate-900 bg-white py-4 pl-14 pr-10 text-[10px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+              <option value="all">Semua Status Verifikasi</option>
               <option value="unverified">🚨 Pending Verifikasi</option>
               <option value="verified">✅ Sudah Verified</option>
               <option value="rejected">❌ Ditolak</option>
@@ -195,197 +196,110 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
             </select>
           </div>
 
-          {selectedIds.length > 0 && (
-            <div className="flex items-center gap-3 animate-in fade-in zoom-in duration-300">
-              <div className="h-10 w-[2px] bg-slate-200 mx-2" />
-              <button 
-                onClick={() => handleAction(selectedIds, 'verified')} 
-                className="bg-emerald-600 text-white px-5 py-3 rounded-xl font-black uppercase text-[10px] shadow-lg hover:bg-slate-900 transition-all"
-              >
-                Verifikasi {selectedIds.length} Orang
-              </button>
-              <button 
-                onClick={() => handleAction(selectedIds, 'rejected')} 
-                className="bg-rose-500 text-white px-5 py-3 rounded-xl font-black uppercase text-[10px] shadow-lg hover:bg-slate-900 transition-all"
-              >
-                Tolak
-              </button>
-            </div>
-          )}
+          <div className="relative">
+            <Briefcase className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <select aria-label="Filter Ragam Disabilitas" value={filterDisability} onChange={(e) => { setFilterDisability(e.target.value); setCurrentPage(1); }} className="w-full appearance-none rounded-2xl border-4 border-slate-900 bg-white py-4 pl-14 pr-10 text-[10px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+              <option value="all">Semua Ragam Disabilitas</option>
+              <option value="Disabilitas Fisik">Disabilitas Fisik</option>
+              <option value="Disabilitas Sensorik Netra">Disabilitas Sensorik Netra</option>
+              <option value="Disabilitas Sensorik Rungu/Wicara">Disabilitas Sensorik Rungu/Wicara</option>
+              <option value="Disabilitas Intelektual">Disabilitas Intelektual</option>
+              <option value="Disabilitas Mental">Disabilitas Mental</option>
+            </select>
+          </div>
+
+          <div className="relative">
+            <GraduationCap className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <select aria-label="Filter Status Pekerjaan" value={filterEmployment} onChange={(e) => { setFilterEmployment(e.target.value); setCurrentPage(1); }} className="w-full appearance-none rounded-2xl border-4 border-slate-900 bg-white py-4 pl-14 pr-10 text-[10px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+              <option value="all">Semua Status Karir</option>
+              <option value="Job Seeker">Mencari Kerja</option>
+              <option value="Fresh Graduate">Fresh Graduate</option>
+              <option value="Pegawai Swasta">Pegawai Swasta</option>
+              <option value="ASN (PNS / PPPK)">ASN (PNS / PPPK)</option>
+              <option value="Wiraswasta / Entrepreneur">Wiraswasta</option>
+              <option value="Belum Bekerja">Belum Bekerja</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* DATA TABLE (NEOBRUTALISM STYLE) */}
+      {/* DATA TABLE */}
       <div className="overflow-hidden rounded-[3rem] border-4 border-slate-900 bg-white shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse" role="grid">
+          <table className="w-full text-left border-collapse">
             <thead className="border-b-4 border-slate-900 bg-slate-50">
               <tr>
                 <th className="px-8 py-6">
-                  <button 
-                    onClick={toggleSelectAll} 
-                    aria-label={selectedIds.length === paginatedData.length ? "Batal pilih semua" : "Pilih semua talenta di halaman ini"}
-                    className="transition-transform active:scale-90"
-                  >
-                    {selectedIds.length === paginatedData.length && selectedIds.length > 0 ? 
-                      <CheckSquare size={24} className="text-emerald-600" /> : 
-                      <Square size={24} className="text-slate-300" />
-                    }
-                  </button>
+                  <div className="flex items-center justify-center">
+                    <input type="checkbox" className="sr-only" id="select-all-top" checked={selectedIds.length === paginatedData.length && selectedIds.length > 0} onChange={toggleSelectAll} />
+                    <label htmlFor="select-all-top" className="cursor-pointer">
+                      {selectedIds.length === paginatedData.length && selectedIds.length > 0 ? <CheckSquare size={24} className="text-emerald-600" /> : <Square size={24} className="text-slate-300" />}
+                    </label>
+                  </div>
                 </th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Info Talenta</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Akademik</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Verifikasi</th>
-                <th className="px-8 py-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Manajemen</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Info Talenta</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Program Studi</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                <th className="px-8 py-6 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y-4 divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-32 text-center">
-                    <Loader2 className="mx-auto animate-spin text-emerald-500" size={48} />
-                    <p className="mt-4 font-black uppercase italic text-slate-300 tracking-tighter text-xl">Menghubungkan Database...</p>
-                  </td>
-                </tr>
+                <tr><td colSpan={5} className="py-32 text-center"><Loader2 className="mx-auto animate-spin text-emerald-500" size={48} /></td></tr>
               ) : paginatedData.length > 0 ? (
                 paginatedData.map((talent) => {
                   const status = talent.campus_verifications?.[0]?.status || 'unverified';
                   const isSelected = selectedIds.includes(talent.id);
-
                   return (
                     <tr key={talent.id} className={`group transition-all ${isSelected ? 'bg-emerald-50/50' : 'hover:bg-slate-50'}`}>
                       <td className="px-8 py-6">
-                        <button 
-                          onClick={() => toggleSelectOne(talent.id)} 
-                          aria-label={`Pilih ${talent.full_name}`}
-                          className="active:scale-90 transition-transform"
-                        >
-                          {isSelected ? 
-                            <CheckSquare size={24} className="text-emerald-600" /> : 
-                            <Square size={24} className="text-slate-200 group-hover:text-slate-400" />
-                          }
-                        </button>
+                        <div className="flex items-center justify-center">
+                          <input type="checkbox" className="sr-only" id={`sel-${talent.id}`} checked={isSelected} onChange={() => toggleSelectOne(talent.id)} />
+                          <label htmlFor={`sel-${talent.id}`} className="cursor-pointer">
+                            {isSelected ? <CheckSquare size={24} className="text-emerald-600" /> : <Square size={24} className="text-slate-200 group-hover:text-slate-400" />}
+                          </label>
+                        </div>
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-slate-900 bg-slate-100 font-black text-slate-400 uppercase">
-                            {talent.full_name?.charAt(0)}
-                          </div>
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-slate-900 bg-slate-100 font-black text-slate-400 uppercase">{talent.full_name?.charAt(0)}</div>
                           <div>
                             <p className="text-sm font-black uppercase tracking-tight text-slate-900 leading-none">{talent.full_name}</p>
                             <p className="mt-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">{talent.disability_type}</p>
                           </div>
                         </div>
                       </td>
+                      <td className="px-8 py-6 text-[10px] font-black uppercase italic text-slate-600">{talent.major || "Belum Update"}</td>
                       <td className="px-8 py-6">
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase italic text-slate-600">
-                          <GraduationCap size={14} className="text-emerald-500" />
-                          {talent.major || "Belum Update"}
+                        <div className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-widest ${status === 'verified' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                          {status === 'verified' ? <CheckCircle2 size={12}/> : <AlertCircle size={12}/>} {status}
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-widest ${
-                          status === 'verified' ? 'bg-emerald-100 text-emerald-700' : 
-                          status === 'rejected' ? 'bg-rose-100 text-rose-700' : 
-                          'bg-orange-100 text-orange-700'
-                        }`}>
-                          {status === 'verified' ? <CheckCircle2 size={12}/> : status === 'rejected' ? <XCircle size={12}/> : <AlertCircle size={12}/>}
-                          {status}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-3">
-                          {status !== 'verified' && (
-                            <button 
-                              onClick={() => handleAction([talent.id], 'verified')} 
-                              className="rounded-xl bg-emerald-600 p-2.5 text-white shadow-md hover:bg-slate-900 transition-all"
-                              aria-label={`Verifikasi ${talent.full_name}`}
-                            >
-                              <UserCheck size={18}/>
-                            </button>
-                          )}
-                          {status !== 'rejected' && (
-                            <button 
-                              onClick={() => handleAction([talent.id], 'rejected')} 
-                              className="rounded-xl border-2 border-slate-200 p-2.5 text-slate-400 hover:border-rose-500 hover:text-rose-500 transition-all"
-                              aria-label={`Tolak verifikasi ${talent.full_name}`}
-                            >
-                              <XCircle size={18}/>
-                            </button>
-                          )}
-                          <div className="h-6 w-[1px] bg-slate-200 mx-1" />
-                          <button 
-                            onClick={() => generateProfessionalCV(talent.id)} 
-                            className="rounded-xl bg-slate-900 p-2.5 text-white shadow-md hover:bg-emerald-600 transition-all"
-                            aria-label={`Cetak CV Profesional ${talent.full_name}`}
-                            title="Cetak CV"
-                          >
-                            <Printer size={18}/>
-                          </button>
-                          <a 
-                            href={`/talent/${talent.id}`} 
-                            target="_blank" 
-                            className="rounded-xl border-2 border-slate-200 p-2.5 text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"
-                            aria-label={`Buka Profil Publik ${talent.full_name}`}
-                          >
-                            <ExternalLink size={18}/>
-                          </a>
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => handleAction([talent.id], 'verified')} className="rounded-xl bg-emerald-600 p-2.5 text-white hover:bg-slate-900 transition-all" aria-label="Verifikasi"><UserCheck size={18}/></button>
+                          <button onClick={() => generateProfessionalCV(talent.id)} className="rounded-xl bg-slate-900 p-2.5 text-white hover:bg-emerald-600 transition-all" aria-label="Cetak CV"><Printer size={18}/></button>
+                          <a href={`/talent/${talent.id}`} target="_blank" className="rounded-xl border-2 border-slate-200 p-2.5 text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"><ExternalLink size={18}/></a>
                         </div>
                       </td>
                     </tr>
                   );
                 })
               ) : (
-                <tr>
-                  <td colSpan={5} className="py-32 text-center opacity-30">
-                    <ShieldCheck size={64} className="mx-auto mb-4" />
-                    <p className="text-2xl font-black uppercase italic tracking-tighter">Tidak Ada Data Ditemukan</p>
-                  </td>
-                </tr>
+                <tr><td colSpan={5} className="py-32 text-center opacity-30 font-black uppercase italic">Tidak Ada Data</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* PAGINATION CONTROLS */}
+      {/* PAGINATION */}
       <div className="mt-12 flex flex-col items-center justify-between gap-6 px-4 md:flex-row">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400" aria-live="polite">
-          Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} Alumni
-        </p>
-        
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Menampilkan {paginatedData.length} dari {filteredData.length} Talenta</p>
         <div className="flex items-center gap-4">
-          <button 
-            disabled={currentPage === 1} 
-            onClick={() => { setCurrentPage(p => p - 1); window.scrollTo(0, 400); }}
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-slate-900 bg-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] disabled:opacity-20 disabled:shadow-none hover:bg-slate-50 transition-all"
-            aria-label="Halaman Sebelumnya"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => { setCurrentPage(page); window.scrollTo(0, 400); }}
-                className={`h-12 w-12 rounded-2xl border-4 border-slate-900 font-black transition-all ${
-                  currentPage === page ? 'bg-slate-900 text-white shadow-none' : 'bg-white text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:translate-x-0.5 hover:translate-y-0.5'
-                }`}
-              >
-                {page}
-              </button>
-            )).slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2))}
-          </div>
-
-          <button 
-            disabled={currentPage === totalPages || totalPages === 0} 
-            onClick={() => { setCurrentPage(p => p + 1); window.scrollTo(0, 400); }}
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border-4 border-slate-900 bg-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] disabled:opacity-20 disabled:shadow-none hover:bg-slate-50 transition-all"
-            aria-label="Halaman Berikutnya"
-          >
-            <ChevronRight size={24} />
-          </button>
+          <button disabled={currentPage === 1} onClick={() => { setCurrentPage(p => p - 1); window.scrollTo(0, 400); }} className="h-12 w-12 rounded-2xl border-4 border-slate-900 bg-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] disabled:opacity-20 transition-all"><ChevronLeft size={24} /></button>
+          <div className="flex gap-2 font-black italic">Halaman {currentPage}</div>
+          <button disabled={currentPage === totalPages || totalPages === 0} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo(0, 400); }} className="h-12 w-12 rounded-2xl border-4 border-slate-900 bg-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] disabled:opacity-20 transition-all"><ChevronRight size={24} /></button>
         </div>
       </div>
     </div>
