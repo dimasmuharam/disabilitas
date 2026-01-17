@@ -71,7 +71,6 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     if (user?.id) fetchLatestData();
   }, [user?.id, autoOpenProfile]);
 
-  // Efek Pindah Fokus saat Modul Dibuka
   useEffect(() => {
     if (activeTab !== "overview") {
       setTimeout(() => {
@@ -87,8 +86,8 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
         setProfile({ ...prof });
         const today = new Date().toISOString();
         const [recJobs, recTrains] = await Promise.all([
-          supabase.from("jobs").select("*, companies(name)").eq("is_active", true).gt("expires_at", today).or(`location.ilike.%${prof.city}%,required_education_level.eq.${prof.education_level}`).limit(4),
-          supabase.from("trainings").select("*, partners(name)").eq("is_published", true).gt("registration_deadline", today).or(`location.ilike.%${prof.city}%,target_disability.cs.{${prof.disability_type}}`).limit(4)
+          supabase.from("jobs").select("*, companies(id, name, slug)").eq("is_active", true).gt("expires_at", today).or(`location.ilike.%${prof.city}%,required_education_level.eq.${prof.education_level}`).limit(4),
+          supabase.from("trainings").select("*, partners(id, name, slug)").eq("is_published", true).gt("registration_deadline", today).or(`location.ilike.%${prof.city}%,target_disability.cs.{${prof.disability_type}}`).limit(4)
         ]);
         setRecommendedJobs(recJobs.data || []);
         setRecommendedTrainings(recTrains.data || []);
@@ -97,8 +96,8 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       const [worksRes, certsRes, appsRes, trainsRes] = await Promise.all([
         supabase.from("work_experiences").select("*").eq("profile_id", user.id).order('start_date', { ascending: false }),
         supabase.from("certifications").select("*, trainings(total_hours, syllabus)").eq("profile_id", user.id).order('year', { ascending: false }),
-        supabase.from("applications").select("*, jobs(id, slug, title, companies(name))").eq("applicant_id", user.id),
-        supabase.from("trainees").select("*, trainings(id, slug, title, start_date, partners(name))").eq("profile_id", user.id)
+        supabase.from("applications").select("*, jobs(id, slug, title, companies(id, name, slug))").eq("applicant_id", user.id),
+        supabase.from("trainees").select("*, trainings(id, slug, title, start_date, partners(id, name, slug))").eq("profile_id", user.id)
       ]);
 
       setWorkExps(worksRes.data || []);
@@ -117,34 +116,38 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     } catch (e) { console.error("Sync Error:", e); } 
     finally { 
       setLoading(false); 
-      setActiveTab("overview"); // Kembali ke overview setelah sukses sinkronisasi
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
-  const renderContent = () => {
+  const handleBackToOverview = () => {
+    setActiveTab("overview");
+    fetchLatestData();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+const renderContent = () => {
     switch (activeTab) {
-      case "identity": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Pengaturan Identitas</h2><IdentityLegal user={user} profile={profile} onSuccess={fetchLatestData} /></section>;
-      case "tech": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Akses Teknologi</h2><TechAccess user={user} profile={profile} onSuccess={fetchLatestData} /></section>;
-      case "career": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Pengalaman Karir</h2><CareerExperience user={user} profile={profile} onSuccess={fetchLatestData} /></section>;
-      case "academic": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Riwayat Akademik</h2><AcademicBarriers user={user} profile={profile} onSuccess={fetchLatestData} /></section>;
-      case "skills": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Skill & Sertifikasi</h2><SkillsCertifications user={user} profile={profile} onSuccess={fetchLatestData} /></section>;
-      case "settings": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Pengaturan Akun</h2><AccountSettings user={user} onSuccess={fetchLatestData} /></section>;
+      case "identity": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Pengaturan Identitas</h2><IdentityLegal user={user} profile={profile} onSuccess={handleBackToOverview} /></section>;
+      case "tech": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Akses Teknologi</h2><TechAccess user={user} profile={profile} onSuccess={handleBackToOverview} /></section>;
+      case "career": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Pengalaman Karir</h2><CareerExperience user={user} profile={profile} onSuccess={handleBackToOverview} /></section>;
+      case "academic": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Riwayat Akademik</h2><AcademicBarriers user={user} profile={profile} onSuccess={handleBackToOverview} /></section>;
+      case "skills": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Skill & Sertifikasi</h2><SkillsCertifications user={user} profile={profile} onSuccess={handleBackToOverview} /></section>;
+      case "settings": return <section aria-labelledby="mod-title"><h2 id="mod-title" ref={moduleHeaderRef} tabIndex={-1} className="sr-only">Pengaturan Akun</h2><AccountSettings user={user} onSuccess={handleBackToOverview} /></section>;
       default: return (
         <div className="space-y-10 duration-500 animate-in fade-in">
-{/* FITUR CEK KELENGKAPAN PROFIL */}
-{completionData.percent < 100 && (
-  <div className="mb-8 rounded-[2.5rem] border-2 border-amber-200 bg-amber-50 p-8 text-left" role="alert">
-    <h3 className="mb-2 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-amber-800">
-      <AlertCircle size={18} /> Bagian Yang Belum Lengkap:
-    </h3>
-    <ul className="list-inside list-disc space-y-1">
-      {completionData.missing.map((item, idx) => (
-        <li key={idx} className="text-xs font-bold text-amber-700">{item}</li>
-      ))}
-    </ul>
-  </div>
-)}
+          {/* FITUR: CEK KELENGKAPAN PROFIL (List bagian mana yang belum terisi) */}
+          {completionData.percent < 100 && (
+            <div className="rounded-[2.5rem] border-2 border-amber-200 bg-amber-50 p-8 text-left" role="alert">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-amber-800">
+                <AlertCircle size={18} /> Profil Belum Lengkap ({completionData.percent}%):
+              </h3>
+              <ul className="list-inside list-disc space-y-1">
+                {completionData.missing.map((item, idx) => (
+                  <li key={idx} className="text-xs font-bold text-amber-700">{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* TRACKING GRID */}
           <div className="grid gap-8 text-left md:grid-cols-2">
             {/* JOBS TRACKING */}
@@ -157,16 +160,17 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                   <div className="divide-y divide-slate-50">
                     {appliedJobs.map((app) => (
                       <div key={app.id} className="p-6 transition-colors hover:bg-slate-50">
-<div className="flex-1 text-left">
-  {/* Link ke Detail Lowongan */}
-  <Link href={`/lowongan/${app.jobs?.slug || app.jobs?.id}`} className="block text-sm font-black uppercase text-slate-900 hover:text-blue-600">
-    {app.jobs?.title}
-  </Link>
-  
-  {/* Link ke Public Profile Perusahaan */}
-  <Link href={`/company/${app.jobs?.companies?.id}`} className="text-[10px] font-bold uppercase text-slate-400 hover:text-blue-500 hover:underline">
-    {app.jobs?.companies?.name}
-  </Link>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 text-left space-y-1">
+                            {/* NAMA POSISI -> LINK LOWONGAN */}
+                            <Link href={`/lowongan/${app.jobs?.slug || app.jobs?.id}`} className="block text-sm font-black uppercase text-slate-900 hover:text-blue-600">
+                              {app.jobs?.title}
+                            </Link>
+                            {/* NAMA PERUSAHAAN -> LINK PUBLIC PROFILE PERUSAHAAN */}
+                            <Link href={`/company/${app.jobs?.companies?.slug || app.jobs?.companies?.id}`} className="text-[10px] font-bold uppercase text-slate-400 hover:text-blue-500 hover:underline">
+                              {app.jobs?.companies?.name}
+                            </Link>
+                          </div>
                           <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
                             app.status === 'hired' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 
                             app.status === 'rejected' ? 'border-red-100 bg-red-50 text-red-500' : 'border-blue-100 bg-blue-50 text-blue-600'
@@ -189,7 +193,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                       </div>
                     ))}
                   </div>
-                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 text-[10px] font-bold uppercase italic opacity-30"><Briefcase size={32} className="mb-2"/> Belum ada lamaran.</div>}
+                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 text-[10px] font-bold uppercase italic opacity-30 text-center"><Briefcase size={32} className="mb-2"/> Belum ada lamaran.</div>}
               </div>
             </div>
 
@@ -202,17 +206,18 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                 {appliedTrainings.length > 0 ? (
                   <div className="divide-y divide-slate-50">
                     {appliedTrainings.map((reg) => (
-                      <div key={reg.id} className="p-6 transition-colors hover:bg-slate-50">
-<div className="flex-1 text-left">
-  {/* Link ke Detail Pelatihan */}
-  <Link href={`/pelatihan/${reg.trainings?.slug || reg.trainings?.id}`} className="block text-sm font-black uppercase text-slate-900 hover:text-emerald-600">
-    {reg.trainings?.title}
-  </Link>
-  
-  {/* Link ke Public Profile Penyelenggara/Partner */}
-  <Link href={`/partner/${reg.trainings?.partners?.id}`} className="text-[10px] font-bold uppercase text-slate-400 hover:text-emerald-500 hover:underline">
-    {reg.trainings?.partners?.name}
-  </Link>
+                      <div key={reg.id} className="p-6 transition-colors hover:bg-slate-50 text-left">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-1">
+                            {/* NAMA PELATIHAN -> LINK DETAIL PELATIHAN */}
+                            <Link href={`/pelatihan/${reg.trainings?.slug || reg.trainings?.id}`} className="block text-sm font-black uppercase text-slate-900 hover:text-emerald-600">
+                              {reg.trainings?.title}
+                            </Link>
+                            {/* PENYELENGGARA -> LINK PUBLIC PROFILE PARTNER */}
+                            <Link href={`/partner/${reg.trainings?.partners?.slug || reg.trainings?.partners?.id}`} className="text-[10px] font-bold uppercase text-slate-400 hover:text-emerald-500 hover:underline">
+                              {reg.trainings?.partners?.name}
+                            </Link>
+                          </div>
                           <span className={`rounded-full border px-3 py-1 text-[8px] font-black uppercase ${
                             reg.status === 'accepted' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 'border-slate-100 bg-slate-50 text-slate-400'
                           }`}>{reg.status}</span>
@@ -234,7 +239,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                       </div>
                     ))}
                   </div>
-                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 text-[10px] font-bold uppercase italic opacity-30"><BookOpen size={32} className="mb-2"/> Belum ada pelatihan.</div>}
+                ) : <div className="flex h-[300px] flex-col items-center justify-center p-10 text-[10px] font-bold uppercase italic opacity-30 text-center"><BookOpen size={32} className="mb-2"/> Belum ada pelatihan.</div>}
               </div>
             </div>
           </div>
@@ -248,29 +253,19 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Peluang Karir Lokal</p>
                 {recommendedJobs.length > 0 ? recommendedJobs.map((j) => (
-                  <Link href={`/lowongan/${j.slug || j.id}`} key={j.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-blue-600">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-xs font-black uppercase leading-tight text-slate-900 transition-colors group-hover:text-blue-600">{j.title}</p>
-                        <p className="text-[8px] font-bold uppercase text-slate-400">{j.companies?.name} | {j.location}</p>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-200 transition-all group-hover:text-blue-600" />
-                    </div>
-                  </Link>
+                  <div key={j.id} className="rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm">
+                    <Link href={`/lowongan/${j.slug || j.id}`} className="block text-xs font-black uppercase hover:text-blue-600">{j.title}</Link>
+                    <Link href={`/company/${j.companies?.slug || j.companies?.id}`} className="text-[8px] font-bold uppercase text-slate-400 hover:underline">{j.companies?.name}</Link>
+                  </div>
                 )) : <div className="rounded-2xl bg-slate-50 p-4 text-center text-[9px] font-bold uppercase italic text-slate-400">Tidak ada peluang lokal tersedia.</div>}
               </div>
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-tighter text-slate-400">Pelatihan Relevan</p>
                 {recommendedTrainings.length > 0 ? recommendedTrainings.map((t) => (
-                  <Link href={`/pelatihan/${t.slug || t.id}`} key={t.id} className="group block rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-emerald-600">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-xs font-black uppercase leading-tight text-slate-900 transition-colors group-hover:text-emerald-600">{t.title}</p>
-                        <p className="text-[8px] font-bold uppercase text-slate-400">{t.partners?.name} | {t.location}</p>
-                      </div>
-                      <ArrowRight size={14} className="text-slate-200 transition-all group-hover:text-emerald-600" />
-                    </div>
-                  </Link>
+                  <div key={t.id} className="rounded-[2rem] border-2 border-slate-100 bg-white p-5 shadow-sm">
+                    <Link href={`/pelatihan/${t.slug || t.id}`} className="block text-xs font-black uppercase hover:text-emerald-600">{t.title}</Link>
+                    <Link href={`/partner/${t.partners?.slug || t.partners?.id}`} className="text-[8px] font-bold uppercase text-slate-400 hover:underline">{t.partners?.name}</Link>
+                  </div>
                 )) : <div className="rounded-2xl bg-slate-50 p-4 text-center text-[9px] font-bold uppercase italic text-slate-400">Tidak ada pelatihan relevan.</div>}
               </div>
             </div>
@@ -311,7 +306,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
             <div className="flex flex-col items-end gap-3">
                <div className="flex items-center gap-2">
                  <div className="h-3 w-32 overflow-hidden rounded-full bg-slate-100 border border-slate-200">
-                    <div className="h-full bg-blue-600" style={{ width: `${completionData.percent}%` }}></div>
+                    <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${completionData.percent}%` }}></div>
                  </div>
                  <span className="text-xl font-black italic text-slate-900">{completionData.percent}%</span>
                </div>
@@ -335,7 +330,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
               onClick={() => setActiveTab(m.id)} 
               aria-pressed={activeTab === m.id}
               className={`group flex flex-col items-center justify-center rounded-3xl border-2 p-4 transition-all ${
-                activeTab === m.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-transparent bg-white shadow-sm hover:border-slate-200'
+                activeTab === m.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-transparent bg-white shadow-sm hover:border-slate-200 focus:ring-4 focus:ring-blue-100'
               }`}
             >
               <m.icon className="mb-2" size={20} />
@@ -378,15 +373,15 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
 
             {/* QUICK STATS */}
             <div className="rounded-[3rem] border-2 border-slate-100 bg-white p-8">
-              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase italic text-slate-400"><LayoutDashboard size={14}/> Ringkasan Aktivitas</h3>
+              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase italic text-slate-400 tracking-widest"><LayoutDashboard size={14}/> Statistik</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-3xl bg-slate-50 p-4">
+                <div className="rounded-3xl bg-slate-50 p-4 text-center">
                   <p className="text-3xl font-black text-slate-900">{stats.jobs}</p>
-                  <p className="text-[8px] font-black uppercase text-slate-400">Lamaran</p>
+                  <p className="text-[8px] font-black uppercase text-slate-400 italic">Lamaran</p>
                 </div>
-                <div className="rounded-3xl bg-slate-50 p-4">
+                <div className="rounded-3xl bg-slate-50 p-4 text-center">
                   <p className="text-3xl font-black text-slate-900">{stats.trainings}</p>
-                  <p className="text-[8px] font-black uppercase text-slate-400">Pelatihan</p>
+                  <p className="text-[8px] font-black uppercase text-slate-400 italic">Pelatihan</p>
                 </div>
               </div>
             </div>
@@ -395,7 +390,12 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       </div>
 
       {selectedJobRating && (
-        <InclusionRatingModal job={selectedJobRating} userId={user.id} onClose={() => setSelectedJobRating(null)} onSuccess={() => { setSelectedJobRating(null); fetchLatestData(); }} />
+        <InclusionRatingModal 
+          job={selectedJobRating} 
+          userId={user.id} 
+          onClose={() => setSelectedJobRating(null)} 
+          onSuccess={() => { setSelectedJobRating(null); fetchLatestData(); }} 
+        />
       )}
     </div>
   );
