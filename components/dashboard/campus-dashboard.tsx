@@ -117,7 +117,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     { subject: 'Output', A: campus?.inclusion_score_output || 0 },
   ], [campus]);
 
-  const handleShare = () => {
+const handleShare = () => {
     const data = {
       name: campus?.name || "Institusi",
       total: Number(campus?.stats_academic_total || 0),
@@ -125,6 +125,14 @@ export default function CampusDashboard({ user }: { user: any }) {
       score: campus?.inclusion_score || 0,
       url: `https://disabilitas.com/kampus/${campus?.id}`
     };
+
+    // PERBAIKAN: Gunakan pengecekan yang aman untuk TypeScript
+    if (typeof window !== "undefined" && window.navigator && window.navigator.share) {
+      shareNative(data);
+    } else {
+      shareToWhatsApp(data);
+    }
+  };
     if (typeof navigator !== "undefined" && navigator.share) shareNative(data); else shareToWhatsApp(data);
   };
 
