@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { 
@@ -80,7 +80,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     }
   }, [activeTab]);
 
-  async function fetchLatestData() {
+  const fetchLatestData = useCallback(async () => {
     try {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (prof) {
@@ -120,7 +120,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       setActiveTab("overview"); // Kembali ke overview setelah sukses sinkronisasi
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }
+  }, [user.id]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -287,7 +287,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
             </div>
             <div className="flex flex-col items-end gap-3">
                <div className="flex items-center gap-2">
-                 <div className="h-3 w-32 overflow-hidden rounded-full bg-slate-100 border border-slate-200">
+                 <div className="h-3 w-32 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
                     <div className="h-full bg-blue-600" style={{ width: `${completionData.percent}%` }}></div>
                  </div>
                  <span className="text-xl font-black italic text-slate-900">{completionData.percent}%</span>

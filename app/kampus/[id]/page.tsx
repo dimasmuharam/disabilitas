@@ -70,7 +70,7 @@ export default async function CampusPublicProfile({ params }: Props) {
                 <h1 className="text-5xl font-black uppercase italic leading-none tracking-tighter lg:text-7xl">
                   {campus.name}
                 </h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm font-black uppercase tracking-widest text-slate-400 text-left">
+                <div className="flex flex-wrap items-center gap-4 text-left text-sm font-black uppercase tracking-widest text-slate-400">
                   <span className="flex items-center gap-1.5"><MapPin size={16} /> {campus.location}</span>
                   {campus.website && (
                     <a href={campus.website} target="_blank" className="flex items-center gap-1.5 text-blue-600 hover:underline">
@@ -82,7 +82,7 @@ export default async function CampusPublicProfile({ params }: Props) {
             </div>
 
             {/* MAIN SCORE CARD */}
-            <div className="w-full rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:w-80 text-left">
+            <div className="w-full rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:w-80">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">National Inclusion Index</p>
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-6xl font-black italic tracking-tighter text-emerald-600">{campus.inclusion_score || 0}%</span>
@@ -104,7 +104,7 @@ export default async function CampusPublicProfile({ params }: Props) {
             
             {/* SMART NARRATIVE (RESEARCH INSIGHT) */}
             <section className="rounded-3xl border-l-8 border-slate-900 bg-slate-50 p-10 italic shadow-sm">
-              <p className="text-2xl font-black text-slate-800 leading-tight md:text-3xl">
+              <p className="text-2xl font-black leading-tight text-slate-800 md:text-3xl">
                 &quot;{campus.smart_narrative_summary || campus.description}&quot;
               </p>
             </section>
@@ -119,7 +119,7 @@ export default async function CampusPublicProfile({ params }: Props) {
                 <div key={c.label} className="rounded-3xl border-2 border-slate-100 bg-slate-50 p-6">
                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{c.label}</p>
                   <p className="mt-1 text-3xl font-black">{c.score || 0}%</p>
-                  <p className="text-[9px] font-bold uppercase text-slate-400 mt-1">{c.sub}</p>
+                  <p className="mt-1 text-[9px] font-bold uppercase text-slate-400">{c.sub}</p>
                   <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white">
                     <div 
                       className={`h-full transition-all duration-1000 ${c.color}`} 
@@ -132,18 +132,18 @@ export default async function CampusPublicProfile({ params }: Props) {
 
             {/* ACCOMMODATION LIST */}
             <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(241,245,249,1)]">
-              <h3 className="mb-8 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900 leading-none">
+              <h3 className="mb-8 flex items-center gap-2 text-xs font-black uppercase leading-none tracking-widest text-slate-900">
                 <CheckCircle2 size={18} className="text-emerald-500" /> Fasilitas & Akomodasi Tersedia
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {(campus.master_accommodations_provided || []).length > 0 ? (
                   campus.master_accommodations_provided.map((acc: string) => (
                     <div key={acc} className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                      <div className="size-2 rounded-full bg-emerald-500 shrink-0" /> {acc}
+                      <div className="size-2 shrink-0 rounded-full bg-emerald-500" /> {acc}
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm font-bold text-slate-400 italic text-left">Belum ada data fasilitas publik.</p>
+                  <p className="text-left text-sm font-bold italic text-slate-400">Belum ada data fasilitas publik.</p>
                 )}
               </div>
             </section>
@@ -159,20 +159,20 @@ export default async function CampusPublicProfile({ params }: Props) {
               </h3>
               <div className="space-y-10">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest opacity-60 leading-none">Populasi Mahasiswa Disabilitas</p>
-                  <p className="text-5xl font-black italic tracking-tighter">{totalTalents} <span className="text-sm not-italic opacity-40 uppercase">Orang</span></p>
+                  <p className="text-[9px] font-black uppercase leading-none tracking-widest opacity-60">Populasi Mahasiswa Disabilitas</p>
+                  <p className="text-5xl font-black italic tracking-tighter">{totalTalents} <span className="text-sm uppercase not-italic opacity-40">Orang</span></p>
                 </div>
                 <div className="border-l-4 border-emerald-500 pl-6">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400 leading-none">Employment Rate</p>
+                  <p className="text-[9px] font-black uppercase leading-none tracking-widest text-emerald-400">Employment Rate</p>
                   <p className="text-5xl font-black italic tracking-tighter">{employmentRate}%</p>
-                  <p className="mt-2 text-[10px] font-medium opacity-60 uppercase leading-relaxed">Alumni telah terserap industri profesional.</p>
+                  <p className="mt-2 text-[10px] font-medium uppercase leading-relaxed opacity-60">Alumni telah terserap industri profesional.</p>
                 </div>
               </div>
             </div>
 
             {/* GENDER PROPORTION */}
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8">
-              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900 leading-none">
+              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase leading-none tracking-widest text-slate-900">
                 <Users size={16} /> Analisis Gender
               </h3>
               <div className="flex gap-4">
@@ -191,7 +191,7 @@ export default async function CampusPublicProfile({ params }: Props) {
 
             {/* DISABILITY DIVERSITY MAP */}
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8">
-              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-900 leading-none">
+              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase leading-none tracking-widest text-slate-900">
                 <Zap size={16} className="text-orange-500" /> Ragam Disabilitas
               </h3>
               <div className="space-y-4">
@@ -224,7 +224,7 @@ export default async function CampusPublicProfile({ params }: Props) {
       <footer className="mx-auto max-w-7xl px-4 py-20">
         <div className="rounded-[3rem] bg-emerald-600 p-12 text-center text-white shadow-2xl">
           <Award className="mx-auto mb-6 shadow-emerald-700" size={48} />
-          <h2 className="text-3xl font-black uppercase italic tracking-tighter md:text-5xl leading-tight">
+          <h2 className="text-3xl font-black uppercase italic leading-tight tracking-tighter md:text-5xl">
             Wujudkan Kampus Inklusif
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-sm font-bold uppercase leading-relaxed tracking-widest opacity-80">

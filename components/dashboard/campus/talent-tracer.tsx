@@ -131,7 +131,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
   };
 
   return (
-    <div className="text-left animate-in fade-in duration-700">
+    <div className="text-left duration-700 animate-in fade-in">
       <div aria-live="polite" className="sr-only">{toast.msg}</div>
       {toast.msg && (
         <div className={`fixed bottom-10 right-10 z-50 flex items-center gap-3 rounded-2xl border-4 border-slate-900 px-6 py-4 font-black uppercase italic shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] ${toast.type === 'success' ? 'bg-emerald-400' : 'bg-rose-400'}`}>
@@ -143,15 +143,15 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
       {/* HEADER SECTION */}
       <div className="mb-10 flex flex-col gap-8 border-b-4 border-slate-900 pb-10 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-600 transition-all">
+          <button onClick={onBack} className="mb-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-all hover:text-emerald-600">
             <ArrowLeft size={16} /> Dashboard Overview
           </button>
-          <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">Talent Tracer System</h2>
+          <h2 className="text-5xl font-black uppercase italic leading-none tracking-tighter">Talent Tracer System</h2>
           <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">
             Manajemen Alumni & Mahasiswa <span className="text-slate-900 underline decoration-emerald-400 decoration-4 underline-offset-4">{campusName}</span>
           </p>
         </div>
-        <button onClick={exportToCSV} className="flex items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-8 py-4 text-[11px] font-black uppercase italic shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+        <button onClick={exportToCSV} className="flex items-center gap-3 rounded-2xl border-4 border-slate-900 bg-white px-8 py-4 text-[11px] font-black uppercase italic shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none">
           <Download size={18} /> Export Tracer (.CSV)
         </button>
       </div>
@@ -171,16 +171,16 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
           </div>
           {selectedIds.length > 0 && (
             <div className="flex items-center gap-3 animate-in zoom-in">
-              <button onClick={() => handleAction(selectedIds, 'verified')} className="bg-emerald-600 text-white px-5 py-3 rounded-xl font-black uppercase text-[10px] shadow-lg hover:bg-slate-900 transition-all">Verifikasi ({selectedIds.length})</button>
-              <button onClick={() => handleAction(selectedIds, 'rejected')} className="bg-rose-500 text-white px-5 py-3 rounded-xl font-black uppercase text-[10px] shadow-lg hover:bg-slate-900 transition-all">Tolak</button>
+              <button onClick={() => handleAction(selectedIds, 'verified')} className="rounded-xl bg-emerald-600 px-5 py-3 text-[10px] font-black uppercase text-white shadow-lg transition-all hover:bg-slate-900">Verifikasi ({selectedIds.length})</button>
+              <button onClick={() => handleAction(selectedIds, 'rejected')} className="rounded-xl bg-rose-500 px-5 py-3 text-[10px] font-black uppercase text-white shadow-lg transition-all hover:bg-slate-900">Tolak</button>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="relative">
             <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] outline-none">
               <option value="all">Semua Verifikasi</option>
               <option value="pending">🚨 Pending</option>
               <option value="verified">✅ Verified</option>
@@ -189,7 +189,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
           </div>
           <div className="relative">
             <GraduationCap className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <select value={filterAcademic} onChange={(e) => setFilterAcademic(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+            <select value={filterAcademic} onChange={(e) => setFilterAcademic(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] outline-none">
               <option value="all">Semua Angkatan</option>
               <option value="aktif">Mahasiswa Aktif</option>
               <option value="alumni">Alumni Disabilitas</option>
@@ -197,7 +197,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
           </div>
           <div className="relative">
             <ShieldCheck className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <select value={filterDisability} onChange={(e) => setFilterDisability(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+            <select value={filterDisability} onChange={(e) => setFilterDisability(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] outline-none">
               <option value="all">Semua Ragam</option>
               <option value="Disabilitas Fisik">Fisik</option>
               <option value="Disabilitas Sensorik Netra">Sensorik Netra</option>
@@ -208,7 +208,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
           </div>
           <div className="relative">
             <Briefcase className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <select value={filterEmployment} onChange={(e) => setFilterEmployment(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+            <select value={filterEmployment} onChange={(e) => setFilterEmployment(e.target.value)} className="w-full appearance-none rounded-xl border-2 border-slate-900 bg-white py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] outline-none">
               <option value="all">Semua Status Karir</option>
               <option value="Job Seeker">Mencari Kerja</option>
               <option value="Pegawai Swasta">Pegawai Swasta</option>
@@ -257,12 +257,12 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-slate-900 bg-slate-100 font-black text-slate-400 uppercase">{talent.full_name?.charAt(0)}</div>
+                        <div className="flex size-12 items-center justify-center rounded-xl border-2 border-slate-900 bg-slate-100 font-black uppercase text-slate-400">{talent.full_name?.charAt(0)}</div>
                         <div>
                           <p className="text-sm font-black uppercase leading-none">{talent.full_name}</p>
                           <div className="mt-1 flex items-center gap-2">
-                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{talent.disability_type}</span>
-                             <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${isAlumni ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>{isAlumni ? 'Alumni' : 'Aktif'}</span>
+                             <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{talent.disability_type}</span>
+                             <span className={`rounded px-1.5 py-0.5 text-[8px] font-black uppercase ${isAlumni ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>{isAlumni ? 'Alumni' : 'Aktif'}</span>
                           </div>
                         </div>
                       </div>
@@ -277,15 +277,15 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
                       <div className="flex items-center justify-center gap-2">
                         {status === 'pending' || status === 'rejected' ? (
                           <>
-                            <button onClick={() => handleAction([talent.id], 'verified')} className="rounded-xl bg-emerald-600 p-2.5 text-white hover:bg-slate-900 transition-all" aria-label="Verifikasi"><UserCheck size={18}/></button>
-                            <button onClick={() => handleAction([talent.id], 'rejected')} className="rounded-xl border-2 border-slate-200 p-2.5 text-slate-400 hover:border-rose-500 hover:text-rose-500 transition-all" aria-label="Tolak"><UserX size={18}/></button>
+                            <button onClick={() => handleAction([talent.id], 'verified')} className="rounded-xl bg-emerald-600 p-2.5 text-white transition-all hover:bg-slate-900" aria-label="Verifikasi"><UserCheck size={18}/></button>
+                            <button onClick={() => handleAction([talent.id], 'rejected')} className="rounded-xl border-2 border-slate-200 p-2.5 text-slate-400 transition-all hover:border-rose-500 hover:text-rose-500" aria-label="Tolak"><UserX size={18}/></button>
                           </>
                         ) : (
-                          <button onClick={() => handleAction([talent.id], 'pending')} className="rounded-xl bg-orange-100 p-2.5 text-orange-600 hover:bg-orange-600 hover:text-white transition-all" aria-label="Batalkan Verifikasi"><Undo2 size={18}/></button>
+                          <button onClick={() => handleAction([talent.id], 'pending')} className="rounded-xl bg-orange-100 p-2.5 text-orange-600 transition-all hover:bg-orange-600 hover:text-white" aria-label="Batalkan Verifikasi"><Undo2 size={18}/></button>
                         )}
-                        <div className="h-6 w-[1px] bg-slate-200 mx-1" />
-                        <button onClick={() => generateProfessionalCV(talent.id)} className="rounded-xl bg-slate-900 p-2.5 text-white hover:bg-emerald-600 transition-all" aria-label="Cetak CV"><Printer size={18}/></button>
-                        <a href={`/talent/${talent.id}`} target="_blank" className="rounded-xl border-2 border-slate-200 p-2.5 text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"><ExternalLink size={18}/></a>
+                        <div className="mx-1 h-6 w-px bg-slate-200" />
+                        <button onClick={() => generateProfessionalCV(talent.id)} className="rounded-xl bg-slate-900 p-2.5 text-white transition-all hover:bg-emerald-600" aria-label="Cetak CV"><Printer size={18}/></button>
+                        <a href={`/talent/${talent.id}`} target="_blank" className="rounded-xl border-2 border-slate-200 p-2.5 text-slate-400 transition-all hover:border-slate-900 hover:text-slate-900"><ExternalLink size={18}/></a>
                       </div>
                     </td>
                   </tr>
@@ -300,9 +300,9 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
       <div className="mt-12 flex flex-col items-center justify-between gap-6 px-4 md:flex-row">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total {filteredData.length} Data Terfilter</p>
         <div className="flex items-center gap-4">
-          <button disabled={currentPage === 1} onClick={() => { setCurrentPage(p => p - 1); window.scrollTo(0, 400); }} className="h-12 w-12 rounded-2xl border-4 border-slate-900 bg-white disabled:opacity-20 transition-all"><ChevronLeft size={24} /></button>
+          <button disabled={currentPage === 1} onClick={() => { setCurrentPage(p => p - 1); window.scrollTo(0, 400); }} className="size-12 rounded-2xl border-4 border-slate-900 bg-white transition-all disabled:opacity-20"><ChevronLeft size={24} /></button>
           <div className="text-xs font-black italic">Halaman {currentPage} dari {totalPages || 1}</div>
-          <button disabled={currentPage === totalPages || totalPages === 0} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo(0, 400); }} className="h-12 w-12 rounded-2xl border-4 border-slate-900 bg-white disabled:opacity-20 transition-all"><ChevronRight size={24} /></button>
+          <button disabled={currentPage === totalPages || totalPages === 0} onClick={() => { setCurrentPage(p => p + 1); window.scrollTo(0, 400); }} className="size-12 rounded-2xl border-4 border-slate-900 bg-white transition-all disabled:opacity-20"><ChevronRight size={24} /></button>
         </div>
       </div>
     </div>
