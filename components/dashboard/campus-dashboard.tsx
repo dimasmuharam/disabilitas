@@ -9,11 +9,11 @@ import {
   Zap, User, School,
   MousePointerClick, Briefcase, Sparkles, TrendingUp,
   ExternalLink, ChevronRight, CheckCircle2,
-  Medal, AlertCircle, GraduationCap
+  Medal, AlertCircle
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
-// Import Modul Pendukung
+// Import Modul Pendukung (Daftar Modul)
 import TalentTracer from "./campus/talent-tracer";
 import ProfileEditor from "./campus/profile-editor";
 import AccountSettings from "./campus/account-settings";
@@ -27,118 +27,83 @@ export default function CampusDashboard({ user }: { user: any }) {
   const [announcement, setAnnouncement] = useState("");
   const [profileCompletion, setProfileCompletion] = useState(0);
   
-  // STATE DATA REAL PLATFORM (Bukan Agregat)
+  // STATE DATA REAL-TIME
   const [unverifiedCount, setUnverifiedCount] = useState(0);
   const [platformStats, setPlatformStats] = useState({
-    mahasiswa: 0,
-    alumni: 0,
-    bekerja: 0,
-    male: 0,
-    female: 0,
-    total: 0
+    mahasiswa: 0, alumni: 0, bekerja: 0, male: 0, female: 0, total: 0
   });
 
   const labelTalent = "Mahasiswa";
+  const labelAlumni = "Alumni Disabilitas";
 
-  // 1. FUNGSI DATA REAL-TIME DARI TABEL VERIFIKASI & PROFIL
+  // 1. FUNGSI REAL-TIME (Sinkronisasi Data Platform)
   const fetchRealtimeData = useCallback(async () => {
     if (!user?.id) return;
-    
     const currentYear = new Date().getFullYear();
-
     try {
-      // Hitung Antrian Verifikasi
+      // Ambil angka antrian verifikasi (Pending)
       const { count: pending } = await supabase
         .from("campus_verifications")
         .select("*", { count: 'exact', head: true })
-        .eq("campus_id", user.id)
-        .eq("status", "pending");
-      
+        .eq("campus_id", user.id).eq("status", "pending");
       setUnverifiedCount(pending || 0);
 
-      // Hitung Statistik Real Platform dari tabel Profiles (Yang sudah diverifikasi oleh kampus ini)
-      // Kita join dengan campus_verifications status 'verified'
-      const { data: verifiedTalents } = await supabase
+      // Agregasi Data Verified secara Real-time
+      const { data: verified } = await supabase
         .from("campus_verifications")
-        .select(`
-          profile_id,
-          profiles (
-            gender,
-            graduation_date,
-            career_status
-          )
-        `)
-        .eq("campus_id", user.id)
-        .eq("status", "verified");
+        .select(`profiles ( gender, graduation_date, career_status )`)
+        .eq("campus_id", user.id).eq("status", "verified");
 
-      if (verifiedTalents) {
-        const stats = verifiedTalents.reduce((acc: any, item: any) => {
+      if (verified) {
+        const stats = verified.reduce((acc: any, item: any) => {
           const p = item.profiles;
           if (!p) return acc;
-
           acc.total++;
-          // Gender
           if (p.gender === 'male') acc.male++;
           if (p.gender === 'female') acc.female++;
-
-          // Status Mahasiswa vs Alumni (Berdasarkan tahun lulus)
-          if (p.graduation_date && p.graduation_date <= currentYear) {
-            acc.alumni++;
-          } else {
-            acc.mahasiswa++;
-          }
-
-          // Karir (Bekerja)
-          const workingStatus = ['Pegawai Swasta', 'Pegawai BUMN / BUMD', 'ASN (PNS / PPPK)', 'Wiraswasta / Entrepreneur'];
-          if (workingStatus.includes(p.career_status)) acc.bekerja++;
-
+          if (p.graduation_date && p.graduation_date <= currentYear) acc.alumni++; else acc.mahasiswa++;
+          const working = ['Pegawai Swasta', 'Pegawai BUMN / BUMD', 'ASN (PNS / PPPK)', 'Wiraswasta / Entrepreneur'];
+          if (working.includes(p.career_status)) acc.bekerja++;
           return acc;
         }, { mahasiswa: 0, alumni: 0, bekerja: 0, male: 0, female: 0, total: 0 });
-
         setPlatformStats(stats);
       }
-    } catch (err) {
-      console.error("Realtime fetch error:", err);
-    }
+    } catch (e) { console.error("Realtime Error:", e); }
   }, [user?.id]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const { data: campusData } = await supabase
-        .from("campuses")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      
+      const { data: campusData } = await supabase.from("campuses").select("*").eq("id", user.id).single();
       if (campusData) {
         setCampus(campusData);
+        // Logika Profile Completion (Fisik + Digital + Output)
         const fields = ["name", "description", "location", "website", "nib_number"];
         const filled = fields.filter(f => campusData[f] && campusData[f].length > 0).length;
         const acc = (campusData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
         setProfileCompletion(Math.round(((filled + acc) / (fields.length + 1)) * 100));
       }
-
       await fetchRealtimeData();
-    } finally { 
-      setLoading(false); 
-    }
+    } finally { setLoading(false); }
   }, [user?.id, fetchRealtimeData]);
 
   useEffect(() => { 
     fetchDashboardData(); 
+    // SEO & Canonical (Balik Lagi)
+    const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    link.setAttribute("href", "https://disabilitas.com/dashboard/campus");
+    if (!document.head.contains(link)) document.head.appendChild(link);
 
-    // REALTIME SUBSCRIPTION
-    const channel = supabase
-      .channel('schema-db-changes')
+    // Realtime Channel Listener
+    const channel = supabase.channel('realtime-campus')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campus_verifications', filter: `campus_id=eq.${user.id}` }, () => fetchRealtimeData())
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, fetchDashboardData, fetchRealtimeData]);
 
-  // Logika Radar & Badge
+  // Logika Badge & Radar
   const badgeInfo = useMemo(() => {
     const score = campus?.inclusion_score || 0;
     if (score >= 80) return { label: "Platinum", color: "text-slate-900", bg: "bg-gradient-to-br from-slate-100 to-slate-300", icon: Sparkles };
@@ -152,31 +117,37 @@ export default function CampusDashboard({ user }: { user: any }) {
     { subject: 'Output', A: campus?.inclusion_score_output || 0 },
   ], [campus]);
 
+  const handleShare = () => {
+    const data = {
+      name: campus?.name || "Institusi",
+      total: Number(campus?.stats_academic_total || 0),
+      rate: campus?.stats_academic_total > 0 ? Math.round((campus.stats_academic_hired / campus.stats_academic_total) * 100) : 0,
+      score: campus?.inclusion_score || 0,
+      url: `https://disabilitas.com/kampus/${campus?.id}`
+    };
+    if (typeof navigator !== "undefined" && navigator.share) shareNative(data); else shareToWhatsApp(data);
+  };
+
   const navigateTo = (tabId: string, label: string) => {
     setActiveTab(tabId);
-    setAnnouncement(`Menampilkan ${label}`);
+    setAnnouncement(`Menampilkan halaman ${label}`);
     window.scrollTo(0, 0);
   };
 
-  if (loading) return (
-    <div className="flex min-h-screen flex-col items-center justify-center font-black uppercase italic tracking-tighter text-slate-400">
-      <Activity className="mb-4 animate-spin text-emerald-500" size={48} />
-      Menyinkronkan Data...
-    </div>
-  );
+  if (loading) return <div className="flex min-h-screen items-center justify-center font-black uppercase italic text-slate-400 animate-pulse">Menyiapkan Portal...</div>;
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900 selection:bg-emerald-100 text-left">
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
-      {/* HEADER */}
+      {/* HEADER SECTION */}
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 md:flex-row md:items-end">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-emerald-600 p-2 text-white shadow-lg"><School size={28} /></div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 leading-none">Profil Institusi • {profileCompletion}% Lengkap</p>
-              <h1 className="mt-1 text-4xl font-black uppercase italic tracking-tighter leading-none">{campus?.name}</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 leading-none">Portal Almamater • {profileCompletion}% Kelengkapan</p>
+              <h1 className="mt-1 text-4xl font-black uppercase italic leading-none tracking-tighter">{campus?.name}</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -184,132 +155,101 @@ export default function CampusDashboard({ user }: { user: any }) {
               <badgeInfo.icon size={16} className={badgeInfo.color} />
               <span className={`text-[10px] font-black uppercase ${badgeInfo.color}`}>Peringkat {badgeInfo.label}</span>
             </div>
+            <a href={`/kampus/${campus?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-500 hover:border-slate-900 hover:text-slate-900 transition-all shadow-sm">
+              <ExternalLink size={14} /> Link Profil Publik
+            </a>
           </div>
         </div>
         <div className="flex w-full gap-3 md:w-auto">
-          <button onClick={() => navigateTo("tracer", "Talent Tracer")} className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 md:flex-none">
-            <Users size={18} /> Verifikasi Talent
+          <button onClick={() => navigateTo("hub", "Career Hub")} className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl hover:bg-emerald-600 transition-all md:flex-none">
+            <Briefcase size={18} /> Career & Skill Hub
           </button>
+          <button onClick={handleShare} className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm hover:border-slate-900 transition-all"><Share2 size={20} /></button>
         </div>
       </header>
 
-      {activeTab === "overview" && (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          
-          {/* ANALISIS INKLUSI & INSIGHT */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-            <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 lg:col-span-2">
-              <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900 leading-none">
-                <Activity size={16} className="text-emerald-500" /> Keseimbangan Pilar Inklusi
-              </h3>
-              <div className="h-[220px] w-full" aria-label="Grafik Radar Inklusi">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="#f1f5f9" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 800 }} />
-                    <Radar dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </section>
+      {/* MODUL NAVIGATION TABS (UTUH) */}
+      <nav className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist">
+        {[
+          { id: "overview", label: "Dashboard", icon: LayoutDashboard },
+          { id: "hub", label: "Career & Skill Hub", icon: Zap },
+          { id: "tracer", label: "Talent Tracer", icon: BarChart3 },
+          { id: "profile", label: "Lengkapi Profil", icon: Settings },
+          { id: "account", label: "Akun", icon: Lock },
+        ].map((tab) => (
+          <button 
+            key={tab.id} 
+            onClick={() => navigateTo(tab.id, tab.label)} 
+            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "bg-slate-900 text-white shadow-xl -translate-y-1" : "border-2 border-slate-100 bg-white text-slate-400 hover:border-slate-900"}`}
+          >
+            <tab.icon size={16} /> {tab.label}
+          </button>
+        ))}
+      </nav>
 
-            <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-3">
-              <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-600 leading-none">
-                <Sparkles size={18} /> Narasi Strategis
-              </h3>
-              <p className="text-2xl font-black italic leading-tight tracking-tighter text-slate-800 md:text-3xl">
-                &quot;{campus?.smart_narrative_summary || "Institusi sedang dalam proses pemetaan data."}&quot;
-              </p>
-            </section>
-          </div>
-
-          {/* DUA SUMBER DATA: INPUT USER VS REAL PLATFORM */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            
-            {/* 1. DATA INPUT UNIVERSITAS (Manual Agregat) */}
-            <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-10">
-              <h4 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-                <Settings size={16} /> Estimasi Internal (Input Kampus)
-              </h4>
-              <div className="grid grid-cols-2 gap-8">
-                <div>
-                  <p className="text-[10px] font-black uppercase text-slate-400">Total Mahasiswa Disabilitas</p>
-                  <p className="text-5xl font-black tracking-tighter text-slate-900 leading-tight">{campus?.stats_academic_total || 0}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase text-slate-400">Estimasi Sudah Bekerja</p>
-                  <p className="text-5xl font-black tracking-tighter text-emerald-600 leading-tight">{campus?.stats_academic_hired || 0}</p>
-                </div>
-              </div>
-              <p className="mt-6 text-[9px] font-bold italic text-slate-400">*Data ini berdasarkan input manual universitas pada tabel agregat.</p>
-            </section>
-
-            {/* 2. DATA REAL PLATFORM (Real-time dari Akun Mahasiswa) */}
-            <section className="rounded-[2.5rem] border-4 border-emerald-600 bg-emerald-50 p-10 shadow-[8px_8px_0px_0px_rgba(16,185,129,1)]">
-              <h4 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
-                <Zap size={16} /> Aktivitas Real Platform (Verified)
-              </h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-[9px] font-black uppercase text-emerald-600">Mahasiswa Aktif</p>
-                  <p className="text-4xl font-black tracking-tighter text-slate-900">{platformStats.mahasiswa}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase text-emerald-600">Alumni Terdata</p>
-                  <p className="text-4xl font-black tracking-tighter text-slate-900">{platformStats.alumni}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase text-emerald-600">Terpantau Bekerja</p>
-                  <p className="text-4xl font-black tracking-tighter text-blue-600">{platformStats.bekerja}</p>
-                </div>
-              </div>
-              
-              {/* REAL-TIME GENDER PROPORTION */}
-              <div className="mt-8 border-t border-emerald-200 pt-6">
-                <p className="text-[10px] font-black uppercase text-emerald-600 mb-3">Proporsi Gender (Real Platform)</p>
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 border-2 border-emerald-100">
-                    <User size={14} className="text-blue-500" />
-                    <span className="text-xs font-black">{platformStats.male} Pria</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 border-2 border-emerald-100">
-                    <User size={14} className="text-pink-500" />
-                    <span className="text-xs font-black">{platformStats.female} Wanita</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* ANTRIAN VERIFIKASI (ALERT BOX) */}
-          <section className="rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl relative overflow-hidden">
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <AlertCircle size={20} />
-                  <p className="text-xs font-black uppercase tracking-widest">Konfirmasi Afiliasi</p>
-                </div>
-                <h4 className="text-3xl font-black uppercase italic tracking-tight" aria-live="polite">
-                  {unverifiedCount} Mahasiswa Menunggu Verifikasi Almamater
-                </h4>
-              </div>
-              <button onClick={() => navigateTo("tracer", "Talent Tracer")} className="bg-emerald-500 hover:bg-white text-slate-900 px-10 py-5 rounded-2xl font-black uppercase italic transition-all active:scale-95 whitespace-nowrap shadow-xl">
-                Buka Tracer <MousePointerClick size={18} className="inline ml-2" />
-              </button>
+      <main id="main-content">
+        {activeTab === "overview" && (
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* ANALISIS RADAR */}
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
+              <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 lg:col-span-2">
+                <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest leading-none"><Activity size={16} className="text-emerald-500" /> Pilar Inklusi</h3>
+                <div className="h-[220px] w-full" aria-label="Grafik Radar Klaster Inklusi"><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid stroke="#f1f5f9" /><PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 800 }} /><Radar dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.6} /></RadarChart></ResponsiveContainer></div>
+              </section>
+              <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-3">
+                <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-emerald-600 leading-none"><Sparkles size={18} /> Narasi Strategis</h3>
+                <p className="text-2xl font-black italic leading-tight tracking-tighter md:text-3xl">&quot;{campus?.smart_narrative_summary || "Institusi Anda sedang dalam proses pemetaan data."}&quot;</p>
+              </section>
             </div>
-            <School className="absolute -right-10 -bottom-10 opacity-10" size={250} />
-          </section>
 
+            {/* STATS SECTION (DUA DIMENSI DATA) */}
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-10">
+                <h4 className="mb-6 text-xs font-black uppercase tracking-[0.2em] text-slate-400"><Settings size={16} /> Estimasi Internal (Input)</h4>
+                <div className="grid grid-cols-2 gap-8">
+                  <div><p className="text-[10px] font-black uppercase text-slate-400">Total {labelTalent}</p><p className="text-5xl font-black tracking-tighter">{campus?.stats_academic_total || 0}</p></div>
+                  <div><p className="text-[10px] font-black uppercase text-slate-400">Kerja (Input)</p><p className="text-5xl font-black tracking-tighter text-emerald-600">{campus?.stats_academic_hired || 0}</p></div>
+                </div>
+              </section>
+
+              <section className="rounded-[2.5rem] border-4 border-emerald-600 bg-emerald-50 p-10 shadow-[8px_8px_0px_0px_rgba(16,185,129,1)]">
+                <h4 className="mb-6 text-xs font-black uppercase tracking-[0.2em] text-emerald-700"><Zap size={16} /> Data Real Platform (Verified)</h4>
+                <div className="grid grid-cols-3 gap-4 text-left">
+                  <div><p className="text-[9px] font-black uppercase text-emerald-600">Aktif</p><p className="text-4xl font-black">{platformStats.mahasiswa}</p></div>
+                  <div><p className="text-[9px] font-black uppercase text-emerald-600">{labelAlumni}</p><p className="text-4xl font-black">{platformStats.alumni}</p></div>
+                  <div><p className="text-[9px] font-black uppercase text-emerald-600">Bekerja</p><p className="text-4xl font-black text-blue-600">{platformStats.bekerja}</p></div>
+                </div>
+                <div className="mt-8 border-t border-emerald-200 pt-6">
+                  <p className="text-[10px] font-black uppercase text-emerald-600 mb-3">Sebaran Gender (Real Platform)</p>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 border-2 border-emerald-100"><User size={14} className="text-blue-500" /><span className="text-xs font-black">{platformStats.male} Laki-laki</span></div>
+                    <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 border-2 border-emerald-100"><User size={14} className="text-pink-500" /><span className="text-xs font-black">{platformStats.female} Perempuan</span></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {/* VERIFIKASI ALERT BOX (REAL-TIME) */}
+            <section className="rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-8">
+              <div className="relative z-10 space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400"><AlertCircle size={20} /><p className="text-xs font-black uppercase tracking-widest leading-none">Konfirmasi Almamater</p></div>
+                <h4 className="text-3xl font-black uppercase italic tracking-tight" aria-live="polite">{unverifiedCount} Permohonan Menunggu</h4>
+              </div>
+              <button onClick={() => navigateTo("tracer", "Talent Tracer")} className="relative z-10 bg-emerald-500 hover:bg-white text-slate-900 px-10 py-5 rounded-2xl font-black uppercase italic transition-all active:scale-95 shadow-xl">Buka Tracer <MousePointerClick size={18} className="inline ml-2" /></button>
+              <School className="absolute -right-10 -bottom-10 opacity-10" size={250} />
+            </section>
+          </div>
+        )}
+
+        {/* DAFTAR MODUL UTUH (TAB COMPONENTS) */}
+        <div className="mt-4">
+          {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
+          {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
+          {/* PROFILE EDITOR: Otomatis close via onUpdate */}
+          {activeTab === "profile" && <ProfileEditor campus={campus} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
+          {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
         </div>
-      )}
-
-      {/* TABS HANDLER */}
-      <div className="mt-4">
-        {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
-        {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
-        {activeTab === "profile" && <ProfileEditor campus={campus} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
-        {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
-      </div>
+      </main>
     </div>
   );
 }
