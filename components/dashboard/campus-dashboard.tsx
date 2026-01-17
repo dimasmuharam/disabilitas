@@ -9,7 +9,7 @@ import {
   Zap, User, School,
   MousePointerClick, Briefcase, Sparkles, TrendingUp,
   ExternalLink, ChevronRight, CheckCircle2,
-  Medal
+  Medal, AlertCircle
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
@@ -26,9 +26,23 @@ export default function CampusDashboard({ user }: { user: any }) {
   const [loading, setLoading] = useState(true);
   const [announcement, setAnnouncement] = useState("");
   const [profileCompletion, setProfileCompletion] = useState(0);
+  
+  // STATE REAL-TIME
+  const [unverifiedCount, setUnverifiedCount] = useState(0);
 
   const labelTalent = "Mahasiswa";
-  const labelAlumni = "Alumni Disabilitas";
+
+  // Fungsi khusus untuk mengambil angka verifikasi secara Real-time
+  const fetchRealtimeStats = useCallback(async () => {
+    if (!user?.id) return;
+    const { count, error } = await supabase
+      .from("campus_verifications")
+      .select("*", { count: 'exact', head: true })
+      .eq("campus_id", user.id)
+      .eq("status", "pending");
+
+    if (!error) setUnverifiedCount(count || 0);
+  }, [user?.id]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!user?.id) return;
@@ -43,25 +57,46 @@ export default function CampusDashboard({ user }: { user: any }) {
       if (error || !campusData) return;
       setCampus(campusData);
 
+      // Hitung kelengkapan profil
       const fields = ["name", "description", "location", "website", "nib_number"];
       const filled = fields.filter(f => campusData[f] && campusData[f].length > 0).length;
       const acc = (campusData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
       setProfileCompletion(Math.round(((filled + acc) / (fields.length + 1)) * 100));
+
+      // Ambil angka verifikasi awal
+      await fetchRealtimeStats();
 
     } catch (e) { 
       console.error("Campus Dashboard Fetch Error:", e); 
     } finally { 
       setLoading(false); 
     }
-  }, [user?.id]);
+  }, [user?.id, fetchRealtimeStats]);
 
   useEffect(() => { 
     fetchDashboardData(); 
-    const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
-    link.setAttribute("rel", "canonical");
-    link.setAttribute("href", "https://disabilitas.com/dashboard/campus");
-    if (!document.head.contains(link)) document.head.appendChild(link);
-  }, [fetchDashboardData]);
+
+    // SETUP SUPABASE REALTIME SUBSCRIPTION
+    const channel = supabase
+      .channel('realtime_campus_verifications')
+      .on(
+        'postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'campus_verifications',
+          filter: `campus_id=eq.${user.id}`
+        }, 
+        () => {
+          fetchRealtimeStats(); // Update angka secara instan jika ada data masuk/berubah
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchDashboardData, fetchRealtimeStats]);
 
   // Logika Penentuan Badge
   const badgeInfo = useMemo(() => {
@@ -81,7 +116,6 @@ export default function CampusDashboard({ user }: { user: any }) {
   const currentStats = {
     total: Number(campus?.stats_academic_total || 0),
     hired: Number(campus?.stats_academic_hired || 0),
-    unverified: Number(campus?.stats_alumni_unverified_total || 0),
     rate: Number(campus?.stats_academic_total || 0) > 0 
       ? Math.round((Number(campus?.stats_academic_hired || 0) / Number(campus?.stats_academic_total || 0)) * 100) 
       : 0
@@ -119,7 +153,7 @@ export default function CampusDashboard({ user }: { user: any }) {
 
       {/* HEADER SECTION */}
       <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 text-left md:flex-row md:items-end">
-        <div className="space-y-4">
+        <div className="space-y-4 text-left">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-emerald-600 p-2 text-white shadow-lg" aria-hidden="true">
               <School size={28} />
@@ -137,9 +171,6 @@ export default function CampusDashboard({ user }: { user: any }) {
             <span className="flex items-center gap-1.5 rounded-full border-2 border-emerald-500 bg-emerald-50 px-4 py-1.5 text-[10px] font-black uppercase text-emerald-700">
               Inclusion Index: {campus?.inclusion_score || 0}%
             </span>
-            <a href={`/kampus/${campus?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-500 transition-all hover:border-slate-900 hover:text-slate-900">
-              <ExternalLink size={14} /> Link Profil Publik
-            </a>
           </div>
         </div>
         
@@ -147,7 +178,7 @@ export default function CampusDashboard({ user }: { user: any }) {
           <button onClick={() => navigateTo("hub", "Career Hub")} className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 md:flex-none">
             <Briefcase size={18} className="group-hover:animate-bounce" /> Career & Skill Hub
           </button>
-          <button onClick={handleShare} className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900 hover:bg-slate-50 active:scale-95">
+          <button onClick={handleShare} className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900 hover:bg-slate-50 active:scale-95" aria-label="Bagikan profil institusi">
             <Share2 size={20} />
           </button>
         </div>
@@ -162,7 +193,13 @@ export default function CampusDashboard({ user }: { user: any }) {
           { id: "profile", label: "Lengkapi Profil", icon: Settings },
           { id: "account", label: "Akun", icon: Lock },
         ].map((tab) => (
-          <button key={tab.id} role="tab" aria-selected={activeTab === tab.id} onClick={() => navigateTo(tab.id, tab.label)} className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "-translate-y-1 bg-slate-900 text-white shadow-xl" : "border-2 border-slate-100 bg-white text-slate-400 hover:border-slate-900 hover:text-slate-900"}`}>
+          <button 
+            key={tab.id} 
+            role="tab" 
+            aria-selected={activeTab === tab.id} 
+            onClick={() => navigateTo(tab.id, tab.label)} 
+            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "-translate-y-1 bg-slate-900 text-white shadow-xl" : "border-2 border-slate-100 bg-white text-slate-400 hover:border-slate-900 hover:text-slate-900"}`}
+          >
             <tab.icon size={16} /> {tab.label}
           </button>
         ))}
@@ -179,7 +216,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                 <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-900 leading-none">
                   <Activity size={16} className="text-emerald-500" /> Keseimbangan Klaster Inklusi
                 </h3>
-                <div className="h-[250px] w-full" aria-hidden="true">
+                <div className="h-[250px] w-full" aria-label="Grafik Radar Keseimbangan Inklusi">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                       <PolarGrid stroke="#f1f5f9" />
@@ -194,42 +231,15 @@ export default function CampusDashboard({ user }: { user: any }) {
                 <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-600 leading-none">
                   <Award size={18} /> Ringkasan Insight & Narasi Strategis
                 </h3>
-                <div className="text-2xl font-black italic leading-tight tracking-tighter text-slate-800 md:text-3xl">
+                <div className="text-2xl font-black italic leading-tight tracking-tighter text-slate-800 md:text-3xl text-left">
                   &quot;{campus?.smart_narrative_summary || "Institusi Anda sedang dalam proses pemetaan data inklusi nasional."}&quot;
-                </div>
-                <div className="mt-6 flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2 rounded-xl border-2 border-slate-100 bg-slate-50 px-4 py-2">
-                    <TrendingUp size={16} className="text-blue-500" />
-                    <span className="text-[10px] font-black uppercase text-slate-500">Employment Output: {campus?.inclusion_score_output || 0}%</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl border-2 border-emerald-100 bg-emerald-50 px-4 py-2">
-                    <CheckCircle2 size={16} className="text-emerald-600" />
-                    <span className="text-[10px] font-black uppercase text-emerald-600">Terverifikasi Publik</span>
-                  </div>
                 </div>
               </section>
             </div>
 
-            {/* 2. BREAKDOWN TIGA KLASTER SCORING (LOGIKA v0.0.3) */}
-            <section aria-label="Analisis Tiga Pilar Utama" className="grid grid-cols-1 gap-6 text-left sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                { label: "Pilar Fisik (30%)", score: campus?.inclusion_score_physical, sub: "Mobilitas & Akses Gedung" },
-                { label: "Pilar Digital (40%)", score: campus?.inclusion_score_digital, sub: "Portal & Kursus Digital" },
-                { label: "Pilar Output (30%)", score: campus?.inclusion_score_output, sub: "Serapan Kerja Alumni" }
-              ].map((item) => (
-                <div key={item.label} className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none">{item.label}</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="text-5xl font-black tracking-tighter">{item.score || 0}%</p>
-                    <span className="rounded-lg bg-slate-50 px-3 py-1 text-[10px] font-black uppercase text-slate-500">{item.sub}</span>
-                  </div>
-                </div>
-              ))}
-            </section>
-
-            {/* 3. TALENTA STATISTICS & MAPS */}
+            {/* 2. REAL-TIME VERIFICATION ALERT */}
             <div className="grid grid-cols-1 gap-8 text-left lg:grid-cols-3">
-               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-10 lg:col-span-2">
+               <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-10 lg:col-span-2 text-left">
                   <h4 className="mb-8 flex items-center gap-2 text-xl font-black uppercase italic tracking-tighter leading-none">
                     <Users className="text-emerald-600" size={24} /> Sebaran Ragam Disabilitas {labelTalent}
                   </h4>
@@ -244,50 +254,37 @@ export default function CampusDashboard({ user }: { user: any }) {
                         </div>
                       </div>
                     ))}
-                    {(!campus?.stats_disability_map || Object.keys(campus.stats_disability_map).length === 0) && (
-                      <p className="text-[10px] font-black italic text-slate-300">Data sebaran talenta belum diperbarui.</p>
-                    )}
                   </div>
                </div>
 
                <div className="space-y-8">
-                  {/* GENDER ANALYSIS */}
-                  <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8">
-                    <h4 className="mb-6 text-[11px] font-black uppercase tracking-widest text-slate-400">Proporsi Berdasarkan Gender</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="rounded-2xl border-2 border-blue-100 bg-blue-50 p-5 text-center">
-                        <User className="mx-auto mb-2 text-blue-500" size={20} />
-                        <p className="text-[8px] font-black uppercase text-blue-400 tracking-widest">Laki-laki</p>
-                        <p className="text-3xl font-black text-blue-900">{campus?.stats_gender_map?.male || 0}</p>
-                      </div>
-                      <div className="rounded-2xl border-2 border-pink-100 bg-pink-50 p-5 text-center">
-                        <User className="mx-auto mb-2 text-pink-500" size={20} />
-                        <p className="text-[8px] font-black uppercase text-pink-400 tracking-widest">Perempuan</p>
-                        <p className="text-3xl font-black text-pink-900">{campus?.stats_gender_map?.female || 0}</p>
-                      </div>
+                  <section className="rounded-[2.5rem] bg-emerald-600 p-8 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-left">
+                    <div className="flex items-center gap-2">
+                       <AlertCircle size={16} className="text-emerald-200" />
+                       <p className="text-[10px] font-black uppercase tracking-widest opacity-80 leading-none">Status Afiliasi Alumni (Real-time)</p>
                     </div>
-                  </div>
-
-                  {/* VERIFICATION ALERT */}
-                  <div className="rounded-[2.5rem] bg-emerald-600 p-8 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-80 leading-none">Status Afiliasi Alumni</p>
-                    <p className="mt-3 text-2xl font-black leading-tight italic tracking-tight uppercase">
-                      {currentStats.unverified} Permohonan Menunggu Konfirmasi
+                    <p className="mt-3 text-3xl font-black leading-tight italic tracking-tight uppercase" aria-live="polite">
+                      {unverifiedCount} Antrian Konfirmasi
                     </p>
                     <button onClick={() => navigateTo("tracer", "Talent Tracer")} className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 text-[10px] font-black uppercase tracking-widest transition-transform hover:scale-105 active:scale-95 shadow-xl">
-                      Buka Talent Tracer <MousePointerClick size={16} />
+                      Verifikasi Sekarang <MousePointerClick size={16} />
                     </button>
+                  </section>
+
+                  <div className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 text-left">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total Talent Terdata</p>
+                    <p className="mt-2 text-5xl font-black tracking-tighter">{currentStats.total}</p>
                   </div>
                </div>
             </div>
 
-            {/* 4. CALL TO ACTION - LENGKAPI PROFIL (NOT AUDIT) */}
+            {/* 3. CALL TO ACTION */}
             <div className="relative flex flex-col items-center justify-between overflow-hidden rounded-[3.5rem] bg-slate-900 p-12 text-center text-white lg:flex-row lg:text-left">
-              <div className="relative z-10 max-w-2xl">
+              <div className="relative z-10 max-w-2xl text-left">
                 <Sparkles className="mb-6 text-emerald-400" size={40} />
                 <h4 className="text-3xl font-black uppercase italic leading-tight tracking-tighter md:text-4xl">Lengkapi Profil Inklusi Institusi</h4>
                 <p className="mt-4 text-sm font-medium italic leading-relaxed text-slate-400">
-                  Update informasi fasilitas dan layanan kampus Anda. Informasi yang lengkap akan membantu mahasiswa disabilitas menemukan institusi yang tepat dan meningkatkan Index Inklusi Nasional Anda.
+                  Update informasi fasilitas dan layanan kampus Anda secara berkala.
                 </p>
               </div>
               <button 
