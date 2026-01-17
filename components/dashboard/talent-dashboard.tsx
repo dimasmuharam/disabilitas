@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { 
@@ -21,7 +21,7 @@ import AccountSettings from "./talent/account-settings";
 import InclusionRatingModal from "./talent/inclusion-rating-modal";
 import { checkIfAlreadyRated } from "@/lib/actions/ratings";
 
-// Import Helpers
+// Import Helpers (Otak sudah dipisah sesuai instruksi)
 import { handleNativeShare, handleWhatsAppShare } from "./talent/share-helper";
 import { generateProfessionalCV } from "./talent/cv-helper";
 
@@ -46,10 +46,14 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
   const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
   const [recommendedTrainings, setRecommendedTrainings] = useState<any[]>([]);
 
+<<<<<<< HEAD
   // Ref untuk Focus Management Aksesibilitas
   const moduleHeaderRef = useRef<HTMLHeadingElement>(null);
 
   // --- LOGIKA PROGRESS PROFILE & DAFTAR YANG KURANG ---
+=======
+  // --- LOGIKA PROGRESS PROFILE ---
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
   const completionData = useMemo(() => {
     if (!profile) return { percent: 0, missing: [] };
     const checks = [
@@ -70,15 +74,6 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     if (autoOpenProfile) setActiveTab("identity");
     if (user?.id) fetchLatestData();
   }, [user?.id, autoOpenProfile]);
-
-  // Efek Pindah Fokus saat Modul Dibuka
-  useEffect(() => {
-    if (activeTab !== "overview") {
-      setTimeout(() => {
-        moduleHeaderRef.current?.focus();
-      }, 150);
-    }
-  }, [activeTab]);
 
   async function fetchLatestData() {
     try {
@@ -128,6 +123,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
         setRatedJobs(ratedStatuses.filter(id => id !== null) as string[]);
       }
     } catch (e) { console.error("Sync Error:", e); } 
+<<<<<<< HEAD
     finally { 
       setLoading(false); 
       // Universal Autoclose: Jika sedang di modul, kembali ke overview setelah save sukses
@@ -136,6 +132,9 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
+=======
+    finally { setLoading(false); }
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
   }
 
   const renderContent = () => {
@@ -190,7 +189,12 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                             app.status === 'rejected' ? 'border-red-100 bg-red-50 text-red-500' : 'border-blue-100 bg-blue-50 text-blue-600'
                           }`}>{app.status}</span>
                         </div>
+<<<<<<< HEAD
                         {/* HRD Notes dari tabel applications */}
+=======
+                        
+                        {/* HRD NOTES & SCHEDULE (Sinkronisasi dengan Tracker HRD) */}
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
                         {app.hrd_notes && (
                           <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
                             <Clock size={14} className="mt-0.5 shrink-0 text-amber-600" />
@@ -200,6 +204,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                             </div>
                           </div>
                         )}
+                        
                         {app.status === 'hired' && !ratedJobs.includes(app.id) && (
                           <button onClick={() => setSelectedJobRating(app)} className="mt-3 flex items-center gap-2 text-[9px] font-black uppercase text-emerald-600">
                             <Zap size={12} /> Beri Rating Inklusi Perusahaan
@@ -237,8 +242,27 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                             reg.status === 'accepted' ? 'border-emerald-100 bg-emerald-50 text-emerald-600' : 'border-slate-100 bg-slate-50 text-slate-400'
                           }`}>{reg.status}</span>
                         </div>
+<<<<<<< HEAD
                         {reg.notes && (
                            <div className="mt-3 text-[10px] italic text-slate-500 text-left">Catatan: {reg.notes}</div>
+=======
+
+                        {/* TRAINING SCHEDULE INFO */}
+                        {reg.status === 'accepted' && reg.trainings?.start_date && (
+                          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                            <Calendar size={14} className="shrink-0 text-emerald-600" />
+                            <div className="space-y-1">
+                              <p className="text-[9px] font-black uppercase text-emerald-700">Jadwal Pelaksanaan:</p>
+                              <p className="text-xs font-bold text-slate-700">{new Date(reg.trainings.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {reg.status === 'completed' && (
+                          <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase text-emerald-600">
+                            <BadgeCheck size={16} /> Sertifikat Tersedia di Modul Skill
+                          </div>
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
                         )}
                       </div>
                     ))}
@@ -250,9 +274,11 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
 
           {/* SMART MATCH SECTION */}
           <section className="space-y-6 border-t-2 border-slate-50 pt-10 text-left">
-            <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-slate-900">
-              <Zap size={16} className="text-amber-500" /> Rekomendasi Pintar (Smart-Match)
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-slate-900">
+                <Zap size={16} className="text-amber-500" /> Rekomendasi Pintar (Smart-Match)
+              </h3>
+            </div>
             <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-tighter text-slate-400 italic">Lowongan Sesuai Domisili & Pendidikan</p>
@@ -283,6 +309,7 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-24 selection:bg-blue-100">
+<<<<<<< HEAD
       <div className="mx-auto max-w-6xl space-y-8 px-4 pt-8 text-left text-slate-900">
         
         {/* HEADER PROFILE (BIODATA UTUH) */}
@@ -305,8 +332,24 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                 <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
                   <Briefcase size={12} className="text-blue-500" /> {profile?.career_status || "Status Belum Diatur"}
                 </span>
-              </div>
+=======
+      <div className="mx-auto max-w-6xl space-y-8 px-4 pt-8">
+        
+        {/* HEADER PROGRESS */}
+        <section className="rounded-[3.5rem] border-2 border-slate-900 bg-white p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div className="space-y-1 text-left">
+              <h1 className="text-3xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Talent Dashboard</h1>
+              <p className="text-[10px] font-bold uppercase italic tracking-widest text-slate-400">Pusat Karir & Pengembangan Kompetensi</p>
             </div>
+            <div className="flex w-full items-center gap-4 md:w-auto">
+              <div className="h-4 flex-1 overflow-hidden rounded-full border border-slate-200 bg-slate-100 md:w-64" role="progressbar" aria-valuenow={completionData.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Progres Kelengkapan Profil">
+                <div className={`h-full transition-all duration-1000 ${completionData.percent === 100 ? 'bg-emerald-500' : 'bg-blue-600'}`} style={{ width: `${completionData.percent}%` }}></div>
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
+              </div>
+              <span className="text-3xl font-black italic leading-none text-slate-900" aria-live="polite">{`${completionData.percent}%`}</span>
+            </div>
+<<<<<<< HEAD
             <div className="flex flex-col items-end gap-3 text-right">
                <div className="flex items-center gap-3">
                  <span className="text-3xl font-black italic leading-none">{completionData.percent}%</span>
@@ -363,19 +406,67 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                 </Link>
                 <button onClick={() => generateProfessionalCV(profile, workExps, certifications)} disabled={isProcessing} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-4 text-[10px] font-black uppercase text-slate-900 shadow-lg transition-all hover:bg-blue-50 text-left">
                   <FileDown size={18} /> {isProcessing ? "Menyusun..." : "Cetak CV"}
+=======
+          </div>
+
+          <nav className="mt-10 grid grid-cols-3 gap-4 border-t border-slate-100 pt-10 md:grid-cols-6" aria-label="Navigasi Menu Dashboard">
+            {[
+              { label: "Identitas", id: "identity", icon: User },
+              { label: "Sarana", id: "tech", icon: Laptop },
+              { label: "Karir", id: "career", icon: Briefcase },
+              { label: "Akademik", id: "academic", icon: GraduationCap },
+              { label: "Skill", id: "skills", icon: BookOpen },
+              { label: "Akun", id: "settings", icon: ShieldCheck }
+            ].map((m) => (
+              <button 
+                key={m.id} 
+                onClick={() => setActiveTab(m.id)} 
+                aria-pressed={activeTab === m.id}
+                aria-label={`Buka pengaturan ${m.label}`} 
+                className={`group rounded-3xl border-2 p-5 text-center shadow-sm outline-none transition-all hover:shadow-md focus:ring-4 focus:ring-blue-200 ${
+                  activeTab === m.id ? 'border-blue-600 bg-blue-50/50' : 'border-transparent bg-slate-50 hover:border-slate-200 hover:bg-white'
+                }`}
+              >
+                <m.icon className={`mx-auto mb-2 transition-colors ${activeTab === m.id ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-600'}`} size={24} aria-hidden="true" />
+                <p className={`text-[10px] font-black uppercase ${activeTab === m.id ? 'text-blue-600' : 'text-slate-900'}`}>{m.label}</p>
+              </button>
+            ))}
+          </nav>
+        </section>
+
+        <div className="grid gap-10 lg:grid-cols-3">
+          <div className="lg:col-span-2">{renderContent()}</div>
+          
+          <aside className="space-y-8 text-left">
+            {/* AKSI PROFESIONAL */}
+            <div className="rounded-[3rem] border-t-[12px] border-blue-600 bg-slate-900 p-8 text-white shadow-2xl">
+              <h3 className="mb-6 text-[10px] font-black uppercase tracking-widest text-blue-400">Professional Hub</h3>
+              <div className="space-y-3">
+                <Link href={`/talent/${user.id}`} target="_blank" className="flex items-center justify-center gap-3 rounded-2xl border border-white/5 bg-white/10 p-4 text-[10px] font-black uppercase transition-all hover:bg-white/20" aria-label="Lihat tampilan profil publik Anda">
+                  <ExternalLink size={18} aria-hidden="true" /> Lihat Profil Publik
+                </Link>
+                <button onClick={() => generateProfessionalCV(profile, workExps, certifications)} disabled={isProcessing} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-4 text-[10px] font-black uppercase text-slate-900 shadow-lg transition-all hover:bg-blue-50" aria-label="Unduh CV dalam format PDF">
+                  <FileDown size={18} aria-hidden="true" /> {isProcessing ? "Menyusun PDF..." : "Cetak CV Profesional"}
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
                 </button>
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => handleNativeShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 p-4 text-[8px] font-black uppercase transition-all hover:bg-emerald-700">
-                    <Share2 size={16} /> Share
+                  <button onClick={() => handleNativeShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 p-4 text-[8px] font-black uppercase transition-all hover:bg-emerald-700" aria-label="Bagikan profil melalui sistem perangkat">
+                    <Share2 size={16} aria-hidden="true" /> Native Share
                   </button>
+<<<<<<< HEAD
                   <button onClick={() => handleWhatsAppShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] p-4 text-[8px] font-black uppercase transition-all hover:opacity-90">
                     <MessageCircle size={16} /> WA
+=======
+                  <button onClick={() => handleWhatsAppShare(user.id, profile)} className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] p-4 text-[8px] font-black uppercase transition-all hover:opacity-90" aria-label="Bagikan profil melalui WhatsApp">
+                    <MessageCircle size={16} aria-hidden="true" /> WhatsApp
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
                   </button>
                 </div>
               </div>
             </div>
 
             {/* RINGKASAN AKTIVITAS */}
+<<<<<<< HEAD
             <div className="rounded-[3.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm text-center">
               <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase italic leading-none tracking-widest text-slate-400 tracking-widest"><LayoutDashboard size={14}/> Statistik</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -386,6 +477,18 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
                 <div className="rounded-3xl bg-slate-50 p-4 text-center">
                   <p className="text-3xl font-black text-slate-900">{stats.trainings}</p>
                   <p className="text-[8px] font-black uppercase text-slate-400 italic text-center">Pelatihan</p>
+=======
+            <div className="rounded-[3rem] border-2 border-slate-200 bg-white p-8 shadow-sm">
+              <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase italic leading-none tracking-widest text-slate-400"><LayoutDashboard size={14}/> Ringkasan Aktivitas</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-3xl font-black leading-none text-slate-900">{stats.jobs}</p>
+                  <p className="mt-2 text-[8px] font-black uppercase italic leading-none text-slate-400">Lamaran</p>
+                </div>
+                <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-3xl font-black leading-none text-slate-900">{stats.trainings}</p>
+                  <p className="mt-2 text-[8px] font-black uppercase italic leading-none text-slate-400">Pelatihan</p>
+>>>>>>> parent of 6ab9a5e (Update talent-dashboard.tsx)
                 </div>
               </div>
             </div>
