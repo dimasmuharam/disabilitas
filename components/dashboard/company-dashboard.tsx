@@ -36,10 +36,6 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
-    if (user?.id) fetchDashboardData();
-  }, [user?.id, fetchDashboardData]);
-
   const fetchDashboardData = useCallback(async () => {
     // Jangan set loading true jika hanya refresh data setelah simpan agar tidak flickr
     try {
@@ -66,6 +62,10 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       }
     } finally { setLoading(false); }
   }, [user.id]);
+
+  useEffect(() => {
+    if (user?.id) fetchDashboardData();
+  }, [user?.id, fetchDashboardData]);
 
   const inclusionQuota = useMemo(() => {
     const total = company?.total_employees || 0;

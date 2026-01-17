@@ -66,20 +66,6 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
     return { percent, missing };
   }, [profile]);
 
-  useEffect(() => {
-    if (autoOpenProfile) setActiveTab("identity");
-    if (user?.id) fetchLatestData();
-  }, [user?.id, autoOpenProfile, fetchLatestData]);
-
-  // Efek Pindah Fokus saat Modul Dibuka
-  useEffect(() => {
-    if (activeTab !== "overview") {
-      setTimeout(() => {
-        moduleHeaderRef.current?.focus();
-      }, 150);
-    }
-  }, [activeTab]);
-
   const fetchLatestData = useCallback(async () => {
     try {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
@@ -121,6 +107,20 @@ export default function TalentDashboard({ user, profile: initialProfile, autoOpe
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [user.id]);
+
+  useEffect(() => {
+    if (autoOpenProfile) setActiveTab("identity");
+    if (user?.id) fetchLatestData();
+  }, [user?.id, autoOpenProfile, fetchLatestData]);
+
+  // Efek Pindah Fokus saat Modul Dibuka
+  useEffect(() => {
+    if (activeTab !== "overview") {
+      setTimeout(() => {
+        moduleHeaderRef.current?.focus();
+      }, 150);
+    }
+  }, [activeTab]);
 
   const renderContent = () => {
     switch (activeTab) {
