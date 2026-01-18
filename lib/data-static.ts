@@ -1,6 +1,7 @@
 // File: lib/data-static.ts
 // Deskripsi: Basis data statis komprehensif untuk sinkronisasi riset disabilitas.com
-
+import { ALL_UNIVERSITIES } from './constants/universities';
+import { ALL_MAJORS } from './constants/majors';
 
 export const USER_ROLES = {
   TALENT: "talent",
@@ -176,31 +177,9 @@ export const NONPROFIT_ORG_LIST = [
   "Rumah Zakat"
 ].sort();
 
-// PERGURUAN TINGGI
-export const UNIVERSITIES = [
-  "Universitas Kehidupan", "Universitas Indonesia (UI)", "Universitas Gadjah Mada (UGM)", "Institut Teknologi Bandung (ITB)", 
-  "Institut Pertanian Bogor (IPB)", "Universitas Brawijaya (UB)", "Universitas Airlangga (UNAIR)", 
-  "Universitas Padjadjaran (UNPAD)", "Universitas Diponegoro (UNDIP)", "Institut Teknologi Sepuluh Nopember (ITS)", 
-  "Universitas Sebelas Maret (UNS)", "Universitas Hasanuddin (UNHAS)", "Universitas Sumatera Utara (USU)", 
-  "Universitas Andalas (UNAND)", "Universitas Sriwijaya (UNSRI)", "Universitas Lampung (UNILA)",
-  "Universitas Syiah Kuala (USK)", "Universitas Riau (UNRI)", "Universitas Jambi (UNJA)", 
-  "Universitas Bengkulu (UNIB)", "Universitas Tanjungpura (UNTAN)", "Universitas Lambung Makurat (ULM)",
-  "Universitas Mulawarman (UNMUL)", "Universitas Sam Ratulangi (UNSRAT)", "Universitas Tadulako (UNTAD)",
-  "Universitas Halu Oleo (UHO)", "Universitas Negeri Gorontalo (UNG)", "Universitas Negeri Jakarta (UNJ)",
-  "Universitas Pendidikan Indonesia (UPI)", "Universitas Negeri Yogyakarta (UNY)", "Universitas Negeri Semarang (UNNES)",
-  "Universitas Negeri Malang (UM)", "Universitas Negeri Surabaya (UNESA)", "Universitas Negeri Makassar (UNM)",
-  "Universitas Negeri Medan (UNIMED)", "Universitas Negeri Padang (UNP)", "Universitas Udayana (UNUD)",
-  "Universitas Mataram (UNRAM)", "Universitas Nusa Cendana (UNDANA)", "Universitas Pattimura (UNPATTI)",
-  "Universitas Cendrawasih (UNCEN)", "Universitas Terbuka (UT)",
-  "UIN Syarif Hidayatullah Jakarta", "UIN Sunan Kalijaga Yogyakarta", "UIN Sunan Ampel Surabaya", 
-  "UIN Maulana Malik Ibrahim Malang", "UIN Alauddin Makassar", "UIN Raden Fatah Palembang", "UIN Ar-Raniry Banda Aceh",
-  "Universitas Telkom (Tel-U)", "Universitas Bina Nusantara (Binus)", "Universitas Muhammadiyah Yogyakarta (UMY)",
-  "Universitas Muhammadiyah Malang (UMM)", "Universitas Muhammadiyah Surakarta (UMS)", "Universitas Islam Indonesia (UII)",
-  "Universitas Katolik Parahyangan (Unpar)", "Universitas Katolik Indonesia Atma Jaya", "Universitas Trisakti",
-  "Universitas Tarumanagara (Untar)", "Universitas Pelita Harapan (UPH)", "Universitas Mercu Buana",
-  "Universitas Gunadarma", "Universitas Kristen Satya Wacana (UKSW)", "Universitas Pasundan (Unpas)"
-].sort();
-
+// PERGURUAN TINGGI dan Jurusan
+export const UNIVERSITIES = ALL_UNIVERSITIES.sort();
+export const UNIVERSITY_MAJORS = ALL_MAJORS.sort();
 // LEMBAGA PELATIHAN (TRAINING PARTNERS)
 export const TRAINING_PARTNERS = [
   "Kementerian Komunikasi dan Digital (Komdigi)",
@@ -278,23 +257,6 @@ export const ACADEMIC_ASSISTIVE_TOOLS = [
   "Aplikasi Pengubah Teks ke Suara (Text-to-Speech)",
   "Lainnya"
 ];
-
-export const UNIVERSITY_MAJORS = [
-  // EKONOMI & BISNIS
-  "Akuntansi", "Manajemen", "Ekonomi Pembangunan", "Perbankan & Keuangan", "Administrasi Bisnis",
-  // TEKNOLOGI & KOMPUTER
-  "Teknik Informatika", "Sistem Informasi", "Teknologi Informasi", "Ilmu Komputer", "Rekayasa Perangkat Lunak",
-  // SOSIAL & HUMANIORA
-  "Ilmu Komunikasi", "Psikologi", "Hukum", "Hubungan Internasional", "Sosiologi", "Ilmu Administrasi Negara",
-  // PENDIDIKAN
-  "Pendidikan Guru (PGSD)", "Pendidikan Luar Biasa (PLB)", "Pendidikan Bahasa Inggris", "Pendidikan Matematika",
-  // TEKNIK & DESAIN
-  "Teknik Sipil", "Teknik Elektro", "Teknik Mesin", "Arsitektur", "Desain Komunikasi Visual (DKV)", "Desain Interior",
-  // KESEHATAN
-  "Kesehatan Masyarakat", "Keperawatan", "Farmasi", "Gizi",
-  // LAINNYA
-  "Sastra Inggris", "Sastra Indonesia", "Ilmu Perpustakaan", "Pertanian / Peternakan", "Lainnya"
-].sort();
 
 // KESESUAIAN BIDANG STUDI
 export const STUDY_RELEVANCE_LEVELS = [
