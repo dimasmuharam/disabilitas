@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { 
@@ -36,11 +36,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
-    if (user?.id) fetchDashboardData();
-  }, [user?.id]);
-
-  async function fetchDashboardData() {
+  const fetchDashboardData = useCallback(async () => {
     // Jangan set loading true jika hanya refresh data setelah simpan agar tidak flickr
     try {
       const { data: latestComp } = await supabase.from("companies").select("*").eq("id", user.id).single();
@@ -65,7 +61,11 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         setTrendingSkills(Object.entries(counts).map(([skill, count]) => ({ skill, count })).sort((a,b) => b.count - a.count).slice(0, 3));
       }
     } finally { setLoading(false); }
-  }
+  }, [user.id]);
+
+  useEffect(() => {
+    if (user?.id) fetchDashboardData();
+  }, [user?.id, fetchDashboardData]);
 
   const inclusionQuota = useMemo(() => {
     const total = company?.total_employees || 0;

@@ -180,14 +180,14 @@ export default function CampusDashboard({ user }: { user: any }) {
   };
 
   if (loading) return (
-    <div role="status" className="flex min-h-screen flex-col items-center justify-center font-black uppercase italic tracking-tighter text-slate-400 animate-pulse">
+    <div role="status" className="flex min-h-screen animate-pulse flex-col items-center justify-center font-black uppercase italic tracking-tighter text-slate-400">
       <Activity className="mb-4 animate-spin text-emerald-500" size={48} aria-hidden="true" />
       Menyiapkan Portal Inklusi...
     </div>
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-slate-900 selection:bg-emerald-100 text-left">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-left text-slate-900 selection:bg-emerald-100">
       <div className="sr-only" aria-live="assertive">{announcement}</div>
 
       {/* HEADER */}
@@ -196,10 +196,10 @@ export default function CampusDashboard({ user }: { user: any }) {
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-emerald-600 p-2 text-white shadow-lg"><School size={28} aria-hidden="true" /></div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600 leading-none">
+              <p className="text-[10px] font-black uppercase leading-none tracking-[0.3em] text-emerald-600">
                 Profil Almamater • {profileCompletion}% Lengkap
               </p>
-              <h1 className="mt-1 text-4xl font-black uppercase italic tracking-tighter leading-none">{campus?.name}</h1>
+              <h1 className="mt-1 text-4xl font-black uppercase italic leading-none tracking-tighter">{campus?.name}</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -207,16 +207,16 @@ export default function CampusDashboard({ user }: { user: any }) {
               <Award size={16} className="text-slate-900" aria-hidden="true" />
               <span className="text-[10px] font-black uppercase tracking-widest">Skor Inklusi: {campus?.inclusion_score || 0}</span>
             </div>
-            <a href={`/kampus/${campus?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-500 hover:border-slate-900 transition-all shadow-sm">
+            <a href={`/kampus/${campus?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-500 shadow-sm transition-all hover:border-slate-900">
               <ExternalLink size={14} aria-hidden="true" /> Profil Publik
             </a>
           </div>
         </div>
         <div className="flex w-full gap-3 md:w-auto">
-          <button onClick={() => navigateTo("hub", "Career Hub")} className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl hover:bg-emerald-600 transition-all md:flex-none">
+          <button onClick={() => navigateTo("hub", "Career Hub")} className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 md:flex-none">
             <Briefcase size={18} aria-hidden="true" /> Career & Skill Hub
           </button>
-          <button onClick={handleShare} aria-label="Bagikan Dashboard" className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm hover:border-slate-900 transition-all">
+          <button onClick={handleShare} aria-label="Bagikan Dashboard" className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900">
             <Share2 size={20} aria-hidden="true" />
           </button>
         </div>
@@ -236,7 +236,7 @@ export default function CampusDashboard({ user }: { user: any }) {
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => navigateTo(tab.id, tab.label)} 
-            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "bg-slate-900 text-white shadow-xl -translate-y-1" : "border-2 border-slate-100 bg-white text-slate-400 hover:border-slate-900"}`}
+            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "-translate-y-1 bg-slate-900 text-white shadow-xl" : "border-2 border-slate-100 bg-white text-slate-400 hover:border-slate-900"}`}
           >
             <tab.icon size={16} aria-hidden="true" /> {tab.label}
           </button>
@@ -245,12 +245,12 @@ export default function CampusDashboard({ user }: { user: any }) {
 
       <main id="main-content">
         {activeTab === "overview" && (
-          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-bottom-4">
             
             {/* ANALISIS RADAR */}
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
               <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 lg:col-span-2">
-                <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest leading-none">
+                <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase leading-none tracking-widest">
                   <Activity size={16} className="text-emerald-500" aria-hidden="true" /> Keseimbangan Pilar Inklusi
                 </h3>
                 {/* ACCESSIBLE RADAR CHART */}
@@ -270,7 +270,7 @@ export default function CampusDashboard({ user }: { user: any }) {
               </section>
 
               <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-3">
-                <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-600 leading-none">
+                <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase leading-none tracking-widest text-emerald-600">
                   <Sparkles size={18} aria-hidden="true" /> Insight Strategis (Platform AI)
                 </h3>
                 <p className="text-2xl font-black italic leading-tight tracking-tighter text-slate-800 md:text-3xl">
@@ -278,9 +278,9 @@ export default function CampusDashboard({ user }: { user: any }) {
                 </p>
                 <div className="mt-6 flex items-center gap-3">
                   <div className="flex -space-x-2">
-                    {[1,2,3].map(i => <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-slate-200" />)}
+                    {[1,2,3].map(i => <div key={i} className="size-8 rounded-full border-2 border-white bg-slate-200" />)}
                   </div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dianalisis dari {platformStats.total} talenta aktif</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Dianalisis dari {platformStats.total} talenta aktif</p>
                 </div>
               </section>
             </div>
@@ -294,13 +294,13 @@ export default function CampusDashboard({ user }: { user: any }) {
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-slate-400">Total {labelTalent}</p>
-                    <p className="text-5xl font-black tracking-tighter text-slate-900 leading-tight" aria-label={`${campus?.stats_academic_total || 0} Mahasiswa sesuai data internal`}>
+                    <p className="text-5xl font-black leading-tight tracking-tighter text-slate-900" aria-label={`${campus?.stats_academic_total || 0} Mahasiswa sesuai data internal`}>
                       {campus?.stats_academic_total || 0}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-slate-400">Terpantau Kerja</p>
-                    <p className="text-5xl font-black tracking-tighter text-emerald-600 leading-tight">
+                    <p className="text-5xl font-black leading-tight tracking-tighter text-emerald-600">
                       {campus?.stats_academic_hired || 0}
                     </p>
                   </div>
@@ -327,19 +327,19 @@ export default function CampusDashboard({ user }: { user: any }) {
                 </div>
                 
                 <div className="mt-8 border-t border-emerald-200 pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
-                      <p className="text-[10px] font-black uppercase text-emerald-600 mb-3 flex items-center gap-1.5"><User size={12}/> Gender</p>
+                      <p className="mb-3 flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-600"><User size={12}/> Gender</p>
                       <div className="flex gap-2">
-                        <div className="rounded-lg bg-white px-3 py-1.5 border border-emerald-100 text-[10px] font-black">L: {platformStats.male}</div>
-                        <div className="rounded-lg bg-white px-3 py-1.5 border border-emerald-100 text-[10px] font-black">P: {platformStats.female}</div>
+                        <div className="rounded-lg border border-emerald-100 bg-white px-3 py-1.5 text-[10px] font-black">L: {platformStats.male}</div>
+                        <div className="rounded-lg border border-emerald-100 bg-white px-3 py-1.5 text-[10px] font-black">P: {platformStats.female}</div>
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-emerald-600 mb-3 flex items-center gap-1.5"><PieChart size={12}/> Ragam Disabilitas</p>
+                      <p className="mb-3 flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-600"><PieChart size={12}/> Ragam Disabilitas</p>
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(platformStats.disabilityMap).slice(0, 3).map(([type, count]) => (
-                          <div key={type} className="rounded-lg bg-white px-3 py-1.5 border border-emerald-100 text-[9px] font-black uppercase">
+                          <div key={type} className="rounded-lg border border-emerald-100 bg-white px-3 py-1.5 text-[9px] font-black uppercase">
                             {type}: {count as number}
                           </div>
                         ))}
@@ -351,11 +351,11 @@ export default function CampusDashboard({ user }: { user: any }) {
             </div>
 
             {/* VERIFIKASI ALERT BOX */}
-            <section className="rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-8">
+            <section className="relative flex flex-col items-center justify-between gap-8 overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl md:flex-row">
               <div className="relative z-10 space-y-2">
                 <div className="flex items-center gap-2 text-emerald-400">
                   <AlertCircle size={20} aria-hidden="true" />
-                  <p className="text-xs font-black uppercase tracking-widest leading-none">Verifikasi Almamater</p>
+                  <p className="text-xs font-black uppercase leading-none tracking-widest">Verifikasi Almamater</p>
                 </div>
                 <h4 className="text-3xl font-black uppercase italic tracking-tight" aria-live="polite">
                   {unverifiedCount} Mahasiswa Menunggu Antrean
@@ -364,11 +364,11 @@ export default function CampusDashboard({ user }: { user: any }) {
               <button 
                 onClick={() => navigateTo("tracer", "Talent Tracer")} 
                 aria-label={`Buka halaman tracer untuk memproses ${unverifiedCount} antrean`}
-                className="relative z-10 bg-emerald-500 hover:bg-white text-slate-900 px-10 py-5 rounded-2xl font-black uppercase italic transition-all active:scale-95 shadow-xl"
+                className="relative z-10 rounded-2xl bg-emerald-500 px-10 py-5 font-black uppercase italic text-slate-900 shadow-xl transition-all hover:bg-white active:scale-95"
               >
-                Proses Sekarang <MousePointerClick size={18} className="inline ml-2" aria-hidden="true" />
+                Proses Sekarang <MousePointerClick size={18} className="ml-2 inline" aria-hidden="true" />
               </button>
-              <School className="absolute -right-10 -bottom-10 opacity-10" size={250} aria-hidden="true" />
+              <School className="absolute -bottom-10 -right-10 opacity-10" size={250} aria-hidden="true" />
             </section>
           </div>
         )}

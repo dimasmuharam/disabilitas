@@ -54,7 +54,7 @@ export default function InclusionCard({ partner, stats }: InclusionCardProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       {/* DESAIN KARTU (Hidden dari layar, hanya untuk di-generate jadi gambar) */}
-      <div className="absolute -left-[9999px] top-0">
+      <div className="absolute left-[-9999px] top-0">
         <div 
           ref={cardRef}
           className="relative size-[600px] overflow-hidden bg-slate-900 p-12 text-white"
