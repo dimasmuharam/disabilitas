@@ -79,23 +79,12 @@ export default function AcademicBarriers({ user, profile, onSuccess }: AcademicB
     }
 
     try {
-      // LOGIKA KRUSIAL: Mencari UUID Kampus agar Agregat di Dashboard Update
-      let detected_university_id = null;
-      if (isCollegeLevel && formData.university) {
-        const { data: campusData } = await supabase
-          .from("campuses")
-          .select("id")
-          .ilike("name", formData.university)
-          .single();
-        
-        if (campusData) detected_university_id = campusData.id;
-      }
+
 
       const payload = {
         education_level: formData.education_level || null,
         education_model: isCollegeLevel ? "Reguler" : (formData.education_model || null),
         university: isCollegeLevel ? formData.university : null,
-        university_id: detected_university_id, // Sekarang database menerima UUID
         major: isCollegeLevel ? formData.major : null,
         graduation_date: formData.graduation_date ? parseInt(formData.graduation_date.toString()) : null,
         scholarship_type: formData.scholarship_type || null,
