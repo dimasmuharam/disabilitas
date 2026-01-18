@@ -149,7 +149,7 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
             Ringkasan Yurisdiksi {govData.location}
           </h3>
           <p className="text-sm font-medium text-slate-400 mb-8 italic">
-            "Data ini digunakan untuk mendukung penyusunan kebijakan inklusi di level {govData.category}."
+            &quot;Data ini digunakan untuk mendukung penyusunan kebijakan inklusi di level {govData.category}.&quot;
           </p>
           <div className="space-y-4 border-t-2 border-slate-800 pt-6">
             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
