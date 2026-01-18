@@ -53,7 +53,7 @@ export default function GovernmentLandingPage() {
             <div className="hidden lg:block">
                <div className="relative mx-auto flex aspect-square w-full max-w-[450px] items-center justify-center rounded-[3rem] border-8 border-slate-900 bg-white shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
                   <Scale size={180} className="text-slate-900" />
-                  <div className="absolute -left-8 -top-8 animate-bounce rounded-3xl border-4 border-slate-900 bg-emerald-400 p-6 shadow-xl text-slate-900">
+                  <div className="absolute -left-8 -top-8 animate-bounce rounded-3xl border-4 border-slate-900 bg-emerald-400 p-6 text-slate-900 shadow-xl">
                     <ShieldCheck size={40} />
                   </div>
                </div>
@@ -110,8 +110,8 @@ export default function GovernmentLandingPage() {
               }
             ].map((f, i) => (
               <div key={i} className="group flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
-                <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] bg-${f.color}-400`}>
-                    <f.icon className="text-slate-900 size-8" />
+                <div className={`bg- mb-6 flex size-16 items-center justify-center rounded-2xl border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]${f.color}-400`}>
+                    <f.icon className="size-8 text-slate-900" />
                 </div>
                 <h3 className="mb-4 text-2xl font-black uppercase italic tracking-tighter">{f.title}</h3>
                 <p className="flex-1 text-sm font-bold italic leading-relaxed text-slate-500">
@@ -132,14 +132,14 @@ export default function GovernmentLandingPage() {
                   <div className="rounded-2xl bg-blue-500 p-4 text-white shadow-xl shadow-blue-500/20"><Building2 size={32}/></div>
                   <div className="text-left">
                      <h4 className="text-xl font-black uppercase italic">Dinas Tenaga Kerja</h4>
-                     <p className="text-xs font-medium uppercase tracking-widest text-slate-400 opacity-80 text-center">Tingkat Provinsi & Kota/Kabupaten</p>
+                     <p className="text-center text-xs font-medium uppercase tracking-widest text-slate-400 opacity-80">Tingkat Provinsi & Kota/Kabupaten</p>
                   </div>
                </div>
                <div className="flex items-center gap-6 rounded-[2rem] border-2 border-white/10 bg-white/5 p-8 backdrop-blur-md">
                   <div className="rounded-2xl bg-purple-500 p-4 text-white shadow-xl shadow-purple-500/20"><PieChart size={32}/></div>
                   <div className="text-left">
                      <h4 className="text-xl font-black uppercase italic">Kementerian Sektoral</h4>
-                     <p className="text-xs font-medium uppercase tracking-widest text-slate-400 opacity-80 text-center">Pengambil Kebijakan Makro</p>
+                     <p className="text-center text-xs font-medium uppercase tracking-widest text-slate-400 opacity-80">Pengambil Kebijakan Makro</p>
                   </div>
                </div>
             </div>
@@ -152,7 +152,7 @@ export default function GovernmentLandingPage() {
       {/* FINAL CALL TO ACTION */}
       <section className="py-24">
         <div className="mx-auto max-w-5xl px-4 text-center">
-          <div className="rounded-[4rem] border-8 border-slate-900 bg-blue-600 p-16 shadow-[20px_20px_0px_0px_rgba(15,23,42,1)] text-white">
+          <div className="rounded-[4rem] border-8 border-slate-900 bg-blue-600 p-16 text-white shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
               <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter md:text-6xl">
                 Wujudkan Ekosistem Kerja Inklusif
               </h2>

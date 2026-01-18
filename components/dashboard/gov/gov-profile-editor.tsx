@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { GOV_INSTANSI_CATEGORIES } from "@/lib/data-static";
 import { 
@@ -35,19 +35,7 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
     email: user?.email || ""
   });
 
-  useEffect(() => {
-    fetchProfile();
-    // Close search results when clicking outside
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setRegionResults([]);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [user.id]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("government")
@@ -63,7 +51,19 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
     } finally {
       setFetching(false);
     }
-  };
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchProfile();
+    // Close search results when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setRegionResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [fetchProfile]);
 
   const notify = (msg: string, type: 'success' | 'error') => {
     setMessage({ msg, type });
@@ -130,12 +130,12 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
   if (fetching) return (
     <div className="flex h-64 flex-col items-center justify-center gap-4">
       <Loader2 className="animate-spin text-blue-600" size={40} />
-      <p className="font-black uppercase italic text-slate-400 tracking-widest">Sinkronisasi Data Otoritas...</p>
+      <p className="font-black uppercase italic tracking-widest text-slate-400">Sinkronisasi Data Otoritas...</p>
     </div>
   );
 
   return (
-    <div className="max-w-4xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-4xl space-y-10 duration-700 animate-in fade-in slide-in-from-bottom-4">
       
       {/* NOTIFIKASI */}
       {message.msg && (
@@ -153,7 +153,7 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
             <MapPin className="text-blue-600" size={28} />
             <div>
               <h3 className="text-xl font-black uppercase italic tracking-tight">Cakupan Wilayah Kerja</h3>
-              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">Identitas administratif instansi pemerintah</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Identitas administratif instansi pemerintah</p>
             </div>
           </div>
 
@@ -192,7 +192,7 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
 
               {/* Dropdown Hasil Pencarian */}
               {regionResults.length > 0 && (
-                <ul className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border-4 border-slate-900 bg-white shadow-2xl animate-in zoom-in-95 duration-200">
+                <ul className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border-4 border-slate-900 bg-white shadow-2xl duration-200 animate-in zoom-in-95">
                   {regionResults.map(region => (
                     <li 
                       key={region.id}
@@ -218,12 +218,12 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
           </div>
 
           {/* Preview Nama Otomatis */}
-          <div className="mt-8 rounded-2xl bg-blue-50 p-6 border-2 border-dashed border-blue-200">
-            <div className="flex items-center gap-3 text-blue-700 mb-2">
+          <div className="mt-8 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 p-6">
+            <div className="mb-2 flex items-center gap-3 text-blue-700">
               <Building2 size={16} />
-              <p className="text-[10px] font-black uppercase tracking-tighter italic">Nama Instansi Yang Akan Terdaftar:</p>
+              <p className="text-[10px] font-black uppercase italic tracking-tighter">Nama Instansi Yang Akan Terdaftar:</p>
             </div>
-            <p className="text-lg font-black text-slate-900 uppercase">
+            <p className="text-lg font-black uppercase text-slate-900">
               {formData.name || "Menunggu Pilihan Wilayah..."}
             </p>
           </div>

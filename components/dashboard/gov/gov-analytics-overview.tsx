@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   BarChart3, Users, Building2, Briefcase, 
@@ -19,13 +19,7 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (govData?.location_id) {
-      calculateStats();
-    }
-  }, [govData?.location_id]);
-
-  const calculateStats = async () => {
+  const calculateStats = useCallback(async () => {
     setLoading(true);
     try {
       // 1. Fetch Talenta di Wilayah (Profiles Table)
@@ -72,7 +66,13 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [govData.category, govData.location_id]);
+
+  useEffect(() => {
+    if (govData?.location_id) {
+      calculateStats();
+    }
+  }, [govData?.location_id, calculateStats]);
 
   if (loading) return (
     <div className="flex h-96 flex-col items-center justify-center gap-4">
@@ -82,7 +82,7 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-10 duration-700 animate-in fade-in">
       
       {/* 1. HIGHLIGHT CARDS */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -115,13 +115,13 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
       {/* 2. CHART SECTION */}
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Distribusi Ragam Disabilitas */}
-        <div className="lg:col-span-2 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+        <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-2">
           <div className="mb-8 flex items-center justify-between">
             <h3 className="flex items-center gap-3 text-xl font-black uppercase italic tracking-tight">
               <PieChart className="text-blue-600" />
               Sebaran Ragam Disabilitas
             </h3>
-            <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-100 px-3 py-1 rounded-full">Data Real-time</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase text-slate-400">Data Real-time</span>
           </div>
           
           <div className="space-y-6">
@@ -145,10 +145,10 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
         {/* Info Otoritas Quick View */}
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[12px_12px_0px_0px_rgba(59,130,246,1)]">
           <MapPin size={40} className="mb-6 text-blue-400" />
-          <h3 className="text-2xl font-black uppercase italic leading-tight mb-4">
+          <h3 className="mb-4 text-2xl font-black uppercase italic leading-tight">
             Ringkasan Yurisdiksi {govData.location}
           </h3>
-          <p className="text-sm font-medium text-slate-400 mb-8 italic">
+          <p className="mb-8 text-sm font-medium italic text-slate-400">
             &quot;Data ini digunakan untuk mendukung penyusunan kebijakan inklusi di level {govData.category}.&quot;
           </p>
           <div className="space-y-4 border-t-2 border-slate-800 pt-6">

@@ -88,7 +88,7 @@ export default function GovAccountSettings({ user }: { user: any }) {
   };
 
   return (
-    <div className="max-w-3xl space-y-10 animate-in fade-in duration-500">
+    <div className="max-w-3xl space-y-10 duration-500 animate-in fade-in">
       
       {/* HEADER KEAMANAN */}
       <div className="rounded-[2.5rem] border-4 border-slate-900 bg-rose-50 p-8">
@@ -149,7 +149,7 @@ export default function GovAccountSettings({ user }: { user: any }) {
             <button 
               type="submit" 
               disabled={loading || !currentPassword}
-              className="w-full rounded-xl bg-slate-900 py-3 text-[10px] font-black uppercase italic text-white hover:bg-blue-600 disabled:opacity-30 transition-all"
+              className="w-full rounded-xl bg-slate-900 py-3 text-[10px] font-black uppercase italic text-white transition-all hover:bg-blue-600 disabled:opacity-30"
             >
               Simpan Email Baru
             </button>
@@ -174,7 +174,7 @@ export default function GovAccountSettings({ user }: { user: any }) {
             <button 
               type="submit" 
               disabled={loading || !currentPassword}
-              className="w-full rounded-xl bg-slate-900 py-3 text-[10px] font-black uppercase italic text-white hover:bg-rose-600 disabled:opacity-30 transition-all"
+              className="w-full rounded-xl bg-slate-900 py-3 text-[10px] font-black uppercase italic text-white transition-all hover:bg-rose-600 disabled:opacity-30"
             >
               Update Password
             </button>
@@ -194,7 +194,7 @@ export default function GovAccountSettings({ user }: { user: any }) {
         <button 
           onClick={handleSignOutAll}
           disabled={loading}
-          className="rounded-2xl bg-rose-500 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white hover:text-rose-600 transition-all active:translate-y-1"
+          className="rounded-2xl bg-rose-500 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-white hover:text-rose-600 active:translate-y-1"
         >
           Keluar Semua Sesi
         </button>

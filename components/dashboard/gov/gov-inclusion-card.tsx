@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import Image from "next/image";
 import { Share2, Download, CheckCircle, MapPin, Globe } from "lucide-react";
 import { handleGovShare } from "./gov-share-logic";
 
@@ -31,20 +32,34 @@ export default function GovInclusionCard({ govData, stats }: GovInclusionCardPro
         className="relative overflow-hidden rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:p-12"
       >
         {/* Background Decorative Element */}
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-50 opacity-50" />
+        <div className="absolute -right-20 -top-20 size-64 rounded-full bg-emerald-50 opacity-50" />
         
         {/* Header: Logos */}
         <div className="relative z-10 mb-10 flex items-center justify-between border-b-2 border-slate-100 pb-8">
           <div className="flex items-center gap-4">
             {govData.official_seal_url ? (
-              <img src={govData.official_seal_url} alt="Logo Pemda" className="h-16 w-16 object-contain" />
+              <Image 
+                src={govData.official_seal_url} 
+                alt="Logo Pemda" 
+                width={64}
+                height={64}
+                unoptimized={true}
+                className="size-16 object-contain" 
+              />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-slate-100 font-black text-slate-400">
+              <div className="flex size-16 items-center justify-center rounded-xl bg-slate-100 font-black text-slate-400">
                 PEMDA
               </div>
             )}
             <div className="h-10 w-[2px] bg-slate-200" />
-            <img src="/logo.png" alt="disabilitas.com" className="h-10 object-contain" />
+            <Image 
+              src="/logo.png" 
+              alt="disabilitas.com" 
+              width={40}
+              height={40}
+              unoptimized={true}
+              className="h-10 object-contain" 
+            />
           </div>
           <div className="hidden text-right md:block">
             <span className="rounded-full bg-slate-900 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-white">
@@ -81,14 +96,21 @@ export default function GovInclusionCard({ govData, stats }: GovInclusionCardPro
 
           {/* QR Code Section */}
           <div className="flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-            <img src={qrCodeUrl} alt="QR Verifikasi" className="mb-4 h-32 w-32 rounded-xl border-4 border-white shadow-sm" />
+            <Image 
+              src={qrCodeUrl} 
+              alt="QR Verifikasi" 
+              width={128}
+              height={128}
+              unoptimized={true}
+              className="mb-4 size-32 rounded-xl border-4 border-white shadow-sm" 
+            />
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Scan untuk Verifikasi</p>
-            <p className="mt-1 text-[8px] font-bold text-slate-400 uppercase italic">Data Real-time disabilitas.com</p>
+            <p className="mt-1 text-[8px] font-bold uppercase italic text-slate-400">Data Real-time disabilitas.com</p>
           </div>
         </div>
 
         {/* Footer Note */}
-        <div className="mt-10 flex items-center justify-between border-t-2 border-slate-100 pt-6 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+        <div className="mt-10 flex items-center justify-between border-t-2 border-slate-100 pt-6 text-[9px] font-bold uppercase tracking-widest text-slate-400">
           <span>Diterbitkan: {new Date().getFullYear()}</span>
           <span className="flex items-center gap-1">
             <Globe size={10} /> disabilitas.com/government/{govData.id.substring(0, 8)}
