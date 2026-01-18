@@ -8,7 +8,7 @@ export const USER_ROLES = {
   CAMPUS: "campus",
   PARTNER: "partner",
   GOVERNMENT: "government",
-  ADMIN: "admin", // Tetap tambahkan di sini untuk pengenalan sistem
+  ADMIN: "admin", 
 } as const;
 
 export const USER_ROLE_LABELS = [
@@ -20,6 +20,16 @@ export const USER_ROLE_LABELS = [
   { id: USER_ROLES.ADMIN, label: "Super Admin" },
  
 ];
+
+// Tambahkan di bawah USER_ROLES
+export const GOV_INSTANSI_CATEGORIES = [
+  "ULD Ketenagakerjaan Provinsi",
+  "ULD Ketenagakerjaan Kota/Kabupaten",
+  "Kementerian Sektoral"
+] as const;
+
+// Tipe data untuk TypeScript (Opsional tapi sangat membantu)
+export type GovCategory = typeof GOV_INSTANSI_CATEGORIES[number];
 
 export const DISABILITY_TYPES = [
   "Netra / Low Vision",
