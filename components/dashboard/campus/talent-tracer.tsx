@@ -45,13 +45,12 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
       let { data, error } = await supabase
         .from("profiles")
         .select(`
-          id, full_name, major, disability_type, career_status, graduation_date,
+          id, full_name, major, disability_type, career_status, graduation_date, university,
           campus_verifications!left (
             status
           )
-        `)
-        .eq("university_id", campusId)
-        .order("full_name", { ascending: true });
+      .eq("university", campusName)
+        `)        .order("full_name", { ascending: true });
 
       if (error) throw error;
       setTalents(data || []);
@@ -61,7 +60,7 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
     } finally {
       setLoading(false);
     }
-  }, [campusId]);
+  }, [campusName]);
 
   useEffect(() => { fetchTalents(); }, [fetchTalents]);
 
