@@ -30,7 +30,7 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
       const { data: profiles } = await supabase
         .from("profiles")
         .select("skills")
-        .eq("university_id", campusId);
+      .eq("university", campusName);
 
       // 2. Ambil Agregat Skill Industri
       const { data: jobs } = await supabase
@@ -72,8 +72,7 @@ export default function CareerSkillHub({ campusId, campusName }: HubProps) {
     } finally {
       setLoading(false);
     }
-  }, [campusId]);
-
+}, [campusName]);
   useEffect(() => { 
     fetchHubData(); 
   }, [fetchHubData]);
