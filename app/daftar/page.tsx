@@ -5,7 +5,11 @@ import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
-import { UserPlus, User, Building2, GraduationCap, School, CheckCircle2, AlertCircle } from "lucide-react"
+import { 
+  UserPlus, User, Building2, GraduationCap, 
+  School, CheckCircle2, AlertCircle, ShieldCheck,
+  ChevronDown
+} from "lucide-react"
 import { USER_ROLES, USER_ROLE_LABELS } from "@/lib/data-static"
 
 export default function RegisterPage() {
@@ -20,51 +24,66 @@ export default function RegisterPage() {
   const [turnstileToken, setTurnstileToken] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
 
-  // Tambahkan Meta Canonical sesuai standar project
+  // FUNGSI AKSESIBILITAS: Pesan Suara
+  const speak = (text: string) => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'id-ID';
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   useEffect(() => {
+    // Meta Canonical
     const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
     link.setAttribute("rel", "canonical");
     link.setAttribute("href", "https://disabilitas.com/daftar");
     if (!document.head.contains(link)) document.head.appendChild(link);
   }, []);
 
-  // Memasukkan Campus ke dalam list role yang bisa diakses publik
+  // UNLOCK SEMUA ROLE KECUALI ADMIN
   const PUBLIC_ROLES = [
     USER_ROLES.TALENT, 
     USER_ROLES.COMPANY, 
     USER_ROLES.PARTNER, 
-    USER_ROLES.CAMPUS // Tambahkan Role Campus di sini
+    USER_ROLES.CAMPUS,
+    USER_ROLES.GOVERNMENT // Government kini bisa daftar mandiri (status pending)
   ];
   
   const filteredRoles = USER_ROLE_LABELS.filter(r => PUBLIC_ROLES.includes(r.id as any));
+
+  // HANDLE ENTER TO BLUR (Keluar dari kolom input setelah tekan enter)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      (e.target as HTMLElement).blur();
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!turnstileToken) {
-        setMsg("Mohon selesaikan verifikasi keamanan Turnstile terlebih dahulu.")
-        setIsError(true)
-        return
+      const errorTxt = "Mohon selesaikan verifikasi keamanan Turnstile.";
+      setMsg(errorTxt);
+      setIsError(true);
+      speak(errorTxt);
+      return;
     }
 
     setLoading(true)
     setMsg("")
     setIsError(false)
 
-    const normalizedEmail = email.toLowerCase().trim()
-    const finalRedirect = "https://www.disabilitas.com/konfirmasi"
-
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: normalizedEmail,
+        email: email.toLowerCase().trim(),
         password,
         options: {
           data: {
             full_name: fullName, 
             role: role 
           },
-          captchaToken: turnstileToken, 
-          emailRedirectTo: finalRedirect,
+          emailRedirectTo: "https://www.disabilitas.com/konfirmasi",
         },
       })
 
@@ -72,27 +91,20 @@ export default function RegisterPage() {
 
       if (data.user) {
         setIsSuccess(true)
-        setMsg("Pendaftaran Berhasil! Instruksi aktivasi telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam.")
-        setIsError(false)
-
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-
-        setTimeout(() => {
-          const alertElement = document.getElementById("register-announcement");
-          if (alertElement) alertElement.focus();
-        }, 100);
-
+        const successTxt = "Pendaftaran Berhasil! Silakan cek email aktivasi Anda.";
+        setMsg(successTxt)
+        speak(successTxt);
+        
         setTimeout(() => {
           router.push("/masuk");
         }, 5000);
       }
 
     } catch (error: any) {
-      console.error("[REGISTRASI] Error:", error)
       setIsError(true)
-      setMsg(error.message || "Terjadi kesalahan sistem saat mendaftar.")
+      const errorMsg = error.message || "Gagal mendaftar.";
+      setMsg(errorMsg)
+      speak(errorMsg);
       setLoading(false)
     }
   }
@@ -101,56 +113,57 @@ export default function RegisterPage() {
     <main className="flex min-h-screen flex-col justify-center bg-slate-50 py-12 font-sans selection:bg-blue-100 sm:px-6 lg:px-8">
       
       <div className="px-4 text-center sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl bg-blue-600 shadow-lg">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl bg-blue-600 shadow-xl border-4 border-white">
             <UserPlus className="text-white" size={32} />
         </div>
-        <h1 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">
-          Daftar Akun Baru
+        <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">
+          Buat Akun Baru
         </h1>
-        <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-          Bergabung dalam Ekosistem Inklusif
+        <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+          Digital Inclusion Ecosystem 2026
         </p>
       </div>
 
       <div className="mt-8 px-4 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="rounded-[2.5rem] border border-slate-200 bg-white px-6 py-10 shadow-2xl">
+        <div className="rounded-[3rem] border-4 border-slate-900 bg-white px-8 py-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] transition-all">
           
           {isError && (
-            <div className="mb-6 flex items-center gap-3 rounded-2xl border-2 border-red-100 bg-red-50 p-4 text-red-700 duration-300 animate-in fade-in">
-              <AlertCircle size={20} />
+            <div role="alert" className="mb-6 flex items-center gap-3 rounded-2xl border-4 border-rose-600 bg-rose-50 p-4 text-rose-700 animate-in slide-in-from-top-2">
+              <AlertCircle size={20} className="shrink-0" />
               <p className="text-[10px] font-black uppercase leading-tight tracking-widest">{msg}</p>
             </div>
           )}
 
           {!isSuccess ? (
             <form className="space-y-6" onSubmit={handleRegister}>
+              {/* SELECT ROLE */}
               <div className="space-y-2">
-                <label htmlFor="role-select" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Kategori Akun
+                <label htmlFor="role-select" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Saya mendaftar sebagai:
                 </label>
                 <div className="relative">
                   <select 
                     id="role-select"
                     value={role} 
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full cursor-pointer appearance-none rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all focus:border-blue-600"
+                    onChange={(e) => {
+                      setRole(e.target.value);
+                      speak(`Mendaftar sebagai ${e.target.selectedOptions[0].text}`);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    className="w-full cursor-pointer appearance-none rounded-2xl border-4 border-slate-900 bg-slate-50 px-6 py-4 font-black uppercase italic text-slate-900 outline-none transition-all focus:bg-white focus:ring-8 focus:ring-blue-50"
                   >
                     {filteredRoles.map((r) => (
                       <option key={r.id} value={r.id}>{r.label}</option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-slate-400">
-                    {role === USER_ROLES.TALENT && <User size={18} />}
-                    {role === USER_ROLES.COMPANY && <Building2 size={18} />}
-                    {role === USER_ROLES.PARTNER && <GraduationCap size={18} />}
-                    {role === USER_ROLES.CAMPUS && <School size={18} className="text-blue-600" />}
-                  </div>
+                  <ChevronDown className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-slate-900" size={20} />
                 </div>
               </div>
 
+              {/* FULL NAME */}
               <div className="space-y-2">
-                <label htmlFor="full_name" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  {role === USER_ROLES.CAMPUS ? "Nama Perguruan Tinggi" : "Nama Lengkap atau Instansi"}
+                <label htmlFor="full_name" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  {role === USER_ROLES.TALENT ? "Nama Lengkap" : "Nama Institusi / Instansi"}
                 </label>
                 <input 
                   id="full_name"
@@ -158,14 +171,16 @@ export default function RegisterPage() {
                   required 
                   value={fullName} 
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder={role === USER_ROLES.CAMPUS ? "Contoh: Universitas Indonesia" : "Nama sesuai identitas..."}
-                  className="block w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-600" 
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ketik di sini..."
+                  className="block w-full rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-200 focus:bg-blue-50 focus:ring-8 focus:ring-blue-100/50" 
                 />
               </div>
 
+              {/* EMAIL */}
               <div className="space-y-2">
-                <label htmlFor="email" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Alamat Email {role === USER_ROLES.CAMPUS ? "Resmi Kampus" : "Aktif"}
+                <label htmlFor="email" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Alamat Email Aktif
                 </label>
                 <input 
                   id="email"
@@ -173,14 +188,16 @@ export default function RegisterPage() {
                   required 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@email.com"
-                  className="block w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-600" 
+                  onKeyDown={handleKeyDown}
+                  placeholder="email@instansi.com"
+                  className="block w-full rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 font-bold text-slate-900 outline-none transition-all focus:bg-blue-50 focus:ring-8 focus:ring-blue-100/50" 
                 />
               </div>
 
+              {/* PASSWORD */}
               <div className="space-y-2">
-                <label htmlFor="password" className="ml-1 block text-[10px] font-black uppercase tracking-widest text-slate-500">
-                  Kata Sandi Baru
+                <label htmlFor="password" title="Minimal 6 karakter" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Kata Sandi
                 </label>
                 <input 
                   id="password"
@@ -189,12 +206,14 @@ export default function RegisterPage() {
                   minLength={6} 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimal 6 karakter..."
-                  className="block w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-5 py-4 font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-600" 
+                  onKeyDown={handleKeyDown}
+                  placeholder="••••••••"
+                  className="block w-full rounded-2xl border-4 border-slate-900 bg-white px-6 py-4 font-bold text-slate-900 outline-none transition-all focus:bg-blue-50 focus:ring-8 focus:ring-blue-100/50" 
                 />
               </div>
 
-              <div className="flex scale-90 justify-center py-2 md:scale-100">
+              {/* CAPTCHA */}
+              <div className="flex justify-center py-2 overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4">
                   <Turnstile 
                       siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
                       onSuccess={(token) => setTurnstileToken(token)}
@@ -205,9 +224,10 @@ export default function RegisterPage() {
               <button 
                   type="submit" 
                   disabled={loading || !turnstileToken} 
-                  className="flex w-full justify-center rounded-2xl bg-blue-600 px-4 py-5 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                  className="group relative flex w-full items-center justify-center gap-3 rounded-2xl border-4 border-slate-900 bg-blue-600 py-5 text-sm font-black uppercase italic tracking-widest text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-900 hover:shadow-none active:translate-x-1 active:translate-y-1 disabled:opacity-30"
               >
-                {loading ? "MEMPROSES DATA..." : "BUAT AKUN SEKARANG"}
+                {loading ? "SINKRONISASI..." : "DAFTAR SEKARANG"}
+                <ShieldCheck className="group-hover:animate-pulse" size={20} />
               </button>
             </form>
           ) : (
@@ -215,28 +235,26 @@ export default function RegisterPage() {
               id="register-announcement"
               role="alert" 
               aria-live="assertive" 
-              tabIndex={-1}
-              className="space-y-6 rounded-[2.5rem] border-2 border-emerald-100 bg-emerald-50 p-10 text-center text-emerald-700 outline-none animate-in zoom-in-95"
+              className="space-y-6 rounded-[2rem] border-4 border-emerald-600 bg-emerald-50 p-10 text-center animate-in zoom-in-95 duration-500"
             >
-              <CheckCircle2 size={56} className="mx-auto text-emerald-500" />
+              <CheckCircle2 size={64} className="mx-auto text-emerald-600" />
               <div className="space-y-2">
-                <p className="text-lg font-black uppercase italic tracking-tighter">Pendaftaran Berhasil</p>
-                <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest">
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter text-emerald-900">Email Terkirim!</h2>
+                <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest text-emerald-700">
                   {msg}
                 </p>
               </div>
-              <div className="pt-4">
-                <div className="mx-auto size-10 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600"></div>
-                <p className="mt-4 text-[8px] font-black uppercase italic text-slate-400">Mengarahkan ke halaman masuk...</p>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-emerald-200">
+                <div className="h-full w-1/2 animate-[progress_2s_ease-in-out_infinite] bg-emerald-600"></div>
               </div>
             </div>
           )}
 
-          <nav className="mt-10 border-t border-slate-50 pt-6 text-center">
-              <Link href="/masuk" className="text-[10px] font-black uppercase tracking-widest text-blue-600 transition-colors hover:text-slate-900">
-                Sudah punya akun? Masuk di sini
+          <div className="mt-10 border-t-4 border-slate-50 pt-8 text-center">
+              <Link href="/masuk" className="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors hover:text-blue-600 underline decoration-slate-200 underline-offset-8">
+                Sudah punya akun? Masuk Kembali
               </Link>
-          </nav>
+          </div>
           
         </div>
       </div>
