@@ -6,9 +6,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Turnstile } from '@marsidev/react-turnstile'
 import { 
-  UserPlus, User, Building2, GraduationCap, 
-  School, CheckCircle2, AlertCircle, ShieldCheck,
-  ChevronDown
+  UserPlus, Building2, AlertCircle, 
+  CheckCircle2, ShieldCheck, ChevronDown 
 } from "lucide-react"
 import { USER_ROLES, USER_ROLE_LABELS } from "@/lib/data-static"
 
@@ -24,35 +23,25 @@ export default function RegisterPage() {
   const [turnstileToken, setTurnstileToken] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
 
-  // FUNGSI AKSESIBILITAS: Pesan Suara
-  const speak = (text: string) => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'id-ID';
-      window.speechSynthesis.speak(utterance);
-    }
-  };
+  // --- FUNGSI SUARA DIHAPUS UNTUK STANDAR AKSESIBILITAS ---
 
   useEffect(() => {
-    // Meta Canonical
     const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
     link.setAttribute("rel", "canonical");
     link.setAttribute("href", "https://disabilitas.com/daftar");
     if (!document.head.contains(link)) document.head.appendChild(link);
   }, []);
 
-  // UNLOCK SEMUA ROLE KECUALI ADMIN
   const PUBLIC_ROLES = [
     USER_ROLES.TALENT, 
     USER_ROLES.COMPANY, 
     USER_ROLES.PARTNER, 
     USER_ROLES.CAMPUS,
-    USER_ROLES.GOVERNMENT // Government kini bisa daftar mandiri (status pending)
+    USER_ROLES.GOVERNMENT 
   ];
   
   const filteredRoles = USER_ROLE_LABELS.filter(r => PUBLIC_ROLES.includes(r.id as any));
 
-  // HANDLE ENTER TO BLUR (Keluar dari kolom input setelah tekan enter)
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       (e.target as HTMLElement).blur();
@@ -63,10 +52,8 @@ export default function RegisterPage() {
     e.preventDefault()
     
     if (!turnstileToken) {
-      const errorTxt = "Mohon selesaikan verifikasi keamanan Turnstile.";
-      setMsg(errorTxt);
+      setMsg("Mohon selesaikan verifikasi keamanan Turnstile.");
       setIsError(true);
-      speak(errorTxt);
       return;
     }
 
@@ -91,9 +78,7 @@ export default function RegisterPage() {
 
       if (data.user) {
         setIsSuccess(true)
-        const successTxt = "Pendaftaran Berhasil! Silakan cek email aktivasi Anda.";
-        setMsg(successTxt)
-        speak(successTxt);
+        setMsg("Pendaftaran Berhasil! Silakan cek email aktivasi Anda.")
         
         setTimeout(() => {
           router.push("/masuk");
@@ -102,9 +87,7 @@ export default function RegisterPage() {
 
     } catch (error: any) {
       setIsError(true)
-      const errorMsg = error.message || "Gagal mendaftar.";
-      setMsg(errorMsg)
-      speak(errorMsg);
+      setMsg(error.message || "Gagal mendaftar.")
       setLoading(false)
     }
   }
@@ -127,8 +110,13 @@ export default function RegisterPage() {
       <div className="mt-8 px-4 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="rounded-[3rem] border-4 border-slate-900 bg-white px-8 py-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] transition-all">
           
+          {/* PESAN ERROR DENGAN ARIA-LIVE */}
           {isError && (
-            <div role="alert" className="mb-6 flex items-center gap-3 rounded-2xl border-4 border-rose-600 bg-rose-50 p-4 text-rose-700 animate-in slide-in-from-top-2">
+            <div 
+              role="alert" 
+              aria-live="assertive"
+              className="mb-6 flex items-center gap-3 rounded-2xl border-4 border-rose-600 bg-rose-50 p-4 text-rose-700 animate-in slide-in-from-top-2"
+            >
               <AlertCircle size={20} className="shrink-0" />
               <p className="text-[10px] font-black uppercase leading-tight tracking-widest">{msg}</p>
             </div>
@@ -136,7 +124,6 @@ export default function RegisterPage() {
 
           {!isSuccess ? (
             <form className="space-y-6" onSubmit={handleRegister}>
-              {/* SELECT ROLE */}
               <div className="space-y-2">
                 <label htmlFor="role-select" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
                   Saya mendaftar sebagai:
@@ -145,10 +132,7 @@ export default function RegisterPage() {
                   <select 
                     id="role-select"
                     value={role} 
-                    onChange={(e) => {
-                      setRole(e.target.value);
-                      speak(`Mendaftar sebagai ${e.target.selectedOptions[0].text}`);
-                    }}
+                    onChange={(e) => setRole(e.target.value)}
                     onKeyDown={handleKeyDown}
                     className="w-full cursor-pointer appearance-none rounded-2xl border-4 border-slate-900 bg-slate-50 px-6 py-4 font-black uppercase italic text-slate-900 outline-none transition-all focus:bg-white focus:ring-8 focus:ring-blue-50"
                   >
@@ -160,7 +144,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* FULL NAME */}
               <div className="space-y-2">
                 <label htmlFor="full_name" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
                   {role === USER_ROLES.TALENT ? "Nama Lengkap" : "Nama Institusi / Instansi"}
@@ -177,7 +160,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* EMAIL */}
               <div className="space-y-2">
                 <label htmlFor="email" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
                   Alamat Email Aktif
@@ -194,7 +176,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* PASSWORD */}
               <div className="space-y-2">
                 <label htmlFor="password" title="Minimal 6 karakter" className="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
                   Kata Sandi
@@ -212,7 +193,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* CAPTCHA */}
               <div className="flex justify-center py-2 overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4">
                   <Turnstile 
                       siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
@@ -232,9 +212,8 @@ export default function RegisterPage() {
             </form>
           ) : (
             <div 
-              id="register-announcement"
-              role="alert" 
-              aria-live="assertive" 
+              role="status" 
+              aria-live="polite" 
               className="space-y-6 rounded-[2rem] border-4 border-emerald-600 bg-emerald-50 p-10 text-center animate-in zoom-in-95 duration-500"
             >
               <CheckCircle2 size={64} className="mx-auto text-emerald-600" />
@@ -243,9 +222,6 @@ export default function RegisterPage() {
                 <p className="text-[10px] font-bold uppercase leading-relaxed tracking-widest text-emerald-700">
                   {msg}
                 </p>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-emerald-200">
-                <div className="h-full w-1/2 animate-[progress_2s_ease-in-out_infinite] bg-emerald-600"></div>
               </div>
             </div>
           )}
