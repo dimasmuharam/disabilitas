@@ -2,6 +2,8 @@
 // Deskripsi: Basis data statis komprehensif untuk sinkronisasi riset disabilitas.com
 import { ALL_UNIVERSITIES } from './constants/universities';
 import { ALL_MAJORS } from './constants/majors';
+import { ALL_INDONESIA_CITIES, PROVINCE_MAP, PROVINCE_LIST } from './constants/locations';
+import { ALL_GOV_INSTITUTIONS } from './constants/institutions';
 
 export const USER_ROLES = {
   TALENT: "talent",
@@ -21,12 +23,11 @@ export const USER_ROLE_LABELS = [
   { id: USER_ROLES.ADMIN, label: "Super Admin" },
  
 ];
-
 // Tambahkan di bawah USER_ROLES
 export const GOV_INSTANSI_CATEGORIES = [
   "ULD Ketenagakerjaan Provinsi",
   "ULD Ketenagakerjaan Kota/Kabupaten",
-  "Kementerian Sektoral"
+  "Kementerian / Lembaga"
 ] as const;
 
 // Tipe data untuk TypeScript (Opsional tapi sangat membantu)
@@ -102,22 +103,7 @@ export const INCLUSION_RATING_QUESTIONS = [
   { id: "score_onboarding", label: "Kualitas Komunikasi & Onboarding" }
 ];
 // LIST INSTANSI PEMERINTAH (ASN)
-export const GOVERNMENT_AGENCIES_LIST = [
-  "Kementerian Keuangan",
-  "Kementerian Sosial",
-  "Kementerian Ketenagakerjaan",
-  "Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi",
-  "Kementerian Hukum dan HAM",
-  "Kementerian Kesehatan",
-  "Kementerian PAN-RB",
-  "Kementerian Komunikasi dan Digital",
-  "Badan Kepegawaian Negara (BKN)",
-  "Badan Riset dan Inovasi Nasional (BRIN)",
-  "Pemerintah Provinsi Jakarta",
-  "Pemerintah Provinsi Jawa Tengah",
-  "Pemerintah Provinsi Jawa Timur",
-  "Pemerintah Provinsi Jawa Barat"
-].sort();
+export const GOVERNMENT_AGENCIES_LIST = ALL_GOV_INSTITUTIONS;
 
 // LIST BUMN & BUMD
 export const STATE_ENTERPRISES_LIST = [
@@ -335,20 +321,8 @@ export const SKILLS_LIST = [
   "Culinary / Tata Boga"
 ].sort();
 
-export const INDONESIA_CITIES = [
-  "Jakarta Pusat", "Jakarta Selatan", "Jakarta Barat", "Jakarta Timur", "Jakarta Utara", "Kepulauan Seribu",
-  "Bogor", "Kota Bogor", "Depok", "Tangerang", "Kota Tangerang", "Tangerang Selatan", "Bekasi", "Kota Bekasi",
-  "Bandung", "Kota Bandung", "Cimahi", "Sumedang", "Garut", "Tasikmalaya", "Ciamis", "Cianjur", "Sukabumi", "Cirebon",
-  "Semarang", "Kota Semarang", "Surakarta (Solo)", "Magelang", "Salatiga", "Purwokerto", "Cilacap", "Kebumen", "Tegal",
-  "Yogyakarta", "Sleman", "Bantul", "Kulon Progo", "Gunungkidul",
-  "Surabaya", "Malang", "Kota Malang", "Batu", "Sidoarjo", "Gresik", "Mojokerto", "Pasuruan", "Probolinggo", "Jember", "Banyuwangi", "Kediri", "Madiun",
-  "Banda Aceh", "Lhokseumawe", "Medan", "Pematangsiantar", "Binjai", "Padang", "Bukittinggi", "Pekanbaru", "Dumai", "Batam", "Tanjungpinang", 
-  "Jambi", "Palembang", "Lubuklinggau", "Bengkulu", "Bandar Lampung", "Metro", "Pangkal Pinang",
-  "Pontianak", "Singkawang", "Banjarmasin", "Banjarbaru", "Palangkaraya", "Samarinda", "Balikpapan", "Bontang", "Tarakan",
-  "Makassar", "Parepare", "Palopo", "Manado", "Bitung", "Tomohon", "Palu", "Kendari", "Gorontalo", "Mamuju",
-  "Denpasar", "Badung", "Gianyar", "Mataram", "Kupang",
-  "Ambon", "Tual", "Ternate", "Tidore", "Jayapura", "Kota Jayapura", "Merauke", "Mimika", "Sorong", "Manokwari"
-].sort();
+export const INDONESIA_CITIES = ALL_INDONESIA_CITIES;
+export { PROVINCE_MAP, PROVINCE_LIST };
 
 // VARIABEL RISET KEAHLIAN & PELATIHAN
 export const SKILL_ACQUISITION_METHODS = [

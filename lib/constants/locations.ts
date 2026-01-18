@@ -1,0 +1,45 @@
+// /lib/constants/locations.ts
+
+export const PROVINCE_MAP: Record<string, string[]> = {
+  "Aceh": ["Aceh Barat", "Aceh Barat Daya", "Aceh Besar", "Aceh Jaya", "Aceh Selatan", "Aceh Singkil", "Aceh Tamiang", "Aceh Tengah", "Aceh Tenggara", "Aceh Timur", "Aceh Utara", "Banda Aceh", "Bener Meriah", "Bireuen", "Gayo Lues", "Langsa", "Lhokseumawe", "Nagan Raya", "Pidie", "Pidie Jaya", "Sabang", "Simeulue", "Subulussalam"],
+  "Sumatera Utara": ["Asahan", "Batu Bara", "Binjai", "Dairi", "Deli Serdang", "Gunungsitoli", "Humbang Hasundutan", "Karo", "Labuhanbatu", "Labuhanbatu Selatan", "Labuhanbatu Utara", "Langkat", "Mandailing Natal", "Medan", "Nias", "Nias Barat", "Nias Selatan", "Nias Utara", "Padang Lawas", "Padang Lawas Utara", "Padangsidimpuan", "Pakpak Bharat", "Pamatangsiantar", "Samosir", "Serdang Bedagai", "Sibolga", "Simalungun", "Tanjungbalai", "Tapanuli Selatan", "Tapanuli Tengah", "Tapanuli Utara", "Tebing Tinggi", "Toba"],
+  "Sumatera Barat": ["Agam", "Bukittinggi", "Dharmasraya", "Kepulauan Mentawai", "Lima Puluh Kota", "Padang", "Padang Panjang", "Padang Pariaman", "Pariaman", "Pasaman", "Pasaman Barat", "Payakumbuh", "Pesisir Selatan", "Sawah Lunto", "Sijunjung", "Solok", "Solok Selatan", "Tanah Datar"],
+  "Riau": ["Bengkalis", "Indragiri Hilir", "Indragiri Hulu", "Kampar", "Kepulauan Meranti", "Kuantan Singingi", "Pekanbaru", "Pelalawan", "Rokan Hilir", "Rokan Hulu", "Siak", "Dumai"],
+  "Jambi": ["Batang Hari", "Bungo", "Jambi", "Kerinci", "Merangin", "Muaro Jambi", "Sarolangun", "Sungaipenuh", "Tanjung Jabung Barat", "Tanjung Jabung Timur", "Tebo"],
+  "Sumatera Selatan": ["Banyuasin", "Empat Lawang", "Lahat", "Lubuklinggau", "Muara Enim", "Musi Banyuasin", "Musi Rawas", "Musi Rawas Utara", "Ogan Ilir", "Ogan Komering Ilir", "Ogan Komering Ulu", "Ogan Komering Ulu Selatan", "Ogan Komering Ulu Timur", "Pagar Alam", "Palembang", "Prabumulih", "Penukal Abab Lematang Ilir"],
+  "Bengkulu": ["Bengkulu", "Bengkulu Selatan", "Bengkulu Tengah", "Bengkulu Utara", "Kaur", "Kepahiang", "Lebong", "Mukomuko", "Rejang Lebong", "Seluma"],
+  "Lampung": ["Bandar Lampung", "Lampung Barat", "Lampung Selatan", "Lampung Tengah", "Lampung Timur", "Lampung Utara", "Mesuji", "Metro", "Pesawaran", "Pesisir Barat", "Pringsewu", "Tanggamus", "Tulang Bawang", "Tulang Bawang Barat", "Way Kanan"],
+  "Kepulauan Bangka Belitung": ["Bangka", "Bangka Barat", "Bangka Selatan", "Bangka Tengah", "Belitung", "Belitung Timur", "Pangkal Pinang"],
+  "Kepulauan Riau": ["Batam", "Bintan", "Karimun", "Kepulauan Anambas", "Lingga", "Natuna", "Tanjungpinang"],
+  "DKI Jakarta": ["Jakarta Barat", "Jakarta Pusat", "Jakarta Selatan", "Jakarta Timur", "Jakarta Utara", "Kepulauan Seribu"],
+  "Jawa Barat": ["Bandung", "Bandung Barat", "Bekasi", "Bogor", "Ciamis", "Cianjur", "Cimahi", "Cirebon", "Depok", "Garut", "Indramayu", "Karawang", "Kuningan", "Majalengka", "Pangandaran", "Purwakarta", "Subang", "Sukabumi", "Sumedang", "Tasikmalaya", "Kota Bandung", "Kota Bekasi", "Kota Bogor", "Kota Cirebon", "Kota Sukabumi", "Kota Tasikmalaya", "Banjar"],
+  "Jawa Tengah": ["Banjarnegara", "Banyumas", "Batang", "Blora", "Boyolali", "Brebes", "Cilacap", "Demak", "Grobogan", "Jepara", "Karanganyar", "Kebumen", "Kendal", "Klaten", "Kudus", "Magelang", "Pati", "Pekalongan", "Pemalang", "Purbalingga", "Purworejo", "Rembang", "Salatiga", "Semarang", "Sragen", "Sukoharjo", "Surakarta (Solo)", "Tegal", "Temanggung", "Wonogiri", "Wonosobo", "Kota Magelang", "Kota Pekalongan", "Kota Salatiga", "Kota Semarang", "Kota Surakarta", "Kota Tegal"],
+  "DI Yogyakarta": ["Bantul", "Gunungkidul", "Kulon Progo", "Sleman", "Yogyakarta"],
+  "Jawa Timur": ["Bangkalan", "Banyuwangi", "Blitar", "Bojonegoro", "Bondowoso", "Gresik", "Jember", "Jombang", "Kediri", "Lamongan", "Lumajang", "Madiun", "Magetan", "Malang", "Mojokerto", "Nganjuk", "Ngawi", "Pacitan", "Pamekasan", "Pasuruan", "Ponorogo", "Probolinggo", "Sampang", "Sidoarjo", "Situbondo", "Sumenep", "Surabaya", "Trenggalek", "Tuban", "Tulungagung", "Batu", "Kota Blitar", "Kota Kediri", "Kota Madiun", "Kota Malang", "Kota Mojokerto", "Kota Pasuruan", "Kota Probolinggo", "Kota Surabaya"],
+  "Banten": ["Lebak", "Pandeglang", "Serang", "Tangerang", "Cilegon", "Kota Serang", "Kota Tangerang", "Kota Tangerang Selatan"],
+  "Bali": ["Badung", "Bangli", "Buleleng", "Denpasar", "Gianyar", "Jembrana", "Karangasem", "Klungkung", "Tabanan"],
+  "Nusa Tenggara Barat": ["Bima", "Dompu", "Lombok Barat", "Lombok Tengah", "Lombok Timur", "Lombok Utara", "Mataram", "Sumbawa", "Sumbawa Barat", "Kota Bima"],
+  "Nusa Tenggara Timur": ["Alor", "Belu", "Ende", "Flores Timur", "Kupang", "Lembata", "Malaka", "Manggarai", "Manggarai Barat", "Manggarai Timur", "Nagekeo", "Ngada", "Rote Ndao", "Sabu Raijua", "Sikka", "Sumba Barat", "Sumba Barat Daya", "Sumba Tengah", "Sumba Timur", "Timor Tengah Selatan", "Timor Tengah Utara", "Kota Kupang"],
+  "Kalimantan Barat": ["Bengkayang", "Kapuas Hulu", "Kayong Utara", "Ketapang", "Kubu Raya", "Landak", "Melawi", "Mempawah", "Pontianak", "Sambas", "Sanggau", "Sekadau", "Sintang", "Singkawang"],
+  "Kalimantan Tengah": ["Barito Selatan", "Barito Timur", "Barito Utara", "Gunung Mas", "Kapuas", "Katingan", "Kotawaringin Barat", "Kotawaringin Timur", "Lamandau", "Murung Raya", "Palangkaraya", "Sukamara", "Seruyan", "Pulang Pisau"],
+  "Kalimantan Selatan": ["Balangan", "Banjar", "Barito Kuala", "Hulu Sungai Selatan", "Hulu Sungai Tengah", "Hulu Sungai Utara", "Kotabaru", "Tabalong", "Tanah Bumbu", "Tanah Laut", "Tapin", "Banjarbaru", "Banjarmasin"],
+  "Kalimantan Timur": ["Berau", "Kutai Barat", "Kutai Kartanegara", "Kutai Timur", "Mahakam Ulu", "Paser", "Penajam Paser Utara", "Balikpapan", "Bontang", "Samarinda"],
+  "Kalimantan Utara": ["Bulungan", "Malinau", "Nunukan", "Tana Tidung", "Tarakan"],
+  "Sulawesi Utara": ["Bolaang Mongondow", "Bolaang Mongondow Selatan", "Bolaang Mongondow Timur", "Bolaang Mongondow Utara", "Kepulauan Sangihe", "Kepulauan Siau Tagulandang Biaro", "Kepulauan Talaud", "Minahasa", "Minahasa Selatan", "Minahasa Tenggara", "Minahasa Utara", "Bitung", "Kotamobagu", "Manado", "Tomohon"],
+  "Sulawesi Tengah": ["Banggai", "Banggai Kepulauan", "Banggai Laut", "Buol", "Donggala", "Morowali", "Morowali Utara", "Parigi Moutong", "Poso", "Sigi", "Tojo Una-Una", "Toli-Toli", "Palu"],
+  "Sulawesi Selatan": ["Bantaeng", "Barru", "Bone", "Bulukumba", "Enrekang", "Gowa", "Jeneponto", "Kepulauan Selayar", "Luwu", "Luwu Timur", "Luwu Utara", "Maros", "Pangkajene dan Kepulauan", "Pinrang", "Sidenreng Rappang", "Sinjai", "Soppeng", "Takalar", "Tana Toraja", "Toraja Utara", "Wajo", "Makassar", "Palopo", "Parepare"],
+  "Sulawesi Tenggara": ["Bombana", "Buton", "Buton Selatan", "Buton Tengah", "Buton Utara", "Kolaka", "Kolaka Timur", "Kolaka Utara", "Konawe", "Konawe Kepulauan", "Konawe Selatan", "Konawe Utara", "Muna", "Muna Barat", "Wakatobi", "Bau-Bau", "Kendari"],
+  "Gorontalo": ["Boalemo", "Bone Bolango", "Gorontalo", "Gorontalo Utara", "Pohuwato", "Kota Gorontalo"],
+  "Sulawesi Barat": ["Majene", "Mamasa", "Mamuju", "Mamuju Tengah", "Pasangkayu", "Polewali Mandar"],
+  "Maluku": ["Buru", "Buru Selatan", "Kepulauan Aru", "Kepulauan Tanimbar", "Maluku Barat Daya", "Maluku Tengah", "Maluku Tenggara", "Maluku Tenggara Barat", "Seram Bagian Barat", "Seram Bagian Timur", "Ambon", "Tual"],
+  "Maluku Utara": ["Halmahera Barat", "Halmahera Tengah", "Halmahera Utara", "Halmahera Selatan", "Kepulauan Sula", "Halmahera Timur", "Pulau Morotai", "Pulau Taliabu", "Ternate", "Tidore Kepulauan"],
+  "Papua": ["Biak Numfor", "Jayapura", "Keerom", "Kepulauan Yapen", "Mamberamo Raya", "Sarmi", "Supiori", "Waropen", "Kota Jayapura"],
+  "Papua Barat": ["Fakfak", "Kaimana", "Manokwari", "Manokwari Selatan", "Pegunungan Arfak", "Teluk Bintuni", "Teluk Wondama"],
+  "Papua Selatan": ["Asmat", "Boven Digoel", "Mappi", "Merauke"],
+  "Papua Tengah": ["Deiyai", "Dogiyai", "Intan Jaya", "Mimika", "Nabire", "Paniai", "Puncak", "Puncak Jaya"],
+  "Papua Pegunungan": ["Jayawijaya", "Lanny Jaya", "Mamberamo Tengah", "Nduga", "Pegunungan Bintang", "Tolikara", "Yahukimo", "Yalimo"],
+  "Papua Barat Daya": ["Maybrat", "Raja Ampat", "Sorong", "Sorong Selatan", "Tambrauw", "Kota Sorong"]
+};
+
+export const PROVINCE_LIST = Object.keys(PROVINCE_MAP).sort();
+export const ALL_INDONESIA_CITIES = Object.values(PROVINCE_MAP).flat().sort();
