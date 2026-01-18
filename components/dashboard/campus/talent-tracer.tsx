@@ -38,30 +38,35 @@ export default function TalentTracer({ campusName, campusId, onBack }: TalentTra
   const itemsPerPage = 10;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const fetchTalents = useCallback(async () => {
-    setLoading(true);
-    const currentYear = new Date().getFullYear();
-    try {
-      let { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          id, full_name, major, disability_type, career_status, graduation_date, university,
-          campus_verifications!left (
-            status
-          )
-      .eq("university", campusName)
-        `)        .order("full_name", { ascending: true });
+const fetchTalents = useCallback(async () => {
+  setLoading(true);
+  try {
+    let { data, error } = await supabase
+      .from("profiles")
+      .select(`
+        id, 
+        full_name, 
+        major, 
+        disability_type, 
+        career_status, 
+        graduation_date, 
+        university,
+        campus_verifications!left (
+          status
+        )
+      `) // Penutup tanda petik di sini
+      .eq("university", campusName) // Filter .eq HARUS di luar .select
+      .order("full_name", { ascending: true });
 
-      if (error) throw error;
-      setTalents(data || []);
-    } catch (error) {
-      console.error("[TRACER_ERROR]:", error);
-      setToast({ msg: "Gagal memuat data talenta", type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  }, [campusName]);
-
+    if (error) throw error;
+    setTalents(data || []);
+  } catch (error) {
+    console.error("[TRACER_ERROR]:", error);
+    setToast({ msg: "Gagal memuat data talenta", type: 'error' });
+  } finally {
+    setLoading(false);
+  }
+}, [campusName]);
   useEffect(() => { fetchTalents(); }, [fetchTalents]);
 
   const handleAction = async (ids: string[], status: 'verified' | 'rejected' | 'pending') => {
