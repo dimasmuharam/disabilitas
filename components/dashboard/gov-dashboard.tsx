@@ -9,10 +9,10 @@ import {
 } from "lucide-react";
 
 // Import Sub-modul yang telah kita buat
-import GovAnalyticsOverview from "./gov/gov-analytics-overview";
-import GovTalentDirectory from "./gov/gov-talent-directory";
-import GovPartnershipManager from "./gov/gov-partnership-manager";
-import GovProfileEditor from "./gov/gov-profile-editor";
+import GovAnalyticsOverview from "./gov/analytics-overview";
+import GovTalentDirectory from "./gov/talent-directory";
+import GovPartnershipManager from "./gov/partnership-manager";
+import GovProfileEditor from "./gov/profile-editor";
 
 export default function GovDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
