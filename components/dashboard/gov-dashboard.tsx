@@ -205,7 +205,7 @@ export default function GovDashboard({ user }: { user: any }) {
               label="Kemitraan"
               ariaLabel="Tampilkan Manajemen Mitra Industri"
             />
-{govData?.category === "Kementerian" && (
+{govData?.category === "Kementerian/Lembaga" && (
   <div className="mt-4 border-t-4 border-dashed border-slate-100 pt-4">
     <NavButton 
       active={activeTab === 'simulation'} 
@@ -264,8 +264,8 @@ export default function GovDashboard({ user }: { user: any }) {
             {activeTab === "overview" && <GovAnalyticsOverview govData={govData} />}
             {activeTab === "directory" && <GovTalentDirectory govData={govData} />}
             {activeTab === "partnership" && <GovPartnershipManager govData={govData} />}
-{activeTab === "simulation" && govData?.category === "Kementerian" && (
-  <GovSimulationModule />
+{activeTab === "simulation" && govData?.category === "Kementerian/Lembaga" && (
+<GovSimulationModule govData={govData} />
 )}
             {activeTab === "profile" && (
               <GovProfileEditor 

@@ -17,7 +17,7 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
   const [filterStatus, setFilterStatus] = useState<"all" | "verified" | "pending">("all");
 
   // Identifikasi Level Otoritas
-  const isPusat = govData.category === "Kementerian" || govData.category === "Lembaga";
+const isPusat = govData.location === "Nasional" || govData.category === "Kementerian/Lembaga";
   const isProvinsi = govData.category.includes("Provinsi");
   const isKotaKab = !isPusat && !isProvinsi;
 

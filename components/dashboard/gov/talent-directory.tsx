@@ -23,7 +23,7 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
 
   // Identifikasi Level Otoritas
-  const isPusat = govData.category === "Kementerian" || govData.category === "Lembaga";
+const isPusat = govData.location === "Nasional" || govData.category === "Kementerian/Lembaga";
   const isProvinsi = govData.category.includes("Provinsi");
 
   const fetchLocalTalents = useCallback(async () => {
