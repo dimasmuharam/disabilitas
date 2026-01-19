@@ -7,7 +7,7 @@ import { PROVINCE_LIST, PROVINCE_MAP } from "@/lib/constants/locations";
 import { 
   Building2, MapPin, Search, Save, 
   Loader2, Globe, MessageSquare, 
-  CheckCircle2, AlertCircle, keyboard
+  CheckCircle2, AlertCircle
 } from "lucide-react";
 
 interface GovProfileEditorProps {
