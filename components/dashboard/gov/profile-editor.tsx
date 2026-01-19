@@ -10,16 +10,17 @@ import {
   CheckCircle2, AlertCircle
 } from "lucide-react";
 
+// SINKRONISASI 1: Tambahkan onSaveSuccess ke Interface
 interface GovProfileEditorProps {
   user: any;
+  onSaveSuccess?: () => void;
 }
 
-export default function GovProfileEditor({ user }: GovProfileEditorProps) {
+export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEditorProps) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [message, setMessage] = useState<{ msg: string; type: 'success' | 'error' | null }>({ msg: "", type: null });
   
-  // Search States
   const [searchQuery, setSearchQuery] = useState("");
   const [regionResults, setRegionResults] = useState<any[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -70,7 +71,6 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
     setTimeout(() => setMessage({ msg: "", type: null }), 5000);
   };
 
-  // Logika Pencarian Statis (Tanpa Database Call)
   const handleSearchRegion = (query: string) => {
     setSearchQuery(query);
     if (query.length < 2) {
@@ -87,7 +87,7 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
         .map(p => ({ name: p, type: 'PROVINSI' }));
     } else {
       const allCities = Object.values(PROVINCE_MAP).flat();
-      filtered = Array.from(new Set(allCities)) // Unique
+      filtered = Array.from(new Set(allCities))
         .filter(c => c.toLowerCase().includes(query.toLowerCase()))
         .map(c => ({ name: c, type: 'KOTA/KAB' }));
     }
@@ -112,7 +112,14 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
         });
 
       if (error) throw error;
+      
       notify("Profil Otoritas Berhasil Diperbarui", "success");
+      
+      // SINKRONISASI 2: Panggil callback agar dashboard utama terupdate
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+      
     } catch (err: any) {
       notify(err.message, "error");
     } finally {
@@ -130,7 +137,7 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
   return (
     <div className="max-w-4xl space-y-10 pb-20">
       
-      {/* NOTIFIKASI - ARIA LIVE UNTUK NVDA */}
+      {/* NOTIFIKASI DENGAN ARIA-LIVE */}
       <div role="status" aria-live="polite">
         {message.msg && (
           <div className={`fixed bottom-10 right-10 z-[60] flex items-center gap-3 rounded-2xl border-4 border-slate-900 px-6 py-4 font-black uppercase italic shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] ${message.type === 'success' ? 'bg-emerald-400' : 'bg-rose-400'}`}>
@@ -153,7 +160,6 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
           </div>
 
           <div className="grid gap-8 md:grid-cols-2">
-            {/* Kategori Level */}
             <div className="space-y-2">
               <label htmlFor="category" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Level Otoritas</label>
               <select 
@@ -178,7 +184,6 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
               </select>
             </div>
 
-            {/* Input Wilayah atau Nama Manual */}
             {isNasional ? (
               <div className="space-y-2">
                 <label htmlFor="manual-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Lengkap Instansi (Manual)</label>
@@ -202,6 +207,8 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
                     type="text"
                     autoComplete="off"
                     aria-autocomplete="list"
+                    aria-expanded={regionResults.length > 0}
+                    aria-haspopup="listbox"
                     aria-controls="region-results"
                     placeholder={formData.location || "Ketik min. 2 huruf..."}
                     value={searchQuery}
@@ -216,7 +223,7 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
                       <li 
                         key={idx}
                         role="option"
-                        aria-selected="false"
+                        aria-selected={formData.location === region.name}
                         tabIndex={0}
                         onClick={() => {
                           setFormData({
@@ -239,18 +246,9 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
               </div>
             )}
           </div>
-
-          {!isNasional && (
-            <div className="mt-8 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 p-6" aria-live="polite">
-              <p className="text-[10px] font-black uppercase italic text-blue-700 mb-1">Preview Identitas:</p>
-              <p className="text-lg font-black uppercase text-slate-900">
-                {formData.name || "Pilih wilayah untuk menjana nama instansi..."}
-              </p>
-            </div>
-          )}
         </section>
 
-        {/* SECTION 2: KONTAK */}
+        {/* SECTION 2: ATRIBUT OPERASIONAL */}
         <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]" aria-labelledby="section-kontak">
           <div className="mb-8 flex items-center gap-4 border-b-2 border-slate-100 pb-4">
             <Globe className="text-emerald-600" size={28} aria-hidden="true" />
@@ -273,7 +271,7 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
               </div>
             </div>
             <div className="space-y-2">
-              <label htmlFor="seal" className="text-[10px] font-black uppercase tracking-widest text-slate-500">URL Logo/Stempel</label>
+              <label htmlFor="seal" className="text-[10px] font-black uppercase tracking-widest text-slate-500">URL Logo/Stempel Resmi</label>
               <input 
                 id="seal"
                 type="url" 
@@ -302,7 +300,6 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
           type="submit" 
           disabled={loading}
           className="group relative flex w-full items-center justify-center gap-4 rounded-[2rem] border-4 border-slate-900 bg-slate-900 py-6 text-xl font-black uppercase italic text-white shadow-[10px_10px_0px_0px_rgba(59,130,246,1)] transition-all hover:bg-blue-600 hover:shadow-none active:translate-x-1 active:translate-y-1 disabled:opacity-50"
-          aria-label={loading ? "Sedang menyimpan..." : "Simpan Data Profil Otoritas"}
         >
           {loading ? <Loader2 className="animate-spin" /> : <Save size={24} />}
           <span>{loading ? "Menyimpan..." : "Simpan Profil Otoritas"}</span>
