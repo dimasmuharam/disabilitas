@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   LayoutDashboard, Users2, Building2, Settings, 
   ExternalLink, AlertTriangle, CheckCircle2, 
-  Share2, Download, Eye, Bell, ShieldCheck
+  FileSpreadsheet, FileText, Eye, Bell, ShieldCheck, Loader2
 } from "lucide-react";
 
-// Import Sub-modul yang telah kita buat
 import GovAnalyticsOverview from "./gov/analytics-overview";
 import GovTalentDirectory from "./gov/talent-directory";
 import GovPartnershipManager from "./gov/partnership-manager";
@@ -18,17 +17,27 @@ export default function GovDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [govData, setGovData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [profileCompletion, setProfileCompletion] = useState({ percent: 0, missing: [] as string[] });
+  
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
+  // 1. HITUNG KELENGKAPAN PROFIL SECARA DETAIL
   const calculateCompletion = useCallback((data: any) => {
-    const fields = ['name', 'location_id', 'description', 'whatsapp_official', 'official_seal_url'];
-    const filled = fields.filter(f => !!data[f]).length;
-    setProfileCompletion((filled / fields.length) * 100);
+    const fields = [
+      { key: 'name', label: 'Nama Instansi' },
+      { key: 'location', label: 'Wilayah Otoritas' },
+      { key: 'description', label: 'Deskripsi' },
+      { key: 'whatsapp_official', label: 'Kontak WhatsApp' },
+      { key: 'official_seal_url', label: 'Logo/Stempel' }
+    ];
+    const missing = fields.filter(f => !data[f]).map(f => f.label);
+    const percent = ((fields.length - missing.length) / fields.length) * 100;
+    setProfileCompletion({ percent, missing });
   }, []);
 
   const fetchGovProfile = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("government")
       .select("*")
       .eq("id", user.id)
@@ -45,31 +54,40 @@ export default function GovDashboard({ user }: { user: any }) {
     fetchGovProfile();
   }, [fetchGovProfile]);
 
+  // 2. MANAJEMEN FOKUS UNTUK SCREEN READER
+  useEffect(() => {
+    if (headingRef.current) {
+      headingRef.current.focus();
+    }
+  }, [activeTab]);
+
+  // 3. FUNGSI AUTO-CLOSE SETELAH SAVE
+  const handleSaveSuccess = () => {
+    fetchGovProfile(); // Refresh data terbaru
+    setActiveTab("overview"); // Kembali ke ringkasan
+  };
+
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-slate-50">
-      <div className="text-center">
-        <div className="mx-auto mb-4 size-16 animate-spin rounded-full border-8 border-slate-200 border-t-blue-600"></div>
-        <p className="font-black uppercase italic tracking-widest text-slate-400">Otoritas Terverifikasi...</p>
-      </div>
+    <div className="flex h-screen flex-col items-center justify-center bg-slate-50" role="status" aria-label="Memuat Dashboard">
+      <Loader2 className="mb-4 animate-spin text-blue-600" size={48} />
+      <p className="font-black uppercase italic tracking-widest text-slate-400">Sinkronisasi Otoritas...</p>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
       
-      {/* 1. TOP UTILITY BAR (Aksesibilitas & Quick Actions) */}
-      <div className="sticky top-0 z-40 flex items-center justify-between border-b-4 border-slate-900 bg-white px-6 py-3 shadow-sm">
+      {/* TOP UTILITY BAR */}
+      <nav className="sticky top-0 z-40 flex items-center justify-between border-b-4 border-slate-900 bg-white px-6 py-3 shadow-sm" aria-label="Aksi Cepat">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-slate-900 p-2 text-white">
-            <ShieldCheck size={20} />
-          </div>
+          <ShieldCheck className="text-slate-900" size={20} aria-hidden="true" />
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-            Official Government Portal • {govData?.location || "Wilayah Belum Diset"}
+            Portal Resmi • {govData?.location || "Wilayah Belum Ditentukan"}
           </span>
         </div>
         
         <div className="flex items-center gap-4">
-          <button className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100">
+          <button className="rounded-full p-2 text-slate-400 hover:bg-slate-100" aria-label="Lihat Notifikasi">
             <Bell size={20} />
           </button>
           <a 
@@ -77,42 +95,60 @@ export default function GovDashboard({ user }: { user: any }) {
             target="_blank"
             className="flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-white px-4 py-1.5 text-[10px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
           >
-            <Eye size={14} /> Lihat Profil Publik
+            <Eye size={14} aria-hidden="true" /> Lihat Profil Publik
           </a>
         </div>
-      </div>
+      </nav>
 
       <div className="mx-auto max-w-7xl px-6 pt-10">
         
-        {/* 2. HEADER & PROFILE CHECKER */}
-        <header className="mb-12 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        {/* HEADER & PROGRESS PROFILE */}
+        <header className="mb-12 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 md:text-5xl">
-              {activeTab === 'overview' && "Dashboard Otoritas"}
-              {activeTab === 'directory' && "Database Talenta"}
-              {activeTab === 'partnership' && "Kemitraan Industri"}
-              {activeTab === 'profile' && "Pengaturan Instansi"}
+            <h1 
+              ref={headingRef}
+              tabIndex={-1}
+              className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 outline-none md:text-5xl"
+            >
+              {activeTab === 'overview' && "Ringkasan Wilayah"}
+              {activeTab === 'directory' && "Direktori Talenta"}
+              {activeTab === 'partnership' && "Manajer Kemitraan"}
+              {activeTab === 'profile' && "Profil Otoritas"}
             </h1>
             <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
-              Selamat Datang, Admin {govData?.name || "Instansi Baru"}
+              Admin: {govData?.name || "Pemerintah RI"}
             </p>
           </div>
 
-          {/* Widget Kelengkapan Profil */}
-          {profileCompletion < 100 && (
-            <div className="flex items-center gap-6 rounded-3xl border-4 border-slate-900 bg-amber-50 p-6 shadow-[8px_8px_0px_0px_rgba(245,158,11,1)]">
-              <AlertTriangle className="shrink-0 text-amber-500" size={32} />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Lengkapi Profil Otoritas</p>
-                <div className="mt-1 h-3 w-48 overflow-hidden rounded-full border-2 border-slate-900 bg-white">
-                  <div className="h-full bg-amber-400 transition-all" style={{ width: `${profileCompletion}%` }}></div>
-                </div>
+          {/* Widget Kelengkapan Profil yang Aksesibel */}
+          {profileCompletion.percent < 100 && (
+            <div 
+              className="max-w-xs rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]"
+              role="region" 
+              aria-label="Status Kelengkapan Profil"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Kesiapan Profil</span>
+                <span className="text-xs font-black text-blue-600">{Math.round(profileCompletion.percent)}%</span>
               </div>
+              <div className="mb-4 h-4 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
+                <div 
+                  className="h-full bg-blue-500 transition-all" 
+                  style={{ width: `${profileCompletion.percent}%` }}
+                  role="progressbar"
+                  aria-valuenow={profileCompletion.percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                ></div>
+              </div>
+              <p className="mb-4 text-[9px] font-bold text-slate-400">
+                Kurang: {profileCompletion.missing.join(", ")}
+              </p>
               <button 
                 onClick={() => setActiveTab("profile")}
-                className="rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-white transition-colors hover:bg-amber-600"
+                className="w-full rounded-xl bg-slate-900 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:bg-blue-600"
               >
-                Lengkapi
+                Lengkapi Sekarang
               </button>
             </div>
           )}
@@ -120,57 +156,72 @@ export default function GovDashboard({ user }: { user: any }) {
 
         <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
           
-          {/* 3. MAIN NAVIGATION (SIDEBAR STYLE) */}
-          <nav className="sticky top-24 flex h-fit flex-col gap-3">
+          {/* SIDEBAR NAVIGATION */}
+          <nav className="sticky top-24 flex h-fit flex-col gap-3" aria-label="Menu Utama">
             <NavButton 
               active={activeTab === 'overview'} 
               onClick={() => setActiveTab('overview')}
               icon={<LayoutDashboard size={20} />}
-              label="Ringkasan Wilayah"
+              label="Overview"
+              ariaLabel="Buka Ringkasan Statistik Wilayah"
             />
             <NavButton 
               active={activeTab === 'directory'} 
               onClick={() => setActiveTab('directory')}
               icon={<Users2 size={20} />}
-              label="Database Talenta"
+              label="Talenta"
+              ariaLabel="Buka Database Talenta Disabilitas"
             />
             <NavButton 
               active={activeTab === 'partnership'} 
               onClick={() => setActiveTab('partnership')}
               icon={<Building2 size={20} />}
-              label="Mitra Industri"
+              label="Kemitraan"
+              ariaLabel="Buka Manajemen Kemitraan Industri"
             />
             <div className="my-4 border-t-4 border-slate-100 pt-4">
               <NavButton 
                 active={activeTab === 'profile'} 
                 onClick={() => setActiveTab('profile')}
                 icon={<Settings size={20} />}
-                label="Profil & Otoritas"
+                label="Pengaturan"
+                ariaLabel="Buka Pengaturan Profil dan Otoritas"
               />
             </div>
 
-            {/* QUICK ACTIONS PANEL */}
-            <div className="mt-6 rounded-3xl border-4 border-slate-900 bg-blue-600 p-6 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-              <h4 className="mb-4 text-center text-[10px] font-black uppercase tracking-widest opacity-80">Export Laporan Riset</h4>
+            {/* EXPORT LAPORAN - CLEAN VERSION */}
+            <div className="mt-6 rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(59,130,246,1)]">
+              <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Export Laporan</p>
               <div className="grid grid-cols-2 gap-3">
-                <button className="flex flex-col items-center gap-2 rounded-xl bg-white/20 p-3 transition-colors hover:bg-white/30">
-                  <Download size={20} />
-                  <span className="text-[8px] font-black uppercase">CSV</span>
+                <button 
+                  aria-label="Export Laporan ke Excel"
+                  className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-900 bg-slate-50 p-3 transition-all hover:bg-emerald-50 hover:text-emerald-600"
+                >
+                  <FileSpreadsheet size={20} />
+                  <span className="text-[8px] font-black">EXCEL</span>
                 </button>
-                <button className="flex flex-col items-center gap-2 rounded-xl bg-white/20 p-3 transition-colors hover:bg-white/30">
-                  <Share2 size={20} />
-                  <span className="text-[8px] font-black uppercase">Share</span>
+                <button 
+                  aria-label="Export Laporan ke PDF"
+                  className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-900 bg-slate-50 p-3 transition-all hover:bg-rose-50 hover:text-rose-600"
+                >
+                  <FileText size={20} />
+                  <span className="text-[8px] font-black">PDF</span>
                 </button>
               </div>
             </div>
           </nav>
 
-          {/* 4. DYNAMIC CONTENT AREA */}
-          <main className="min-h-[600px]">
+          {/* DYNAMIC CONTENT AREA */}
+          <main className="min-h-[600px]" role="tabpanel" aria-labelledby={activeTab}>
             {activeTab === "overview" && <GovAnalyticsOverview govData={govData} />}
             {activeTab === "directory" && <GovTalentDirectory govData={govData} />}
             {activeTab === "partnership" && <GovPartnershipManager govData={govData} />}
-            {activeTab === "profile" && <GovProfileEditor user={user} />}
+            {activeTab === "profile" && (
+              <GovProfileEditor 
+                user={user} 
+                onSaveSuccess={handleSaveSuccess} 
+              />
+            )}
           </main>
 
         </div>
@@ -179,12 +230,13 @@ export default function GovDashboard({ user }: { user: any }) {
   );
 }
 
-// Sub-komponen Navigasi agar kode bersih
-function NavButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+function NavButton({ active, onClick, icon, label, ariaLabel }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; ariaLabel: string }) {
   return (
     <button 
       onClick={onClick}
-      className={`group flex items-center gap-4 rounded-2xl border-4 p-4 transition-all ${
+      aria-label={ariaLabel}
+      aria-current={active ? "page" : undefined}
+      className={`group flex items-center gap-4 rounded-2xl border-4 p-4 transition-all outline-none focus:ring-4 focus:ring-blue-200 ${
         active 
         ? 'border-slate-900 bg-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]' 
         : 'border-transparent text-slate-400 hover:border-slate-200 hover:text-slate-600'
