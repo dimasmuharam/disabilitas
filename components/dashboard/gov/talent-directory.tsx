@@ -4,10 +4,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Users2, Search, Filter, FileSpreadsheet, 
-  MapPin, Loader2, ChevronRight 
+  MapPin, Loader2, ExternalLink 
 } from "lucide-react";
 import { PROVINCE_MAP } from "@/lib/constants/locations";
 import { exportGovTalentReport } from "./export-logic";
+import { generateGovTalentPDF } from "./cv-generator"; // Import generator CV baru
 
 interface GovTalentDirectoryProps {
   govData: any; 
@@ -19,6 +20,7 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDisability, setFilterDisability] = useState("Semua");
   const [isExporting, setIsExporting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState<string | null>(null);
 
   const fetchLocalTalents = useCallback(async () => {
     if (!govData?.location) return;
@@ -26,16 +28,12 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
     try {
       let query = supabase.from("profiles").select("*");
 
-      // LOGIKA FILTER TERBARU (STRING MAPPING)
       if (govData.category === "ULD Ketenagakerjaan Provinsi") {
-        // Ambil semua kota yang masuk dalam provinsi tersebut di PROVINCE_MAP
         const citiesInProvince = PROVINCE_MAP[govData.location] || [];
         query = query.in("city", citiesInProvince);
       } else if (govData.category === "ULD Ketenagakerjaan Kota/Kabupaten") {
-        // Filter kota spesifik
         query = query.eq("city", govData.location);
       }
-      // Jika Kementerian, tidak difilter (Nasional)
 
       const { data, error } = await query.order('full_name', { ascending: true });
       if (error) throw error;
@@ -50,6 +48,18 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
   useEffect(() => {
     fetchLocalTalents();
   }, [fetchLocalTalents]);
+
+  // Fungsi untuk Trigger Download CV Aksesibel
+  const handleDownloadCV = async (talentId: string, talentName: string) => {
+    setIsGenerating(talentId);
+    try {
+      await generateGovTalentPDF(talentId, govData.name, govData.official_seal_url);
+    } catch (err) {
+      alert("Gagal membuat CV. Silakan coba lagi.");
+    } finally {
+      setIsGenerating(null);
+    }
+  };
 
   const filteredData = talents.filter(t => {
     const matchName = t.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -85,7 +95,6 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
           onClick={handleExportClick}
           disabled={isExporting}
           className="flex items-center gap-2 rounded-xl border-4 border-slate-900 bg-emerald-400 px-6 py-3 text-[10px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-y-1 hover:shadow-none disabled:opacity-50"
-          aria-label="Unduh daftar talenta ke Excel"
         >
           {isExporting ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
           {isExporting ? "Memproses..." : "Export Excel"}
@@ -93,12 +102,11 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
       </div>
 
       {/* 2. FILTER & SEARCH CONTROL */}
-      <div className="grid gap-4 md:grid-cols-3" role="search" aria-label="Filter Talenta">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="group relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} aria-hidden="true" />
           <input 
             type="text" 
-            aria-label="Cari nama talenta"
             placeholder="Cari berdasarkan nama..." 
             className="w-full rounded-2xl border-4 border-slate-900 p-4 pl-12 font-bold outline-none focus:ring-4 focus:ring-blue-100"
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -108,7 +116,6 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
         <div className="relative">
           <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
           <select 
-            aria-label="Filter ragam disabilitas"
             onChange={(e) => setFilterDisability(e.target.value)}
             className="w-full cursor-pointer appearance-none rounded-2xl border-4 border-slate-900 bg-white p-4 pl-12 font-black uppercase italic outline-none focus:ring-4 focus:ring-blue-100"
           >
@@ -121,7 +128,7 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
           </select>
         </div>
 
-        <div className="flex items-center justify-center rounded-2xl border-4 border-slate-900 bg-slate-100 p-4" aria-live="polite">
+        <div className="flex items-center justify-center rounded-2xl border-4 border-slate-900 bg-slate-100 p-4">
           <span className="text-xs font-black uppercase italic">Ditemukan: {filteredData.length} Talenta</span>
         </div>
       </div>
@@ -129,20 +136,20 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
       {/* 3. TALENT LIST TABLE */}
       <div className="overflow-hidden rounded-[2.5rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
         {loading ? (
-          <div className="flex flex-col items-center justify-center gap-6 p-24" role="status">
+          <div className="flex flex-col items-center justify-center gap-6 p-24">
             <Loader2 className="animate-spin text-blue-600" size={48} />
             <p className="font-black uppercase italic text-slate-400">Memindai Wilayah...</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left" role="table">
+            <table className="w-full border-collapse text-left">
               <thead className="bg-slate-900 text-[10px] font-black uppercase tracking-[0.2em] text-white">
                 <tr>
                   <th scope="col" className="p-6">Data Personal</th>
                   <th scope="col" className="p-6">Ragam Disabilitas</th>
                   <th scope="col" className="p-6">Pendidikan</th>
                   <th scope="col" className="p-6">Status Karir</th>
-                  <th scope="col" className="p-6 text-center">Detail</th>
+                  <th scope="col" className="p-6 text-center">CV Resmi</th>
                 </tr>
               </thead>
               <tbody className="divide-y-4 divide-slate-100">
@@ -167,24 +174,23 @@ export default function GovTalentDirectory({ govData }: GovTalentDirectoryProps)
                     </td>
                     <td className="p-6 text-center">
                       <button 
-                        aria-label={`Lihat detail ${talent.full_name}`}
-                        className="rounded-xl border-4 border-slate-900 p-3 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-900 hover:text-white hover:shadow-none active:translate-y-1"
+                        onClick={() => handleDownloadCV(talent.id, talent.full_name)}
+                        disabled={isGenerating === talent.id}
+                        aria-label={`Unduh CV Resmi ${talent.full_name}`}
+                        className="flex items-center gap-2 mx-auto rounded-xl border-4 border-slate-900 bg-white p-3 font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-900 hover:text-white hover:shadow-none disabled:opacity-50"
                       >
-                        <ChevronRight size={20} aria-hidden="true" />
+                        {isGenerating === talent.id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <ExternalLink size={16} />
+                        )}
+                        <span className="text-[9px]">Unduh CV</span>
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-
-        {!loading && filteredData.length === 0 && (
-          <div className="p-24 text-center" role="status">
-            <Users2 className="mx-auto mb-6 text-slate-300" size={64} />
-            <h4 className="text-xl font-black uppercase italic text-slate-400">Wilayah Masih Kosong</h4>
-            <p className="mt-2 text-xs font-bold uppercase text-slate-300">Belum ada talenta terdaftar di {govData.location}</p>
           </div>
         )}
       </div>

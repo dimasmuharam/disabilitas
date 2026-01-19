@@ -5,9 +5,9 @@ import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { 
   Building2, ShieldCheck, Search, Info, 
-  CheckCircle, XCircle, Loader2, ExternalLink,
-  Award, Briefcase
+  Loader2, MapPin, ShieldAlert
 } from "lucide-react";
+import { PROVINCE_MAP } from "@/lib/constants/locations";
 
 export default function GovPartnershipManager({ govData }: { govData: any }) {
   const [companies, setCompanies] = useState<any[]>([]);
@@ -15,43 +15,48 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchLocalCompanies = useCallback(async () => {
+    if (!govData?.location) return;
     setLoading(true);
     try {
       let query = supabase.from("companies").select("*");
 
-      // LOGIKA FILTER WILAYAH (Sama dengan Talent)
+      // LOGIKA FILTER STRING MAPPING
       if (govData.category.includes("Provinsi")) {
-        query = query.like("city_id", `${govData.location_id}%`);
-      } else if (govData.category.includes("Kota/Kabupaten")) {
-        query = query.eq("city_id", govData.location_id);
+        const citiesInProvince = PROVINCE_MAP[govData.location] || [];
+        query = query.in("location", citiesInProvince);
+      } else {
+        query = query.eq("location", govData.location);
       }
 
       const { data, error } = await query.order('name', { ascending: true });
       if (error) throw error;
       setCompanies(data || []);
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Fetch Error:", err);
     } finally {
       setLoading(false);
     }
-  }, [govData.category, govData.location_id]);
+  }, [govData]);
 
   useEffect(() => {
-    if (govData?.location_id) {
-      fetchLocalCompanies();
-    }
-  }, [govData?.location_id, fetchLocalCompanies]);
+    fetchLocalCompanies();
+  }, [fetchLocalCompanies]);
 
-  const toggleVerification = async (companyId: string, currentStatus: boolean) => {
+  const toggleVerification = async (companyId: string, currentStatus: boolean, companyName: string) => {
     const { error } = await supabase
       .from("companies")
-      .update({ is_verified_by_uld: !currentStatus })
+      .update({ 
+        is_verified: !currentStatus, // Sinkron dengan skema kolom 'is_verified'
+        uld_verified_at: !currentStatus ? new Date().toISOString() : null,
+        uld_verified_by: govData.id
+      })
       .eq("id", companyId);
 
     if (!error) {
       setCompanies(prev => prev.map(c => 
-        c.id === companyId ? { ...c, is_verified_by_uld: !currentStatus } : c
+        c.id === companyId ? { ...c, is_verified: !currentStatus } : c
       ));
+      // Opsional: Tambahkan notifikasi toast sukses di sini
     }
   };
 
@@ -66,15 +71,17 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
       <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-4">
-            <div className="rounded-2xl bg-emerald-500 p-4 text-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+            <div className="rounded-2xl bg-emerald-500 p-4 text-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]" aria-hidden="true">
               <Building2 size={32} />
             </div>
             <div>
-              <h3 className="text-2xl font-black uppercase italic tracking-tight">Kemitraan Industri</h3>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Manajemen Perusahaan di Wilayah {govData.location}</p>
+              <h2 className="text-2xl font-black uppercase italic tracking-tight text-slate-900">Kemitraan Industri</h2>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Otoritas Wilayah: {govData.location}
+              </p>
             </div>
           </div>
-          <div className="flex gap-4 rounded-2xl border-2 border-slate-900 bg-slate-100 p-4">
+          <div className="flex gap-4 rounded-2xl border-2 border-slate-900 bg-slate-100 p-4" aria-label="Statistik Kemitraan">
              <div className="border-r-2 border-slate-300 px-4 text-center">
                 <p className="text-[9px] font-black uppercase text-slate-500">Total Mitra</p>
                 <p className="text-xl font-black">{companies.length}</p>
@@ -82,7 +89,7 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
              <div className="px-4 text-center">
                 <p className="text-[9px] font-black uppercase text-emerald-500">Terverifikasi</p>
                 <p className="text-xl font-black text-emerald-600">
-                  {companies.filter(c => c.is_verified_by_uld).length}
+                  {companies.filter(c => c.is_verified).length}
                 </p>
              </div>
           </div>
@@ -90,10 +97,11 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
       </div>
 
       {/* 2. SEARCH BAR */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+      <div className="relative group" role="search">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500" size={20} aria-hidden="true" />
         <input 
           type="text" 
+          aria-label="Cari nama perusahaan mitra"
           placeholder="Cari berdasarkan nama perusahaan..." 
           className="w-full rounded-2xl border-4 border-slate-900 p-4 pl-12 font-bold outline-none transition-all focus:ring-4 focus:ring-emerald-100"
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -102,21 +110,26 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
 
       {/* 3. COMPANY GRID */}
       {loading ? (
-        <div className="flex justify-center p-20"><Loader2 className="animate-spin text-emerald-500" size={48} /></div>
+        <div className="flex flex-col items-center justify-center p-20" role="status">
+          <Loader2 className="animate-spin text-emerald-500" size={48} />
+          <p className="mt-4 font-black uppercase italic text-slate-400">Memuat Data Industri...</p>
+        </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           {filteredCompanies.map((company) => (
-            <div key={company.id} className="group relative rounded-[2rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none">
-              
-              {/* Badge Status */}
-              <div className="absolute right-6 top-6">
-                {company.is_verified_by_uld ? (
+            <article 
+              key={company.id} 
+              className="group relative rounded-[2rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+            >
+              {/* Badge Status Aksesibel */}
+              <div className="absolute right-6 top-6" aria-live="polite">
+                {company.is_verified ? (
                   <div className="flex items-center gap-1 rounded-full border-2 border-emerald-600 bg-emerald-100 px-3 py-1 text-[9px] font-black uppercase text-emerald-600">
-                    <ShieldCheck size={12} /> Verified
+                    <ShieldCheck size={12} aria-hidden="true" /> Terverifikasi ULD
                   </div>
                 ) : (
-                  <div className="rounded-full border-2 border-slate-200 bg-slate-100 px-3 py-1 text-[9px] font-black uppercase text-slate-400">
-                    Unverified
+                  <div className="flex items-center gap-1 rounded-full border-2 border-slate-200 bg-slate-100 px-3 py-1 text-[9px] font-black uppercase text-slate-400">
+                    <ShieldAlert size={12} aria-hidden="true" /> Belum Verifikasi
                   </div>
                 )}
               </div>
@@ -125,56 +138,60 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
                 <div className="size-16 overflow-hidden rounded-xl border-2 border-slate-900 bg-slate-50">
                    <Image 
                      src={company.logo_url || '/placeholder-company.png'} 
-                     alt={company.name} 
+                     alt={`Logo ${company.name}`} 
                      width={64}
                      height={64}
-                     unoptimized={true}
                      className="size-full object-cover" 
                    />
                 </div>
                 <div className="flex-1">
                   <h4 className="mb-1 text-lg font-black uppercase italic leading-tight text-slate-900">{company.name}</h4>
-                  <p className="mb-4 text-[10px] font-bold uppercase text-slate-400">{company.industry}</p>
+                  <p className="text-[10px] font-bold uppercase text-slate-400">{company.industry || 'Industri Umum'}</p>
                 </div>
               </div>
 
               <div className="mt-6 flex items-center justify-between border-t-2 border-slate-50 pt-6">
-                <div className="flex gap-4">
+                <div className="flex gap-4" aria-label="Statistik Perusahaan">
                   <div className="text-center">
-                    <p className="text-[8px] font-black uppercase tracking-tighter text-slate-400">Loker</p>
+                    <p className="text-[8px] font-black uppercase text-slate-400">Loker</p>
                     <p className="text-sm font-black">{company.active_jobs_count || 0}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[8px] font-black uppercase tracking-tighter text-slate-400">Disabilitas</p>
-                    <p className="text-sm font-black">{company.disabled_workers_count || 0}</p>
+                    <p className="text-[8px] font-black uppercase text-slate-400">Karyawan Disabilitas</p>
+                    <p className="text-sm font-black">{company.total_employees_with_disability || 0}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                   <button 
-                    onClick={() => toggleVerification(company.id, company.is_verified_by_uld)}
-                    className={`rounded-xl border-2 border-slate-900 px-4 py-2 text-[10px] font-black uppercase italic transition-all ${
-                      company.is_verified_by_uld 
-                      ? 'bg-rose-400 hover:bg-rose-500' 
-                      : 'bg-emerald-400 hover:bg-emerald-500'
-                    }`}
-                   >
-                    {company.is_verified_by_uld ? 'Cabut Verifikasi' : 'Berikan Verifikasi'}
-                   </button>
-                </div>
+                <button 
+                  onClick={() => toggleVerification(company.id, company.is_verified, company.name)}
+                  aria-label={company.is_verified ? `Cabut verifikasi untuk ${company.name}` : `Berikan verifikasi untuk ${company.name}`}
+                  className={`rounded-xl border-2 border-slate-900 px-4 py-2 text-[10px] font-black uppercase italic transition-all ${
+                    company.is_verified 
+                    ? 'bg-rose-400 hover:bg-rose-500' 
+                    : 'bg-emerald-400 hover:bg-emerald-500'
+                  }`}
+                >
+                  {company.is_verified ? 'Cabut Verifikasi' : 'Verifikasi Mitra'}
+                </button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}
 
-      {/* FOOTER INFO */}
-      <div className="flex items-start gap-4 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-6">
-        <Info className="shrink-0 text-amber-500" />
-        <p className="text-[11px] font-bold uppercase leading-relaxed text-amber-700">
-          <span className="font-black">PENTING:</span> Verifikasi ULD memberikan kepercayaan lebih bagi talenta disabilitas untuk melamar. Pastikan Anda telah melakukan visitasi atau pengecekan dokumen akomodasi layak perusahaan sebelum memberikan verifikasi.
-        </p>
-      </div>
+      {/* FOOTER INFO - AKSESIBILITAS TINGGI */}
+      <section 
+        className="flex items-start gap-4 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-6"
+        aria-labelledby="disclaimer-title"
+      >
+        <Info className="shrink-0 text-amber-500" aria-hidden="true" />
+        <div>
+          <h5 id="disclaimer-title" className="text-[11px] font-black uppercase text-amber-700">Panduan Otoritas</h5>
+          <p className="mt-1 text-[11px] font-bold leading-relaxed text-amber-700">
+            Pastikan Anda telah melakukan visitasi atau verifikasi dokumen akomodasi layak perusahaan sebelum memberikan status mitra resmi. Status ini akan memprioritaskan loker mereka di halaman depan talenta.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

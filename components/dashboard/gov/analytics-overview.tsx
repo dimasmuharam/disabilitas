@@ -4,9 +4,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   BarChart3, Users, Building2, Briefcase, 
-  TrendingUp, PieChart, MapPin, Loader2 
+  TrendingUp, PieChart, MapPin, Loader2,
+  Share2, MessageCircle
 } from "lucide-react";
 import { PROVINCE_MAP } from "@/lib/constants/locations";
+import { handleGovShare } from "./share-logic";
+import GovInclusionCard from "./inclusion-card"; // Import Inclusion Card
 
 interface Stats {
   totalTalents: number;
@@ -25,33 +28,27 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
     setLoading(true);
     
     try {
-      // 1. Persiapkan Filter Wilayah (String Mapping)
       let targetLocations: string[] = [govData.location];
-      
       if (govData.category === "ULD Ketenagakerjaan Provinsi") {
         targetLocations = PROVINCE_MAP[govData.location] || [govData.location];
       }
 
-      // 2. Fetch Talenta
       const { data: talentData } = await supabase
         .from("profiles")
         .select("disability_type, career_status")
         .in("city", targetLocations);
 
-      // 3. Fetch Perusahaan (Gunakan filter 'location' sesuai skema)
       const { count: companyCount } = await supabase
         .from("companies")
         .select("id", { count: 'exact', head: true })
         .in("location", targetLocations);
 
-      // 4. Fetch Loker Aktif
       const { count: jobCount } = await supabase
         .from("jobs")
         .select("id", { count: 'exact', head: true })
         .in("location", targetLocations)
         .eq("is_active", true);
 
-      // Logika Kalkulasi Distribusi & Keterserapan
       const dist: Record<string, number> = {};
       let employedCount = 0;
 
@@ -59,7 +56,6 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
         if (t.disability_type) {
           dist[t.disability_type] = (dist[t.disability_type] || 0) + 1;
         }
-        // ASN, Pegawai Swasta, BUMN, Wiraswasta dianggap employed
         if (t.career_status && !['Job Seeker', 'Belum Bekerja', 'Fresh Graduate'].includes(t.career_status)) {
           employedCount++;
         }
@@ -83,6 +79,20 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
   useEffect(() => {
     calculateStats();
   }, [calculateStats]);
+
+  const onShareStats = (mode: 'viral' | 'formal') => {
+    if (!stats) return;
+    const hiredCount = Math.round((stats.employmentRate / 100) * stats.totalTalents);
+    
+    handleGovShare({
+      locationName: govData.location,
+      totalTalents: stats.totalTalents,
+      hiredTalents: hiredCount,
+      hiredPercentage: `${stats.employmentRate}%`,
+      url: `https://disabilitas.com/gov/${govData.id}`,
+      mode: mode
+    });
+  };
 
   if (loading) return (
     <div className="flex h-96 flex-col items-center justify-center gap-4" role="status">
@@ -123,12 +133,30 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
         />
       </div>
 
-      {/* 2. CHART SECTION */}
+      {/* 2. INCLUSION CARD (SINKRONISASI BARU) */}
+      {stats && (
+        <section className="animate-in fade-in zoom-in-95 duration-500 delay-200">
+          <GovInclusionCard 
+            govData={{
+              id: govData.id,
+              name: govData.name,
+              location: govData.location,
+              official_seal_url: govData.official_seal_url
+            }}
+            stats={{
+              total: stats.totalTalents,
+              hired: Math.round((stats.employmentRate / 100) * stats.totalTalents),
+              percentage: `${stats.employmentRate}%`
+            }}
+          />
+        </section>
+      )}
+
+      {/* 3. CHART & INFO SECTION */}
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Distribusi Ragam Disabilitas */}
         <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-2">
           <div className="mb-8 flex items-center justify-between">
-            <h3 className="flex items-center gap-3 text-xl font-black uppercase italic tracking-tight">
+            <h3 className="flex items-center gap-3 text-xl font-black uppercase italic tracking-tight text-slate-900">
               <PieChart className="text-blue-600" aria-hidden="true" />
               Sebaran Ragam Disabilitas
             </h3>
@@ -146,7 +174,7 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
                   <div className="h-4 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
                     <div 
                       role="img"
-                      aria-label={`${type}: ${count} jiwa, atau ${percentage} persen dari total talenta`}
+                      aria-label={`${type}: ${count} jiwa, atau ${percentage} persen`}
                       className="h-full bg-blue-500 transition-all duration-1000 group-hover:bg-blue-600" 
                       style={{ width: `${percentage}%` }}
                     ></div>
@@ -157,25 +185,29 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
           </div>
         </section>
 
-        {/* Info Otoritas Quick View */}
-        <aside className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[12px_12px_0px_0px_rgba(59,130,246,1)]">
+        <aside className="flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[12px_12px_0px_0px_rgba(59,130,246,1)]">
           <MapPin size={40} className="mb-6 text-blue-400" aria-hidden="true" />
           <h3 className="mb-4 text-2xl font-black uppercase italic leading-tight">
             Yurisdiksi {govData.location}
           </h3>
-          <p className="mb-8 text-sm font-medium italic text-slate-400">
-            Data real-time untuk mendukung monitoring ULD level {govData.category}.
-          </p>
-          <div className="space-y-4 border-t-2 border-slate-800 pt-6">
-            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-              <span>Admin Otoritas:</span>
-              <span className="text-blue-400">{govData.name}</span>
-            </div>
-            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-              <span>Status Akun:</span>
-              <span className={govData.is_verified ? "text-emerald-400" : "text-amber-400"}>
-                {govData.is_verified ? "Terverifikasi" : "Menunggu Verifikasi"}
-              </span>
+          
+          <div className="mt-auto space-y-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Aksi Cepat Laporan</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => onShareStats('viral')}
+                className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800 p-4 transition-all hover:bg-blue-600 hover:border-white"
+              >
+                <Share2 size={20} />
+                <span className="text-[8px] font-black">MEDSOS</span>
+              </button>
+              <button 
+                onClick={() => onShareStats('formal')}
+                className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800 p-4 transition-all hover:bg-emerald-600 hover:border-white"
+              >
+                <MessageCircle size={20} />
+                <span className="text-[8px] font-black">LAPORAN</span>
+              </button>
             </div>
           </div>
         </aside>
