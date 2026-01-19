@@ -8,9 +8,7 @@ import {
   FileSpreadsheet, FileText, Eye, Bell, ShieldCheck, Loader2
 } from "lucide-react";
 
-// Import Logika Export yang sudah kita sesuaikan dengan sistem String Mapping
-import { exportGovTalentReport, exportGovCompanyReport } from "@/lib/export-logic";
-
+import { exportGovTalentReport, exportGovCompanyReport } from "./gov/export-logic";
 // Sub-modul
 import GovAnalyticsOverview from "./gov/analytics-overview";
 import GovTalentDirectory from "./gov/talent-directory";
