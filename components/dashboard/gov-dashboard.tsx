@@ -32,8 +32,7 @@ export default function GovDashboard({ user }: { user: any }) {
       { key: 'description', label: 'Deskripsi' },
       { key: 'whatsapp_official', label: 'Kontak WhatsApp' },
       { key: 'official_seal_url', label: 'Logo/Stempel Resmi' }
-    ];
-    const missing = fields.filter(f => !data[f]).map(f => f.label);
+const missing = fields.filter(f => !data[f.key]).map(f => f.label);    ];
     const percent = ((fields.length - missing.length) / fields.length) * 100;
     setProfileCompletion({ percent, missing });
   }, []);
