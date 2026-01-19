@@ -77,7 +77,7 @@ export default function KonfirmasiPendaftaran() {
           <div className="rounded-md bg-blue-50 p-4 border-l-4 border-blue-400" role="alert">
             <h2 className="text-sm font-medium text-blue-800">Instruksi:</h2>
             <ul className="mt-2 text-sm text-blue-700 list-disc pl-5 space-y-1">
-              <li>Klik tombol <strong>"Confirm Email"</strong> di inbox Anda.</li>
+              <li>Klik tombol <strong>Confirm Email</strong> di inbox Anda.</li>
               <li>Cek folder <strong>Spam/Promosi</strong> jika tidak ada.</li>
             </ul>
           </div>

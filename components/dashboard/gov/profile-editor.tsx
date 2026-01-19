@@ -201,7 +201,6 @@ export default function GovProfileEditor({ user }: GovProfileEditorProps) {
                     id="search-region"
                     type="text"
                     autoComplete="off"
-                    aria-expanded={regionResults.length > 0}
                     aria-autocomplete="list"
                     aria-controls="region-results"
                     placeholder={formData.location || "Ketik min. 2 huruf..."}
