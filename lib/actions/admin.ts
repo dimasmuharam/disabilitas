@@ -1,15 +1,15 @@
 "use server"
 
-import { supabase } from "@/lib/supabase"
+// Kita import supabaseAdmin (Kunci Master) untuk bypass RLS
+import { supabaseAdmin } from "@/lib/supabase"
 
 /**
  * PUSAT DATA NASIONAL (RESEARCH AGGREGATOR)
- * Mengambil statistik demografi & variabel riset BRIN dari tabel profiles.
+ * Menggunakan supabaseAdmin untuk memastikan data 10 responden Mas terbaca sepenuhnya.
  */
 export async function getNationalStats() {
   try {
-    // Menghapus filter .eq("role", "talent") karena role sudah dikelola via metadata
-    const { data: profiles, error } = await supabase
+    const { data: profiles, error } = await supabaseAdmin
       .from("profiles")
       .select(`
         disability_type, career_status, education_level, 
@@ -59,7 +59,6 @@ export async function getNationalStats() {
         laptop: profiles.filter(p => p.has_laptop).length,
         smartphone: profiles.filter(p => p.has_smartphone).length,
         internet: countDist(profiles, "internet_quality"),
-        // Kalkulasi persentase fiber untuk progress bar
         internetFiberPct: Math.round((profiles.filter(p => p.internet_quality === 'fiber').length / profiles.length) * 100) || 0
       },
       employmentRate: {
@@ -77,18 +76,15 @@ export async function getNationalStats() {
 
 /**
  * ANALISA TRANSISI & DATA LONGITUDINAL
- * Mengambil data dari VIEW research_transition_analysis atau fallback ke profiles.
  */
 export async function getTransitionInsights() {
   try {
-    // Mencoba mengambil data dari view yang kita buat tadi
-    const { data: transitionData, error: tError } = await supabase
+    const { data: transitionData, error: tError } = await supabaseAdmin
       .from("research_transition_analysis")
       .select("*")
 
-    // Jika view belum ada (error 404/42P01), jangan lempar error, gunakan fallback profiles
     if (tError) {
-      const { data: fallbackData } = await supabase.from("profiles").select("education_model, career_status")
+      const { data: fallbackData } = await supabaseAdmin.from("profiles").select("education_model, career_status")
       const inklusiWork = fallbackData?.filter(d => d.education_model?.includes("inklusi") && d.career_status !== "Job Seeker").length || 0
       return {
         narrative: `Data transisi sedang dikalkulasi manual. Tercatat ${inklusiWork} responden inklusi telah terserap kerja.`
@@ -112,7 +108,7 @@ export async function getTransitionInsights() {
  */
 export async function getManualInputAudit() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("manual_input_logs")
       .select("*")
       .eq("is_reviewed", false)
@@ -132,10 +128,10 @@ export async function getManualInputAudit() {
 export async function manageAdminUser(action: "EDIT" | "DELETE", table: "profiles" | "companies", payload: any) {
   try {
     if (action === "DELETE") {
-      const { error } = await supabase.from(table).delete().eq("id", payload.id)
+      const { error } = await supabaseAdmin.from(table).delete().eq("id", payload.id)
       if (error) throw error
     } else if (action === "EDIT") {
-      const { error } = await supabase.from(table).update(payload).eq("id", payload.id)
+      const { error } = await supabaseAdmin.from(table).update(payload).eq("id", payload.id)
       if (error) throw error
     }
     return { success: true, error: null }
@@ -145,7 +141,7 @@ export async function manageAdminUser(action: "EDIT" | "DELETE", table: "profile
 }
 
 /**
- * SETUP ADMIN LOCK (OTORITAS INSTRUMEN)
+ * SETUP ADMIN LOCK
  */
 export async function setupAdminLock(profileId: string, lockType: "agency" | "partner", lockValue: string) {
   try {
@@ -153,7 +149,7 @@ export async function setupAdminLock(profileId: string, lockType: "agency" | "pa
       ? { admin_agency_lock: lockValue } 
       : { admin_partner_lock: lockValue };
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("profiles")
       .update(updateData)
       .eq("id", profileId)
