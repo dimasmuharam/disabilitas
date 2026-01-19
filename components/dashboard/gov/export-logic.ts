@@ -1,87 +1,68 @@
 import { supabase } from "@/lib/supabase";
-import { downloadCSV } from "../campus/export-helper";
+import * as XLSX from "xlsx"; // Pastikan sudah terinstall
+import { jsPDF } from "jspdf"; // Pastikan sudah terinstall
+import autoTable from "jspdf-autotable";
 
 /**
- * FUNGSI 1: Laporan Data Talenta Wilayah (Filter berdasarkan String Lokasi)
+ * FUNGSI 1: Export EXCEL (Menggunakan Library XLSX)
  */
-export const exportGovTalentReport = async (locationName: string) => {
-  if (!locationName) return { success: false, message: "Wilayah otoritas belum ditentukan." };
-
+export const exportGovExcel = async (locationName: string) => {
   try {
-    // KLARIFIKASI: Di tabel profiles, kolomnya adalah 'city' (string)
-    const { data: talents, error } = await supabase
+    const { data: talents } = await supabase
       .from("profiles")
-      .select(`
-        full_name, 
-        disability_type, 
-        education_level, 
-        major, 
-        graduation_date, 
-        career_status,
-        city
-      `)
-      .eq("city", locationName); // Filter string langsung sesuai locations.ts
+      .select("full_name, disability_type, education_level, major, career_status")
+      .eq("city", locationName);
 
-    if (error) throw error;
+    // Pembuatan Worksheet
+    const worksheet = XLSX.utils.json_to_sheet(talents || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Talenta");
 
-    const headers = [
-      "Nama Lengkap", 
-      "Ragam Disabilitas", 
-      "Pendidikan", 
-      "Program Studi", 
-      "Tahun Lulus", 
-      "Status Karir",
-      "Kota Domisili"
-    ];
-
-    const rows = (talents || []).map(t => [
-      t.full_name || "Tanpa Nama",
-      t.disability_type || "Tidak Disebutkan",
-      t.education_level || "-",
-      t.major || "-",
-      t.graduation_date || "-",
-      t.career_status || "Job Seeker",
-      t.city || locationName
-    ]);
-
-    const dateStr = new Date().toLocaleDateString('id-ID').replace(/\//g, '-');
-    const fileName = `Laporan_Talenta_${locationName.replace(/\s+/g, '_')}_${dateStr}.csv`;
-    
-    downloadCSV(fileName, headers, rows);
+    // Download File
+    XLSX.writeFile(workbook, `Laporan_ULD_${locationName.replace(/\s+/g, '_')}.xlsx`);
     return { success: true };
   } catch (err) {
-    console.error("Export Error:", err);
     return { success: false };
   }
 };
 
 /**
- * FUNGSI 2: Laporan Mitra Industri (Filter berdasarkan String Lokasi)
+ * FUNGSI 2: Export PDF (Menggunakan Library jsPDF)
  */
-export const exportGovCompanyReport = async (locationName: string) => {
+export const exportGovPDF = async (locationName: string, govName: string) => {
   try {
-    // Di tabel companies, kolomnya adalah 'location' (string)
-    const { data: companies, error } = await supabase
-      .from("companies")
-      .select("name, industry, size, inclusion_score, uld_verified_at")
-      .eq("location", locationName);
+    const { data: talents } = await supabase
+      .from("profiles")
+      .select("full_name, disability_type, education_level, career_status")
+      .eq("city", locationName);
 
-    if (error) throw error;
+    const doc = new jsPDF();
+    
+    // Header Laporan Resmi
+    doc.setFontSize(18);
+    doc.text("LAPORAN DATA TALENTA DISABILITAS", 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Otoritas: ${govName}`, 14, 30);
+    doc.text(`Wilayah: ${locationName}`, 14, 36);
+    doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 42);
 
-    const headers = ["Nama Perusahaan", "Industri", "Skala Bisnis", "Skor Inklusi", "Status Verifikasi"];
-    const rows = (companies || []).map(c => [
-      c.name,
-      c.industry || "-",
-      c.size || "-",
-      c.inclusion_score || 0,
-      c.uld_verified_at ? `Terverifikasi (${new Date(c.uld_verified_at).toLocaleDateString('id-ID')})` : "Belum Verifikasi"
-    ]);
+    // Pembuatan Tabel PDF
+    autoTable(doc, {
+      startY: 50,
+      head: [['Nama Lengkap', 'Ragam Disabilitas', 'Pendidikan', 'Status']],
+      body: (talents || []).map(t => [
+        t.full_name, 
+        t.disability_type, 
+        t.education_level, 
+        t.career_status
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [15, 23, 42] } // Warna Slate-900 sesuai UI Mas
+    });
 
-    const fileName = `Mitra_Industri_${locationName.replace(/\s+/g, '_')}.csv`;
-    downloadCSV(fileName, headers, rows);
+    doc.save(`Laporan_ULD_${locationName}.pdf`);
     return { success: true };
   } catch (err) {
-    console.error("Export Error:", err);
     return { success: false };
   }
 };
