@@ -1,54 +1,53 @@
 import { supabase } from "@/lib/supabase";
-import { downloadCSV } from "../campus/export-helper"; // Kita re-use helper yang sudah ada
+import { downloadCSV } from "../campus/export-helper";
 
 /**
- * FUNGSI 1: Ekspor Laporan Standar Kemenaker (Excel/CSV)
- * Menghasilkan data agregat dan detail untuk laporan periodik ULD.
+ * FUNGSI 1: Laporan Data Talenta Wilayah (Filter berdasarkan String Lokasi)
  */
-export const exportGovTalentReport = async (locationId: string, locationName: string) => {
+export const exportGovTalentReport = async (locationName: string) => {
+  if (!locationName) return { success: false, message: "Wilayah otoritas belum ditentukan." };
+
   try {
-    // 1. Ambil data talenta berdasarkan wilayah ULD
+    // KLARIFIKASI: Di tabel profiles, kolomnya adalah 'city' (string)
     const { data: talents, error } = await supabase
       .from("profiles")
       .select(`
         full_name, 
-        major, 
         disability_type, 
-        career_status, 
         education_level, 
-        graduation_date,
+        major, 
+        graduation_date, 
+        career_status,
         city
       `)
-      .eq("city_id", locationId); // Filter otomatis per wilayah
+      .eq("city", locationName); // Filter string langsung sesuai locations.ts
 
     if (error) throw error;
 
-    // 2. Susun Header Laporan Resmi
     const headers = [
       "Nama Lengkap", 
       "Ragam Disabilitas", 
-      "Pendidikan Terakhir", 
+      "Pendidikan", 
       "Program Studi", 
       "Tahun Lulus", 
-      "Status Karir saat ini",
-      "Wilayah Domisili"
+      "Status Karir",
+      "Kota Domisili"
     ];
 
-    // 3. Mapping Data
     const rows = (talents || []).map(t => [
-      t.full_name,
-      t.disability_type,
-      t.education_level || "N/A",
-      t.major || "N/A",
-      t.graduation_date || "N/A",
-      t.career_status,
-      t.city
+      t.full_name || "Tanpa Nama",
+      t.disability_type || "Tidak Disebutkan",
+      t.education_level || "-",
+      t.major || "-",
+      t.graduation_date || "-",
+      t.career_status || "Job Seeker",
+      t.city || locationName
     ]);
 
-    // 4. Eksekusi Download
-    const fileName = `Laporan_ULD_${locationName.replace(/\s+/g, '_')}_2026.csv`;
+    const dateStr = new Date().toLocaleDateString('id-ID').replace(/\//g, '-');
+    const fileName = `Laporan_Talenta_${locationName.replace(/\s+/g, '_')}_${dateStr}.csv`;
+    
     downloadCSV(fileName, headers, rows);
-
     return { success: true };
   } catch (err) {
     console.error("Export Error:", err);
@@ -57,10 +56,11 @@ export const exportGovTalentReport = async (locationId: string, locationName: st
 };
 
 /**
- * FUNGSI 2: Ekspor Data Perusahaan Mitra Wilayah
+ * FUNGSI 2: Laporan Mitra Industri (Filter berdasarkan String Lokasi)
  */
 export const exportGovCompanyReport = async (locationName: string) => {
   try {
+    // Di tabel companies, kolomnya adalah 'location' (string)
     const { data: companies, error } = await supabase
       .from("companies")
       .select("name, industry, size, inclusion_score, uld_verified_at")
@@ -68,18 +68,20 @@ export const exportGovCompanyReport = async (locationName: string) => {
 
     if (error) throw error;
 
-    const headers = ["Nama Perusahaan", "Industri", "Skala", "Skor Inklusi", "Tanggal Verifikasi ULD"];
+    const headers = ["Nama Perusahaan", "Industri", "Skala Bisnis", "Skor Inklusi", "Status Verifikasi"];
     const rows = (companies || []).map(c => [
       c.name,
-      c.industry,
-      c.size,
-      c.inclusion_score,
-      c.uld_verified_at ? new Date(c.uld_verified_at).toLocaleDateString('id-ID') : "Belum Verifikasi"
+      c.industry || "-",
+      c.size || "-",
+      c.inclusion_score || 0,
+      c.uld_verified_at ? `Terverifikasi (${new Date(c.uld_verified_at).toLocaleDateString('id-ID')})` : "Belum Verifikasi"
     ]);
 
-    downloadCSV(`Daftar_Mitra_Industri_${locationName}.csv`, headers, rows);
+    const fileName = `Mitra_Industri_${locationName.replace(/\s+/g, '_')}.csv`;
+    downloadCSV(fileName, headers, rows);
     return { success: true };
   } catch (err) {
+    console.error("Export Error:", err);
     return { success: false };
   }
 };
