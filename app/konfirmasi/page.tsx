@@ -81,7 +81,7 @@ if (data) {
     // standar terbaik adalah redirect ke login agar user input email lagi atau 
     // minta mereka cek kembali pendaftaran. 
     // Namun untuk UX, kita asumsikan user ingin ke halaman bantuan.
-    router.push("/login?error=expired")
+    router.push("/masuk?error=expired")
   }
 
   if (loading) return (
