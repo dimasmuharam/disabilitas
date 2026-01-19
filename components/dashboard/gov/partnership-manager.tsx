@@ -18,9 +18,14 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
     if (!govData?.location) return;
     setLoading(true);
     try {
-      let query = supabase.from("companies").select("*");
+      // 1. SINKRONISASI QUERY: Menarik data perusahaan sekaligus menghitung loker aktif
+      // Kita menggunakan subquery jobs(id) untuk menghitung relasi secara realtime
+      let query = supabase.from("companies").select(`
+        *,
+        jobs(id)
+      `).eq('jobs.is_active', true); 
 
-      // LOGIKA FILTER STRING MAPPING
+      // 2. LOGIKA FILTER WILAYAH
       if (govData.category.includes("Provinsi")) {
         const citiesInProvince = PROVINCE_MAP[govData.location] || [];
         query = query.in("location", citiesInProvince);
@@ -30,7 +35,15 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
 
       const { data, error } = await query.order('name', { ascending: true });
       if (error) throw error;
-      setCompanies(data || []);
+
+      // 3. FORMATTING DATA: Masukkan jumlah loker ke dalam properti yang dipahami UI
+      const formattedData = data?.map(company => ({
+        ...company,
+        // Karena kita select jobs(id), data jobs akan menjadi array
+        active_jobs_count: company.jobs?.length || 0 
+      })) || [];
+
+      setCompanies(formattedData);
     } catch (err) {
       console.error("Fetch Error:", err);
     } finally {
@@ -42,13 +55,14 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
     fetchLocalCompanies();
   }, [fetchLocalCompanies]);
 
-  const toggleVerification = async (companyId: string, currentStatus: boolean, companyName: string) => {
+  const toggleVerification = async (companyId: string, currentStatus: boolean) => {
     const { error } = await supabase
       .from("companies")
       .update({ 
-        is_verified: !currentStatus, // Sinkron dengan skema kolom 'is_verified'
+        is_verified: !currentStatus,
         uld_verified_at: !currentStatus ? new Date().toISOString() : null,
-        uld_verified_by: govData.id
+        uld_verified_by: govData.id,
+        verification_status: !currentStatus ? 'verified' : 'pending' // Sinkron dengan kolom enum
       })
       .eq("id", companyId);
 
@@ -56,7 +70,6 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
       setCompanies(prev => prev.map(c => 
         c.id === companyId ? { ...c, is_verified: !currentStatus } : c
       ));
-      // Opsional: Tambahkan notifikasi toast sukses di sini
     }
   };
 
@@ -81,7 +94,7 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
               </p>
             </div>
           </div>
-          <div className="flex gap-4 rounded-2xl border-2 border-slate-900 bg-slate-100 p-4" aria-label="Statistik Kemitraan">
+          <div className="flex gap-4 rounded-2xl border-2 border-slate-900 bg-slate-100 p-4">
              <div className="border-r-2 border-slate-300 px-4 text-center">
                 <p className="text-[9px] font-black uppercase text-slate-500">Total Mitra</p>
                 <p className="text-xl font-black">{companies.length}</p>
@@ -121,7 +134,7 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
               key={company.id} 
               className="group relative rounded-[2rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             >
-              {/* Badge Status Aksesibel */}
+              {/* Badge Status */}
               <div className="absolute right-6 top-6" aria-live="polite">
                 {company.is_verified ? (
                   <div className="flex items-center gap-1 rounded-full border-2 border-emerald-600 bg-emerald-100 px-3 py-1 text-[9px] font-black uppercase text-emerald-600">
@@ -135,13 +148,12 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
               </div>
 
               <div className="flex gap-4">
-                <div className="size-16 overflow-hidden rounded-xl border-2 border-slate-900 bg-slate-50">
+                <div className="size-16 overflow-hidden rounded-xl border-2 border-slate-900 bg-slate-50 relative">
                    <Image 
-                     src={company.logo_url || '/placeholder-company.png'} 
+                     src={company.official_seal_url || company.logo_url || '/placeholder-company.png'} 
                      alt={`Logo ${company.name}`} 
-                     width={64}
-                     height={64}
-                     className="size-full object-cover" 
+                     fill
+                     className="object-contain p-2" 
                    />
                 </div>
                 <div className="flex-1">
@@ -153,8 +165,8 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
               <div className="mt-6 flex items-center justify-between border-t-2 border-slate-50 pt-6">
                 <div className="flex gap-4" aria-label="Statistik Perusahaan">
                   <div className="text-center">
-                    <p className="text-[8px] font-black uppercase text-slate-400">Loker</p>
-                    <p className="text-sm font-black">{company.active_jobs_count || 0}</p>
+                    <p className="text-[8px] font-black uppercase text-slate-400">Loker Aktif</p>
+                    <p className="text-sm font-black text-blue-600">{company.active_jobs_count}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-[8px] font-black uppercase text-slate-400">Karyawan Disabilitas</p>
@@ -163,8 +175,7 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
                 </div>
 
                 <button 
-                  onClick={() => toggleVerification(company.id, company.is_verified, company.name)}
-                  aria-label={company.is_verified ? `Cabut verifikasi untuk ${company.name}` : `Berikan verifikasi untuk ${company.name}`}
+                  onClick={() => toggleVerification(company.id, company.is_verified)}
                   className={`rounded-xl border-2 border-slate-900 px-4 py-2 text-[10px] font-black uppercase italic transition-all ${
                     company.is_verified 
                     ? 'bg-rose-400 hover:bg-rose-500' 
@@ -179,16 +190,16 @@ export default function GovPartnershipManager({ govData }: { govData: any }) {
         </div>
       )}
 
-      {/* FOOTER INFO - AKSESIBILITAS TINGGI */}
+      {/* Info Aksesibilitas */}
       <section 
         className="flex items-start gap-4 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-6"
         aria-labelledby="disclaimer-title"
       >
         <Info className="shrink-0 text-amber-500" aria-hidden="true" />
         <div>
-          <h5 id="disclaimer-title" className="text-[11px] font-black uppercase text-amber-700">Panduan Otoritas</h5>
+          <h5 id="disclaimer-title" className="text-[11px] font-black uppercase text-amber-700">Penting</h5>
           <p className="mt-1 text-[11px] font-bold leading-relaxed text-amber-700">
-            Pastikan Anda telah melakukan visitasi atau verifikasi dokumen akomodasi layak perusahaan sebelum memberikan status mitra resmi. Status ini akan memprioritaskan loker mereka di halaman depan talenta.
+            Angka loker menunjukkan jumlah lowongan kerja aktif yang terdaftar di wilayah otoritas Anda. Pastikan perusahaan mitra telah mengisi kriteria akomodasi dengan benar.
           </p>
         </div>
       </section>
