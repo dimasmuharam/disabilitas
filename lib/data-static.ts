@@ -27,7 +27,7 @@ export const USER_ROLE_LABELS = [
 export const GOV_INSTANSI_CATEGORIES = [
   "ULD Ketenagakerjaan Provinsi",
   "ULD Ketenagakerjaan Kota/Kabupaten",
-  "Kementerian / Lembaga"
+  "Kementerian/Lembaga" 
 ] as const;
 
 // Tipe data untuk TypeScript (Opsional tapi sangat membantu)

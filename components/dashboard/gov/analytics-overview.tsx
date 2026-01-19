@@ -24,7 +24,7 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
   const [loading, setLoading] = useState(true);
 
   // Identifikasi Level Otoritas
-  const isPusat = govData.category === "Kementerian" || govData.category === "Lembaga";
+const isPusat = govData.location === "Nasional" || govData.category === "Kementerian/Lembaga";
   const isProvinsi = govData.category.includes("Provinsi");
 
   const calculateStats = useCallback(async () => {
@@ -34,19 +34,17 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
       let talentQuery = supabase.from("profiles").select("disability_type, career_status");
       let companyQuery = supabase.from("companies").select("id", { count: 'exact', head: true });
       let jobQuery = supabase.from("jobs").select("id", { count: 'exact', head: true }).eq("is_active", true);
-
-      // Aplikasikan filter jika BUKAN level pusat
-      if (!isPusat) {
-        let targetLocations: string[] = [govData.location];
-        if (isProvinsi) {
-          targetLocations = PROVINCE_MAP[govData.location] || [govData.location];
-        }
-        
-        talentQuery = talentQuery.in("city", targetLocations);
-        companyQuery = companyQuery.in("location", targetLocations);
-        jobQuery = jobQuery.in("location", targetLocations);
-      }
-
+// Aplikasikan filter jika BUKAN level pusat
+if (!isPusat) {
+  let targetLocations: string[] = [govData.location];
+  if (isProvinsi) {
+    targetLocations = PROVINCE_MAP[govData.location] || [govData.location];
+  }
+  
+  talentQuery = talentQuery.in("city", targetLocations);
+  companyQuery = companyQuery.in("location", targetLocations);
+  jobQuery = jobQuery.in("location", targetLocations);
+}
       // 2. EKSEKUSI DATA
       const [talentRes, companyRes, jobRes] = await Promise.all([
         talentQuery,
