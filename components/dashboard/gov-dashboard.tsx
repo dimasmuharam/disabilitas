@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
-  LayoutDashboard, Users2, Building2, Settings, 
+  LayoutDashboard, Users2, Building2, Settings, Calculator,
   AlertTriangle, CheckCircle2, 
   FileSpreadsheet, FileText, Eye, Bell, ShieldCheck, Loader2
 } from "lucide-react";

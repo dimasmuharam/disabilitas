@@ -205,6 +205,7 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
                   <input 
                     id="search-region"
                     type="text"
+  role="combobox"
                     autoComplete="off"
                     aria-autocomplete="list"
                     aria-expanded={regionResults.length > 0}
