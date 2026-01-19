@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
 import AdminDashboard from "@/components/dashboard/admin-dashboard"
-import PartnerDashboard from "@/components/dashboard/partner-dashboard" // Update Import
-import CampusDashboard from "@/components/dashboard/campus-dashboard"   // Tetap ada untuk role Campus
+import PartnerDashboard from "@/components/dashboard/partner-dashboard"
+import CampusDashboard from "@/components/dashboard/campus-dashboard"
 import GovDashboard from "@/components/dashboard/gov-dashboard"
 import { USER_ROLES } from "@/lib/data-static"
 
@@ -24,15 +24,32 @@ function DashboardContent() {
   useEffect(() => {
     async function checkUser() {
       try {
-const userRole = authUser.app_metadata?.role || authUser.user_metadata?.role || USER_ROLES.TALENT
-setRole(userRole)
-         const userRole = authUser.user_metadata?.role || USER_ROLES.TALENT
+        // 1. Ambil data autentikasi terbaru
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+        
+        if (authError || !authUser) {
+          router.push("/masuk")
+          return
+        }
+
+        setUser(authUser)
+
+        // 2. Tentukan Role dengan urutan prioritas: App Metadata (Admin) -> User Metadata -> Default Talent
+        const userRole = authUser.app_metadata?.role || authUser.user_metadata?.role || USER_ROLES.TALENT
         setRole(userRole)
 
         let profileData = null
 
-        // --- LOGIKA ROUTING DATA BERDASARKAN ROLE ---
-        if (userRole === USER_ROLES.COMPANY) {
+        // 3. Ambil data profil berdasarkan tabel masing-masing role
+        if (userRole === 'admin' || userRole === 'super_admin') {
+          // Admin mengambil data dari tabel profiles
+          const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle()
+          profileData = data || { 
+            id: authUser.id, 
+            full_name: authUser.user_metadata?.full_name || "Administrator Hub",
+            is_placeholder: true 
+          }
+        } else if (userRole === USER_ROLES.COMPANY) {
           const { data } = await supabase.from('companies').select('*').eq('id', authUser.id).maybeSingle()
           profileData = data || { 
             id: authUser.id, 
@@ -61,7 +78,7 @@ setRole(userRole)
             is_placeholder: true 
           }
         } else {
-          // Role Talent atau Admin
+          // Default: Role Talent
           const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle()
           profileData = data || { 
             id: authUser.id, 
@@ -72,7 +89,7 @@ setRole(userRole)
 
         setProfile(profileData)
 
-        // Manajemen Fokus Aksesibilitas
+        // 4. Manajemen Fokus Aksesibilitas untuk Screen Reader
         setTimeout(() => {
           const targetId = isJustVerified ? "welcome-banner" : "dashboard-title";
           const element = document.getElementById(targetId);
@@ -127,7 +144,7 @@ setRole(userRole)
 
         <h1 id="dashboard-title" className="sr-only">{"Dashboard Router"}</h1>
 
-        {/* SWITCHER BERDASARKAN ROLE METADATA */}
+        {/* SWITCHER BERDASARKAN ROLE */}
         {role === 'admin' || role === 'super_admin' ? (
           <AdminDashboard user={{ ...user, ...profile }} />
         ) : role === USER_ROLES.TALENT ? (
