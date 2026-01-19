@@ -14,6 +14,7 @@ import GovAnalyticsOverview from "./gov/analytics-overview";
 import GovTalentDirectory from "./gov/talent-directory";
 import GovPartnershipManager from "./gov/partnership-manager";
 import GovProfileEditor from "./gov/profile-editor";
+import GovSimulationModule from "./gov/simulation-module";
 import GovAccountSettings from "./gov/account-settings";
 
 export default function GovDashboard({ user }: { user: any }) {
@@ -204,6 +205,17 @@ export default function GovDashboard({ user }: { user: any }) {
               label="Kemitraan"
               ariaLabel="Tampilkan Manajemen Mitra Industri"
             />
+{govData?.category === "Kementerian" && (
+  <div className="mt-4 border-t-4 border-dashed border-slate-100 pt-4">
+    <NavButton 
+      active={activeTab === 'simulation'} 
+      onClick={() => setActiveTab('simulation')}
+      icon={<Calculator size={20} />}
+      label="Simulasi CASN"
+      ariaLabel="Buka Simulator Perencanaan Formasi"
+    />
+  </div>
+)}
             <div className="my-4 border-t-4 border-slate-100 pt-4">
               <NavButton 
                 active={activeTab === 'profile'} 
@@ -252,6 +264,9 @@ export default function GovDashboard({ user }: { user: any }) {
             {activeTab === "overview" && <GovAnalyticsOverview govData={govData} />}
             {activeTab === "directory" && <GovTalentDirectory govData={govData} />}
             {activeTab === "partnership" && <GovPartnershipManager govData={govData} />}
+{activeTab === "simulation" && govData?.category === "Kementerian" && (
+  <GovSimulationModule />
+)}
             {activeTab === "profile" && (
               <GovProfileEditor 
                 user={user} 
