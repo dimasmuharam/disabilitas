@@ -14,6 +14,7 @@ import GovAnalyticsOverview from "./gov/analytics-overview";
 import GovTalentDirectory from "./gov/talent-directory";
 import GovPartnershipManager from "./gov/partnership-manager";
 import GovProfileEditor from "./gov/profile-editor";
+import GovAccountSettings from "./gov/account-settings";
 
 export default function GovDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -136,6 +137,7 @@ export default function GovDashboard({ user }: { user: any }) {
               {activeTab === 'directory' && "Database Talenta"}
               {activeTab === 'partnership' && "Kemitraan Industri"}
               {activeTab === 'profile' && "Profil Otoritas"}
+  {activeTab === 'account' && "Keamanan Akun"} {/* TAMBAHKAN INI */}
             </h1>
             <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
               {govData?.name || "Instansi Pemerintah"}
@@ -210,6 +212,13 @@ export default function GovDashboard({ user }: { user: any }) {
                 label="Pengaturan"
                 ariaLabel="Buka Pengaturan Profil Instansi"
               />
+  <NavButton 
+    active={activeTab === 'account'} 
+    onClick={() => setActiveTab('account')}
+    icon={<ShieldCheck size={20} />}
+    label="Keamanan Akun"
+    ariaLabel="Buka Pengaturan Akun dan Password"
+  />
             </div>
 
             {/* EXPORT SECTION */}
@@ -249,8 +258,9 @@ export default function GovDashboard({ user }: { user: any }) {
                 onSaveSuccess={handleSaveSuccess} 
               />
             )}
-          </main>
-
+  {/* TAMBAHKAN LOGIKA RENDER AKUN DI SINI */}
+  {activeTab === "account" && <GovAccountSettings user={user} />}
+</main>
         </div>
       </div>
     </div>
