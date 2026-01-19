@@ -24,15 +24,9 @@ function DashboardContent() {
   useEffect(() => {
     async function checkUser() {
       try {
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-        
-        if (authError || !authUser) {
-          router.push("/masuk")
-          return
-        }
-
-        setUser(authUser)
-        const userRole = authUser.user_metadata?.role || USER_ROLES.TALENT
+const userRole = authUser.app_metadata?.role || authUser.user_metadata?.role || USER_ROLES.TALENT
+setRole(userRole)
+         const userRole = authUser.user_metadata?.role || USER_ROLES.TALENT
         setRole(userRole)
 
         let profileData = null
