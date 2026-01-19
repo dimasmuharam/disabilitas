@@ -3,7 +3,7 @@
 import React, { useRef } from "react";
 import Image from "next/image";
 import { Share2, Download, CheckCircle, MapPin, Globe } from "lucide-react";
-import { handleGovShare } from "./gov-share-logic";
+import { handleGovShare } from "./share-logic";
 
 interface GovInclusionCardProps {
   govData: {
