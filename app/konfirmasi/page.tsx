@@ -51,9 +51,9 @@ function ConfirmContent() {
           .eq("id", user.id)
           .maybeSingle()
 
-        if (data) {
-          displayName = data.name || data.full_name || metaName
-        }
+if (data) {
+  displayName = ('name' in data ? data.name : (data as any).full_name) || metaName;
+}
 
         setProfileName(displayName)
 
