@@ -6,6 +6,7 @@ import {
   BarChart3, Users, Building2, Briefcase, 
   TrendingUp, PieChart, MapPin, Loader2 
 } from "lucide-react";
+import { PROVINCE_MAP } from "@/lib/constants/locations";
 
 interface Stats {
   totalTalents: number;
@@ -20,45 +21,56 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
   const [loading, setLoading] = useState(true);
 
   const calculateStats = useCallback(async () => {
+    if (!govData?.location) return;
     setLoading(true);
+    
     try {
-      // 1. Fetch Talenta di Wilayah (Profiles Table)
-      let talentQuery = supabase.from("profiles").select("disability_type, career_status");
+      // 1. Persiapkan Filter Wilayah (String Mapping)
+      let targetLocations: string[] = [govData.location];
       
-      if (govData.category.includes("Provinsi")) {
-        talentQuery = talentQuery.like("city_id", `${govData.location_id}%`);
-      } else {
-        talentQuery = talentQuery.eq("city_id", govData.location_id);
+      if (govData.category === "ULD Ketenagakerjaan Provinsi") {
+        targetLocations = PROVINCE_MAP[govData.location] || [govData.location];
       }
 
-      const { data: talentData } = await talentQuery;
+      // 2. Fetch Talenta
+      const { data: talentData } = await supabase
+        .from("profiles")
+        .select("disability_type, career_status")
+        .in("city", targetLocations);
 
-      // 2. Fetch Perusahaan di Wilayah (Assuming companies table)
-      let companyQuery = supabase.from("companies").select("id", { count: 'exact', head: true });
-      if (govData.category.includes("Provinsi")) {
-        companyQuery = companyQuery.like("city_id", `${govData.location_id}%`);
-      } else {
-        companyQuery = companyQuery.eq("city_id", govData.location_id);
-      }
-      const { count: companyCount } = await companyQuery;
+      // 3. Fetch Perusahaan (Gunakan filter 'location' sesuai skema)
+      const { count: companyCount } = await supabase
+        .from("companies")
+        .select("id", { count: 'exact', head: true })
+        .in("location", targetLocations);
 
-      // Logika Kalkulasi Distribusi
+      // 4. Fetch Loker Aktif
+      const { count: jobCount } = await supabase
+        .from("jobs")
+        .select("id", { count: 'exact', head: true })
+        .in("location", targetLocations)
+        .eq("is_active", true);
+
+      // Logika Kalkulasi Distribusi & Keterserapan
       const dist: Record<string, number> = {};
-      let employed = 0;
+      let employedCount = 0;
 
       talentData?.forEach(t => {
-        dist[t.disability_type] = (dist[t.disability_type] || 0) + 1;
-        if (t.career_status !== 'Job Seeker' && t.career_status !== 'Belum Bekerja') {
-          employed++;
+        if (t.disability_type) {
+          dist[t.disability_type] = (dist[t.disability_type] || 0) + 1;
+        }
+        // ASN, Pegawai Swasta, BUMN, Wiraswasta dianggap employed
+        if (t.career_status && !['Job Seeker', 'Belum Bekerja', 'Fresh Graduate'].includes(t.career_status)) {
+          employedCount++;
         }
       });
 
       setStats({
         totalTalents: talentData?.length || 0,
         totalCompanies: companyCount || 0,
-        activeJobs: 0, // Bisa ditarik dari table jobs nanti
+        activeJobs: jobCount || 0,
         disabilityDistribution: dist,
-        employmentRate: talentData?.length ? Math.round((employed / talentData.length) * 100) : 0
+        employmentRate: talentData?.length ? Math.round((employedCount / talentData.length) * 100) : 0
       });
 
     } catch (err) {
@@ -66,102 +78,107 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
     } finally {
       setLoading(false);
     }
-  }, [govData.category, govData.location_id]);
+  }, [govData]);
 
   useEffect(() => {
-    if (govData?.location_id) {
-      calculateStats();
-    }
-  }, [govData?.location_id, calculateStats]);
+    calculateStats();
+  }, [calculateStats]);
 
   if (loading) return (
-    <div className="flex h-96 flex-col items-center justify-center gap-4">
-      <Loader2 className="animate-spin text-blue-600" size={48} />
-      <p className="font-black uppercase italic text-slate-400">Mengompilasi Data Wilayah...</p>
+    <div className="flex h-96 flex-col items-center justify-center gap-4" role="status">
+      <Loader2 className="animate-spin text-blue-600" size={48} aria-hidden="true" />
+      <p className="font-black uppercase italic text-slate-400">Sinkronisasi Data Wilayah...</p>
     </div>
   );
 
   return (
     <div className="space-y-10 duration-700 animate-in fade-in">
+      <h2 className="sr-only">Statistik Wilayah {govData.location}</h2>
       
       {/* 1. HIGHLIGHT CARDS */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard 
-          icon={<Users className="text-blue-600" />} 
+          icon={<Users className="text-blue-600" aria-hidden="true" />} 
           label="Total Talenta" 
           value={stats?.totalTalents || 0} 
-          sub="Terdaftar di Wilayah"
+          sub="Individu Terdata"
         />
         <StatCard 
-          icon={<Building2 className="text-emerald-600" />} 
+          icon={<Building2 className="text-emerald-600" aria-hidden="true" />} 
           label="Mitra Industri" 
           value={stats?.totalCompanies || 0} 
-          sub="Perusahaan Lokal"
+          sub="Perusahaan Inklusif"
         />
         <StatCard 
-          icon={<TrendingUp className="text-purple-600" />} 
-          label="Tingkat Kerja" 
+          icon={<TrendingUp className="text-purple-600" aria-hidden="true" />} 
+          label="Keterserapan" 
           value={`${stats?.employmentRate}%`} 
-          sub="Keterserapan"
+          sub="Sudah Bekerja"
         />
         <StatCard 
-          icon={<Briefcase className="text-amber-600" />} 
+          icon={<Briefcase className="text-amber-600" aria-hidden="true" />} 
           label="Loker Aktif" 
           value={stats?.activeJobs || 0} 
-          sub="Peluang Baru"
+          sub="Peluang Terbuka"
         />
       </div>
 
       {/* 2. CHART SECTION */}
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Distribusi Ragam Disabilitas */}
-        <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-2">
+        <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-2">
           <div className="mb-8 flex items-center justify-between">
             <h3 className="flex items-center gap-3 text-xl font-black uppercase italic tracking-tight">
-              <PieChart className="text-blue-600" />
+              <PieChart className="text-blue-600" aria-hidden="true" />
               Sebaran Ragam Disabilitas
             </h3>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase text-slate-400">Data Real-time</span>
           </div>
           
           <div className="space-y-6">
-            {Object.entries(stats?.disabilityDistribution || {}).map(([type, count]) => (
-              <div key={type} className="group">
-                <div className="mb-2 flex justify-between text-[11px] font-black uppercase italic">
-                  <span>{type}</span>
-                  <span className="text-blue-600">{count} Orang</span>
+            {Object.entries(stats?.disabilityDistribution || {}).map(([type, count]) => {
+              const percentage = Math.round((count / (stats?.totalTalents || 1)) * 100);
+              return (
+                <div key={type} className="group">
+                  <div className="mb-2 flex justify-between text-[11px] font-black uppercase italic">
+                    <span>{type}</span>
+                    <span className="text-blue-600">{count} Jiwa ({percentage}%)</span>
+                  </div>
+                  <div className="h-4 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
+                    <div 
+                      role="img"
+                      aria-label={`${type}: ${count} jiwa, atau ${percentage} persen dari total talenta`}
+                      className="h-full bg-blue-500 transition-all duration-1000 group-hover:bg-blue-600" 
+                      style={{ width: `${percentage}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="h-4 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
-                  <div 
-                    className="h-full bg-blue-500 transition-all duration-1000 group-hover:bg-blue-600" 
-                    style={{ width: `${(count / (stats?.totalTalents || 1)) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
+        </section>
 
         {/* Info Otoritas Quick View */}
-        <div className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[12px_12px_0px_0px_rgba(59,130,246,1)]">
-          <MapPin size={40} className="mb-6 text-blue-400" />
+        <aside className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[12px_12px_0px_0px_rgba(59,130,246,1)]">
+          <MapPin size={40} className="mb-6 text-blue-400" aria-hidden="true" />
           <h3 className="mb-4 text-2xl font-black uppercase italic leading-tight">
-            Ringkasan Yurisdiksi {govData.location}
+            Yurisdiksi {govData.location}
           </h3>
           <p className="mb-8 text-sm font-medium italic text-slate-400">
-            &quot;Data ini digunakan untuk mendukung penyusunan kebijakan inklusi di level {govData.category}.&quot;
+            Data real-time untuk mendukung monitoring ULD level {govData.category}.
           </p>
           <div className="space-y-4 border-t-2 border-slate-800 pt-6">
             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-              <span>Kode Wilayah:</span>
-              <span className="text-blue-400">{govData.location_id}</span>
+              <span>Admin Otoritas:</span>
+              <span className="text-blue-400">{govData.name}</span>
             </div>
             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-              <span>Admin Otoritas:</span>
-              <span className="text-blue-400">{govData.email}</span>
+              <span>Status Akun:</span>
+              <span className={govData.is_verified ? "text-emerald-400" : "text-amber-400"}>
+                {govData.is_verified ? "Terverifikasi" : "Menunggu Verifikasi"}
+              </span>
             </div>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   );
@@ -170,10 +187,10 @@ export default function GovAnalyticsOverview({ govData }: { govData: any }) {
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode, label: string, value: string | number, sub: string }) {
   return (
     <div className="rounded-[2rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-1">
-      <div className="mb-4 inline-block rounded-xl border-2 border-slate-100 p-3">{icon}</div>
+      <div className="mb-4 inline-block rounded-xl border-2 border-slate-100 p-3" aria-hidden="true">{icon}</div>
       <div className="text-xs font-black uppercase tracking-widest text-slate-400">{label}</div>
       <div className="my-1 text-3xl font-black italic tracking-tighter text-slate-900">{value}</div>
-      <div className="text-[9px] font-bold uppercase text-slate-400">{sub}</div>
+      <p className="text-[9px] font-bold uppercase text-slate-400">{sub}</p>
     </div>
   );
 }
