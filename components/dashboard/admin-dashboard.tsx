@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 import { 
   BarChart3, Users, Link2, AlertTriangle, 
@@ -8,7 +8,7 @@ import {
   Loader2, CheckCircle2 
 } from "lucide-react"
 
-// IMPORT MODUL MODULAR (Pastikan file ini sudah ada di folder /admin/)
+// IMPORT MODUL MODULAR
 import NationalAnalytics from "./admin/national-analytics"
 import UserManagement from "./admin/user-management"
 import AuthorityControl from "./admin/authority-control"
@@ -31,6 +31,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("national_stats")
   const [msg, setMsg] = useState("")
+  const announcementRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
   const [stats, setStats] = useState<any>(null)
@@ -43,10 +44,16 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     loadAllAdminData()
   }, [])
 
+  // Mengumumkan perubahan status ke Screen Reader saat pesan muncul
+  useEffect(() => {
+    if (msg && announcementRef.current) {
+      announcementRef.current.focus();
+    }
+  }, [msg])
+
   async function loadAllAdminData() {
     setLoading(true)
     try {
-      // Sinkronisasi data dari berbagai tabel sesuai skema (profiles, companies, logs)
       const [nData, iData, aData, talentsRes, entitiesRes] = await Promise.all([
         getNationalStats(),
         getTransitionInsights(),
@@ -67,18 +74,16 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     }
   }
 
-  // --- HANDLER ACTIONS ---
   const handleLockAuthority = async (profileId: string, type: "agency" | "partner", value: string) => {
     const { error } = await setupAdminLock(profileId, type, value)
     if (!error) {
-      setMsg(`Otoritas ${type} untuk user tersebut telah dikunci.`);
-      setTimeout(() => setMsg(""), 3000);
+      setMsg(`Otoritas ${type} berhasil diperbarui.`);
       loadAllAdminData();
     }
   }
 
   const handleDeleteUser = async (profileId: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus user ini secara permanen dari sistem?")) {
+    if (confirm("Hapus user ini secara permanen?")) {
       const { error } = await manageAdminUser("DELETE", "profiles", { id: profileId });
       if (!error) {
         setMsg("User berhasil dihapus.");
@@ -89,7 +94,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status" aria-live="polite">
         <Loader2 className="animate-spin text-blue-600" size={48} />
         <p className="font-black uppercase italic tracking-widest text-slate-400">Mensinkronisasi Pusat Data Nasional...</p>
       </div>
@@ -99,10 +104,21 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
   return (
     <div className="mx-auto max-w-[1600px] space-y-8 px-6 pb-20 duration-700 animate-in fade-in">
       
-      {/* 1. HERO HEADER (COMMAND CENTER STYLE) */}
-      <header className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row">
+      {/* AREA PENGUMUMAN STATUS (Live Region untuk Screen Reader) */}
+      <div 
+        ref={announcementRef}
+        className="sr-only" 
+        role="status" 
+        aria-live="assertive" 
+        tabIndex={-1}
+      >
+        {msg}
+      </div>
+
+      {/* 1. HEADER (Landmark Banner) */}
+      <header role="banner" className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row">
         <div className="flex items-center gap-6">
-          <div className="flex size-24 items-center justify-center rounded-3xl bg-blue-600 shadow-lg outline outline-4 outline-white/10">
+          <div className="flex size-24 items-center justify-center rounded-3xl bg-blue-600 shadow-lg outline outline-4 outline-white/10" aria-hidden="true">
             <ShieldCheck size={48} />
           </div>
           <div>
@@ -113,53 +129,54 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
           </div>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 text-[10px] font-black uppercase shadow-xl hover:translate-y-1 transition-all active:translate-y-0">
-            <UserPlus size={18}/> Invite Partner
+          <button aria-label="Undang Partner Baru" className="flex items-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 text-[10px] font-black uppercase shadow-xl hover:translate-y-1 transition-all">
+            <UserPlus size={18} aria-hidden="true"/> Invite Partner
           </button>
-          <button className="flex items-center gap-2 rounded-2xl border-4 border-white/10 bg-white/10 px-6 py-4 text-[10px] font-black uppercase text-white hover:bg-white/20 transition-all">
-            <FileSpreadsheet size={18}/> Export Dataset
+          <button aria-label="Unduh Dataset Lengkap" className="flex items-center gap-2 rounded-2xl border-4 border-white/10 bg-white/10 px-6 py-4 text-[10px] font-black uppercase text-white hover:bg-white/20 transition-all">
+            <FileSpreadsheet size={18} aria-hidden="true"/> Export Dataset
           </button>
         </div>
       </header>
 
-      {/* 2. NAVIGATION TABS */}
-      <nav className="no-scrollbar flex gap-3 overflow-x-auto rounded-[2.5rem] border-4 border-slate-900 bg-slate-100 p-3 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-        {[
-          { id: "national_stats", label: "National Analytics", icon: BarChart3 },
-          { id: "user_mgmt", label: "User Management", icon: Users },
-          { id: "authority", label: "Authority Control", icon: Link2 },
-          { id: "audit", label: "Data Audit Hub", icon: AlertTriangle }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-3 whitespace-nowrap rounded-[1.8rem] px-8 py-5 text-[10px] font-black uppercase tracking-widest transition-all
-              ${activeTab === tab.id 
-                ? "bg-slate-900 text-white shadow-lg translate-y-[-2px]" 
-                : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
-          >
-            <tab.icon size={18} /> {tab.label}
-          </button>
-        ))}
+      {/* 2. NAVIGATION TABS (Aria Role Tablist) */}
+      <nav aria-label="Menu Utama Dashboard Admin">
+        <div role="tablist" className="no-scrollbar flex gap-3 overflow-x-auto rounded-[2.5rem] border-4 border-slate-900 bg-slate-100 p-3 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+          {[
+            { id: "national_stats", label: "National Analytics", icon: BarChart3 },
+            { id: "user_mgmt", label: "User Management", icon: Users },
+            { id: "authority", label: "Authority Control", icon: Link2 },
+            { id: "audit", label: "Data Audit Hub", icon: AlertTriangle }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`panel-${tab.id}`}
+              id={`tab-${tab.id}`}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setMsg(`Beralih ke halaman ${tab.label}`);
+              }}
+              className={`flex items-center gap-3 whitespace-nowrap rounded-[1.8rem] px-8 py-5 text-[10px] font-black uppercase tracking-widest transition-all
+                ${activeTab === tab.id 
+                  ? "bg-slate-900 text-white shadow-lg translate-y-[-2px]" 
+                  : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
+            >
+              <tab.icon size={18} aria-hidden="true" /> {tab.label}
+            </button>
+          ))}
+        </div>
       </nav>
 
-      {/* ALERT FEEDBACK */}
-      {msg && (
-        <div className="flex items-center justify-center gap-3 rounded-2xl border-4 border-emerald-500 bg-emerald-50 p-4 text-[10px] font-black uppercase text-emerald-700 animate-in slide-in-from-top-4">
-          <CheckCircle2 size={16} /> {msg}
-        </div>
-      )}
-
-      {/* 3. MODULAR CONTENT AREA */}
-      <main className="min-h-[500px]">
+      {/* 3. MODULAR CONTENT AREA (Main Landmark) */}
+      <main id={`panel-${activeTab}`} role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="min-h-[500px]">
         {activeTab === "national_stats" && (
-          <NationalAnalytics stats={stats} transitionInsights={transitionInsights} />
+          <NationalAnalytics stats={stats} />
         )}
 
         {activeTab === "user_mgmt" && (
           <UserManagement 
             talents={allTalents} 
-            entities={allEntities} 
             onAction={handleDeleteUser} 
           />
         )}
@@ -174,13 +191,12 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
         {activeTab === "audit" && (
           <AuditHub 
             logs={auditLogs} 
-            onMerge={(log: any) => console.log("Merging log:", log)} 
+            onMerge={(log: any) => setMsg(`Memproses penggabungan data: ${log.input_value}`)} 
           />
         )}
       </main>
 
-      {/* FOOTER */}
-      <footer className="border-t-4 border-slate-100 pt-16 text-center">
+      <footer role="contentinfo" className="border-t-4 border-slate-100 pt-16 text-center">
         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-300">
           © 2026 DISABILITAS.COM • RESEARCH INTELLIGENCE HUB V.2.0.4
         </p>
