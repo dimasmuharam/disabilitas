@@ -24,7 +24,8 @@ export default function GovDashboard({ user }: { user: any }) {
   
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // 1. HITUNG KELENGKAPAN PROFIL (Sistem String Mapping)
+
+// 1. HITUNG KELENGKAPAN PROFIL SECARA DETAIL
   const calculateCompletion = useCallback((data: any) => {
     const fields = [
       { key: 'name', label: 'Nama Instansi' },
@@ -32,11 +33,12 @@ export default function GovDashboard({ user }: { user: any }) {
       { key: 'description', label: 'Deskripsi' },
       { key: 'whatsapp_official', label: 'Kontak WhatsApp' },
       { key: 'official_seal_url', label: 'Logo/Stempel Resmi' }
-const missing = fields.filter(f => !data[f.key]).map(f => f.label);    ];
+    ]; // Pastikan tanda ]; ada di sini sendiri
+
+    const missing = fields.filter(f => !data[f.key]).map(f => f.label);
     const percent = ((fields.length - missing.length) / fields.length) * 100;
     setProfileCompletion({ percent, missing });
   }, []);
-
   const fetchGovProfile = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
