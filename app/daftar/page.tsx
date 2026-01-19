@@ -81,8 +81,8 @@ export default function RegisterPage() {
         setMsg("Pendaftaran Berhasil! Silakan cek email aktivasi Anda.")
         
         setTimeout(() => {
-router.push(`/daftar/konfirmasi?email=${encodeURIComponent(data.email)}`);
-        }, 5000);
+router.push(`/daftar/konfirmasi?email=${encodeURIComponent(email)}`);
+         }, 5000);
       }
 
     } catch (error: any) {
