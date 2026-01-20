@@ -3,29 +3,26 @@
 import { createAdminClient } from "@/lib/supabase"
 
 /**
- * 1. ANALISIS NASIONAL (NATIONAL ANALYTICS)
- * Dioptimalkan untuk memproses data 11 responden (atau ribuan nantinya) secara cepat.
+ * MENGAMBIL STATISTIK NASIONAL
  */
 export async function getNationalStats() {
   try {
     const admin = createAdminClient();
-    const { data: profiles, error } = await admin
-      .from("profiles")
-      .select("*");
-
+    const { data: profiles, error } = await admin.from("profiles").select("*");
+    
     if (error) return { totalTalents: 0, error: error.message };
     if (!profiles || profiles.length === 0) return { totalTalents: 0, empty: true };
 
     const total = profiles.length;
 
-    // Helper Distribusi Kolom Tunggal
+    // Helper untuk distribusi variabel tunggal
     const countDist = (key: string) => profiles.reduce((acc: any, p: any) => {
       const val = p[key] || 'Tidak Terisi';
       acc[val] = (acc[val] || 0) + 1;
       return acc;
     }, {});
 
-    // Helper Distribusi Kolom Array (Hambatan & Alat Bantu)
+    // Helper untuk distribusi variabel array (Multi-select)
     const countArrayDist = (key: string) => profiles.reduce((acc: any, p: any) => {
       const arr = p[key] || [];
       if (Array.isArray(arr)) {
@@ -40,12 +37,8 @@ export async function getNationalStats() {
       totalTalents: total,
       disabilityDist: countDist('disability_type'),
       employmentRate: {
-        employed: profiles.filter(p => 
-          ['Pegawai Swasta', 'Pegawai BUMN / BUMD', 'ASN (PNS / PPPK)', 'Wiraswasta / Entrepreneur', 'Freelancer / Tenaga Lepas'].includes(p.career_status)
-        ).length,
-        seeking: profiles.filter(p => 
-          ['Job Seeker', 'Fresh Graduate', 'Belum Bekerja'].includes(p.career_status)
-        ).length,
+        employed: profiles.filter(p => ['Pegawai Swasta', 'Pegawai BUMN / BUMD', 'ASN (PNS / PPPK)', 'Wiraswasta / Entrepreneur', 'Freelancer / Tenaga Lepas'].includes(p.career_status)).length,
+        seeking: profiles.filter(p => ['Job Seeker', 'Fresh Graduate', 'Belum Bekerja'].includes(p.career_status)).length,
       },
       barrierDist: countArrayDist('education_barrier'),
       toolsDist: countArrayDist('used_assistive_tools'),
@@ -64,7 +57,7 @@ export async function getNationalStats() {
 }
 
 /**
- * 2. DATA AUDIT (AUDIT HUB)
+ * MENGAMBIL LOG AUDIT INPUT MANUAL
  */
 export async function getManualInputAudit() {
   try {
@@ -74,8 +67,6 @@ export async function getManualInputAudit() {
       .select("*")
       .eq("is_reviewed", false)
       .order("occurrence_count", { ascending: false });
-
-    if (error) throw error;
     return data || [];
   } catch (err) {
     return [];
@@ -83,44 +74,34 @@ export async function getManualInputAudit() {
 }
 
 /**
- * 3. MANAJEMEN USER & VERIFIKASI (UPDATE & DELETE)
- * Fungsi ini krusial untuk fitur 'Verifikasi' dan 'Hapus' di dashboard.
+ * MANAJEMEN DATA (DELETE, UPDATE, BULK)
+ * PERBAIKAN: Menggunakan 'action: string' agar TypeScript menerima BULK_UPDATE
  */
-export async function manageAdminUser(action: "UPDATE" | "DELETE", table: string, payload: any) {
+export async function manageAdminUser(action: string, table: string, payload: any) {
   try {
     const admin = createAdminClient();
-    const { id, ...updateData } = payload;
-
+    
+    // Hapus satu data
     if (action === "DELETE") {
-      const { error } = await admin.from(table).delete().eq("id", id);
+      const { error } = await admin.from(table).delete().eq("id", payload.id);
       return { error };
     }
 
+    // Update satu data (Verifikasi tunggal)
     if (action === "UPDATE") {
+      const { id, ...updateData } = payload;
       const { error } = await admin.from(table).update(updateData).eq("id", id);
       return { error };
     }
 
-    return { error: "Action not recognized" };
-  } catch (err: any) {
-    return { error: err.message };
-  }
-}
+    // UPDATE MASSAL (Fitur Baru untuk Verifikasi Massal)
+    if (action === "BULK_UPDATE") {
+      const { ids, ...updateData } = payload;
+      const { error } = await admin.from(table).update(updateData).in("id", ids);
+      return { error };
+    }
 
-/**
- * 4. GHOST FUNCTIONS (Maintenance)
- */
-export async function getTransitionInsights() { return []; }
-
-export async function setupAdminLock(profileId: string, type: string, value: string) {
-  try {
-    const admin = createAdminClient();
-    const updateData: any = {};
-    if (type === "agency") updateData.admin_agency_lock = value;
-    if (type === "partner") updateData.admin_partner_lock = value;
-
-    const { error } = await admin.from("profiles").update(updateData).eq("id", profileId);
-    return { error };
+    return { error: null };
   } catch (err: any) {
     return { error: err.message };
   }
