@@ -52,30 +52,42 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     }
   }, [msg])
 
+  /**
+   * MEMPERBAIKI LOGIKA SYNC:
+   * Kita tidak lagi menggunakan Promise.all yang kaku agar jika satu gagal,
+   * yang lain tetap tampil.
+   */
   async function loadAllAdminData() {
     setLoading(true)
     try {
-      // Kita panggil data secara paralel agar cepat
-      // Gunakan Action Server (getNationalStats) untuk tembus RLS
-      const [nData, iData, aData, talentsRes, entitiesRes] = await Promise.all([
-        getNationalStats(),
-        getTransitionInsights(),
-        getManualInputAudit(),
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("companies").select("*").order("created_at", { ascending: false })
-      ])
+      // 1. Ambil Stats Nasional (Prioritas Utama)
+      getNationalStats().then(data => {
+        setStats(data);
+      }).catch(err => console.error("Error Stats:", err));
 
-      setStats(nData)
-      setTransitionInsights(iData)
-      setAuditLogs(Array.isArray(aData) ? aData : [])
-      setAllTalents(talentsRes.data || [])
-      setAllEntities(entitiesRes.data || [])
+      // 2. Ambil Audit Logs
+      getManualInputAudit().then(data => {
+        setAuditLogs(Array.isArray(data) ? data : []);
+      }).catch(err => console.error("Error Audit:", err));
+
+      // 3. Ambil Transition Insights
+      getTransitionInsights().then(data => {
+        setTransitionInsights(data);
+      }).catch(err => console.error("Error Insights:", err));
+
+      // 4. Ambil Data Profil & Instansi via Supabase Client (Bypass RLS via Service Role di Action jika perlu)
+      const { data: talents } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      const { data: entities } = await supabase.from("companies").select("*").order("created_at", { ascending: false });
+
+      setAllTalents(talents || []);
+      setAllEntities(entities || []);
       
     } catch (e) {
       console.error("[ADMIN-SYNC-ERROR]:", e)
-      setMsg("Terjadi kegagalan sinkronisasi data pusat.")
+      setMsg("Sinkronisasi data terhambat, mencoba memulihkan...");
     } finally {
-      setLoading(false)
+      // Kita beri jeda sedikit agar transisi loading lebih halus bagi NVDA
+      setTimeout(() => setLoading(false), 500);
     }
   }
 
@@ -107,7 +119,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status" aria-live="polite">
         <Loader2 className="animate-spin text-blue-600" size={48} />
-        <p className="font-black uppercase italic tracking-widest text-slate-400">Mensinkronisasi Pusat Data Nasional...</p>
+        <p className="font-black uppercase italic tracking-widest text-slate-400">Mensinkronisasi Pusat Data BRIN...</p>
       </div>
     )
   }
@@ -126,7 +138,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
         {msg}
       </div>
 
-      {/* 1. HEADER (Landmark Banner) */}
+      {/* 1. HEADER */}
       <header role="banner" className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row">
         <div className="flex items-center gap-6">
           <div className="flex size-24 items-center justify-center rounded-3xl bg-blue-600 shadow-lg outline outline-4 outline-white/10" aria-hidden="true">
