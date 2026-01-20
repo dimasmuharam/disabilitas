@@ -115,11 +115,11 @@ export default function NationalAnalytics({ stats }: any) {
           <div className="mt-8 grid grid-cols-2 gap-6">
             <div className="rounded-3xl border-2 border-white/20 bg-blue-600 p-6 text-center">
               <p className="text-[10px] font-black uppercase text-blue-100 opacity-80">Total Responden</p>
-              <p className="text-5xl font-black italic tracking-tighter leading-none mt-2">{stats.totalTalents || 0}</p>
+              <p className="mt-2 text-5xl font-black italic leading-none tracking-tighter">{stats.totalTalents || 0}</p>
             </div>
             <div className="rounded-3xl border-2 border-white/20 bg-indigo-600 p-6 text-center">
               <p className="text-[10px] font-black uppercase text-indigo-100 opacity-80">Terserap Kerja</p>
-              <p className="text-5xl font-black italic tracking-tighter leading-none mt-2">{stats.employmentRate?.employed || 0}</p>
+              <p className="mt-2 text-5xl font-black italic leading-none tracking-tighter">{stats.employmentRate?.employed || 0}</p>
             </div>
           </div>
         </div>
@@ -177,11 +177,11 @@ function StatTable({ title, icon: Icon, data, color }: any) {
               Object.entries(data).map(([key, val]: any) => (
                 <tr key={key} className="transition-colors hover:bg-slate-50">
                   <td className="px-4 py-3 text-slate-600">{key}</td>
-                  <td className="px-4 py-3 text-right text-slate-900 font-black">{val}</td>
+                  <td className="px-4 py-3 text-right font-black text-slate-900">{val}</td>
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={2} className="px-4 py-3 text-center text-slate-300 italic">Data nihil</td></tr>
+              <tr><td colSpan={2} className="px-4 py-3 text-center italic text-slate-300">Data nihil</td></tr>
             )}
           </tbody>
         </table>

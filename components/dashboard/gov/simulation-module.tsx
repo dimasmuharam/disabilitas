@@ -119,23 +119,23 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
   };
 
   return (
-    <div className="space-y-10 pb-20 animate-in fade-in duration-700">
+    <div className="space-y-10 pb-20 duration-700 animate-in fade-in">
       {/* 1. ADVANCED FILTER PANEL */}
       <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
         <div className="mb-8 flex items-center gap-4 border-b-4 border-slate-100 pb-6">
-          <div className="bg-indigo-600 p-4 rounded-2xl text-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+          <div className="rounded-2xl bg-indigo-600 p-4 text-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
             <Globe size={32} />
           </div>
           <div>
             <h2 className="text-2xl font-black uppercase italic text-slate-900">Simulator Formasi Nasional</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Kementerian / Lembaga Eksklusif</p>
+            <p className="text-[10px] font-bold uppercase italic tracking-widest text-slate-400">Kementerian / Lembaga Eksklusif</p>
           </div>
         </div>
 
         <form onSubmit={runSimulation} className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {/* Filter Pendidikan */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2"><GraduationCap size={14}/> Pendidikan</label>
+            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><GraduationCap size={14}/> Pendidikan</label>
             <select 
               className="w-full rounded-2xl border-4 border-slate-900 bg-slate-50 p-4 font-bold outline-none focus:ring-4 focus:ring-indigo-100"
               value={criteria.education}
@@ -148,7 +148,7 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
 
           {/* Searchable Major (Datalist) */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2"><Search size={14}/> Cari Jurusan</label>
+            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><Search size={14}/> Cari Jurusan</label>
             <input 
               list="majors-list"
               placeholder="Ketik nama jurusan..."
@@ -163,7 +163,7 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
 
           {/* Filter Provinsi */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2"><Map size={14}/> Provinsi</label>
+            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><Map size={14}/> Provinsi</label>
             <select 
               className="w-full rounded-2xl border-4 border-slate-900 bg-slate-50 p-4 font-bold outline-none focus:ring-4 focus:ring-indigo-100"
               value={criteria.province}
@@ -176,7 +176,7 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
 
           {/* Filter Kota */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2"><Map size={14}/> Kota/Kabupaten</label>
+            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><Map size={14}/> Kota/Kabupaten</label>
             <select 
               disabled={!criteria.province}
               className="w-full rounded-2xl border-4 border-slate-900 bg-slate-50 p-4 font-bold outline-none focus:ring-4 focus:ring-indigo-100 disabled:opacity-50"
@@ -188,8 +188,8 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
             </select>
           </div>
 
-          <div className="lg:col-span-4 flex justify-end mt-4">
-            <button type="submit" disabled={loading} className="w-full lg:w-1/3 rounded-2xl bg-slate-900 py-4 font-black uppercase italic text-white shadow-[4px_4px_0px_0px_rgba(79,70,229,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2">
+          <div className="mt-4 flex justify-end lg:col-span-4">
+            <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 font-black uppercase italic text-white shadow-[4px_4px_0px_0px_rgba(79,70,229,1)] transition-all hover:translate-y-1 hover:shadow-none lg:w-1/3">
               {loading ? <Loader2 className="animate-spin" /> : <Calculator size={20} />} Jalankan Analisis Strategis
             </button>
           </div>
@@ -198,12 +198,12 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
 
       {/* 2. ENHANCED RESULTS */}
       {results && (
-        <div className="space-y-8 animate-in zoom-in-95 duration-500">
+        <div className="space-y-8 duration-500 animate-in zoom-in-95">
           <div className="grid gap-8 lg:grid-cols-4">
             {/* Total Highlight */}
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[12px_12px_0px_0px_rgba(79,70,229,1)] lg:col-span-1">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 italic text-blue-400">Total Potensi</p>
-              <h3 className="text-6xl font-black italic my-2">{results.total} <span className="text-lg text-slate-400">Jiwa</span></h3>
+              <p className="text-[10px] font-black uppercase italic tracking-widest text-blue-400 opacity-60">Total Potensi</p>
+              <h3 className="my-2 text-6xl font-black italic">{results.total} <span className="text-lg text-slate-400">Jiwa</span></h3>
               <p className="text-[10px] font-bold uppercase">Siap Menjalani Seleksi</p>
             </div>
 
@@ -225,8 +225,8 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
               <div className="grid grid-cols-2 gap-4">
                 {results.topCities.map((item, i) => (
                   <div key={i} className="flex items-center justify-between border-b-2 border-slate-50 pb-2">
-                    <span className="text-[10px] font-black uppercase italic truncate">{item.city}</span>
-                    <span className="text-xs font-black bg-slate-100 px-2 py-1 rounded-lg">{item.count}</span>
+                    <span className="truncate text-[10px] font-black uppercase italic">{item.city}</span>
+                    <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-black">{item.count}</span>
                   </div>
                 ))}
               </div>
@@ -237,8 +237,8 @@ export default function GovSimulationModule({ govData }: { govData: any }) {
               <h3 className="mb-6 flex items-center gap-2 font-black uppercase italic text-slate-900"><ShieldCheck className="text-emerald-500" /> Akomodasi Prioritas</h3>
               <div className="grid grid-cols-1 gap-2">
                 {results.requiredAccommodations.slice(0, 6).map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 rounded-xl border-2 border-slate-100 bg-slate-50 p-3 text-[10px] font-bold leading-tight uppercase">
-                    <CheckCircle2 size={14} className="text-emerald-500 shrink-0" /> {item}
+                  <div key={i} className="flex items-start gap-3 rounded-xl border-2 border-slate-100 bg-slate-50 p-3 text-[10px] font-bold uppercase leading-tight">
+                    <CheckCircle2 size={14} className="shrink-0 text-emerald-500" /> {item}
                   </div>
                 ))}
               </div>

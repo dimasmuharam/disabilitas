@@ -65,7 +65,7 @@ export default function AdminPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center space-y-4 bg-slate-950">
         <div className="size-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-        <p className="font-black uppercase italic tracking-widest text-white animate-pulse">
+        <p className="animate-pulse font-black uppercase italic tracking-widest text-white">
           Otorisasi Komando Admin...
         </p>
       </div>

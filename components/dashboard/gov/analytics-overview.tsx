@@ -103,15 +103,15 @@ if (!isPusat) {
     <div className="space-y-10 duration-700 animate-in fade-in">
       
       {/* HEADER DYNAMIC */}
-      <div className="flex items-center gap-4 mb-4">
-        <div className={`p-3 rounded-2xl text-white ${isPusat ? 'bg-indigo-600' : 'bg-blue-600'}`}>
+      <div className="mb-4 flex items-center gap-4">
+        <div className={`rounded-2xl p-3 text-white ${isPusat ? 'bg-indigo-600' : 'bg-blue-600'}`}>
           {isPusat ? <Globe size={24} /> : <MapPin size={24} />}
         </div>
         <div>
-          <h2 className="text-2xl font-black uppercase italic text-slate-900 leading-tight">
+          <h2 className="text-2xl font-black uppercase italic leading-tight text-slate-900">
             Ringkasan Analitik {isPusat ? 'Nasional' : govData.location}
           </h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Data Terintegrasi secara Real-time dari Dashboard {govData.category}
           </p>
         </div>
@@ -150,9 +150,9 @@ if (!isPusat) {
                 <div key={type} className="group">
                   <div className="mb-2 flex justify-between text-[11px] font-black uppercase">
                     <span>{type}</span>
-                    <span className="text-blue-600 font-black">{count} Jiwa</span>
+                    <span className="font-black text-blue-600">{count} Jiwa</span>
                   </div>
-                  <div className="h-4 rounded-full border-2 border-slate-900 bg-slate-100 overflow-hidden">
+                  <div className="h-4 overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
                     <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${percentage}%` }}></div>
                   </div>
                 </div>
@@ -164,16 +164,16 @@ if (!isPusat) {
         <aside className="flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[12px_12px_0px_0px_rgba(59,130,246,1)]">
           <BarChart3 size={40} className="mb-6 text-blue-400" />
           <h3 className="mb-4 text-2xl font-black uppercase italic leading-tight">Aksi Dashboard {isPusat ? 'Pusat' : 'Wilayah'}</h3>
-          <p className="text-[11px] text-slate-400 font-bold leading-relaxed mb-8">
+          <p className="mb-8 text-[11px] font-bold leading-relaxed text-slate-400">
             {isPusat 
               ? "Gunakan data nasional ini untuk menyusun kuota formasi CASN dan monitoring indeks inklusi kementerian." 
               : "Bagikan progres inklusi wilayah Anda ke media sosial atau buat laporan PDF formal untuk pimpinan."}
           </p>
           <div className="mt-auto grid grid-cols-2 gap-3">
-            <button onClick={() => onShareStats('viral')} className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800 p-4 hover:bg-blue-600 transition-all">
+            <button onClick={() => onShareStats('viral')} className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800 p-4 transition-all hover:bg-blue-600">
               <Share2 size={20} /><span className="text-[8px] font-black uppercase">Viral Share</span>
             </button>
-            <button onClick={() => onShareStats('formal')} className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800 p-4 hover:bg-emerald-600 transition-all">
+            <button onClick={() => onShareStats('formal')} className="flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-700 bg-slate-800 p-4 transition-all hover:bg-emerald-600">
               <MessageCircle size={20} /><span className="text-[8px] font-black uppercase">Laporan</span>
             </button>
           </div>
@@ -187,9 +187,9 @@ function StatCard({ icon, label, value, sub }: { icon: React.ReactNode, label: s
   return (
     <div className="rounded-[2rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-1">
       <div className="mb-4 inline-block rounded-xl border-2 border-slate-100 p-3">{icon}</div>
-      <div className="text-xs font-black uppercase text-slate-400 tracking-widest">{label}</div>
-      <div className="my-1 text-3xl font-black italic text-slate-900 tracking-tighter">{value}</div>
-      <p className="text-[9px] font-bold uppercase text-slate-400 italic">{sub}</p>
+      <div className="text-xs font-black uppercase tracking-widest text-slate-400">{label}</div>
+      <div className="my-1 text-3xl font-black italic tracking-tighter text-slate-900">{value}</div>
+      <p className="text-[9px] font-bold uppercase italic text-slate-400">{sub}</p>
     </div>
   );
 }

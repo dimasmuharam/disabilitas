@@ -129,12 +129,12 @@ if (data) {
     <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <div className="w-full max-w-md rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-center shadow-[12px_12px_0px_0px_rgba(59,130,246,1)]">
         <div className="mb-8 flex justify-center">
-          <div className="rounded-[2.5rem] bg-blue-50 p-6 text-blue-600 border-2 border-blue-100">
+          <div className="rounded-[2.5rem] border-2 border-blue-100 bg-blue-50 p-6 text-blue-600">
             {content.icon}
           </div>
         </div>
 
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-5 py-1.5 border-2 border-emerald-200">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border-2 border-emerald-200 bg-emerald-100 px-5 py-1.5">
           <CheckCircle size={14} className="text-emerald-600" />
           <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Terverifikasi</span>
         </div>

@@ -128,7 +128,7 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
 
       {/* 2. CONTROL BAR */}
       <div className="flex flex-col gap-4 md:flex-row">
-        <div className="relative flex-1 group">
+        <div className="group relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500" size={20} />
           <input 
             type="text" 
@@ -137,12 +137,12 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 p-1 bg-slate-200 rounded-2xl border-4 border-slate-900">
+        <div className="flex gap-2 rounded-2xl border-4 border-slate-900 bg-slate-200 p-1">
           {(['all', 'verified', 'pending'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
+              className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase transition-all ${
                 filterStatus === status 
                 ? 'bg-slate-900 text-white shadow-lg' 
                 : 'text-slate-500 hover:bg-slate-300'
@@ -177,21 +177,21 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
                   </div>
                 )}
                 {(isPusat || isProvinsi) && (
-                  <div className="flex items-center gap-1 text-[8px] font-black uppercase text-slate-400 italic">
+                  <div className="flex items-center gap-1 text-[8px] font-black uppercase italic text-slate-400">
                     <MapPin size={10} /> {company.location}
                   </div>
                 )}
               </div>
 
               <div className="flex gap-4">
-                <div className="size-16 overflow-hidden rounded-xl border-2 border-slate-900 bg-slate-50 relative shrink-0">
+                <div className="relative size-16 shrink-0 overflow-hidden rounded-xl border-2 border-slate-900 bg-slate-50">
                    <Image 
                      src={company.logo_url || '/placeholder-company.png'} 
                      alt="logo" fill className="object-contain p-2" 
                    />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="mb-1 text-lg font-black uppercase italic leading-tight text-slate-900 truncate">{company.name}</h4>
+                <div className="min-w-0 flex-1">
+                  <h4 className="mb-1 truncate text-lg font-black uppercase italic leading-tight text-slate-900">{company.name}</h4>
                   <p className="text-[10px] font-bold uppercase text-slate-400">{company.industry || 'Industri'}</p>
                 </div>
               </div>
@@ -199,11 +199,11 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
               <div className="mt-6 flex items-center justify-between border-t-2 border-slate-100 pt-6">
                 <div className="flex gap-4">
                   <div className="text-center">
-                    <p className="text-[8px] font-black uppercase text-slate-400 italic">Loker</p>
+                    <p className="text-[8px] font-black uppercase italic text-slate-400">Loker</p>
                     <p className="text-sm font-black text-blue-600">{company.active_jobs_count}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[8px] font-black uppercase text-slate-400 italic">Karyawan Disabilitas</p>
+                    <p className="text-[8px] font-black uppercase italic text-slate-400">Karyawan Disabilitas</p>
                     <p className="text-sm font-black text-slate-700">{company.total_employees_with_disability || 0}</p>
                   </div>
                 </div>
@@ -212,16 +212,16 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
                 {isKotaKab ? (
                   <button 
                     onClick={() => toggleVerification(company.id, company.is_verified)}
-                    className={`rounded-xl border-2 border-slate-900 px-4 py-2 text-[10px] font-black uppercase italic transition-all active:scale-95 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] ${
+                    className={`rounded-xl border-2 border-slate-900 px-4 py-2 text-[10px] font-black uppercase italic shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all active:scale-95 ${
                       company.is_verified ? 'bg-rose-400 hover:bg-rose-500' : 'bg-emerald-400 hover:bg-emerald-500'
                     }`}
                   >
                     {company.is_verified ? 'Cabut Verifikasi' : 'Verifikasi Mitra'}
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 border-2 border-slate-200">
+                  <div className="flex items-center gap-2 rounded-lg border-2 border-slate-200 bg-slate-50 px-3 py-2">
                     <BarChart3 size={14} className="text-slate-400" />
-                    <span className="text-[9px] font-black uppercase text-slate-400 italic">Mode Monitoring</span>
+                    <span className="text-[9px] font-black uppercase italic text-slate-400">Mode Monitoring</span>
                   </div>
                 )}
               </div>
@@ -229,7 +229,7 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
           ))}
         </div>
       ) : (
-        <div className="bg-slate-50 border-4 border-dashed border-slate-200 rounded-[2rem] p-20 text-center text-slate-400 font-black uppercase italic">
+        <div className="rounded-[2rem] border-4 border-dashed border-slate-200 bg-slate-50 p-20 text-center font-black uppercase italic text-slate-400">
           Data tidak ditemukan
         </div>
       )}
@@ -238,7 +238,7 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
       <section className="flex items-start gap-4 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-6">
         <Info className="shrink-0 text-slate-500" />
         <div>
-          <h5 className="text-[11px] font-black uppercase text-slate-700 italic">
+          <h5 className="text-[11px] font-black uppercase italic text-slate-700">
             {isPusat ? "Panduan Monitoring Pusat" : isProvinsi ? "Panduan Koordinasi Wilayah" : "Panduan Verifikasi Lokal"}
           </h5>
           <p className="mt-1 text-[11px] font-bold leading-relaxed text-slate-500">

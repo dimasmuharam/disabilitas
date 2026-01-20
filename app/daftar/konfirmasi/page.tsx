@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
 
-export default function KonfirmasiPendaftaran() {
+function KonfirmasiContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -52,11 +52,11 @@ export default function KonfirmasiPendaftaran() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4" role="main">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4" role="main">
+      <div className="w-full max-w-md space-y-8 rounded-xl border border-gray-100 bg-white p-10 shadow-lg">
         <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6" aria-hidden="true">
-            <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-green-100" aria-hidden="true">
+            <svg className="size-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -70,13 +70,13 @@ export default function KonfirmasiPendaftaran() {
           </h1>
           
           <p className="mt-4 text-gray-600">Pendaftaran berhasil. Silakan verifikasi email Anda:</p>
-          <p className="mt-2 font-bold text-blue-600 break-all">{email}</p>
+          <p className="mt-2 break-all font-bold text-blue-600">{email}</p>
         </div>
 
         <div className="mt-8 space-y-6">
-          <div className="rounded-md bg-blue-50 p-4 border-l-4 border-blue-400" role="alert">
+          <div className="rounded-md border-l-4 border-blue-400 bg-blue-50 p-4" role="alert">
             <h2 className="text-sm font-medium text-blue-800">Instruksi:</h2>
-            <ul className="mt-2 text-sm text-blue-700 list-disc pl-5 space-y-1">
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-blue-700">
               <li>Klik tombol <strong>Confirm Email</strong> di inbox Anda.</li>
               <li>Cek folder <strong>Spam/Promosi</strong> jika tidak ada.</li>
             </ul>
@@ -85,7 +85,7 @@ export default function KonfirmasiPendaftaran() {
           {/* Alert Message untuk User (Dibaca NVDA via role="status") */}
           {message && (
             <div 
-              className={`p-3 rounded-md text-sm text-center ${message.includes('Gagal') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}
+              className={`rounded-md p-3 text-center text-sm ${message.includes('Gagal') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}
               role="status"
               aria-live="polite"
             >
@@ -96,7 +96,7 @@ export default function KonfirmasiPendaftaran() {
           <div className="space-y-4">
             <Link
               href="/login"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
             >
               Masuk ke Akun
             </Link>
@@ -114,4 +114,19 @@ export default function KonfirmasiPendaftaran() {
       </div>
     </main>
   );
+}
+
+export default function KonfirmasiPendaftaran() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 size-16 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
+          <p className="text-sm font-medium text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <KonfirmasiContent />
+    </Suspense>
+  )
 }
