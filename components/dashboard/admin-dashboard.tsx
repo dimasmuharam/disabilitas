@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase"
 import { 
   BarChart3, Users, Link2, AlertTriangle, 
   ShieldCheck, UserPlus, FileSpreadsheet, 
-  Loader2 
+  Loader2, RefreshCw 
 } from "lucide-react"
 
 // IMPORT MODUL MODULAR
@@ -53,7 +53,21 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
       // Jika dibuka lewat /admin (Jalur Mandiri), cukup tarik data background yang kurang
       loadBackgroundData()
     }
-  }, [serverStats])
+  }, [])
+
+  // Retry mechanism jika data awal null/undefined
+  useEffect(() => {
+    // Jika setelah 3 detik masih loading dan tidak ada stats, retry
+    if (loading && !stats) {
+      const retryTimer = setTimeout(() => {
+        console.log("[ADMIN-RETRY] Retrying data fetch...")
+        if (!serverStats) {
+          loadAllAdminData()
+        }
+      }, 3000)
+      return () => clearTimeout(retryTimer)
+    }
+  }, [loading, stats, serverStats])
 
   // Mengumumkan perubahan status ke Screen Reader (NVDA)
   useEffect(() => {
@@ -164,6 +178,16 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
           </div>
         </div>
         <div className="flex gap-4">
+          <button 
+            onClick={() => {
+              setMsg("Menyegarkan data...");
+              loadAllAdminData();
+            }}
+            aria-label="Segarkan Data Dashboard" 
+            className="flex items-center gap-2 rounded-2xl border-4 border-emerald-500 bg-emerald-500 px-6 py-4 text-[10px] font-black uppercase text-white shadow-xl transition-all hover:bg-emerald-600"
+          >
+            <RefreshCw size={18} aria-hidden="true"/> Refresh Data
+          </button>
           <button aria-label="Undang Partner Baru" className="flex items-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 text-[10px] font-black uppercase text-white shadow-xl transition-all hover:translate-y-1">
             <UserPlus size={18} aria-hidden="true"/> Invite Partner
           </button>

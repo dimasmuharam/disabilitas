@@ -40,15 +40,31 @@ export default function AdminPage() {
         // Simpan data user untuk dikirim ke komponen dashboard
         setUser(authUser)
 
-        // 3. Tarik Data Riset BRIN (Pre-fetching)
+        // 3. Tarik Data Riset BRIN (Pre-fetching dengan Retry Logic)
         // Memastikan saat komponen render, data sudah siap untuk NVDA
-        const [resStats, resAudit] = await Promise.all([
-          getNationalStats(),
-          getManualInputAudit()
-        ])
+        let retryCount = 0
+        const maxRetries = 2
         
-        setStats(resStats)
-        setAudit(resAudit || [])
+        while (retryCount <= maxRetries) {
+          try {
+            const [resStats, resAudit] = await Promise.all([
+              getNationalStats(),
+              getManualInputAudit()
+            ])
+            
+            setStats(resStats)
+            setAudit(resAudit || [])
+            break // Success, exit retry loop
+          } catch (fetchError) {
+            console.error(`[ADMIN_DATA_FETCH_ERROR] Attempt ${retryCount + 1}:`, fetchError)
+            retryCount++
+            
+            if (retryCount <= maxRetries) {
+              // Wait before retry (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
+            }
+          }
+        }
         
       } catch (e) {
         console.error("[ADMIN_INIT_ERROR]:", e)
