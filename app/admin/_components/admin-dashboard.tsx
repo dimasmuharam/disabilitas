@@ -4,13 +4,12 @@ import { useState, useEffect, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 import { 
   BarChart3, Users, ShieldCheck, AlertTriangle, 
-  Loader2, ArrowLeft, ShieldAlert
+  Loader2, ArrowLeft 
 } from "lucide-react"
 
-// IMPORT MODUL MODULAR
+// IMPORT MODUL MODULAR (Tab Access Control sudah dibuang)
 import NationalAnalytics from "./modules/national-analytics"
 import UserManagement from "./modules/user-management"
-import AccessControl from "./modules/access-control"
 import AuditHub from "./modules/audit-hub"
 
 // IMPORT ACTIONS
@@ -24,15 +23,14 @@ interface AdminDashboardProps {
   user: any;
   serverStats?: any;
   serverAudit?: any[];
-  serverWhitelist?: any[];
 }
 
-export default function AdminDashboard({ user, serverStats, serverAudit, serverWhitelist }: AdminDashboardProps) {
+export default function AdminDashboard({ user, serverStats, serverAudit }: AdminDashboardProps) {
   const [loading, setLoading] = useState(!serverStats)
   const [activeTab, setActiveTab] = useState("national_stats")
   const [msg, setMsg] = useState("")
   
-  // REFS UNTUK AKSESIBILITAS
+  // REFS UNTUK AKSESIBILITAS & FOCUS
   const announcementRef = useRef<HTMLDivElement>(null)
   const moduleHeadingRef = useRef<HTMLDivElement>(null)
 
@@ -40,7 +38,6 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
   const [stats, setStats] = useState<any>(serverStats || null)
   const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
   const [allTalents, setAllTalents] = useState<any[]>([])
-  const [whitelist, setWhitelist] = useState<any[]>(serverWhitelist || [])
 
   // Sinkronisasi Data Background
   useEffect(() => {
@@ -72,6 +69,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
       setLoading(false);
     } catch (e) {
       console.error("Background sync error:", e);
+      setLoading(false);
     }
   }
 
@@ -87,12 +85,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
   }
 
   const handleUserAction = async (actionType: string, payload: any) => {
-    // Proteksi Level Akses
-    if (user.access_level === 'researcher' && (actionType === 'DELETE' || actionType === 'VERIFY')) {
-      setMsg("Akses Ditolak: Level Periset hanya diizinkan membaca data.");
-      return;
-    }
-
+    // Karena sudah melewati Cloudflare, Mas Dimas memiliki akses Admin Penuh (Full Authority)
     switch (actionType) {
       case "DELETE":
         if (confirm("Hapus data ini secara permanen dari ekosistem?")) {
@@ -112,20 +105,31 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
         if (!vError) { setMsg("Entitas berhasil diverifikasi."); refreshData(); }
         break;
 
-      case "ADD_WHITELIST":
-        setMsg(`Mendaftarkan ${payload.email} ke sistem...`);
-        // Logika penambahan ke tabel admin_whitelist via Supabase client
-        const { error: wError } = await supabase.from("admin_whitelist").insert([payload]);
-        if (!wError) { setMsg("Tim berhasil ditambahkan."); refreshData(); }
+      case "BULK_VERIFY":
+        setMsg(`Memverifikasi ${payload.length} entitas sekaligus...`);
+        const { error: bvError } = await manageAdminUser("BULK_UPDATE", "profiles", { 
+          ids: payload, 
+          verification_status: "verified",
+          is_verified: true 
+        });
+        if (!bvError) { setMsg("Verifikasi massal sukses."); refreshData(); }
+        break;
+
+      case "BULK_DELETE":
+        if (confirm(`Hapus ${payload.length} data terpilih secara permanen?`)) {
+          setMsg("Menghapus data massal...");
+          const { error: bdError } = await supabase.from("profiles").delete().in("id", payload);
+          if (!bdError) { setMsg("Data massal berhasil dibersihkan."); refreshData(); }
+        }
         break;
     }
   }
 
   if (loading && !stats) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status" aria-live="polite">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status">
         <Loader2 className="size-12 animate-spin text-blue-600" />
-        <p className="font-black uppercase italic tracking-widest text-slate-400">Menghubungkan ke Pusat Data...</p>
+        <p className="font-black uppercase italic tracking-widest text-slate-400 text-[10px]">Menghubungkan ke Pusat Data BRIN...</p>
       </div>
     )
   }
@@ -134,31 +138,24 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
     <div className="mx-auto max-w-[1600px] space-y-8 px-6 pb-20 duration-700 animate-in fade-in">
       
       {/* 0. LIVE REGION (NVDA) */}
-      <div 
-        ref={announcementRef} 
-        className="sr-only" 
-        role="status" 
-        aria-live="assertive" 
-        tabIndex={-1}
-      >
+      <div ref={announcementRef} className="sr-only" role="status" aria-live="assertive" tabIndex={-1}>
         {msg}
       </div>
 
-      {/* 1. HEADER */}
+      {/* 1. HEADER - Leveling Dihapus, Menampilkan Email Admin */}
       <header role="banner" className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 text-left">
           <div className="size-20 flex items-center justify-center rounded-3xl bg-blue-600 shadow-lg" aria-hidden="true">
             <ShieldCheck size={40} />
           </div>
           <div>
             <h1 className="text-3xl font-black uppercase italic leading-none tracking-tighter text-white">Research Command Center</h1>
             <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-blue-400">
-              {user?.full_name} • Access Level: <span className="text-white bg-blue-500 px-2 py-0.5 rounded-md">{user?.access_level}</span>
+              {user?.full_name || 'Administrator'} • <span className="text-white opacity-80">{user?.email}</span>
             </p>
           </div>
         </div>
         
-        {/* Tombol Back to Overview (Hanya muncul jika tidak di tab utama) */}
         {activeTab !== "national_stats" && (
           <button 
             onClick={() => {
@@ -166,28 +163,24 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
               setMsg("Kembali ke Ringkasan Statistik Nasional.");
             }}
             className="flex items-center gap-2 rounded-2xl bg-white px-6 py-4 text-[10px] font-black uppercase text-slate-900 shadow-xl transition-all hover:bg-blue-50"
-            aria-label="Kembali ke Ringkasan Utama"
           >
             <ArrowLeft size={16} /> Back to Overview
           </button>
         )}
       </header>
 
-      {/* 2. TABS NAVIGATION */}
+      {/* 2. TABS NAVIGATION - Tab Access Control Sudah Dibuang */}
       <nav aria-label="Navigasi Utama Dashboard">
         <div role="tablist" className="no-scrollbar flex gap-3 overflow-x-auto rounded-[2.5rem] border-4 border-slate-900 bg-slate-100 p-3 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
           {[
             { id: "national_stats", label: "National Analytics", icon: BarChart3 },
             { id: "user_mgmt", label: "User Management", icon: Users },
-            { id: "authority", label: "Access Control", icon: ShieldAlert },
             { id: "audit", label: "Data Audit Hub", icon: AlertTriangle }
           ].map((tab) => (
             <button
               key={tab.id}
               role="tab"
               aria-selected={activeTab === tab.id}
-              aria-controls={`panel-${tab.id}`}
-              id={`tab-${tab.id}`}
               onClick={() => {
                 setActiveTab(tab.id);
                 setMsg(`Membuka modul ${tab.label}`);
@@ -203,14 +196,13 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
         </div>
       </nav>
 
-      {/* 3. MODULE CONTENT WITH FOCUS ANCHOR */}
+      {/* 3. MODULE CONTENT */}
       <main 
         id={`panel-${activeTab}`} 
         role="tabpanel" 
         tabIndex={-1} 
         ref={moduleHeadingRef} 
         className="min-h-[500px] outline-none"
-        aria-labelledby={`tab-${activeTab}`}
       >
         {activeTab === "national_stats" && <NationalAnalytics stats={stats} />}
         
@@ -218,15 +210,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
           <UserManagement 
             talents={allTalents} 
             onAction={handleUserAction} 
-            canDelete={user.access_level === 'admin'} 
-          />
-        )}
-        
-        {activeTab === "authority" && (
-          <AccessControl 
-            whitelist={whitelist} 
-            onAction={handleUserAction}
-            currentAccess={user.access_level} 
+            canDelete={true} // Selalu True karena lolos Cloudflare
           />
         )}
         
@@ -234,7 +218,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit, serverW
           <AuditHub 
             logs={auditLogs} 
             onMerge={refreshData}
-            canAction={user.access_level !== 'researcher'} 
+            canAction={true} // Selalu True karena lolos Cloudflare
           />
         )}
       </main>

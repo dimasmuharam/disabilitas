@@ -3,8 +3,8 @@
 import React, { useState, useMemo } from "react"
 import { 
   Users, Search, ShieldCheck, Building2, GraduationCap, 
-  Landmark, Briefcase, Trash2, Filter, CheckCircle, 
-  XCircle, ChevronLeft, ChevronRight, MoreHorizontal 
+  Landmark, Briefcase, Trash2, CheckCircle, 
+  ChevronLeft, ChevronRight, MoreHorizontal 
 } from "lucide-react"
 
 export default function UserManagement({ talents = [], onAction }: any) {
@@ -41,11 +41,6 @@ export default function UserManagement({ talents = [], onAction }: any) {
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // --- HANDLERS ---
-  const toggleSelectAll = () => {
-    if (selectedIds.length === paginatedData.length) setSelectedIds([]);
-    else setSelectedIds(paginatedData.map((t: any) => t.id));
-  };
-
   const toggleSelectOne = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
@@ -67,16 +62,16 @@ export default function UserManagement({ talents = [], onAction }: any) {
       {/* 1. TOP STATS CARDS */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-blue-600 p-8 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Total Ekosistem</p>
-          <p className="text-4xl font-black italic">{stats.total}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-80 text-left">Total Ekosistem</p>
+          <p className="text-4xl font-black italic text-left">{stats.total}</p>
         </div>
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-emerald-500 p-8 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Terverifikasi</p>
-          <p className="text-4xl font-black italic">{stats.verified}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-80 text-left">Terverifikasi</p>
+          <p className="text-4xl font-black italic text-left">{stats.verified}</p>
         </div>
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-rose-500 p-8 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Menunggu Verifikasi</p>
-          <p className="text-4xl font-black italic">{stats.unverified}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-80 text-left">Menunggu Verifikasi</p>
+          <p className="text-4xl font-black italic text-left">{stats.unverified}</p>
         </div>
       </div>
 
@@ -88,7 +83,7 @@ export default function UserManagement({ talents = [], onAction }: any) {
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20}/>
             <input 
               placeholder="Cari Nama atau Email..." 
-              className="size-full rounded-3xl border-4 border-slate-900 py-4 pl-14 pr-6 text-sm font-black uppercase outline-none focus:ring-8 focus:ring-blue-50"
+              className="w-full rounded-3xl border-4 border-slate-900 py-4 pl-14 pr-6 text-sm font-black uppercase outline-none focus:ring-8 focus:ring-blue-50"
               value={query}
               onChange={(e) => { setQuery(e.target.value); setCurrentPage(1); }}
             />
@@ -122,15 +117,26 @@ export default function UserManagement({ talents = [], onAction }: any) {
           </div>
         </div>
 
-        {/* 3. BULK ACTIONS */}
+        {/* 3. BULK ACTIONS - DIPERBAIKI: Menghubungkan ke onAction */}
         {selectedIds.length > 0 && (
-          <div className="flex items-center justify-between bg-blue-50 p-4 animate-in fade-in slide-in-from-top-2">
-            <p className="text-[10px] font-black uppercase text-blue-700">{selectedIds.length} User Terpilih</p>
-            <div className="flex gap-2">
-              <button className="rounded-xl bg-blue-600 px-4 py-2 text-[9px] font-black uppercase text-white hover:bg-blue-700">Verifikasi Massal</button>
+          <div className="flex items-center justify-between bg-blue-50 p-4 animate-in fade-in slide-in-from-top-2 rounded-2xl mb-6">
+            <p className="text-[10px] font-black uppercase text-blue-700 ml-4">{selectedIds.length} User Terpilih</p>
+            <div className="flex gap-2 mr-4">
               <button 
-                onClick={() => onAction("BULK_DELETE", selectedIds)}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-[9px] font-black uppercase text-white hover:bg-rose-700"
+                onClick={() => {
+                   onAction("BULK_VERIFY", selectedIds);
+                   setSelectedIds([]); // Reset setelah aksi
+                }}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-[9px] font-black uppercase text-white hover:bg-blue-700 transition-all"
+              >
+                Verifikasi Massal
+              </button>
+              <button 
+                onClick={() => {
+                   onAction("BULK_DELETE", selectedIds);
+                   setSelectedIds([]); // Reset setelah aksi
+                }}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-[9px] font-black uppercase text-white hover:bg-rose-700 transition-all"
               >
                 Hapus Massal
               </button>
@@ -138,7 +144,7 @@ export default function UserManagement({ talents = [], onAction }: any) {
           </div>
         )}
 
-        {/* 4. DATA TABLE / LIST */}
+        {/* 4. DATA LIST */}
         <div className="mt-8 space-y-4">
           {paginatedData.length > 0 ? (
             paginatedData.map((t: any) => (
@@ -156,7 +162,7 @@ export default function UserManagement({ talents = [], onAction }: any) {
                   <div className="hidden size-14 items-center justify-center rounded-2xl bg-slate-900 text-lg font-black text-white sm:flex">
                     {t.full_name?.[0] || "?"}
                   </div>
-                  <div>
+                  <div className="text-left">
                     <h3 className="flex items-center gap-2 text-sm font-black uppercase text-slate-900">
                       {t.full_name} 
                       {t.verification_status === 'verified' && <CheckCircle size={16} className="text-emerald-500" />}
@@ -171,12 +177,10 @@ export default function UserManagement({ talents = [], onAction }: any) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* TOMBOL VERIFIKASI (Hanya untuk non-talent) */}
                   {t.role !== 'talent' && t.verification_status !== 'verified' && (
                     <button 
                       onClick={() => onAction("VERIFY", t.id)}
                       className="rounded-xl bg-emerald-100 px-4 py-2 text-[9px] font-black uppercase text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
-                      title="Verifikasi Instansi"
                     >
                       Verifikasi
                     </button>
@@ -185,12 +189,11 @@ export default function UserManagement({ talents = [], onAction }: any) {
                   <button 
                     onClick={() => onAction("DELETE", t.id)}
                     className="p-2 text-slate-300 hover:text-rose-600 transition-colors"
-                    aria-label={`Hapus user ${t.full_name}`}
                   >
                     <Trash2 size={20} />
                   </button>
                   
-                  <button className="p-2 text-slate-300 hover:text-slate-900" aria-label="Menu lainnya">
+                  <button className="p-2 text-slate-300 hover:text-slate-900">
                     <MoreHorizontal size={20} />
                   </button>
                 </div>
@@ -214,7 +217,6 @@ export default function UserManagement({ talents = [], onAction }: any) {
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(prev => prev - 1)}
                 className="flex size-12 items-center justify-center rounded-xl border-4 border-slate-900 disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all"
-                aria-label="Halaman Sebelumnya"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -222,7 +224,6 @@ export default function UserManagement({ talents = [], onAction }: any) {
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(prev => prev + 1)}
                 className="flex size-12 items-center justify-center rounded-xl border-4 border-slate-900 disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all"
-                aria-label="Halaman Berikutnya"
               >
                 <ChevronRight size={20} />
               </button>
