@@ -194,7 +194,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
               }}
               className={`flex items-center gap-3 whitespace-nowrap rounded-[1.8rem] px-8 py-5 text-[10px] font-black uppercase tracking-widest transition-all
                 ${activeTab === tab.id 
-                  ? "bg-slate-900 text-white shadow-lg translate-y-[-2px]" 
+                  ? "translate-y-[-2px] bg-slate-900 text-white shadow-lg" 
                   : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
             >
               <tab.icon size={18} aria-hidden="true" /> {tab.label}

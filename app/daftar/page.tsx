@@ -96,7 +96,7 @@ router.push(`/daftar/konfirmasi?email=${encodeURIComponent(email)}`);
     <main className="flex min-h-screen flex-col justify-center bg-slate-50 py-12 font-sans selection:bg-blue-100 sm:px-6 lg:px-8">
       
       <div className="px-4 text-center sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl bg-blue-600 shadow-xl border-4 border-white">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl border-4 border-white bg-blue-600 shadow-xl">
             <UserPlus className="text-white" size={32} />
         </div>
         <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">
@@ -193,7 +193,7 @@ router.push(`/daftar/konfirmasi?email=${encodeURIComponent(email)}`);
                 />
               </div>
 
-              <div className="flex justify-center py-2 overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4">
+              <div className="flex justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 py-2">
                   <Turnstile 
                       siteKey="0x4AAAAAACJnZ2_6aY-VEgfH" 
                       onSuccess={(token) => setTurnstileToken(token)}
@@ -214,7 +214,7 @@ router.push(`/daftar/konfirmasi?email=${encodeURIComponent(email)}`);
             <div 
               role="status" 
               aria-live="polite" 
-              className="space-y-6 rounded-[2rem] border-4 border-emerald-600 bg-emerald-50 p-10 text-center animate-in zoom-in-95 duration-500"
+              className="space-y-6 rounded-[2rem] border-4 border-emerald-600 bg-emerald-50 p-10 text-center duration-500 animate-in zoom-in-95"
             >
               <CheckCircle2 size={64} className="mx-auto text-emerald-600" />
               <div className="space-y-2">
@@ -227,7 +227,7 @@ router.push(`/daftar/konfirmasi?email=${encodeURIComponent(email)}`);
           )}
 
           <div className="mt-10 border-t-4 border-slate-50 pt-8 text-center">
-              <Link href="/masuk" className="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors hover:text-blue-600 underline decoration-slate-200 underline-offset-8">
+              <Link href="/masuk" className="text-[10px] font-black uppercase tracking-widest text-slate-400 underline decoration-slate-200 underline-offset-8 transition-colors hover:text-blue-600">
                 Sudah punya akun? Masuk Kembali
               </Link>
           </div>

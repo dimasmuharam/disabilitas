@@ -166,8 +166,8 @@ export default function GovDashboard({ user }: { user: any }) {
                   aria-valuemax={100}
                 ></div>
               </div>
-              <p className="mb-4 text-[9px] font-bold text-slate-400 leading-relaxed">
-                <AlertTriangle size={10} className="inline mr-1 text-amber-500" />
+              <p className="mb-4 text-[9px] font-bold leading-relaxed text-slate-400">
+                <AlertTriangle size={10} className="mr-1 inline text-amber-500" />
                 Data Kurang: <span className="text-slate-600">{profileCompletion.missing.join(", ")}</span>
               </p>
               <button 
@@ -288,7 +288,7 @@ function NavButton({ active, onClick, icon, label, ariaLabel }: { active: boolea
       onClick={onClick}
       aria-label={ariaLabel}
       aria-current={active ? "page" : undefined}
-      className={`group flex items-center gap-4 rounded-2xl border-4 p-4 transition-all outline-none focus:ring-4 focus:ring-blue-200 ${
+      className={`group flex items-center gap-4 rounded-2xl border-4 p-4 outline-none transition-all focus:ring-4 focus:ring-blue-200 ${
         active 
         ? 'border-slate-900 bg-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]' 
         : 'border-transparent text-slate-400 hover:border-slate-200 hover:text-slate-600'

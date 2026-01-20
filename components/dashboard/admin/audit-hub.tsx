@@ -27,17 +27,17 @@ export default function AuditHub({ logs, onMerge }: any) {
           <tbody className="divide-y-4 divide-slate-100 text-[12px] font-black uppercase italic">
             {logs.map((log: any) => (
               <tr key={log.id} className="transition-all hover:bg-slate-50">
-                <td className="px-10 py-6 text-blue-600 font-black">{log.field_name}</td>
+                <td className="px-10 py-6 font-black text-blue-600">{log.field_name}</td>
                 <td className="px-10 py-6 text-slate-900">{log.input_value}</td>
                 <td className="px-10 py-6 text-center">
-                   <span className="rounded-full bg-slate-100 px-6 py-2 border-2 border-slate-200">{log.occurrence_count}</span>
+                   <span className="rounded-full border-2 border-slate-200 bg-slate-100 px-6 py-2">{log.occurrence_count}</span>
                 </td>
                 <td className="px-10 py-6 text-right">
                   <button 
                     onClick={() => onMerge(log)}
-                    className="group flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-[10px] font-black uppercase text-white hover:bg-blue-600 transition-all"
+                    className="group flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-[10px] font-black uppercase text-white transition-all hover:bg-blue-600"
                   >
-                    Merge <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    Merge <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                   </button>
                 </td>
               </tr>

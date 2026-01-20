@@ -176,7 +176,7 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
                     </td>
                     <td className="p-6">
                       <div className="text-xs font-bold text-slate-700">{talent.education_level || "-"}</div>
-                      <div className="text-[9px] text-slate-400 truncate max-w-[150px]">{talent.major}</div>
+                      <div className="max-w-[150px] truncate text-[9px] text-slate-400">{talent.major}</div>
                     </td>
                     <td className="p-6">
                       <div className="flex items-center gap-1 text-xs font-bold text-slate-600">
@@ -188,7 +188,7 @@ const isPusat = govData.location === "Nasional" || govData.category === "Kemente
                       <button 
                         onClick={() => handleDownloadCV(talent.id)}
                         disabled={isGenerating === talent.id}
-                        className="flex items-center gap-2 mx-auto rounded-xl border-4 border-slate-900 bg-white p-3 font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-900 hover:text-white hover:shadow-none"
+                        className="mx-auto flex items-center gap-2 rounded-xl border-4 border-slate-900 bg-white p-3 font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-slate-900 hover:text-white hover:shadow-none"
                       >
                         {isGenerating === talent.id ? (
                           <Loader2 size={16} className="animate-spin" />

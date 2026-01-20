@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation" // Tambahkan useSearchParams
 import { Turnstile } from '@marsidev/react-turnstile'
 import { Eye, EyeOff, LogIn, CheckCircle2, AlertCircle, ShieldCheck, RefreshCw } from "lucide-react"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams() // Inisialisasi searchParams
   const [email, setEmail] = useState("")
@@ -132,7 +132,7 @@ export default function LoginPage() {
 
             {/* INPUT PASSWORD */}
             {!showResendBtn && ( // Sembunyikan password jika sedang mode kirim ulang email
-              <div className="animate-in fade-in duration-300">
+              <div className="duration-300 animate-in fade-in">
                 <div className="mb-2 flex items-center justify-between px-1">
                   <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Kata Sandi</label>
                   <Link href="/lupa-password" internal-title="Reset Access" className="text-[9px] font-black uppercase text-blue-600 hover:underline">Lupa Sandi?</Link>
@@ -213,5 +213,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 size-16 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900"></div>
+          <p className="text-sm font-medium text-slate-600">Memuat...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

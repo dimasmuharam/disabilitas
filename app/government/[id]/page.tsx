@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { 
   ShieldCheck, MapPin, Building2, 
@@ -50,9 +51,11 @@ export default async function GovernmentPublicProfile({ params }: Props) {
         <div className="container mx-auto px-6">
           <div className="flex flex-col items-center gap-10 md:flex-row md:items-end">
             <div className="size-44 shrink-0 rounded-[3rem] border-4 border-slate-900 bg-white p-6 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
-              <img 
+              <Image 
                 src={govData.official_seal_url || "/gov-placeholder.png"} 
                 alt={`Stempel Resmi ${govData.name}`} 
+                width={176}
+                height={176}
                 className="size-full object-contain"
               />
             </div>
@@ -68,7 +71,7 @@ export default async function GovernmentPublicProfile({ params }: Props) {
                 {govData.name}
               </h1>
               <div className="mt-6 flex flex-wrap justify-center gap-4 md:justify-start">
-                <div className="flex items-center gap-2 rounded-xl bg-indigo-800/50 px-4 py-2 text-xs font-black italic uppercase text-indigo-100">
+                <div className="flex items-center gap-2 rounded-xl bg-indigo-800/50 px-4 py-2 text-xs font-black uppercase italic text-indigo-100">
                   <Globe size={16} /> Otoritas {isPusat ? 'Nasional' : 'Sektoral'}
                 </div>
               </div>
@@ -102,14 +105,14 @@ export default async function GovernmentPublicProfile({ params }: Props) {
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
               <Scale className="mb-4 text-indigo-600" />
               <h3 className="text-lg font-black uppercase italic">Landasan Hukum</h3>
-              <p className="mt-2 text-sm font-bold text-slate-400 leading-relaxed">
+              <p className="mt-2 text-sm font-bold leading-relaxed text-slate-400">
                 Menjalankan fungsi pengawasan dan fasilitasi sesuai dengan UU No. 8 Tahun 2016 tentang Penyandang Disabilitas.
               </p>
             </div>
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-indigo-900 p-8 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
               <BookOpen className="mb-4 text-emerald-400" />
               <h3 className="text-lg font-black uppercase italic">Visi Inklusi</h3>
-              <p className="mt-2 text-sm font-bold opacity-70 leading-relaxed">
+              <p className="mt-2 text-sm font-bold leading-relaxed opacity-70">
                 Mendorong terciptanya lingkungan kerja yang adaptif dan suportif bagi talenta disabilitas di sektor publik dan swasta.
               </p>
             </div>
@@ -134,8 +137,8 @@ export default async function GovernmentPublicProfile({ params }: Props) {
 
             <div className="mt-8 space-y-4 border-t-2 border-slate-100 pt-8">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Surel Korespondensi</p>
-                <p className="font-bold text-slate-900 break-all">{govData.email || 'N/A'}</p>
+                <p className="text-[9px] font-black uppercase italic tracking-widest text-slate-400">Surel Korespondensi</p>
+                <p className="break-all font-bold text-slate-900">{govData.email || 'N/A'}</p>
               </div>
             </div>
           </div>
