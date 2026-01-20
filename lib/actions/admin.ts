@@ -2,9 +2,6 @@
 
 import { createAdminClient } from "@/lib/supabase"
 
-// Kita pastikan helper ini bisa berjalan di Edge Runtime
-export const runtime = "edge";
-
 /**
  * 1. ANALISIS NASIONAL (NATIONAL ANALYTICS)
  * Dioptimalkan untuk memproses data 11 responden (atau ribuan nantinya) secara cepat.
