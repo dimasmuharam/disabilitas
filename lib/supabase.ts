@@ -3,21 +3,20 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// 1. Client Standar (Aman untuk semua halaman termasuk Homepage)
+// Client standar untuk browser (Aman & Terbatas)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// 2. Client Admin (Gunakan fungsi agar tidak langsung dieksekusi di browser)
-export const getSupabaseAdmin = () => {
+/**
+ * Fungsi ini khusus digunakan di Server (Server Actions/API)
+ * untuk mendapatkan akses penuh ke database.
+ */
+export const createAdminClient = () => {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  if (typeof window !== 'undefined') {
-    // Jika terpanggil di browser, arahkan ke client biasa (keamanan)
-    return supabase 
-  }
-
   if (!serviceKey) {
-    console.warn("Admin Service Key is missing")
-    return supabase
+    // Jika kunci tidak ditemukan, berikan peringatan di log server
+    console.error("SERVICE_ROLE_KEY tidak ditemukan di environment server.");
+    return supabase; 
   }
 
   return createClient(supabaseUrl, serviceKey, {
@@ -28,5 +27,5 @@ export const getSupabaseAdmin = () => {
   })
 }
 
-// Untuk memudahkan import di admin.ts
-export const supabaseAdmin = getSupabaseAdmin()
+// Untuk kompatibilitas kode lama (opsional)
+export const supabaseAdmin = typeof window === 'undefined' ? createAdminClient() : supabase;
