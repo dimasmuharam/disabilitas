@@ -53,17 +53,16 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
       // Jika dibuka lewat /admin (Jalur Mandiri), cukup tarik data background yang kurang
       loadBackgroundData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Retry mechanism jika data awal null/undefined
   useEffect(() => {
     // Jika setelah 3 detik masih loading dan tidak ada stats, retry
-    if (loading && !stats) {
+    if (loading && !stats && !serverStats) {
       const retryTimer = setTimeout(() => {
         console.log("[ADMIN-RETRY] Retrying data fetch...")
-        if (!serverStats) {
-          loadAllAdminData()
-        }
+        loadAllAdminData()
       }, 3000)
       return () => clearTimeout(retryTimer)
     }
