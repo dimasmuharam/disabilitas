@@ -45,7 +45,7 @@ export default function AdminPage() {
         let retryCount = 0
         const maxRetries = 2
         
-        while (retryCount <= maxRetries) {
+        while (retryCount < maxRetries) {
           try {
             const [resStats, resAudit] = await Promise.all([
               getNationalStats(),
@@ -59,7 +59,7 @@ export default function AdminPage() {
             console.error(`[ADMIN_DATA_FETCH_ERROR] Attempt ${retryCount + 1}:`, fetchError)
             retryCount++
             
-            if (retryCount <= maxRetries) {
+            if (retryCount < maxRetries) {
               // Wait before retry (exponential backoff)
               await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
             }

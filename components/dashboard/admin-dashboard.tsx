@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
 import { 
   BarChart3, Users, Link2, AlertTriangle, 
@@ -53,8 +53,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
       // Jika dibuka lewat /admin (Jalur Mandiri), cukup tarik data background yang kurang
       loadBackgroundData()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [serverStats, loadAllAdminData, loadBackgroundData])
 
   // Retry mechanism jika data awal null/undefined
   useEffect(() => {
@@ -66,7 +65,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
       }, 3000)
       return () => clearTimeout(retryTimer)
     }
-  }, [loading, stats, serverStats])
+  }, [loading, stats, serverStats, loadAllAdminData])
 
   // Mengumumkan perubahan status ke Screen Reader (NVDA)
   useEffect(() => {
@@ -78,7 +77,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   /**
    * Jalur Cepat: Hanya tarik data yang belum ada dari server
    */
-  async function loadBackgroundData() {
+  const loadBackgroundData = useCallback(async () => {
     try {
       const { data: talents } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       const { data: entities } = await supabase.from("companies").select("*").order("created_at", { ascending: false });
@@ -89,12 +88,12 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     } catch (e) {
       console.error("Background sync error:", e);
     }
-  }
+  }, [])
 
   /**
    * Jalur Standar: Sync penuh (untuk kompatibilitas ke belakang)
    */
-  async function loadAllAdminData() {
+  const loadAllAdminData = useCallback(async () => {
     setLoading(true)
     try {
       // Jalankan tanpa Promise.all agar data yang cepat muncul duluan
@@ -114,7 +113,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     } finally {
       setTimeout(() => setLoading(false), 500);
     }
-  }
+  }, [])
 
   const handleLockAuthority = async (profileId: string, type: "agency" | "partner", value: string) => {
     setMsg(`Sedang memperbarui otoritas ${type}...`);
@@ -138,6 +137,11 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         setMsg("Gagal menghapus user.");
       }
     }
+  }
+
+  const handleRefreshData = () => {
+    setMsg("Menyegarkan data...");
+    loadAllAdminData();
   }
 
   if (loading) {
@@ -178,10 +182,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         </div>
         <div className="flex gap-4">
           <button 
-            onClick={() => {
-              setMsg("Menyegarkan data...");
-              loadAllAdminData();
-            }}
+            onClick={handleRefreshData}
             aria-label="Segarkan Data Dashboard" 
             className="flex items-center gap-2 rounded-2xl border-4 border-emerald-500 bg-emerald-500 px-6 py-4 text-[10px] font-black uppercase text-white shadow-xl transition-all hover:bg-emerald-600"
           >
