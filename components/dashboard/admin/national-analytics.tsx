@@ -16,12 +16,15 @@ export default function NationalAnalytics({ stats }: any) {
   
   // 1. SMART NARRATIVE ENGINE
   const generatedNarrative = useMemo(() => {
-    if (!stats || !stats.totalTalents) return "Menghimpun data variabel riset untuk analisis otomatis...";
+    // Cek apakah data benar-benar ada, bukan sekadar objek kosong
+    if (!stats || !stats.totalTalents || stats.totalTalents === 0) {
+      return "Menghimpun data variabel riset untuk analisis otomatis...";
+    }
     
     const topBarrier = stats.barrierDist ? Object.entries(stats.barrierDist).sort((a:any, b:any) => b[1] - a[1])[0] : null;
     const topTool = stats.toolsDist ? Object.entries(stats.toolsDist).sort((a:any, b:any) => b[1] - a[1])[0] : null;
     const laptopOwnership = stats.digitalAssets?.laptop || 0;
-    const employmentPct = stats.totalTalents ? Math.round(((stats.employmentRate?.employed || 0) / stats.totalTalents) * 100) : 0;
+    const employmentPct = Math.round(((stats.employmentRate?.employed || 0) / stats.totalTalents) * 100);
 
     return `Berdasarkan data ${stats.totalTalents} responden, tingkat penyerapan kerja berada di angka ${employmentPct}%. 
     Hambatan terbesar yang terdeteksi adalah "${topBarrier?.[0] || 'N/A'}", 
@@ -29,12 +32,24 @@ export default function NationalAnalytics({ stats }: any) {
     Terdapat korelasi kuat antara kepemilikan aset digital (${laptopOwnership} laptop) dengan kesiapan memasuki pasar kerja inklusif.`;
   }, [stats]);
 
-  // 2. HANDLING LOADING / NULL STATE (Agar tidak blank)
-  if (!stats) {
+  // 2. HANDLING LOADING / NULL STATE
+  // Perbaikan: Jangan hanya cek !stats, tapi cek apakah totalTalents sudah terisi
+  if (!stats || typeof stats.totalTalents === 'undefined') {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center rounded-[3rem] border-4 border-dashed border-slate-200 p-20 text-center" role="status" aria-live="polite">
-        <Loader2 className="mb-4 animate-spin text-slate-300" size={48} />
+        <Loader2 className="mb-4 animate-spin text-blue-600" size={48} />
         <p className="font-black uppercase italic tracking-widest text-slate-400">Menyusun Dasbor Analisis Nasional...</p>
+      </div>
+    );
+  }
+
+  // 3. HANDLING EMPTY DATA (Jika responden memang 0)
+  if (stats.totalTalents === 0) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-20 text-center">
+        <AlertCircle className="mb-4 text-red-500" size={48} />
+        <h2 className="text-xl font-black uppercase italic">Belum Ada Data Responden</h2>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">Pastikan tabel profiles di Supabase sudah terisi.</p>
       </div>
     );
   }
@@ -143,12 +158,16 @@ function StatTable({ title, icon: Icon, data, color }: any) {
             <tr><th className="px-4 py-3">Kategori</th><th className="px-4 py-3 text-right">Jumlah</th></tr>
           </thead>
           <tbody className="divide-y-2 divide-slate-50 font-bold uppercase">
-            {data && Object.entries(data).map(([key, val]: any) => (
-              <tr key={key} className="hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3 text-slate-600">{key}</td>
-                <td className="px-4 py-3 text-right text-slate-900">{val}</td>
-              </tr>
-            ))}
+            {data && Object.entries(data).length > 0 ? (
+              Object.entries(data).map(([key, val]: any) => (
+                <tr key={key} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3 text-slate-600">{key}</td>
+                  <td className="px-4 py-3 text-right text-slate-900">{val}</td>
+                </tr>
+              ))
+            ) : (
+              <tr><td colSpan={2} className="px-4 py-3 text-center text-slate-300 italic">Data tidak tersedia</td></tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -160,7 +179,7 @@ function AssetItem({ icon, label, value }: any) {
   return (
     <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4 border-2 border-slate-100">
       <div className="flex items-center gap-3 text-slate-500">
-        {React.cloneElement(icon, { size: 18 })}
+        {React.cloneElement(icon as React.ReactElement, { size: 18 })}
         <span className="text-[10px] font-black uppercase">{label}</span>
       </div>
       <span className="text-2xl font-black text-slate-900">{value || 0}</span>
