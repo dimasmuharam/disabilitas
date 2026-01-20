@@ -2,11 +2,10 @@
 
 import { createAdminClient } from "@/lib/supabase"
 
+// 1. FUNGSI UTAMA YANG KITA KERJAKAN (Statistik Nasional)
 export async function getNationalStats() {
   try {
     const admin = createAdminClient();
-
-    // Menarik data profil untuk statistik nasional
     const { data: profiles, error } = await admin
       .from("profiles")
       .select(`
@@ -23,19 +22,10 @@ export async function getNationalStats() {
         internet_quality
       `)
 
-    if (error) {
-      console.error("Gagal menarik data:", error.message);
-      return { totalTalents: 0, error: error.message };
-    }
+    if (error) return { totalTalents: 0, error: error.message };
+    if (!profiles || profiles.length === 0) return { totalTalents: 0, empty: true };
 
-    if (!profiles || profiles.length === 0) {
-      return { totalTalents: 0, empty: true };
-    }
-
-    // --- PROSES DATA (Logic yang Mas sudah buat) ---
-    
-    // Contoh penghitungan sederhana untuk memastikan data mengalir
-    const stats = {
+    return {
       totalTalents: profiles.length,
       disabilityDist: profiles.reduce((acc: any, p: any) => {
         const type = p.disability_type || 'Lainnya';
@@ -45,14 +35,16 @@ export async function getNationalStats() {
       employmentRate: {
         employed: profiles.filter((p: any) => p.career_status === 'Bekerja').length,
         seeking: profiles.filter((p: any) => p.career_status === 'Mencari Kerja').length,
-      },
-      // ... Mas bisa tambahkan logika distribusi lainnya di sini ...
+      }
     };
-
-    return stats;
-
   } catch (err: any) {
-    console.error("System Error:", err.message);
-    return { totalTalents: 0, error: "Terjadi kesalahan sistem internal." };
+    return { totalTalents: 0, error: err.message };
   }
 }
+
+// 2. FUNGSI-FUNGSI PENDUKUNG (Agar Build Tidak Error)
+// Kita buat fungsi kosong dulu supaya sistem bisa jalan
+export async function getTransitionInsights() { return null; }
+export async function getManualInputAudit() { return null; }
+export async function setupAdminLock() { return null; }
+export async function manageAdminUser() { return null; }
