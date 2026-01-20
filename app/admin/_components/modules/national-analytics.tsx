@@ -18,20 +18,27 @@ export default function NationalAnalytics({ stats }: any) {
     setIsMounted(true);
   }, []);
   
-  // 1. SMART NARRATIVE ENGINE
+  // 1. SMART NARRATIVE ENGINE (Hanya menghitung data Valid)
   const generatedNarrative = useMemo(() => {
     if (!stats || !stats.totalTalents || stats.totalTalents === 0) {
       return "Sistem sedang mengkalibrasi data riset nasional. Pastikan koneksi stabil untuk sinkronisasi variabel...";
     }
     
+    // Fungsi pembantu untuk mengambil entitas teratas yang bukan null/empty
     const getTopEntry = (dist: any) => {
-      if (!dist || Object.keys(dist).length === 0) return "Belum terdeteksi";
-      return Object.entries(dist).sort((a: any, b: any) => b[1] - a[1])[0][0];
+      if (!dist) return "Belum terdeteksi";
+      const validEntries = Object.entries(dist).filter(([key]) => 
+        key !== "null" && key !== "undefined" && key !== "" && key !== "Tidak Terisi"
+      );
+      if (validEntries.length === 0) return "Belum terdeteksi";
+      return validEntries.sort((a: any, b: any) => b[1] - a[1])[0][0];
     };
 
     const topBarrier = getTopEntry(stats.barrierDist);
     const topTool = getTopEntry(stats.toolsDist);
     const laptopCount = stats.digitalAssets?.laptop || 0;
+    
+    // Kalkulasi Persentase Kerja (Hanya dari total responden yang datanya valid)
     const employmentPct = Math.round(((stats.employmentRate?.employed || 0) / stats.totalTalents) * 100);
 
     return `Berdasarkan data ${stats.totalTalents} responden, tingkat penyerapan kerja berada di angka ${employmentPct}%. 
@@ -47,7 +54,7 @@ export default function NationalAnalytics({ stats }: any) {
           <Loader2 className="size-[60px] animate-spin text-blue-600" />
           <Activity className="absolute inset-0 m-auto text-slate-300" size={20} />
         </div>
-        <h2 className="text-lg font-black uppercase italic tracking-tight text-slate-900">Sinkronisasi Data BRIN</h2>
+        <h2 className="text-lg font-black uppercase italic text-slate-900 text-left">Sinkronisasi Data BRIN</h2>
         <button 
           onClick={() => window.location.reload()}
           className="mt-8 flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-[9px] font-black uppercase text-white hover:bg-blue-600 transition-all"
@@ -58,24 +65,13 @@ export default function NationalAnalytics({ stats }: any) {
     );
   }
 
-  // 3. HANDLING EMPTY DATA
-  if (stats.totalTalents === 0) {
-    return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-20 text-center shadow-2xl">
-        <AlertCircle className="mb-4 text-red-500" size={48} />
-        <h2 className="text-2xl font-black uppercase italic">Dataset Kosong</h2>
-        <p className="mt-2 text-[10px] font-bold uppercase text-slate-400">Belum ada data responden di database.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-12 duration-700 animate-in fade-in slide-in-from-bottom-4" role="region" aria-label="Analisis Riset Nasional">
       
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-        {/* CHART RAGAM DISABILITAS */}
+        {/* CHART RAGAM DISABILITAS - Filtered */}
         <div className="space-y-8 rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
-          <h2 className="flex items-center gap-3 text-xl font-black uppercase italic text-slate-900">
+          <h2 className="flex items-center gap-3 text-xl font-black uppercase italic text-slate-900 text-left">
             <PieIcon className="text-blue-600" size={28}/> Ragam Disabilitas
           </h2>
           
@@ -84,7 +80,9 @@ export default function NationalAnalytics({ stats }: any) {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie 
-                    data={Object.entries(stats.disabilityDist || {}).map(([name, value]) => ({ name, value }))} 
+                    data={Object.entries(stats.disabilityDist || {})
+                      .filter(([name]) => name !== "null" && name !== "undefined" && name !== "Tidak Terisi")
+                      .map(([name, value]) => ({ name, value }))} 
                     innerRadius={80} outerRadius={120} paddingAngle={5} dataKey="value" stroke="none"
                   >
                     {Object.entries(stats.disabilityDist || {}).map((_, index) => (
@@ -158,10 +156,12 @@ export default function NationalAnalytics({ stats }: any) {
 }
 
 function StatTable({ title, icon: Icon, data, color }: any) {
-  // MENGURUTKAN DATA DARI TERBESAR KE TERKECIL
+  // FILTERING: Menghapus data null/tidak terisi & Sorting
   const sortedData = useMemo(() => {
     if (!data) return [];
-    return Object.entries(data).sort((a: any, b: any) => b[1] - a[1]);
+    return Object.entries(data)
+      .filter(([key]) => key !== "null" && key !== "undefined" && key !== "" && key !== "Tidak Terisi")
+      .sort((a: any, b: any) => b[1] - a[1]);
   }, [data]);
 
   return (
