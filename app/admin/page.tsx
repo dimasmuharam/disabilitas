@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import AdminDashboard from "./_components/admin-dashboard";
 import { getNationalStats, getManualInputAudit } from "@/lib/actions/admin";
 
+export const runtime = 'edge';
 /**
  * INISIALISASI SUPABASE ADMIN
  * Menggunakan Service Role Key untuk bypass RLS agar Admin bisa melihat data riset utuh.
