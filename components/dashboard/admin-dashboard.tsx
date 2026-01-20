@@ -24,26 +24,36 @@ import {
 } from "@/lib/actions/admin"
 
 interface AdminDashboardProps {
-  user: any
+  user: any;
+  serverStats?: any; // Data titipan dari Server Component
+  serverAudit?: any[]; // Data titipan dari Server Component
 }
 
-export default function AdminDashboard({ user }: AdminDashboardProps) {
-  const [loading, setLoading] = useState(true)
+export default function AdminDashboard({ user, serverStats, serverAudit }: AdminDashboardProps) {
+  // Jika sudah ada data dari server, loading langsung false
+  const [loading, setLoading] = useState(!serverStats)
   const [activeTab, setActiveTab] = useState("national_stats")
   const [msg, setMsg] = useState("")
   const announcementRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
-  const [stats, setStats] = useState<any>(null)
+  // Gunakan data server sebagai nilai awal jika tersedia
+  const [stats, setStats] = useState<any>(serverStats || null)
   const [transitionInsights, setTransitionInsights] = useState<any>(null)
-  const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
   const [allTalents, setAllTalents] = useState<any[]>([])
   const [allEntities, setAllEntities] = useState<any[]>([])
 
-  // Sinkronisasi Data Saat Pertama Kali Dibuka
+  // Sinkronisasi Data
   useEffect(() => {
-    loadAllAdminData()
-  }, [])
+    if (!serverStats) {
+      // Jika dibuka lewat /dashboard (Router lama), jalankan sync penuh
+      loadAllAdminData()
+    } else {
+      // Jika dibuka lewat /admin (Jalur Mandiri), cukup tarik data background yang kurang
+      loadBackgroundData()
+    }
+  }, [serverStats])
 
   // Mengumumkan perubahan status ke Screen Reader (NVDA)
   useEffect(() => {
@@ -53,29 +63,32 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
   }, [msg])
 
   /**
-   * MEMPERBAIKI LOGIKA SYNC:
-   * Kita tidak lagi menggunakan Promise.all yang kaku agar jika satu gagal,
-   * yang lain tetap tampil.
+   * Jalur Cepat: Hanya tarik data yang belum ada dari server
+   */
+  async function loadBackgroundData() {
+    try {
+      const { data: talents } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      const { data: entities } = await supabase.from("companies").select("*").order("created_at", { ascending: false });
+      
+      setAllTalents(talents || []);
+      setAllEntities(entities || []);
+      setLoading(false);
+    } catch (e) {
+      console.error("Background sync error:", e);
+    }
+  }
+
+  /**
+   * Jalur Standar: Sync penuh (untuk kompatibilitas ke belakang)
    */
   async function loadAllAdminData() {
     setLoading(true)
     try {
-      // 1. Ambil Stats Nasional (Prioritas Utama)
-      getNationalStats().then(data => {
-        setStats(data);
-      }).catch(err => console.error("Error Stats:", err));
+      // Jalankan tanpa Promise.all agar data yang cepat muncul duluan
+      getNationalStats().then(data => setStats(data));
+      getManualInputAudit().then(data => setAuditLogs(Array.isArray(data) ? data : []));
+      getTransitionInsights().then(data => setTransitionInsights(data));
 
-      // 2. Ambil Audit Logs
-      getManualInputAudit().then(data => {
-        setAuditLogs(Array.isArray(data) ? data : []);
-      }).catch(err => console.error("Error Audit:", err));
-
-      // 3. Ambil Transition Insights
-      getTransitionInsights().then(data => {
-        setTransitionInsights(data);
-      }).catch(err => console.error("Error Insights:", err));
-
-      // 4. Ambil Data Profil & Instansi via Supabase Client (Bypass RLS via Service Role di Action jika perlu)
       const { data: talents } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       const { data: entities } = await supabase.from("companies").select("*").order("created_at", { ascending: false });
 
@@ -84,9 +97,8 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
       
     } catch (e) {
       console.error("[ADMIN-SYNC-ERROR]:", e)
-      setMsg("Sinkronisasi data terhambat, mencoba memulihkan...");
+      setMsg("Sinkronisasi data terhambat.");
     } finally {
-      // Kita beri jeda sedikit agar transisi loading lebih halus bagi NVDA
       setTimeout(() => setLoading(false), 500);
     }
   }
