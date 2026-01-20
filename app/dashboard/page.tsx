@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabase"
 import { useRouter, useSearchParams } from "next/navigation"
 import TalentDashboard from "@/components/dashboard/talent-dashboard"
 import CompanyDashboard from "@/components/dashboard/company-dashboard"
-import AdminDashboard from "@/components/dashboard/admin-dashboard"
 import PartnerDashboard from "@/components/dashboard/partner-dashboard"
 import CampusDashboard from "@/components/dashboard/campus-dashboard"
 import GovDashboard from "@/components/dashboard/gov-dashboard"
@@ -32,24 +31,22 @@ function DashboardContent() {
           return
         }
 
-        setUser(authUser)
-
-        // 2. Tentukan Role dengan urutan prioritas: App Metadata (Admin) -> User Metadata -> Default Talent
+        // 2. Tentukan Role
         const userRole = authUser.app_metadata?.role || authUser.user_metadata?.role || USER_ROLES.TALENT
+
+        // --- JALUR MANDIRI ADMIN (DIPISAH KE /admin) ---
+        if (userRole === 'admin' || userRole === 'super_admin') {
+          router.replace("/admin")
+          return // Hentikan eksekusi kode selanjutnya untuk Admin
+        }
+
+        setUser(authUser)
         setRole(userRole)
 
         let profileData = null
 
-        // 3. Ambil data profil berdasarkan tabel masing-masing role
-        if (userRole === 'admin' || userRole === 'super_admin') {
-          // Admin mengambil data dari tabel profiles
-          const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle()
-          profileData = data || { 
-            id: authUser.id, 
-            full_name: authUser.user_metadata?.full_name || "Administrator Hub",
-            is_placeholder: true 
-          }
-        } else if (userRole === USER_ROLES.COMPANY) {
+        // 3. Ambil data profil berdasarkan tabel masing-masing role (Non-Admin)
+        if (userRole === USER_ROLES.COMPANY) {
           const { data } = await supabase.from('companies').select('*').eq('id', authUser.id).maybeSingle()
           profileData = data || { 
             id: authUser.id, 
@@ -89,7 +86,7 @@ function DashboardContent() {
 
         setProfile(profileData)
 
-        // 4. Manajemen Fokus Aksesibilitas untuk Screen Reader
+        // 4. Manajemen Fokus Aksesibilitas
         setTimeout(() => {
           const targetId = isJustVerified ? "welcome-banner" : "dashboard-title";
           const element = document.getElementById(targetId);
@@ -144,10 +141,8 @@ function DashboardContent() {
 
         <h1 id="dashboard-title" className="sr-only">{"Dashboard Router"}</h1>
 
-        {/* SWITCHER BERDASARKAN ROLE */}
-        {role === 'admin' || role === 'super_admin' ? (
-          <AdminDashboard user={{ ...user, ...profile }} />
-        ) : role === USER_ROLES.TALENT ? (
+        {/* SWITCHER BERDASARKAN ROLE (Hanya Non-Admin) */}
+        {role === USER_ROLES.TALENT ? (
           <TalentDashboard 
             user={user} 
             profile={profile} 
