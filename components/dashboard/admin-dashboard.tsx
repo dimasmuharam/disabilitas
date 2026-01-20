@@ -46,6 +46,8 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const [allEntities, setAllEntities] = useState<any[]>([])
 
   // Sinkronisasi Data
+  // Note: loadAllAdminData and loadBackgroundData are wrapped in useCallback with empty deps,
+  // so they're stable references and won't cause unnecessary re-renders
   useEffect(() => {
     if (!serverStats) {
       // Jika dibuka lewat /dashboard (Router lama), jalankan sync penuh
@@ -57,6 +59,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   }, [serverStats, loadAllAdminData, loadBackgroundData])
 
   // Retry mechanism jika data awal null/undefined
+  // Note: stats from getNationalStats always returns an object, so !stats check is safe
   useEffect(() => {
     const MAX_RETRIES = 2
     

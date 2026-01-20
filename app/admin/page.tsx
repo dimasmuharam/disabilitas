@@ -60,7 +60,7 @@ export default function AdminPage() {
             console.error(`[ADMIN_DATA_FETCH_ERROR] Attempt ${attempt}/${maxAttempts}:`, fetchError)
             
             if (attempt < maxAttempts) {
-              // Wait before retry (exponential backoff: 1s, 2s, 4s, ...)
+              // Wait before retry (exponential backoff: 1s, 2s for attempts 1, 2)
               await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)))
             }
           }
