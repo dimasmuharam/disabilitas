@@ -1,85 +1,81 @@
-"use client"
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+import AdminDashboard from "./_components/admin-dashboard";
+import { getNationalStats, getManualInputAudit } from "@/lib/actions/admin";
 
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import AdminDashboard from "@/components/dashboard/admin-dashboard"
-import { useRouter } from "next/navigation"
-import { getNationalStats, getManualInputAudit } from "@/lib/actions/admin"
+// Inisialisasi Admin Client (Bypass RLS)
+// Kita gunakan Service Role Key agar data riset BRIN bisa ditarik secara utuh
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
+);
 
-/**
- * JALUR MANDIRI ADMIN (CLIENT-SIDE AUTH)
- * Mengapa Client-Side? Agar sinkron dengan sesi login di /dashboard dan /masuk.
- * Data statistik tetap ditarik via Server Actions untuk keamanan & kecepatan.
- */
-export default function AdminPage() {
-  const [user, setUser] = useState<any>(null)
-  const [stats, setStats] = useState<any>(null)
-  const [audit, setAudit] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    async function initAdmin() {
-      try {
-        // 1. Validasi Sesi (Menggunakan metode yang sama dengan dashboard Mas)
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-        
-        if (authError || !authUser) {
-          router.replace("/masuk")
-          return
-        }
+export default async function AdminPage() {
+  /**
+   * 1. IDENTIFIKASI VIA CLOUDFLARE ZERO TRUST
+   * Cloudflare mengirimkan email user yang berhasil login melalui header.
+   * Jika sedang di localhost (development), kita gunakan email fallback.
+   */
+  const headersList = require("next/headers").headers();
+  const userEmail = headersList.get("cf-access-authenticated-user-email") || "dimasmuharam@gmail.com"; 
 
-        // 2. Validasi Otoritas Admin
-        const role = authUser.app_metadata?.role || authUser.user_metadata?.role
-        if (role !== 'admin' && role !== 'super_admin') {
-          // Jika bukan admin, kembalikan ke router dashboard biasa
-          router.replace("/dashboard")
-          return
-        }
+  /**
+   * 2. VALIDASI WHITELIST INTERNAL
+   * Cek apakah email ini terdaftar di tabel whitelist dan level aksesnya.
+   */
+  const { data: whitelistEntry, error: whitelistError } = await supabaseAdmin
+    .from("admin_whitelist")
+    .select("*")
+    .eq("email", userEmail)
+    .single();
 
-        // Simpan data user untuk dikirim ke komponen dashboard
-        setUser(authUser)
-
-        // 3. Tarik Data Riset BRIN (Pre-fetching)
-        // Memastikan saat komponen render, data sudah siap untuk NVDA
-        const [resStats, resAudit] = await Promise.all([
-          getNationalStats(),
-          getManualInputAudit()
-        ])
-        
-        setStats(resStats)
-        setAudit(resAudit || [])
-        
-      } catch (e) {
-        console.error("[ADMIN_INIT_ERROR]:", e)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    initAdmin()
-  }, [router])
-
-  // Tampilan transisi saat pengecekan kunci akses
-  if (loading) {
+  // Jika email tidak terdaftar di whitelist, cegah akses meskipun lolos Cloudflare
+  if (whitelistError || !whitelistEntry) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center space-y-4 bg-slate-950">
-        <div className="size-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-        <p className="animate-pulse font-black uppercase italic tracking-widest text-white">
-          Otorisasi Komando Admin...
-        </p>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center">
+        <div className="max-w-md space-y-4 rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(225,29,72,1)]">
+          <h1 className="text-2xl font-black uppercase italic text-rose-600">Akses Ditolak</h1>
+          <p className="text-xs font-bold uppercase leading-relaxed text-slate-500">
+            Email <span className="text-slate-900">{userEmail}</span> berhasil melewati Cloudflare, 
+            namun belum terdaftar dalam Whitelist Internal Riset BRIN.
+          </p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+            Silakan hubungi Principal Investigator untuk pendaftaran otoritas.
+          </p>
+        </div>
       </div>
-    )
+    );
   }
 
-  // Jika lolos proteksi, tampilkan Command Center
+  /**
+   * 3. DATA FETCHING (SERVER SIDE)
+   * Karena email valid, kita tarik semua data yang dibutuhkan dashboard.
+   */
+  const [stats, auditLogs, { data: allWhitelist }] = await Promise.all([
+    getNationalStats(),
+    getManualInputAudit(),
+    supabaseAdmin.from("admin_whitelist").select("*").order("created_at", { ascending: false })
+  ]);
+
+  // Siapkan objek user untuk UI Dashboard
+  const authorizedUser = {
+    full_name: whitelistEntry.name,
+    email: whitelistEntry.email,
+    access_level: whitelistEntry.access_level // 'admin', 'staff', atau 'researcher'
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <AdminDashboard 
-        user={user} 
+        user={authorizedUser} 
         serverStats={stats} 
-        serverAudit={audit} 
+        serverAudit={auditLogs}
+        serverWhitelist={allWhitelist} // Kirim data whitelist ke dashboard
       />
     </main>
-  )
+  );
 }
