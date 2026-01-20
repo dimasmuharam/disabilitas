@@ -42,10 +42,10 @@ export default function AdminPage() {
 
         // 3. Tarik Data Riset BRIN (Pre-fetching dengan Retry Logic)
         // Memastikan saat komponen render, data sudah siap untuk NVDA
-        let retryCount = 0
-        const maxRetries = 2
+        let attempt = 0
+        const maxAttempts = 3 // 1 initial attempt + 2 retries
         
-        while (retryCount < maxRetries) {
+        while (attempt < maxAttempts) {
           try {
             const [resStats, resAudit] = await Promise.all([
               getNationalStats(),
@@ -56,12 +56,12 @@ export default function AdminPage() {
             setAudit(resAudit || [])
             break // Success, exit retry loop
           } catch (fetchError) {
-            console.error(`[ADMIN_DATA_FETCH_ERROR] Attempt ${retryCount + 1}:`, fetchError)
-            retryCount++
+            attempt++
+            console.error(`[ADMIN_DATA_FETCH_ERROR] Attempt ${attempt}/${maxAttempts}:`, fetchError)
             
-            if (retryCount < maxRetries) {
-              // Wait before retry (exponential backoff)
-              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
+            if (attempt < maxAttempts) {
+              // Wait before retry (exponential backoff: 1s, 2s, 4s, ...)
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)))
             }
           }
         }

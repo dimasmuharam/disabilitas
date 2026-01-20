@@ -34,6 +34,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const [loading, setLoading] = useState(!serverStats)
   const [activeTab, setActiveTab] = useState("national_stats")
   const [msg, setMsg] = useState("")
+  const [retryCount, setRetryCount] = useState(0)
   const announcementRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
@@ -57,15 +58,25 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
 
   // Retry mechanism jika data awal null/undefined
   useEffect(() => {
-    // Jika setelah 3 detik masih loading dan tidak ada stats, retry
-    if (loading && !stats && !serverStats) {
+    const MAX_RETRIES = 2
+    
+    // Jika setelah 3 detik masih loading dan tidak ada stats, retry (max 2 times)
+    if (loading && !stats && !serverStats && retryCount < MAX_RETRIES) {
       const retryTimer = setTimeout(() => {
-        console.log("[ADMIN-RETRY] Retrying data fetch...")
+        console.log(`[ADMIN-RETRY] Retrying data fetch (attempt ${retryCount + 1}/${MAX_RETRIES})...`)
+        setRetryCount(prev => prev + 1)
         loadAllAdminData()
       }, 3000)
       return () => clearTimeout(retryTimer)
     }
-  }, [loading, stats, serverStats, loadAllAdminData])
+    
+    // Jika sudah mencapai max retries, stop loading
+    if (retryCount >= MAX_RETRIES && loading && !stats) {
+      console.error("[ADMIN-RETRY] Max retries reached, stopping...")
+      setLoading(false)
+      setMsg("Gagal memuat data setelah beberapa percobaan. Silakan klik tombol Refresh Data.")
+    }
+  }, [loading, stats, serverStats, retryCount, loadAllAdminData])
 
   // Mengumumkan perubahan status ke Screen Reader (NVDA)
   useEffect(() => {
@@ -141,6 +152,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
 
   const handleRefreshData = () => {
     setMsg("Menyegarkan data...");
+    setRetryCount(0); // Reset retry counter
     loadAllAdminData();
   }
 
