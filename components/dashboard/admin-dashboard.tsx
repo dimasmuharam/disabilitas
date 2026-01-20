@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
 import { 
   BarChart3, Users, Link2, AlertTriangle, 
   ShieldCheck, UserPlus, FileSpreadsheet, 
-  Loader2 
+  Loader2, RefreshCw 
 } from "lucide-react"
 
 // IMPORT MODUL MODULAR
@@ -34,6 +34,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const [loading, setLoading] = useState(!serverStats)
   const [activeTab, setActiveTab] = useState("national_stats")
   const [msg, setMsg] = useState("")
+  const [retryCount, setRetryCount] = useState(0)
   const announcementRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
@@ -45,6 +46,8 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const [allEntities, setAllEntities] = useState<any[]>([])
 
   // Sinkronisasi Data
+  // Note: loadAllAdminData and loadBackgroundData are wrapped in useCallback with empty deps,
+  // so they're stable references and won't cause unnecessary re-renders
   useEffect(() => {
     if (!serverStats) {
       // Jika dibuka lewat /dashboard (Router lama), jalankan sync penuh
@@ -53,7 +56,30 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
       // Jika dibuka lewat /admin (Jalur Mandiri), cukup tarik data background yang kurang
       loadBackgroundData()
     }
-  }, [serverStats])
+  }, [serverStats, loadAllAdminData, loadBackgroundData])
+
+  // Retry mechanism jika data awal null/undefined
+  // Note: stats from getNationalStats always returns an object, so !stats check is safe
+  useEffect(() => {
+    const MAX_RETRIES = 2
+    
+    // Jika setelah 3 detik masih loading dan tidak ada stats, retry (max 2 times)
+    if (loading && !stats && !serverStats && retryCount < MAX_RETRIES) {
+      const retryTimer = setTimeout(() => {
+        console.log(`[ADMIN-RETRY] Retrying data fetch (attempt ${retryCount + 1}/${MAX_RETRIES})...`)
+        setRetryCount(prev => prev + 1)
+        loadAllAdminData()
+      }, 3000)
+      return () => clearTimeout(retryTimer)
+    }
+    
+    // Jika sudah mencapai max retries, stop loading
+    if (retryCount >= MAX_RETRIES && loading && !stats) {
+      console.error("[ADMIN-RETRY] Max retries reached, stopping...")
+      setLoading(false)
+      setMsg("Gagal memuat data setelah beberapa percobaan. Silakan klik tombol Refresh Data.")
+    }
+  }, [loading, stats, serverStats, retryCount, loadAllAdminData])
 
   // Mengumumkan perubahan status ke Screen Reader (NVDA)
   useEffect(() => {
@@ -65,7 +91,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   /**
    * Jalur Cepat: Hanya tarik data yang belum ada dari server
    */
-  async function loadBackgroundData() {
+  const loadBackgroundData = useCallback(async () => {
     try {
       const { data: talents } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       const { data: entities } = await supabase.from("companies").select("*").order("created_at", { ascending: false });
@@ -76,12 +102,12 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     } catch (e) {
       console.error("Background sync error:", e);
     }
-  }
+  }, [])
 
   /**
    * Jalur Standar: Sync penuh (untuk kompatibilitas ke belakang)
    */
-  async function loadAllAdminData() {
+  const loadAllAdminData = useCallback(async () => {
     setLoading(true)
     try {
       // Jalankan tanpa Promise.all agar data yang cepat muncul duluan
@@ -101,7 +127,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     } finally {
       setTimeout(() => setLoading(false), 500);
     }
-  }
+  }, [])
 
   const handleLockAuthority = async (profileId: string, type: "agency" | "partner", value: string) => {
     setMsg(`Sedang memperbarui otoritas ${type}...`);
@@ -125,6 +151,12 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         setMsg("Gagal menghapus user.");
       }
     }
+  }
+
+  const handleRefreshData = () => {
+    setMsg("Menyegarkan data...");
+    setRetryCount(0); // Reset retry counter
+    loadAllAdminData();
   }
 
   if (loading) {
@@ -164,6 +196,13 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
           </div>
         </div>
         <div className="flex gap-4">
+          <button 
+            onClick={handleRefreshData}
+            aria-label="Segarkan Data Dashboard" 
+            className="flex items-center gap-2 rounded-2xl border-4 border-emerald-500 bg-emerald-500 px-6 py-4 text-[10px] font-black uppercase text-white shadow-xl transition-all hover:bg-emerald-600"
+          >
+            <RefreshCw size={18} aria-hidden="true"/> Refresh Data
+          </button>
           <button aria-label="Undang Partner Baru" className="flex items-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 text-[10px] font-black uppercase text-white shadow-xl transition-all hover:translate-y-1">
             <UserPlus size={18} aria-hidden="true"/> Invite Partner
           </button>
