@@ -1,95 +1,114 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     /* --- MODE TERANG (LIGHT) --- */
-    --background: 0 0% 100%;       /* Putih */
-    --foreground: 222.2 84% 4.9%;  /* Hitam Teks */
- 
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
- 
+
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
- 
-    /* PERUBAHAN DI SINI: Jadi Biru (Sesuai Logo) */
-    --primary: 221.2 83.2% 53.3%; 
-    --primary-foreground: 210 40% 98%; /* Teks putih di atas biru */
- 
+
+    /* Biru Utama Disabilitas.com */
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
- 
+
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
- 
+
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
- 
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
- 
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%; /* Ring fokus jadi biru */
- 
-    --radius: 0.5rem;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.75rem;
   }
- 
+
   .dark {
     /* --- MODE GELAP (DARK) --- */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
- 
+
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
- 
+
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
- 
-    /* Biru sedikit lebih terang agar kontras di layar hitam */
-    --primary: 217.2 91.2% 59.8%; 
-    --primary-foreground: 222.2 47.4% 11.2%;
- 
+
+    /* Biru lebih vibran untuk Mode Gelap agar lolos kontras */
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 210 40% 98%; /* Diubah ke putih agar lebih aksesibel */
+
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
- 
+
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
- 
+
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
- 
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
- 
+
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* Transisi warna background saat toggle dark mode */
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+  
+  /* Fokus ring universal untuk Aksesibilitas */
+  :focus-visible {
+    @apply outline-none ring-4 ring-primary/30 ring-offset-2 ring-offset-background;
   }
 }
 
-/* ... kode css yang sudah ada sebelumnya biarkan saja ... */
-
-/* TAMBAHAN UNTUK DASHBOARD */
 @layer components {
-  /* Style standar untuk Input Form */
+  /* Style standar untuk Input Form (Dukungan Dark Mode) */
   .input-std {
-    @apply w-full p-2 border rounded-md bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all;
+    @apply w-full p-4 border-2 rounded-2xl bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:border-primary focus:bg-white outline-none transition-all;
   }
   
-  /* Style standar untuk Tombol Utama */
+  /* Style standar untuk Tombol Utama (Neubrutalism Style) */
   .btn-primary {
-    @apply py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply py-3 px-6 bg-primary text-primary-foreground font-black uppercase italic tracking-widest rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed;
   }
+
+  /* Indikator Fokus untuk Pembaca Layar */
+  .sr-only-focus {
+    @apply sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-primary focus:text-white focus:p-4;
+  }
+}
+
+/* Scrollbar kustom agar tetap terlihat di Mode Gelap */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-700 rounded-full border-4 border-solid border-transparent bg-clip-padding;
 }
