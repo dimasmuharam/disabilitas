@@ -9,10 +9,42 @@ import {
 } from "lucide-react";
 
 export const runtime = "edge";
-export const revalidate = 3600; // Cache 1 jam
+export const revalidate = 3600;
 
 interface Props {
   params: { id: string };
+}
+
+/**
+ * 1. DYNAMIC METADATA UNTUK SEO
+ * Mengambil data dari DB sebelum render untuk mengisi tag <title> dan <meta>
+ */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { data: campus } = await supabase
+    .from("campuses")
+    .select("name, description, location")
+    .eq("id", params.id)
+    .single();
+
+  if (!campus) return { title: "Kampus Tidak Ditemukan" };
+
+  const cleanDescription = campus.description?.substring(0, 160) || `Profil inklusivitas ${campus.name} di ${campus.location}.`;
+
+  return {
+    title: `${campus.name} | Profil Inklusi Kampus`,
+    description: cleanDescription,
+    openGraph: {
+      title: `${campus.name} - Indeks Inklusi Nasional`,
+      description: cleanDescription,
+      type: "website",
+      url: `https://disabilitas.com/kampus/${params.id}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: campus.name,
+      description: cleanDescription,
+    },
+  };
 }
 
 export default async function CampusPublicProfile({ params }: Props) {
@@ -24,7 +56,7 @@ export default async function CampusPublicProfile({ params }: Props) {
 
   if (error || !campus) notFound();
 
-  // 1. Kalkulasi Statistik & Metadata
+  // Kalkulasi Statistik
   const totalTalents = Number(campus.stats_academic_total || 0);
   const hiredTalents = Number(campus.stats_academic_hired || 0);
   const employmentRate = totalTalents > 0 ? Math.round((hiredTalents / totalTalents) * 100) : 0;
@@ -32,17 +64,25 @@ export default async function CampusPublicProfile({ params }: Props) {
   const disMap = campus.stats_disability_map || {};
   const genMap = campus.stats_gender_map || { male: 0, female: 0 };
   
-  // Logika Badge Peringkat
   const badgeLabel = campus.inclusion_score >= 80 ? "Platinum" : campus.inclusion_score >= 60 ? "Gold" : campus.inclusion_score >= 40 ? "Silver" : "Bronze";
 
-  // JSON-LD untuk SEO
+  // JSON-LD untuk SEO Google (Rich Results)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
     "name": campus.name,
     "description": campus.description,
-    "url": campus.website,
-    "address": { "@type": "PostalAddress", "addressLocality": campus.location }
+    "url": campus.website || `https://disabilitas.com/kampus/${params.id}`,
+    "address": { 
+      "@type": "PostalAddress", 
+      "addressLocality": campus.location 
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": campus.inclusion_score,
+      "bestRating": "100",
+      "worstRating": "0"
+    }
   };
 
   return (
@@ -102,7 +142,7 @@ export default async function CampusPublicProfile({ params }: Props) {
           {/* LEFT COLUMN: NARRATIVE & BREAKDOWN */}
           <div className="space-y-12 text-left lg:col-span-2">
             
-            {/* SMART NARRATIVE (RESEARCH INSIGHT) */}
+            {/* SMART NARRATIVE */}
             <section className="rounded-3xl border-l-8 border-slate-900 bg-slate-50 p-10 italic shadow-sm">
               <p className="text-2xl font-black leading-tight text-slate-800 md:text-3xl">
                 &quot;{campus.smart_narrative_summary || campus.description}&quot;
@@ -149,10 +189,8 @@ export default async function CampusPublicProfile({ params }: Props) {
             </section>
           </div>
 
-          {/* RIGHT COLUMN: TALENT ANALYTICS */}
+          {/* RIGHT COLUMN: ANALYTICS */}
           <div className="space-y-8 text-left">
-            
-            {/* TRACER STUDY BOX */}
             <div className="rounded-[3rem] bg-slate-900 p-10 text-white shadow-2xl">
               <h3 className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-400">
                 <BarChart3 size={18} /> Tracer Study Result
@@ -170,7 +208,6 @@ export default async function CampusPublicProfile({ params }: Props) {
               </div>
             </div>
 
-            {/* GENDER PROPORTION */}
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8">
               <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase leading-none tracking-widest text-slate-900">
                 <Users size={16} /> Analisis Gender
@@ -189,7 +226,6 @@ export default async function CampusPublicProfile({ params }: Props) {
               </div>
             </div>
 
-            {/* DISABILITY DIVERSITY MAP */}
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8">
               <h3 className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase leading-none tracking-widest text-slate-900">
                 <Zap size={16} className="text-orange-500" /> Ragam Disabilitas
@@ -215,8 +251,6 @@ export default async function CampusPublicProfile({ params }: Props) {
               </div>
             </div>
           </div>
-          {/* END RIGHT COLUMN */}
-
         </div>
       </main>
 
