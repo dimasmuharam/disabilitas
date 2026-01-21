@@ -24,7 +24,7 @@ export async function POST(request: Request) {
           userId,
           { email_confirm: true }
         )
-        if (confirmError) throw confirmError
+        if (confirmError) return NextResponse.json({ error: confirmError.message }, { status: 400 });
         return NextResponse.json({ message: "User berhasil dikonfirmasi secara paksa" })
 
       case "SUSPEND":
@@ -32,21 +32,17 @@ export async function POST(request: Request) {
           userId,
           { ban_duration: "87600h" } 
         )
-        if (banError) throw banError
+        if (banError) return NextResponse.json({ error: banError.message }, { status: 400 });
         return NextResponse.json({ message: "User berhasil disuspend" })
 
       case "DELETE_USER":
-        /**
-         * PENTING: Supabase auth.admin.deleteUser hanya menghapus data di auth.users.
-         * Jika ada relasi tabel publik yang tidak diset 'ON DELETE CASCADE', 
-         * database akan menolak (Error 23503).
-         */
+        // Karena Mas sudah set ON DELETE CASCADE di SQL, 
+        // cukup jalankan satu perintah ini.
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
         
         if (deleteError) {
-          // Jika error, kirim pesan string yang jelas, bukan object
           return NextResponse.json(
-            { error: deleteError.message || "Gagal menghapus karena relasi data di tabel lain." }, 
+            { error: deleteError.message }, 
             { status: 400 }
           )
         }
@@ -57,17 +53,16 @@ export async function POST(request: Request) {
           type: 'recovery',
           email: email
         })
-        if (resetError) throw resetError
+        if (resetError) return NextResponse.json({ error: resetError.message }, { status: 400 });
         return NextResponse.json({ message: "Link reset password telah dikirim" })
 
       default:
         return NextResponse.json({ error: "Aksi tidak dikenal" }, { status: 400 })
     }
   } catch (error: any) {
-    console.error("Admin API Error:", error)
-    // Pastikan error yang dikirim selalu string message
+    console.error("Admin API Error Critical:", error)
     return NextResponse.json(
-      { error: error.message || "Terjadi kesalahan internal server" }, 
+      { error: "Kesalahan sistem: " + (error.message || "Unknown Error") }, 
       { status: 500 }
     )
   }
