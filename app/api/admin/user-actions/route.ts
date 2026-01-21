@@ -1,3 +1,4 @@
+export const runtime = 'edge'; // TAMBAHKAN BARIS INI
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 

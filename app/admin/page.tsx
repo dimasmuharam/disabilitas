@@ -1,14 +1,14 @@
 import { headers } from "next/headers";
 import AdminDashboard from "./_components/admin-dashboard";
-import { getRawResearchData, getManualInputAudit } from "@/lib/actions/admin";
+import { getManualInputAudit } from "@/lib/actions/admin";
+import { createClient } from "@supabase/supabase-js";
 import { Metadata } from "next";
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-// Metadata khusus untuk area Admin agar tidak terindeks SEO
 export const metadata: Metadata = {
-  title: "Admin Command Center",
+  title: "Admin Command Center | Disabilitas.com",
   robots: "noindex, nofollow",
 };
 
@@ -17,36 +17,44 @@ export default async function AdminPage() {
   
   /**
    * 1. IDENTIFIKASI VIA CLOUDFLARE ACCESS
-   * Mengambil identitas dari header yang disuntikkan oleh Cloudflare Zero Trust.
    */
   const userEmail = headersList.get("cf-access-authenticated-user-email");
   const userName = headersList.get("cf-access-authenticated-user-name");
 
   /**
-   * 2. DATA FETCHING (SERVER SIDE)
-   * Fetching data paralel untuk performa maksimal pada runtime edge.
+   * 2. INITIALIZE SUPABASE ADMIN (Service Role)
+   * Kita butuh Service Role untuk menarik daftar user dari auth.users
    */
-  const [profiles, auditLogs] = await Promise.all([
-    getRawResearchData(),
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+
+  /**
+   * 3. DATA FETCHING (Auth Users & Audit Logs)
+   * Kita tarik semua data user dari tabel Auth agar filter 5 role (Talent, Company, dll) 
+   * di komponen UserManagement bekerja 100%.
+   */
+  const [{ data: authUsersData }, auditLogs] = await Promise.all([
+    supabaseAdmin.auth.admin.listUsers(),
     getManualInputAudit()
   ]);
 
-  // Object user untuk dikirim ke Client Component
+  const allAuthUsers = authUsersData?.users || [];
+
+  // Objek user administrator (Cloudflare Auth)
   const authorizedUser = {
     full_name: userName || "Administrator",
     email: userEmail || "Internal Access",
-    isExternal: !!userEmail // True jika masuk via Cloudflare
+    isExternal: !!userEmail
   };
 
-  /**
-   * 3. RENDER DASHBOARD
-   * Tidak perlu pembungkus <main> tambahan karena sudah ditangani oleh layout.tsx
-   */
   return (
     <div className="p-4 md:p-8 lg:p-12">
       <AdminDashboard 
         user={authorizedUser} 
-        serverStats={profiles} // Raw data profiles untuk National Analytics
+        serverStats={allAuthUsers} // Sekarang mengirim list utuh dari auth.users
         serverAudit={auditLogs ?? []}
       />
     </div>
