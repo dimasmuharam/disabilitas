@@ -1,47 +1,54 @@
 import { headers } from "next/headers";
 import AdminDashboard from "./_components/admin-dashboard";
-// Update import: gunakan getRawResearchData
 import { getRawResearchData, getManualInputAudit } from "@/lib/actions/admin";
+import { Metadata } from "next";
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
+
+// Metadata khusus untuk area Admin agar tidak terindeks SEO
+export const metadata: Metadata = {
+  title: "Admin Command Center",
+  robots: "noindex, nofollow",
+};
 
 export default async function AdminPage() {
   const headersList = headers();
   
   /**
-   * 1. IDENTIFIKASI VIA CLOUDFLARE
-   * Data ini diambil dari header Cloudflare Access Zero Trust
+   * 1. IDENTIFIKASI VIA CLOUDFLARE ACCESS
+   * Mengambil identitas dari header yang disuntikkan oleh Cloudflare Zero Trust.
    */
-  const userEmail = headersList.get("cf-access-authenticated-user-email") || "Admin Riset";
-  const userName = headersList.get("cf-access-authenticated-user-name") || "Administrator";
+  const userEmail = headersList.get("cf-access-authenticated-user-email");
+  const userName = headersList.get("cf-access-authenticated-user-name");
 
   /**
    * 2. DATA FETCHING (SERVER SIDE)
-   * Kita mengambil data profil mentah (profiles) dan log audit manual.
+   * Fetching data paralel untuk performa maksimal pada runtime edge.
    */
   const [profiles, auditLogs] = await Promise.all([
     getRawResearchData(),
     getManualInputAudit()
   ]);
 
+  // Object user untuk dikirim ke Client Component
   const authorizedUser = {
-    full_name: userName,
-    email: userEmail,
+    full_name: userName || "Administrator",
+    email: userEmail || "Internal Access",
+    isExternal: !!userEmail // True jika masuk via Cloudflare
   };
 
   /**
    * 3. RENDER DASHBOARD
-   * serverStats sekarang berisi array mentah dari profiles yang akan 
-   * diolah oleh komponen NationalAnalytics secara modular.
+   * Tidak perlu pembungkus <main> tambahan karena sudah ditangani oleh layout.tsx
    */
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="p-4 md:p-8 lg:p-12">
       <AdminDashboard 
         user={authorizedUser} 
-        serverStats={profiles} // Mengirim raw data ke dashboard
+        serverStats={profiles} // Raw data profiles untuk National Analytics
         serverAudit={auditLogs ?? []}
       />
-    </main>
+    </div>
   );
 }

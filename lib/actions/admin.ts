@@ -3,30 +3,34 @@
 import { createAdminClient } from "@/lib/supabase"
 
 /**
- * AMBIL DATA SELURUH EKOSISTEM (The Great Union)
- * Menggabungkan data singkat dari 5 tabel berbeda untuk User Management.
+ * AMBIL DATA SELURUH EKOSISTEM (The Great Union V2)
+ * Menggabungkan data dari 5 tabel database DAN data status dari Supabase Auth.
  */
 export async function getAllSystemUsers() {
   try {
     const admin = createAdminClient();
 
-    // Jalankan 5 kueri sekaligus secara paralel
+    // 1. Ambil data dari 5 tabel database & Daftar User dari Auth secara paralel
     const [
+      { data: authUsers, error: authError },
       { data: talents },
       { data: companies },
       { data: partners },
       { data: campuses },
       { data: government }
     ] = await Promise.all([
-      admin.from("profiles").select("id, full_name, email, city, created_at"),
-      admin.from("companies").select("id, name, email, location, created_at"),
-      admin.from("partners").select("id, name, email, location, created_at"),
-      admin.from("campuses").select("id, name, email, location, created_at"),
-      admin.from("government").select("id, name, email, location, created_at")
+      admin.auth.admin.listUsers(), // Ambil data konfirmasi email & last login
+      admin.from("profiles").select("id, full_name, email, city, created_at, is_verified"),
+      admin.from("companies").select("id, name, email, location, created_at, is_verified"),
+      admin.from("partners").select("id, name, email, location, created_at, is_verified"),
+      admin.from("campuses").select("id, name, email, location, created_at, is_verified"),
+      admin.from("government").select("id, name, email, location, created_at, is_verified")
     ]);
 
-    // Gabungkan dengan label Role
-    const unified = [
+    if (authError) throw authError;
+
+    // 2. Mapping data database ke format standar
+    const dbUsers = [
       ...(talents?.map(u => ({ ...u, role: 'talent' })) || []),
       ...(companies?.map(u => ({ ...u, role: 'company', full_name: u.name, city: u.location })) || []),
       ...(partners?.map(u => ({ ...u, role: 'partner', full_name: u.name, city: u.location })) || []),
@@ -34,7 +38,16 @@ export async function getAllSystemUsers() {
       ...(government?.map(u => ({ ...u, role: 'government', full_name: u.name, city: u.location })) || []),
     ];
 
-    // Urutkan berdasarkan yang terbaru bergabung
+    // 3. Inject status dari Auth (email_confirmed_at) ke tiap user database
+    const unified = dbUsers.map(user => {
+      const authData = authUsers.users.find(au => au.id === user.id);
+      return {
+        ...user,
+        email_confirmed_at: authData?.email_confirmed_at || null,
+        last_sign_in_at: authData?.last_sign_in_at || null
+      };
+    });
+
     return unified.sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
@@ -45,7 +58,7 @@ export async function getAllSystemUsers() {
 }
 
 /**
- * AMBIL DATA RISET MENTAH (Tetap fokus ke Profiles)
+ * AMBIL DATA RISET MENTAH (Untuk Dashboard Analytics)
  */
 export async function getRawResearchData() {
   try {
@@ -58,51 +71,61 @@ export async function getRawResearchData() {
 
 /**
  * MANAJEMEN AUTH USER (AKSI SAKTI)
- * Menangani Reset Password, Banned, dan Delete di level Auth Supabase
  */
 export async function manageUserAuth(action: string, userId: string, extra?: any) {
   try {
     const admin = createAdminClient();
 
-    if (action === "RESET_PASSWORD") {
-      // Mengirim email reset password langsung dari sistem admin
-      const { error } = await admin.auth.admin.generateLink({
-        type: 'recovery',
-        email: extra // email dikirim via payload extra
-      });
-      return { error };
-    }
+    switch (action) {
+      case "RESET_PASSWORD":
+        // Generate recovery link (extra = email)
+        const { error: resError } = await admin.auth.admin.generateLink({
+          type: 'recovery',
+          email: extra 
+        });
+        return { error: resError };
 
-    if (action === "BAN_USER") {
-      // Membekukan akses user
-      const { error } = await admin.auth.admin.updateUserById(userId, {
-        ban_duration: '87600h' // Banned selama 10 tahun
-      });
-      return { error };
-    }
+      case "BAN_USER":
+        // Suspend user selama 10 tahun
+        const { error: banError } = await admin.auth.admin.updateUserById(userId, {
+          ban_duration: '87600h'
+        });
+        return { error: banError };
 
-    if (action === "DELETE_USER") {
-      // Hapus permanen dari Auth (Data tabel akan terhapus otomatis jika ada Cascade Delete)
-      const { error } = await admin.auth.admin.deleteUser(userId);
-      return { error };
-    }
+      case "DELETE_USER":
+        // Hapus permanen dari Auth
+        const { error: delError } = await admin.auth.admin.deleteUser(userId);
+        return { error: delError };
 
-    if (action === "VERIFY_EMAIL") {
-      // Konfirmasi email manual tanpa user harus klik link
-      const { error } = await admin.auth.admin.updateUserById(userId, {
-        email_confirm: true
-      });
-      return { error };
-    }
+      case "VERIFY_EMAIL":
+        // Paksa verifikasi email tanpa klik link
+        const { error: verError } = await admin.auth.admin.updateUserById(userId, {
+          email_confirm: true
+        });
+        return { error: verError };
 
-    return { error: null };
+      case "RESEND_CONFIRMATION":
+        // Kirim ulang email konfirmasi (extra = email)
+        // Note: Gunakan method resend dari auth client
+        const { error: sendError } = await admin.auth.resend({
+          type: 'signup',
+          email: extra,
+          options: {
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+          }
+        });
+        return { error: sendError };
+
+      default:
+        return { error: "Action not found" };
+    }
   } catch (err: any) {
     return { error: err.message };
   }
 }
 
 /**
- * LOG AUDIT & MANAJEMEN TABEL BIASA (Tetap Ada)
+ * LOG AUDIT & MANAJEMEN TABEL BIASA
  */
 export async function getManualInputAudit() {
   const admin = createAdminClient();
@@ -110,9 +133,33 @@ export async function getManualInputAudit() {
   return data || [];
 }
 
+/**
+ * UPDATE MASAL ATAU TUNGGAL UNTUK TABEL DATABASE
+ */
 export async function manageAdminUser(action: string, table: string, payload: any) {
-  const admin = createAdminClient();
-  if (action === "DELETE") return await admin.from(table).delete().eq("id", payload.id);
-  if (action === "UPDATE") return await admin.from(table).update(payload).eq("id", payload.id);
-  return { error: null };
+  try {
+    const admin = createAdminClient();
+    
+    if (action === "DELETE") {
+      return await admin.from(table).delete().eq("id", payload.id);
+    }
+    
+    if (action === "UPDATE") {
+      const { id, ...data } = payload;
+      return await admin.from(table).update(data).eq("id", id);
+    }
+
+    if (action === "BULK_UPDATE") {
+      const { ids, ...data } = payload;
+      return await admin.from(table).update(data).in("id", ids);
+    }
+
+    if (action === "BULK_DELETE") {
+      return await admin.from(table).delete().in("id", payload);
+    }
+
+    return { error: null };
+  } catch (err: any) {
+    return { error: err.message };
+  }
 }
