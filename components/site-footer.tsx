@@ -24,7 +24,7 @@ export function SiteFooter() {
                 Disabilitas.com
               </h2>
               <p className="mt-4 text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-                Pusat data dan ekosistem inklusi disabilitas terintegrasi. Menghubungkan potensi talenta dengan peluang karir melalui teknologi riset dan audit aksesibilitas.
+                Platform Digital ekosistem inklusi disabilitas terintegrasi. Menghubungkan potensi talenta dengan peluang karir melalui teknologi riset dan audit aksesibilitas.
               </p>
             </div>
             
