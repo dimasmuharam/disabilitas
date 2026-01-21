@@ -87,8 +87,8 @@ export function SiteHeader() {
             <nav className="hidden items-center gap-6 md:flex" aria-label="Navigasi Utama">
               {[
                 { href: "/lowongan", label: "Cari Lowongan" },
+                { href: "/pelatihan", label: "Tingkatkan Keterampilan" },
                 { href: "/bisnis", label: "Audit & Rekrutmen" },
-                { href: "/kampus", label: "Mitra Kampus" },
                 { href: "/tentang", label: "Tentang Kami" }
               ].map((link) => (
                 <Link
