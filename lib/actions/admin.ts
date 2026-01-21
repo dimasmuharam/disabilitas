@@ -3,61 +3,29 @@
 import { createAdminClient } from "@/lib/supabase"
 
 /**
- * MENGAMBIL STATISTIK NASIONAL
+ * AMBIL DATA RISET MENTAH (RAW DATA)
+ * Fungsi ini mengambil seluruh baris dari tabel profiles.
+ * Logika perhitungan persentase dan distribusi dilakukan di sisi klien (komponen).
  */
-export async function getNationalStats() {
+export async function getRawResearchData() {
   try {
     const admin = createAdminClient();
-    const { data: profiles, error } = await admin.from("profiles").select("*");
+    const { data: profiles, error } = await admin
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
     
-    if (error) return { totalTalents: 0, error: error.message };
-    if (!profiles || profiles.length === 0) return { totalTalents: 0, empty: true };
-
-    const total = profiles.length;
-
-    // Helper untuk distribusi variabel tunggal
-    const countDist = (key: string) => profiles.reduce((acc: any, p: any) => {
-      const val = p[key] || 'Tidak Terisi';
-      acc[val] = (acc[val] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Helper untuk distribusi variabel array (Multi-select)
-    const countArrayDist = (key: string) => profiles.reduce((acc: any, p: any) => {
-      const arr = p[key] || [];
-      if (Array.isArray(arr)) {
-        arr.forEach((item: string) => {
-          acc[item] = (acc[item] || 0) + 1;
-        });
-      }
-      return acc;
-    }, {});
-
-    return {
-      totalTalents: total,
-      disabilityDist: countDist('disability_type'),
-      employmentRate: {
-        employed: profiles.filter(p => ['Pegawai Swasta', 'Pegawai BUMN / BUMD', 'ASN (PNS / PPPK)', 'Wiraswasta / Entrepreneur', 'Freelancer / Tenaga Lepas'].includes(p.career_status)).length,
-        seeking: profiles.filter(p => ['Job Seeker', 'Fresh Graduate', 'Belum Bekerja'].includes(p.career_status)).length,
-      },
-      barrierDist: countArrayDist('education_barrier'),
-      toolsDist: countArrayDist('used_assistive_tools'),
-      accDist: countArrayDist('preferred_accommodations'),
-      eduModelDist: countDist('education_model'),
-      scholarshipDist: countDist('scholarship_type'),
-      digitalAssets: {
-        laptop: profiles.filter(p => p.has_laptop === true).length,
-        smartphone: profiles.filter(p => p.has_smartphone === true).length,
-        internetFiberPct: Math.round((profiles.filter(p => p.internet_quality === 'fiber').length / total) * 100) || 0
-      }
-    };
+    if (error) throw error;
+    return profiles || [];
   } catch (err: any) {
-    return { totalTalents: 0, error: err.message };
+    console.error("Fetch Error Profiles:", err.message);
+    return [];
   }
 }
 
 /**
- * MENGAMBIL LOG AUDIT INPUT MANUAL
+ * AMBIL LOG AUDIT INPUT MANUAL
+ * Mengambil entri yang belum di-review untuk standarisasi data.
  */
 export async function getManualInputAudit() {
   try {
@@ -67,34 +35,38 @@ export async function getManualInputAudit() {
       .select("*")
       .eq("is_reviewed", false)
       .order("occurrence_count", { ascending: false });
+    
+    if (error) throw error;
     return data || [];
-  } catch (err) {
+  } catch (err: any) {
+    console.error("Fetch Error Audit Logs:", err.message);
     return [];
   }
 }
 
 /**
- * MANAJEMEN DATA (DELETE, UPDATE, BULK)
- * PERBAIKAN: Menggunakan 'action: string' agar TypeScript menerima BULK_UPDATE
+ * MANAJEMEN DATA ADMIN (UNIVERSAL)
+ * Fungsi tunggal untuk menangani penghapusan, pembaruan, dan pembaruan massal.
+ * Action: "DELETE" | "UPDATE" | "BULK_UPDATE"
  */
 export async function manageAdminUser(action: string, table: string, payload: any) {
   try {
     const admin = createAdminClient();
     
-    // Hapus satu data
+    // 1. Hapus Data Tunggal
     if (action === "DELETE") {
       const { error } = await admin.from(table).delete().eq("id", payload.id);
       return { error };
     }
 
-    // Update satu data (Verifikasi tunggal)
+    // 2. Update Data Tunggal (Contoh: Verifikasi)
     if (action === "UPDATE") {
       const { id, ...updateData } = payload;
       const { error } = await admin.from(table).update(updateData).eq("id", id);
       return { error };
     }
 
-    // UPDATE MASSAL (Fitur Baru untuk Verifikasi Massal)
+    // 3. Update Massal (Contoh: Verifikasi Massal)
     if (action === "BULK_UPDATE") {
       const { ids, ...updateData } = payload;
       const { error } = await admin.from(table).update(updateData).in("id", ids);
@@ -103,6 +75,7 @@ export async function manageAdminUser(action: string, table: string, payload: an
 
     return { error: null };
   } catch (err: any) {
+    console.error("Management Action Error:", err.message);
     return { error: err.message };
   }
 }

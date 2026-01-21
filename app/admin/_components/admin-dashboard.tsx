@@ -7,21 +7,21 @@ import {
   Loader2, ArrowLeft 
 } from "lucide-react"
 
-// IMPORT MODUL MODULAR (Tab Access Control sudah dibuang)
+// IMPORT MODUL MODULAR
 import NationalAnalytics from "./modules/national-analytics"
 import UserManagement from "./modules/user-management"
 import AuditHub from "./modules/audit-hub"
 
-// IMPORT ACTIONS
+// IMPORT ACTIONS - Nama fungsi sudah disesuaikan dengan lib/actions/admin.ts
 import { 
-  getNationalStats, 
+  getRawResearchData, 
   getManualInputAudit,
   manageAdminUser
 } from "@/lib/actions/admin"
 
 interface AdminDashboardProps {
   user: any;
-  serverStats?: any;
+  serverStats?: any; // Ini sekarang berisi raw data profiles
   serverAudit?: any[];
 }
 
@@ -35,11 +35,11 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const moduleHeadingRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
-  const [stats, setStats] = useState<any>(serverStats || null)
+  const [stats, setStats] = useState<any>(serverStats || [])
   const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
   const [allTalents, setAllTalents] = useState<any[]>([])
 
-  // Sinkronisasi Data Background
+  // Sinkronisasi Data Background untuk User Management
   useEffect(() => {
     loadBackgroundData()
   }, [])
@@ -60,6 +60,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
 
   async function loadBackgroundData() {
     try {
+      // Mengambil data untuk tabel User Management
       const { data: talents } = await supabase
         .from("profiles")
         .select("*")
@@ -75,17 +76,17 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
 
   async function refreshData() {
     setMsg("Sinkronisasi database terbaru...");
-    const [resStats, resAudit] = await Promise.all([
-      getNationalStats(),
+    // Menggunakan fungsi getRawResearchData agar NationalAnalytics bisa mengolah sendiri
+    const [resProfiles, resAudit] = await Promise.all([
+      getRawResearchData(),
       getManualInputAudit()
     ]);
-    setStats(resStats);
+    setStats(resProfiles);
     setAuditLogs(resAudit || []);
     loadBackgroundData();
   }
 
   const handleUserAction = async (actionType: string, payload: any) => {
-    // Karena sudah melewati Cloudflare, Mas Dimas memiliki akses Admin Penuh (Full Authority)
     switch (actionType) {
       case "DELETE":
         if (confirm("Hapus data ini secara permanen dari ekosistem?")) {
@@ -125,7 +126,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     }
   }
 
-  if (loading && !stats) {
+  if (loading && (!stats || stats.length === 0)) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status">
         <Loader2 className="size-12 animate-spin text-blue-600" />
@@ -142,9 +143,9 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         {msg}
       </div>
 
-      {/* 1. HEADER - Leveling Dihapus, Menampilkan Email Admin */}
-      <header role="banner" className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row">
-        <div className="flex items-center gap-6 text-left">
+      {/* 1. HEADER */}
+      <header role="banner" className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row text-left">
+        <div className="flex items-center gap-6">
           <div className="size-20 flex items-center justify-center rounded-3xl bg-blue-600 shadow-lg" aria-hidden="true">
             <ShieldCheck size={40} />
           </div>
@@ -169,7 +170,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         )}
       </header>
 
-      {/* 2. TABS NAVIGATION - Tab Access Control Sudah Dibuang */}
+      {/* 2. TABS NAVIGATION */}
       <nav aria-label="Navigasi Utama Dashboard">
         <div role="tablist" className="no-scrollbar flex gap-3 overflow-x-auto rounded-[2.5rem] border-4 border-slate-900 bg-slate-100 p-3 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
           {[
@@ -204,13 +205,13 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         ref={moduleHeadingRef} 
         className="min-h-[500px] outline-none"
       >
-        {activeTab === "national_stats" && <NationalAnalytics stats={stats} />}
+        {activeTab === "national_stats" && <NationalAnalytics rawData={stats} />}
         
         {activeTab === "user_mgmt" && (
           <UserManagement 
             talents={allTalents} 
             onAction={handleUserAction} 
-            canDelete={true} // Selalu True karena lolos Cloudflare
+            canDelete={true} 
           />
         )}
         
@@ -218,7 +219,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
           <AuditHub 
             logs={auditLogs} 
             onMerge={refreshData}
-            canAction={true} // Selalu True karena lolos Cloudflare
+            canAction={true} 
           />
         )}
       </main>
