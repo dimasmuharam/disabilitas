@@ -5,7 +5,7 @@ import {
   Users, Search, Building2, Trash2, CheckCircle, 
   ChevronLeft, ChevronRight, Key, Ban, 
   MailCheck, Download, MapPin, ExternalLink,
-  MailWarning, RotateCcw, ShieldCheck, GraduationCap, Landmark
+  MailWarning, RotateCcw
 } from "lucide-react"
 import * as XLSX from "xlsx"
 import { cn } from "@/lib/utils"
@@ -20,10 +20,9 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
   const itemsPerPage = 10
   const [announcement, setAnnouncement] = useState("")
 
-  // --- LOGIC: FILTERING & STATS (Synced with Database Schema) ---
+  // --- LOGIC: FILTERING & STATS ---
   const filteredData = useMemo(() => {
     return allUsers.filter((u: any) => {
-      // Mencakup skema: profiles (full_name), companies/campuses/partners (name)
       const name = (u.full_name || u.name || "").toLowerCase();
       const email = (u.email || "").toLowerCase();
       const location = (u.city || u.location || "").toLowerCase();
@@ -62,7 +61,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
       setAnnouncement("Pilihan massal dibatalkan");
     } else {
       setSelectedIds(paginatedData.map((u: any) => u.id));
-      setAnnouncement(`${paginatedData.length} user terpilih di halaman ini`);
+      setAnnouncement(`${paginatedData.length} user terpilih`);
     }
   };
 
@@ -71,11 +70,13 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
   };
 
   const getPublicLink = (user: any) => {
-    if (user.role === 'company') return `/perusahaan/${user.id}`;
-    if (user.role === 'campus') return `/kampus/${user.id}`;
-    if (user.role === 'government') return `/government/${user.id}`;
-    if (user.role === 'partner') return `/partner/${user.id}`;
-    return `/talent/${user.id}`;
+    const roleMap: Record<string, string> = {
+      company: 'perusahaan',
+      campus: 'kampus',
+      government: 'government',
+      partner: 'partner'
+    };
+    return `/${roleMap[user.role] || 'talent'}/${user.id}`;
   };
 
   const exportToExcel = () => {
@@ -84,26 +85,26 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
       Email: u.email,
       Role: u.role,
       Lokasi: u.city || u.location,
-      Status_Email: u.email_confirmed_at ? "Confirmed" : "Pending"
+      Status_Email: u.email_confirmed_at ? "Terverifikasi" : "Belum Konfirmasi"
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Users_Disabilitas_Com");
-    XLSX.writeFile(wb, `User_Management_${new Date().toLocaleDateString()}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Daftar_User");
+    XLSX.writeFile(wb, "Manajemen_User_Disabilitas.xlsx");
   };
 
   return (
-    <section className="space-y-6" role="region" aria-label="Identity and Access Management">
+    <section className="space-y-6" role="region" aria-label="Identity Management">
       
       {/* SCREEN READER LIVE REGION */}
       <div className="sr-only" role="status" aria-live="polite">{announcement}</div>
 
-      {/* 1. STATS GRID (Extended) */}
+      {/* 1. STATS GRID */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total User" val={stats.total} bg="bg-slate-900" icon={<Users className="opacity-20" />} />
         <StatCard label="Talenta" val={stats.talent} bg="bg-blue-600" icon={<Users className="opacity-20" />} />
         <StatCard label="Perusahaan" val={stats.company} bg="bg-indigo-600" icon={<Building2 className="opacity-20" />} />
-        <StatCard label="Unconfirmed" val={stats.unconfirmed} bg="bg-rose-600" icon={<MailWarning className="opacity-20" />} />
+        <StatCard label="Belum Konfirmasi" val={stats.unconfirmed} bg="bg-rose-600" icon={<MailWarning className="opacity-20" />} />
       </div>
 
       <div className="rounded-[3.5rem] border-4 border-slate-900 bg-white p-6 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:p-10">
@@ -123,7 +124,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
           <div className="flex flex-wrap gap-3">
             <select 
               aria-label="Filter Tipe Role"
-              className="rounded-2xl border-4 border-slate-900 bg-white px-4 py-3 text-[10px] font-black uppercase outline-none cursor-pointer"
+              className="rounded-2xl border-4 border-slate-900 bg-white px-4 py-3 text-[10px] font-black uppercase outline-none"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
@@ -136,20 +137,20 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
             </select>
 
             <select 
-              aria-label="Filter Status Konfirmasi"
-              className="rounded-2xl border-4 border-slate-900 bg-white px-4 py-3 text-[10px] font-black uppercase outline-none cursor-pointer"
+              aria-label="Filter Status"
+              className="rounded-2xl border-4 border-slate-900 bg-white px-4 py-3 text-[10px] font-black uppercase outline-none"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="all">Semua Status</option>
               <option value="unconfirmed">Belum Konfirmasi</option>
-              <option value="verified">Verified</option>
+              <option value="verified">Verified Profile</option>
             </select>
 
             <button 
               onClick={exportToExcel} 
-              className="rounded-2xl bg-emerald-600 p-3 text-white hover:bg-emerald-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none transition-all"
-              aria-label="Download Laporan Excel"
+              className="rounded-2xl bg-emerald-600 p-3 text-white hover:bg-emerald-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all active:shadow-none"
+              aria-label="Export ke Excel"
             >
               <Download size={20}/>
             </button>
@@ -165,18 +166,18 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
               checked={selectedIds.length === paginatedData.length && paginatedData.length > 0}
               onChange={toggleSelectAll}
             />
-            <span className="text-[10px] font-black uppercase italic text-slate-400 group-hover:text-slate-900">Pilih Semua Halaman Ini</span>
+            <span className="text-[10px] font-black uppercase italic text-slate-400 group-hover:text-slate-900">Pilih Semua</span>
           </label>
 
           {selectedIds.length > 0 && (
             <div className="flex gap-2">
               <button onClick={() => onAction("BULK_RESEND", selectedIds)} className="rounded-xl bg-amber-500 px-4 py-2 text-[9px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">Kirim Ulang Email ({selectedIds.length})</button>
-              <button onClick={() => onAction("BULK_DELETE", selectedIds)} className="rounded-xl bg-rose-600 px-4 py-2 text-[9px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">Hapus ({selectedIds.length})</button>
+              <button onClick={() => onAction("BULK_DELETE", selectedIds)} className="rounded-xl bg-rose-600 px-4 py-2 text-[9px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">Hapus Massal</button>
             </div>
           )}
         </div>
 
-        {/* 4. USER LIST (Accessible Cards) */}
+        {/* 4. USER LIST */}
         <div className="space-y-4" role="list">
           {paginatedData.map((user: any) => (
             <div 
@@ -184,13 +185,13 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
               role="listitem"
               className={cn(
                 "flex flex-col gap-4 rounded-3xl border-4 border-slate-900 p-5 transition-all lg:flex-row lg:items-center lg:justify-between",
-                selectedIds.includes(user.id) ? "bg-blue-50 border-blue-600 ring-4 ring-blue-100" : "bg-white"
+                selectedIds.includes(user.id) ? "bg-blue-50 border-blue-600" : "bg-white"
               )}
             >
               <div className="flex items-center gap-5">
                 <input 
                   type="checkbox" 
-                  aria-label={`Pilih user ${user.full_name || user.name}`}
+                  aria-label={`Pilih ${user.full_name || user.name}`}
                   className="size-6 cursor-pointer rounded-lg border-4 border-slate-900 accent-blue-600"
                   checked={selectedIds.includes(user.id)}
                   onChange={() => toggleSelectOne(user.id)}
@@ -199,36 +200,31 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
                 <div className="text-left">
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-black uppercase text-slate-900">
-                      {user.full_name || user.name || "User Tanpa Nama"}
+                      {user.full_name || user.name || "Anonymous"}
                     </h4>
-                    <a 
-                      href={getPublicLink(user)} 
-                      target="_blank" 
-                      className="text-slate-300 hover:text-blue-600"
-                      aria-label={`Lihat profil ${user.full_name}`}
-                    >
+                    <a href={getPublicLink(user)} target="_blank" className="text-slate-300 hover:text-blue-600">
                       <ExternalLink size={14} />
                     </a>
                     {user.is_verified && <CheckCircle size={16} className="text-emerald-500" />}
-                    {!user.email_confirmed_at && <MailWarning size={16} className="text-rose-500" title="Email Unconfirmed" />}
+                    {!user.email_confirmed_at && <MailWarning size={16} className="text-rose-500" aria-label="Email Belum Konfirmasi" />}
                   </div>
                   
                   <div className="mt-1 flex flex-col gap-1">
                     <p className="text-[11px] font-bold text-slate-500">{user.email}</p>
-                    <div className="flex items-center gap-3">
-                      <span className="rounded-md bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase italic text-white">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[8px] font-black uppercase italic text-slate-500 border border-slate-200">
                         {user.role}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                        <MapPin size={10}/> {user.city || user.location || "Lokasi Global"}
+                        <MapPin size={10}/> {user.city || user.location || "Lokasi Nihil"}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* ACTION BUTTONS */}
-              <div className="flex flex-wrap items-center gap-2 border-t-2 border-slate-50 pt-4 lg:border-t-0 lg:pt-0">
+              {/* ACTIONS */}
+              <div className="flex flex-wrap items-center gap-2 pt-4 border-t-2 border-slate-50 lg:pt-0 lg:border-t-0">
                 {!user.email_confirmed_at && (
                   <ActionButton 
                     icon={<RotateCcw size={12}/>} 
@@ -241,8 +237,8 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
                 <ActionButton icon={<MailCheck size={12}/>} label="Force Verify" onClick={() => onAction("VERIFY_EMAIL", user.id)} color="hover:bg-emerald-500" />
                 <button 
                   onClick={() => onAction("DELETE_USER", user.id)} 
-                  className="ml-2 p-2 text-slate-300 hover:text-rose-600 transition-colors"
-                  aria-label={`Hapus ${user.full_name}`}
+                  className="p-2 ml-2 text-slate-300 hover:text-rose-600 transition-all"
+                  aria-label={`Hapus user ${user.full_name}`}
                 >
                   <Trash2 size={20} />
                 </button>
@@ -253,22 +249,22 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
 
         {/* 5. PAGINATION */}
         {totalPages > 1 && (
-          <nav className="mt-10 flex items-center justify-between border-t-4 border-slate-50 pt-8" aria-label="Pagination Nav">
+          <nav className="mt-10 flex items-center justify-between border-t-4 border-slate-50 pt-8" aria-label="Navigasi Halaman">
             <p className="text-[10px] font-black uppercase text-slate-400">
-              Page {currentPage} of {totalPages}
+              Menampilkan {paginatedData.length} dari {filteredData.length} User
             </p>
             <div className="flex gap-2">
               <button 
                 disabled={currentPage === 1} 
                 onClick={() => { setCurrentPage(v => v-1); setAnnouncement(`Halaman ${currentPage - 1}`); }} 
-                className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white"
+                className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all"
               >
                 <ChevronLeft size={20}/>
               </button>
               <button 
                 disabled={currentPage === totalPages} 
                 onClick={() => { setCurrentPage(v => v+1); setAnnouncement(`Halaman ${currentPage + 1}`); }} 
-                className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white"
+                className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all"
               >
                 <ChevronRight size={20}/>
               </button>
@@ -282,12 +278,12 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
 
 function StatCard({ label, val, bg, icon }: any) {
   return (
-    <div className={`relative overflow-hidden rounded-[2rem] border-4 border-slate-900 ${bg} p-6 text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]`}>
+    <div className={`relative overflow-hidden rounded-[2rem] border-4 border-slate-900 ${bg} p-6 text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]`}>
       <div className="relative z-10">
         <p className="text-[9px] font-black uppercase tracking-widest opacity-70">{label}</p>
         <p className="mt-1 text-2xl font-black italic">{val}</p>
       </div>
-      <div className="absolute -right-2 -bottom-2 scale-150 transform">
+      <div className="absolute -right-2 -bottom-2 scale-150">
         {icon}
       </div>
     </div>
