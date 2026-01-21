@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { supabase } from "@/lib/supabase"
 import { 
   BarChart3, Users, ShieldCheck, AlertTriangle, 
   Loader2, ArrowLeft 
@@ -12,16 +11,18 @@ import NationalAnalytics from "./modules/national-analytics"
 import UserManagement from "./modules/user-management"
 import AuditHub from "./modules/audit-hub"
 
-// IMPORT ACTIONS - Nama fungsi sudah disesuaikan dengan lib/actions/admin.ts
+// IMPORT ACTIONS
 import { 
   getRawResearchData, 
   getManualInputAudit,
+  getAllSystemUsers,
+  manageUserAuth,
   manageAdminUser
 } from "@/lib/actions/admin"
 
 interface AdminDashboardProps {
   user: any;
-  serverStats?: any; // Ini sekarang berisi raw data profiles
+  serverStats?: any; 
   serverAudit?: any[];
 }
 
@@ -30,99 +31,97 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const [activeTab, setActiveTab] = useState("national_stats")
   const [msg, setMsg] = useState("")
   
-  // REFS UNTUK AKSESIBILITAS & FOCUS
   const announcementRef = useRef<HTMLDivElement>(null)
   const moduleHeadingRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
   const [stats, setStats] = useState<any>(serverStats || [])
   const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
-  const [allTalents, setAllTalents] = useState<any[]>([])
+  const [allUsers, setAllUsers] = useState<any[]>([])
 
-  // Sinkronisasi Data Background untuk User Management
+  // Sinkronisasi Data Gabungan untuk User Management
   useEffect(() => {
-    loadBackgroundData()
+    refreshData()
   }, [])
 
-  // Effect untuk Voice Announcement (NVDA)
   useEffect(() => {
     if (msg && announcementRef.current) {
       announcementRef.current.focus();
     }
   }, [msg])
 
-  // EFFECT UNTUK AUTO-FOCUS SAAT PINDAH TAB
   useEffect(() => {
     if (moduleHeadingRef.current) {
       moduleHeadingRef.current.focus();
     }
   }, [activeTab])
 
-  async function loadBackgroundData() {
+  async function refreshData() {
+    if (!loading) setMsg("Sinkronisasi database terbaru...");
+    
     try {
-      // Mengambil data untuk tabel User Management
-      const { data: talents } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      setAllTalents(talents || []);
+      const [resProfiles, resAudit, resUnified] = await Promise.all([
+        getRawResearchData(),
+        getManualInputAudit(),
+        getAllSystemUsers() // Fungsi sakti gabungan 5 tabel
+      ]);
+
+      setStats(resProfiles);
+      setAuditLogs(resAudit || []);
+      setAllUsers(resUnified || []);
       setLoading(false);
     } catch (e) {
-      console.error("Background sync error:", e);
+      console.error("Refresh error:", e);
       setLoading(false);
     }
   }
 
-  async function refreshData() {
-    setMsg("Sinkronisasi database terbaru...");
-    // Menggunakan fungsi getRawResearchData agar NationalAnalytics bisa mengolah sendiri
-    const [resProfiles, resAudit] = await Promise.all([
-      getRawResearchData(),
-      getManualInputAudit()
-    ]);
-    setStats(resProfiles);
-    setAuditLogs(resAudit || []);
-    loadBackgroundData();
-  }
-
   const handleUserAction = async (actionType: string, payload: any) => {
-    switch (actionType) {
-      case "DELETE":
-        if (confirm("Hapus data ini secara permanen dari ekosistem?")) {
-          setMsg("Menghapus data...");
-          const { error } = await manageAdminUser("DELETE", "profiles", { id: payload });
-          if (!error) { setMsg("Data berhasil dihapus."); refreshData(); }
-        }
-        break;
+    setMsg("Memproses perintah administrator...");
+    let result: any = { error: null };
 
-      case "VERIFY":
-        setMsg("Memproses verifikasi entitas...");
-        const { error: vError } = await manageAdminUser("UPDATE", "profiles", { 
-          id: payload, 
-          verification_status: "verified",
-          is_verified: true 
-        });
-        if (!vError) { setMsg("Entitas berhasil diverifikasi."); refreshData(); }
-        break;
+    try {
+      switch (actionType) {
+        case "DELETE_USER":
+          if (confirm("Hapus user ini secara permanen dari AUTH dan DATABASE?")) {
+            result = await manageUserAuth("DELETE_USER", payload);
+          }
+          break;
 
-      case "BULK_VERIFY":
-        setMsg(`Memverifikasi ${payload.length} entitas sekaligus...`);
-        const { error: bvError } = await manageAdminUser("BULK_UPDATE", "profiles", { 
-          ids: payload, 
-          verification_status: "verified",
-          is_verified: true 
-        });
-        if (!bvError) { setMsg("Verifikasi massal sukses."); refreshData(); }
-        break;
+        case "RESET_PASSWORD":
+          // payload pada aksi ini adalah email user
+          result = await manageUserAuth("RESET_PASSWORD", "", payload);
+          break;
 
-      case "BULK_DELETE":
-        if (confirm(`Hapus ${payload.length} data terpilih secara permanen?`)) {
-          setMsg("Menghapus data massal...");
-          const { error: bdError } = await supabase.from("profiles").delete().in("id", payload);
-          if (!bdError) { setMsg("Data massal berhasil dibersihkan."); refreshData(); }
-        }
-        break;
+        case "SUSPEND_USER":
+          result = await manageUserAuth("BAN_USER", payload);
+          break;
+
+        case "VERIFY_EMAIL":
+          result = await manageUserAuth("VERIFY_EMAIL", payload);
+          break;
+        
+        // Aksi verifikasi profil di tabel masing-masing
+        case "VERIFY":
+          result = await manageAdminUser("UPDATE", "profiles", { 
+            id: payload, 
+            verification_status: "verified",
+            is_verified: true 
+          });
+          break;
+
+        default:
+          console.warn("Action not recognized");
+      }
+
+      if (result?.error) {
+        setMsg("Gagal: " + (result.error.message || result.error));
+      } else {
+        setMsg("Operasi berhasil dijalankan.");
+        refreshData();
+      }
+    } catch (err: any) {
+      setMsg("Terjadi kesalahan sistem.");
     }
   }
 
@@ -209,9 +208,8 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         
         {activeTab === "user_mgmt" && (
           <UserManagement 
-            talents={allTalents} 
+            allUsers={allUsers} 
             onAction={handleUserAction} 
-            canDelete={true} 
           />
         )}
         
