@@ -1,8 +1,6 @@
-"use client"
-
 import "./globals.css"
+import { Metadata } from "next"
 import { Inter as FontSans } from "next/font/google"
-import { usePathname } from "next/navigation"
 import Script from "next/script"
 
 import { cn } from "@/lib/utils"
@@ -15,12 +13,44 @@ const fontSans = FontSans({
   variable: "--font-sans",
 })
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-  
-  // Cek path tanpa fungsi server headers() agar tidak error di Cloudflare
-  const isAdmin = pathname.startsWith('/admin')
+/**
+ * METADATA PUSAT (SEO FRIENDLY)
+ * Slogan Mas Dimas bertahta di sini.
+ */
+export const metadata: Metadata = {
+  metadataBase: new URL("https://www.disabilitas.com"),
+  title: {
+    default: "Disabilitas.com | Inklusi Jadi Nyata.",
+    template: "%s | Disabilitas.com",
+  },
+  description: "Platform hub talenta disabilitas dan rekrutmen inklusif terbesar di Indonesia. Menghubungkan potensi dengan peluang tanpa batas melalui data dan riset.",
+  keywords: [
+    "lowongan disabilitas",
+    "audit aksesibilitas",
+    "inklusi kerja",
+    "audit SPBE",
+    "Dimaster Group",
+    "ASN Inklusif"
+  ],
+  alternates: {
+    canonical: "https://www.disabilitas.com",
+  },
+  icons: {
+    icon: "/logo.png",
+  },
+  authors: [
+    {
+      name: "Dimaster Group",
+      url: "https://dimaster.co.id",
+    },
+  ],
+}
 
+interface RootLayoutProps {
+  children: React.ReactNode
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="id" suppressHydrationWarning>
       <body
@@ -32,25 +62,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="relative flex min-h-screen flex-col">
             
+            {/* FITUR AKSESIBILITAS: SKIP LINK */}
             <a 
               href="#main-content" 
-              className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-6 focus:py-4 focus:font-black"
+              className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-6 focus:py-4 focus:font-black focus:outline-none focus:ring-4 focus:ring-yellow-400"
             >
               Lompat ke Konten Utama
             </a>
 
-            {/* Header & Footer otomatis hilang di area /admin */}
-            {!isAdmin && <SiteHeader />}
+            {/* SITE HEADER & FOOTER 
+              Komponen ini sekarang punya logika internal untuk sembunyi otomatis 
+              ketika mendeteksi path /admin (via usePathname di dalam komponennya).
+            */}
+            <SiteHeader />
             
             <main id="main-content" className="flex-1 outline-none" tabIndex={-1}>
               {children}
             </main>
 
-            {!isAdmin && <SiteFooter />}
+            <SiteFooter />
           </div>
         </ThemeProvider>
 
-        {/* GOOGLE ANALYTICS */}
+        {/* GOOGLE ANALYTICS (G-Q9H6SLY8R0) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-Q9H6SLY8R0"
           strategy="afterInteractive"

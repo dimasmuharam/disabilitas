@@ -1,10 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation" // Pastikan import ini ada
 import { Globe, Mail, MapPin, Phone, ExternalLink } from "lucide-react"
 
 export function SiteFooter() {
+  const pathname = usePathname()
   const currentYear = new Date().getFullYear();
+
+  // --- LOGIKA "TAHU DIRI": SEMBUNYI JIKA DI AREA ADMIN ---
+  if (pathname.startsWith('/admin')) return null
 
   return (
     <footer className="mt-auto w-full border-t border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950 print:hidden">
