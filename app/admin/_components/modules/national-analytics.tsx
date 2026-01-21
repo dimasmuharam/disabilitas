@@ -88,16 +88,16 @@ export default function NationalAnalytics({ rawData = [] }: { rawData: any[] }) 
     };
   }, [rawData]);
 
-  if (!stats) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" /></div>;
+  if (!stats) return <div className="p-20 text-center"><Loader2 className="mx-auto animate-spin text-blue-600" /></div>;
 
   return (
-    <div className="space-y-12 pb-24 animate-in fade-in duration-700" role="region" aria-label="Dashboard Riset Nasional Komprehensif">
+    <div className="space-y-12 pb-24 duration-700 animate-in fade-in" role="region" aria-label="Dashboard Riset Nasional Komprehensif">
       
       {/* 1. HERO ANALYTICS */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
-          <h2 className="flex items-center gap-3 text-xl font-black uppercase italic text-left"><PieIcon className="text-blue-600"/> Ragam Disabilitas</h2>
-          <div className="h-[350px] mt-6">
+          <h2 className="flex items-center gap-3 text-left text-xl font-black uppercase italic"><PieIcon className="text-blue-600"/> Ragam Disabilitas</h2>
+          <div className="mt-6 h-[350px]">
             {isMounted && (
               <ResponsiveContainer>
                 <PieChart>
@@ -112,19 +112,19 @@ export default function NationalAnalytics({ rawData = [] }: { rawData: any[] }) 
           </div>
         </div>
 
-        <div className="rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] flex flex-col justify-between text-left">
+        <div className="flex flex-col justify-between rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-left text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)]">
           <div className="space-y-6">
             <h2 className="flex items-center gap-3 text-xl font-black uppercase italic text-blue-400"><Brain className="animate-pulse" /> Research Narrative</h2>
-            <div className="rounded-3xl border-2 border-white/10 bg-white/5 p-8 italic text-blue-100 text-lg leading-relaxed">
+            <div className="rounded-3xl border-2 border-white/10 bg-white/5 p-8 text-lg italic leading-relaxed text-blue-100">
               &ldquo;Dataset mencakup {stats.total} responden. Inklusi data tervalidasi (Consent) mencapai {stats.professional.consent}%. Mayoritas talenta berada pada fase karir sebagai {Object.entries(stats.career).sort((a:any,b:any)=>b[1]-a[1])[0]?.[0] || '...'}.&rdquo;
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mt-8">
-            <div className="bg-blue-600 p-6 rounded-[2rem] border-2 border-white/20 text-center">
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            <div className="rounded-[2rem] border-2 border-white/20 bg-blue-600 p-6 text-center">
               <p className="text-[10px] font-black uppercase opacity-60">Total Responden</p>
               <p className="text-4xl font-black italic">{stats.total}</p>
             </div>
-            <div className="bg-emerald-600 p-6 rounded-[2rem] border-2 border-white/20 text-center">
+            <div className="rounded-[2rem] border-2 border-white/20 bg-emerald-600 p-6 text-center">
               <p className="text-[10px] font-black uppercase opacity-60">Avg Training Access</p>
               <p className="text-4xl font-black italic">{stats.avgRating}/5</p>
             </div>
@@ -133,8 +133,8 @@ export default function NationalAnalytics({ rawData = [] }: { rawData: any[] }) 
       </div>
 
       {/* 2. EKOSISTEM PENDIDIKAN & HAMBATAN */}
-      <h3 className="text-2xl font-black uppercase italic text-slate-900 text-left border-b-4 border-slate-900 pb-2 flex items-center gap-3"><GraduationCap size={32}/> Pendidikan & Hambatan</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <h3 className="flex items-center gap-3 border-b-4 border-slate-900 pb-2 text-left text-2xl font-black uppercase italic text-slate-900"><GraduationCap size={32}/> Pendidikan & Hambatan</h3>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatTable title="Hambatan Studi" icon={AlertCircle} data={stats.barrier} total={stats.total} color="text-rose-600" />
         <StatTable title="Dukungan Kampus" icon={Accessibility} data={stats.academicSupport} total={stats.total} color="text-emerald-600" />
         <StatTable title="Top Kampus" icon={Landmark} data={stats.university} total={stats.total} color="text-indigo-600" />
@@ -142,8 +142,8 @@ export default function NationalAnalytics({ rawData = [] }: { rawData: any[] }) 
       </div>
 
       {/* 3. EKONOMI & KARIR */}
-      <h3 className="text-2xl font-black uppercase italic text-slate-900 text-left border-b-4 border-slate-900 pb-2 flex items-center gap-3"><Coins size={32}/> Ekonomi & Dinamika Karir</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <h3 className="flex items-center gap-3 border-b-4 border-slate-900 pb-2 text-left text-2xl font-black uppercase italic text-slate-900"><Coins size={32}/> Ekonomi & Dinamika Karir</h3>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatTable title="Ekspektasi Gaji" icon={Coins} data={stats.salaryDist} total={stats.total} color="text-emerald-700" isFixed={true} />
         <StatTable title="Status Karir" icon={Briefcase} data={stats.career} total={stats.total} color="text-blue-600" />
         <StatTable title="Kesesuaian Studi" icon={TrendingUp} data={stats.relevance} total={stats.total} color="text-emerald-600" />
@@ -151,25 +151,25 @@ export default function NationalAnalytics({ rawData = [] }: { rawData: any[] }) 
       </div>
 
       {/* 4. PROFESIONALISME & DIGITAL PRESENCE */}
-      <h3 className="text-2xl font-black uppercase italic text-slate-900 text-left border-b-4 border-slate-900 pb-2 flex items-center gap-3"><Globe size={32}/> Kesiapan Profesional & Digital</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] flex flex-col justify-between">
-           <h3 className="text-sm font-black uppercase italic text-indigo-600 flex items-center gap-2 text-left"><PieIcon size={18}/> Branding Digital</h3>
-           <div className="space-y-3 mt-6">
+      <h3 className="flex items-center gap-3 border-b-4 border-slate-900 pb-2 text-left text-2xl font-black uppercase italic text-slate-900"><Globe size={32}/> Kesiapan Profesional & Digital</h3>
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="flex flex-col justify-between rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+           <h3 className="flex items-center gap-2 text-left text-sm font-black uppercase italic text-indigo-600"><PieIcon size={18}/> Branding Digital</h3>
+           <div className="mt-6 space-y-3">
              <SmallProgress label="LinkedIn" pct={stats.professional.linkedin} icon={<PieIcon size={12}/>}/>
              <SmallProgress label="Portofolio" pct={stats.professional.portfolio} icon={<FileText size={12}/>}/>
              <SmallProgress label="Video Intro" pct={stats.professional.video} icon={<Video size={12}/>}/>
            </div>
         </div>
         
-        <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] flex flex-col justify-between">
-          <h3 className="text-sm font-black uppercase italic text-emerald-600 flex items-center gap-2 text-left"><Activity size={18}/> Kesiapan Gadget</h3>
-          <div className="space-y-4 mt-6">
+        <div className="flex flex-col justify-between rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+          <h3 className="flex items-center gap-2 text-left text-sm font-black uppercase italic text-emerald-600"><Activity size={18}/> Kesiapan Gadget</h3>
+          <div className="mt-6 space-y-4">
              <SmallProgress label="Akses Laptop" pct={Math.round((stats.digital.laptop/stats.total)*100)} icon={<Laptop size={14}/>}/>
              <SmallProgress label="Smartphone" pct={Math.round((stats.digital.smartphone/stats.total)*100)} icon={<Smartphone size={14}/>}/>
-             <div className="pt-4 border-t-2 border-dashed border-slate-100">
-               <div className="flex justify-between text-[9px] font-black uppercase mb-2"><span>INTERNET FIBER</span><span>{stats.digital.fiberPct}%</span></div>
-               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow={stats.digital.fiberPct} aria-valuemin={0} aria-valuemax={100}>
+             <div className="border-t-2 border-dashed border-slate-100 pt-4">
+               <div className="mb-2 flex justify-between text-[9px] font-black uppercase"><span>INTERNET FIBER</span><span>{stats.digital.fiberPct}%</span></div>
+               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={stats.digital.fiberPct} aria-valuemin={0} aria-valuemax={100}>
                  <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${stats.digital.fiberPct}%` }} />
                </div>
              </div>
@@ -180,8 +180,8 @@ export default function NationalAnalytics({ rawData = [] }: { rawData: any[] }) 
       </div>
 
       {/* 5. SEBARAN & IMPACT */}
-      <h3 className="text-2xl font-black uppercase italic text-slate-900 text-left border-b-4 border-slate-900 pb-2 flex items-center gap-3"><Star size={32}/> Sebaran & Dampak Pelatihan</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <h3 className="flex items-center gap-3 border-b-4 border-slate-900 pb-2 text-left text-2xl font-black uppercase italic text-slate-900"><Star size={32}/> Sebaran & Dampak Pelatihan</h3>
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <StatTable title="Sebaran Kota" icon={MapPin} data={stats.city} total={stats.total} color="text-slate-600" />
         <StatTable title="Dampak Pelatihan" icon={Star} data={stats.impact} total={stats.total} color="text-orange-600" />
         <StatTable title="Preferensi Komunikasi" icon={MessageSquare} data={stats.commPref} total={stats.total} color="text-cyan-600" />
@@ -198,22 +198,22 @@ function StatTable({ title, icon: Icon, data, total, color, isFixed = false }: a
   }, [data, isFixed]);
 
   return (
-    <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-left" role="group" aria-label={`Tabel Proporsi ${title}`}>
-      <h3 className={`text-[11px] font-black uppercase italic mb-4 flex items-center gap-2 ${color}`}>
+    <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 text-left shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]" role="group" aria-label={`Tabel Proporsi ${title}`}>
+      <h3 className={`mb-4 flex items-center gap-2 text-[11px] font-black uppercase italic ${color}`}>
         {Icon && <Icon size={14} aria-hidden="true"/>} {title}
       </h3>
-      <div className="rounded-2xl border-2 border-slate-50 overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border-2 border-slate-50">
         <table className="w-full text-[10px] font-bold">
           <tbody className="divide-y-2 divide-slate-50 uppercase">
             {sorted.length > 0 ? sorted.map(([k, v]: any) => {
               const pct = Math.round((v / total) * 100);
               return (
-                <tr key={k} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-500 truncate max-w-[130px]">{k}</td>
-                  <td className="py-2.5 px-3 text-right font-black" aria-label={`${pct} persen`}>{pct}%</td>
+                <tr key={k} className="transition-colors hover:bg-slate-50">
+                  <td className="max-w-[130px] truncate px-3 py-2.5 text-slate-500">{k}</td>
+                  <td className="px-3 py-2.5 text-right font-black" aria-label={`${pct} persen`}>{pct}%</td>
                 </tr>
               )
-            }) : <tr><td className="py-4 text-center text-slate-300 italic">Nihil</td></tr>}
+            }) : <tr><td className="py-4 text-center italic text-slate-300">Nihil</td></tr>}
           </tbody>
         </table>
       </div>
@@ -223,8 +223,8 @@ function StatTable({ title, icon: Icon, data, total, color, isFixed = false }: a
 
 function SmallProgress({ label, pct, icon }: any) {
   return (
-    <div className="bg-slate-50 p-3 rounded-xl border-2 border-slate-100 flex justify-between items-center" aria-label={`${label}: ${pct} persen`}>
-      <span className="text-[9px] font-black text-slate-400 flex items-center gap-2">{icon} {label}</span>
+    <div className="flex items-center justify-between rounded-xl border-2 border-slate-100 bg-slate-50 p-3" aria-label={`${label}: ${pct} persen`}>
+      <span className="flex items-center gap-2 text-[9px] font-black text-slate-400">{icon} {label}</span>
       <span className="text-xs font-black">{pct}%</span>
     </div>
   );

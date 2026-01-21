@@ -65,7 +65,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             {/* FITUR AKSESIBILITAS: SKIP LINK */}
             <a 
               href="#main-content" 
-              className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-6 focus:py-4 focus:font-black focus:outline-none focus:ring-4 focus:ring-yellow-400"
+              className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-blue-600 focus:px-6 focus:py-4 focus:font-black focus:text-white focus:outline-none focus:ring-4 focus:ring-yellow-400"
             >
               Lompat ke Konten Utama
             </a>

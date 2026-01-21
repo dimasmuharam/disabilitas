@@ -109,7 +109,7 @@ function LoginForm() {
   }
 
   return (
-    <main id="main-content" className="flex min-h-screen flex-col justify-center bg-white py-12 font-sans text-slate-900 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-white py-12 font-sans text-slate-900 sm:px-6 lg:px-8">
       
       <header className="px-4 text-center sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-3xl bg-slate-900 text-white shadow-2xl" aria-hidden="true">
@@ -159,7 +159,7 @@ function LoginForm() {
                   <button 
                     type="button" 
                     onClick={() => setShowPassword(!showPassword)} 
-                    className="absolute inset-y-0 right-4 flex items-center text-slate-300 hover:text-slate-900 focus:outline-none focus:text-blue-600"
+                    className="absolute inset-y-0 right-4 flex items-center text-slate-300 hover:text-slate-900 focus:text-blue-600 focus:outline-none"
                     aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                   >
                     {showPassword ? <EyeOff size={20} aria-hidden="true" /> : <Eye size={20} aria-hidden="true" />}
@@ -194,7 +194,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading || !turnstileToken}
-                className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 p-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-blue-600 active:scale-[0.98] disabled:opacity-50 focus:ring-4 focus:ring-blue-100"
+                className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 p-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-blue-600 focus:ring-4 focus:ring-blue-100 active:scale-[0.98] disabled:opacity-50"
               >
                 {loading ? "PROSES OTENTIKASI..." : (
                   <>MASUK KE PORTAL <LogIn size={18} className="transition-transform group-hover:translate-x-1" aria-hidden="true" /></>
@@ -205,7 +205,7 @@ function LoginForm() {
                 type="button"
                 onClick={handleResendVerification}
                 disabled={loading || !turnstileToken}
-                className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 p-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-slate-900 active:scale-[0.98] focus:ring-4 focus:ring-blue-100"
+                className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 p-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-slate-900 focus:ring-4 focus:ring-blue-100 active:scale-[0.98]"
               >
                 {loading ? "MENGIRIM ULANG..." : (
                   <>KIRIM ULANG LINK KONFIRMASI <RefreshCw size={18} className="transition-transform group-hover:rotate-180" aria-hidden="true" /></>
@@ -226,7 +226,7 @@ function LoginForm() {
           
         </div>
       </section>
-    </main>
+    </div>
   )
 }
 

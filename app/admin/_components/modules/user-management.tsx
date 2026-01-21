@@ -144,7 +144,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
             </select>
 
             <div className="flex gap-2">
-              <button onClick={exportToExcel} className="rounded-2xl bg-emerald-600 p-3 text-white hover:bg-emerald-700 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" aria-label="Export ke Excel">
+              <button onClick={exportToExcel} className="rounded-2xl bg-emerald-600 p-3 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-emerald-700" aria-label="Export ke Excel">
                 <Download size={20}/>
               </button>
             </div>
@@ -154,7 +154,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
         {/* 3. BULK ACTION TOOLBAR */}
         <div className="flex items-center justify-between py-6">
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-3 cursor-pointer group">
+            <label className="group flex cursor-pointer items-center gap-3">
               <input 
                 type="checkbox" 
                 className="size-6 rounded-lg border-4 border-slate-900 accent-blue-600"
@@ -180,7 +180,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
             <div 
               key={user.id} 
               role="listitem"
-              className={`flex flex-col gap-4 rounded-3xl border-4 border-slate-900 p-5 transition-all lg:flex-row lg:items-center lg:justify-between ${selectedIds.includes(user.id) ? 'bg-blue-50 border-blue-600' : 'bg-white'}`}
+              className={`flex flex-col gap-4 rounded-3xl border-4 border-slate-900 p-5 transition-all lg:flex-row lg:items-center lg:justify-between ${selectedIds.includes(user.id) ? 'border-blue-600 bg-blue-50' : 'bg-white'}`}
             >
               <div className="flex items-center gap-5">
                 <input 
@@ -199,7 +199,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
                     <a 
                       href={getPublicLink(user)} 
                       target="_blank" 
-                      className="text-slate-300 hover:text-blue-600 transition-colors"
+                      className="text-slate-300 transition-colors hover:text-blue-600"
                       title={`Lihat Profil Publik ${user.role}`}
                       aria-label={`Lihat Profil Publik ${user.full_name}`}
                     >
@@ -212,10 +212,10 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
                   <div className="mt-1 flex flex-col gap-1">
                     <p className="text-[11px] font-bold text-slate-500">{user.email}</p>
                     <div className="flex flex-wrap gap-2">
-                      <span className="flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[8px] font-black uppercase italic text-slate-500 border border-slate-200">
+                      <span className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[8px] font-black uppercase italic text-slate-500">
                         {user.role}
                       </span>
-                      <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
                         <MapPin size={10}/> {user.city || user.location || "Lokasi Nihil"}
                       </span>
                     </div>
@@ -239,7 +239,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
                 
                 <button 
                   onClick={() => onAction("DELETE_USER", user.id)} 
-                  className="ml-2 p-2 text-slate-300 hover:text-rose-600 transition-all"
+                  className="ml-2 p-2 text-slate-300 transition-all hover:text-rose-600"
                   aria-label={`Hapus user ${user.full_name}`}
                 >
                   <Trash2 size={20} />
@@ -259,7 +259,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
               <button 
                 disabled={currentPage === 1} 
                 onClick={() => { setCurrentPage(v => v-1); setAnnouncement(`Halaman ${currentPage - 1}`); }} 
-                className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all"
+                className="rounded-xl border-4 border-slate-900 p-3 transition-all hover:bg-slate-900 hover:text-white disabled:opacity-20"
                 aria-label="Halaman Sebelumnya"
               >
                 <ChevronLeft size={20}/>
@@ -270,7 +270,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
               <button 
                 disabled={currentPage === totalPages} 
                 onClick={() => { setCurrentPage(v => v+1); setAnnouncement(`Halaman ${currentPage + 1}`); }} 
-                className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all"
+                className="rounded-xl border-4 border-slate-900 p-3 transition-all hover:bg-slate-900 hover:text-white disabled:opacity-20"
                 aria-label="Halaman Selanjutnya"
               >
                 <ChevronRight size={20}/>
@@ -290,7 +290,7 @@ function StatCard({ label, val, bg, icon }: any) {
         <p className="text-[9px] font-black uppercase tracking-widest opacity-70">{label}</p>
         <p className="mt-1 text-3xl font-black italic">{val}</p>
       </div>
-      <div className="absolute -right-2 -bottom-2 scale-150 transform">
+      <div className="absolute -bottom-2 -right-2 scale-150">
         {icon}
       </div>
     </div>
