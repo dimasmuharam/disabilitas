@@ -1,14 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation" // Pastikan import ini ada
+import { usePathname } from "next/navigation"
 import { Globe, Mail, MapPin, Phone, ExternalLink } from "lucide-react"
 
 export function SiteFooter() {
+  // 1. Deklarasi hooks harus di paling atas
   const pathname = usePathname()
   const currentYear = new Date().getFullYear();
 
-  // --- LOGIKA "TAHU DIRI": SEMBUNYI JIKA DI AREA ADMIN ---
+  // 2. Logika sembunyi ditaruh SETELAH hooks dipanggil agar build sukses
   if (pathname.startsWith('/admin')) return null
 
   return (

@@ -12,13 +12,13 @@ import { FontToggle } from "@/components/font-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 
 export function SiteHeader() {
+  // 1. DEKLARASI HOOKS (Harus di paling atas)
   const pathname = usePathname()
-  if (pathname.startsWith('/admin')) return null
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
-  // LOGIKA 1: Sinkronisasi Status Auth & Role
+  // 2. LOGIKA SINKRONISASI (Harus sebelum Early Return)
   useEffect(() => {
     async function getStatus() {
       const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -51,9 +51,12 @@ export function SiteHeader() {
     router.push("/masuk")
   }
 
+  // 3. EARLY RETURN (Sekarang aman ditaruh di sini setelah semua hooks dipanggil)
+  if (pathname.startsWith('/admin')) return null
+
   return (
     <>
-      {/* 1. SKIP TO CONTENT (WAJIB AKSESIBILITAS) */}
+      {/* SKIP TO CONTENT (WAJIB AKSESIBILITAS) */}
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-6 focus:py-4 focus:font-black focus:uppercase focus:outline-none focus:ring-4 focus:ring-yellow-400"
@@ -86,7 +89,7 @@ export function SiteHeader() {
               </span>
             </Link>
 
-            {/* NAVIGASI DESKTOP (Semantik) */}
+            {/* NAVIGASI DESKTOP */}
             <nav className="hidden items-center gap-6 md:flex" aria-label="Navigasi Utama">
               {[
                 { href: "/lowongan", label: "Cari Lowongan" },
@@ -109,10 +112,9 @@ export function SiteHeader() {
             </nav>
           </div>
 
-          {/* BAGIAN KANAN: Tools & Auth */}
+          {/* BAGIAN KANAN: Tools & Auth (Dark Mode, Translate, Font Tetap Ada) */}
           <div className="flex items-center space-x-2 md:space-x-4">
             
-            {/* Panel Kontrol Aksesibilitas */}
             <div className="hidden items-center space-x-1 border-r border-slate-200 pr-3 dark:border-slate-800 sm:flex" role="group" aria-label="Pengaturan Aksesibilitas">
               <LanguageToggle />
               <FontToggle />
