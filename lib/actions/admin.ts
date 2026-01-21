@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/lib/supabase"
 
 /**
- * AMBIL DATA SELURUH EKOSISTEM (The Great Union V3)
+ * AMBIL DATA SELURUH EKOSISTEM (The Great Union V3 - Final Fix)
  * Menggabungkan data dari Auth (Master) dengan data metadata dari 5 tabel DB.
  */
 export async function getAllSystemUsers() {
@@ -30,7 +30,6 @@ export async function getAllSystemUsers() {
     if (authError) throw authError;
 
     // 2. Buat Map dari Database untuk mempercepat pencarian (Lookup Table)
-    // Kita gabungkan semua tabel ke dalam satu Map berdasarkan ID
     const dbMap = new Map();
     
     talents?.forEach(u => dbMap.set(u.id, { ...u, role: 'talent' }));
@@ -39,18 +38,17 @@ export async function getAllSystemUsers() {
     campuses?.forEach(u => dbMap.set(u.id, { ...u, role: 'campus', full_name: u.name, city: u.location }));
     government?.forEach(u => dbMap.set(u.id, { ...u, role: 'government', full_name: u.name, city: u.location }));
 
-    // 3. Loop utama berdasarkan Auth (Karena Auth adalah kebenaran tunggal user yang ada)
+    // 3. Loop utama berdasarkan Auth (Menggunakan user_metadata sesuai aturan TypeScript)
     const unified = authUsers.users.map(au => {
       const dbData = dbMap.get(au.id);
+      const meta = au.user_metadata; // Perbaikan: Pakai user_metadata
       
       return {
         id: au.id,
         email: au.email,
-        // Prioritas Nama: Data Tabel DB > User Metadata Auth > Email
-        full_name: dbData?.full_name || au.raw_user_meta_data?.full_name || au.raw_user_meta_data?.name || au.email?.split('@')[0],
-        // Prioritas Role: Data Tabel DB > User Metadata Auth > Default Talent
-        role: dbData?.role || au.raw_user_meta_data?.role || 'talent',
-        city: dbData?.city || au.raw_user_meta_data?.city || "Lokasi Nihil",
+        full_name: dbData?.full_name || meta?.full_name || meta?.name || au.email?.split('@')[0],
+        role: dbData?.role || meta?.role || 'talent',
+        city: dbData?.city || meta?.city || meta?.location || "Lokasi Nihil",
         is_verified: dbData?.is_verified || false,
         email_confirmed_at: au.email_confirmed_at || null,
         last_sign_in_at: au.last_sign_in_at || null,
@@ -68,7 +66,7 @@ export async function getAllSystemUsers() {
 }
 
 /**
- * AMBIL DATA RISET MENTAH (Untuk Dashboard Analytics)
+ * AMBIL DATA RISET MENTAH (Dashboard Analytics)
  */
 export async function getRawResearchData() {
   try {
@@ -97,8 +95,7 @@ export async function getManualInputAudit() {
 }
 
 /**
- * MANAJEMEN AUTH USER (AKSI SAKTI ADMIN)
- * Terintegrasi dengan UserManagement UI
+ * MANAJEMEN AUTH USER (AKSI ADMIN)
  */
 export async function manageUserAuth(action: string, userId: string, extra?: any) {
   try {
@@ -106,16 +103,15 @@ export async function manageUserAuth(action: string, userId: string, extra?: any
 
     switch (action) {
       case "FORCE_CONFIRM":
-      case "VERIFY_EMAIL":
-        const { error: verError } = await admin.auth.admin.updateUserById(userId, {
+        const { error: confirmError } = await admin.auth.admin.updateUserById(userId, {
           email_confirm: true
         });
-        return { error: verError };
+        return { error: confirmError };
 
-      case "SUSPEND":
       case "BAN_USER":
+      case "SUSPEND":
         const { error: banError } = await admin.auth.admin.updateUserById(userId, {
-          ban_duration: '87600h' // Suspend 10 tahun
+          ban_duration: '87600h' 
         });
         return { error: banError };
 
@@ -126,7 +122,7 @@ export async function manageUserAuth(action: string, userId: string, extra?: any
       case "RESET_PASSWORD":
         const { error: resError } = await admin.auth.admin.generateLink({
           type: 'recovery',
-          email: extra // Menggunakan email sebagai identitas
+          email: extra 
         });
         return { error: resError };
 
@@ -149,7 +145,7 @@ export async function manageUserAuth(action: string, userId: string, extra?: any
 }
 
 /**
- * UPDATE MASAL ATAU TUNGGAL UNTUK TABEL DATABASE
+ * MANAJEMEN TABEL DATABASE BIASA
  */
 export async function manageAdminUser(action: string, table: string, payload: any) {
   try {

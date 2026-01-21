@@ -24,10 +24,10 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
   const filteredData = useMemo(() => {
     return allUsers.filter((u: any) => {
       // Mengambil data dari metadata jika tidak ada di level root (Skema Auth Supabase)
-      const name = (u.raw_user_meta_data?.full_name || u.raw_user_meta_data?.name || u.email || "").toLowerCase();
+      const name = (u.user_metadata?.full_name || u.user_metadata?.name || u.email || "").toLowerCase();
       const email = (u.email || "").toLowerCase();
-      const role = (u.raw_user_meta_data?.role || "talent");
-      const location = (u.raw_user_meta_data?.city || u.raw_user_meta_data?.location || "Global").toLowerCase();
+      const role = (u.user_metadata?.role || "talent");
+      const location = (u.user_metadata?.city || u.user_metadata?.location || "Global").toLowerCase();
       
       const matchQuery = name.includes(query.toLowerCase()) || email.includes(query.toLowerCase());
       const matchRole = roleFilter === "all" || role === roleFilter;
@@ -40,7 +40,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
   }, [allUsers, query, roleFilter, statusFilter]);
 
   const stats = useMemo(() => {
-    const getRoleCount = (r: string) => allUsers.filter((u: any) => (u.raw_user_meta_data?.role || 'talent') === r).length;
+    const getRoleCount = (r: string) => allUsers.filter((u: any) => (u.user_metadata?.role || 'talent') === r).length;
     return {
       total: allUsers.length,
       talent: getRoleCount('talent'),
@@ -71,7 +71,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
   };
 
   const getPublicLink = (user: any) => {
-    const role = user.raw_user_meta_data?.role || 'talent';
+    const role = user.user_metadata?.role || 'talent';
     const roleMap: Record<string, string> = {
       company: 'perusahaan',
       campus: 'kampus',
@@ -85,9 +85,9 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
   const exportToExcel = () => {
     const data = filteredData.map((u: any) => ({
       ID: u.id,
-      Nama: u.raw_user_meta_data?.full_name || u.raw_user_meta_data?.name || "N/A",
+      Nama: u.user_metadata?.full_name || u.user_metadata?.name || "N/A",
       Email: u.email,
-      Role: u.raw_user_meta_data?.role || "talent",
+      Role: u.user_metadata?.role || "talent",
       Status_Konfirmasi: u.email_confirmed_at ? "Confirmed" : "Pending"
     }));
     const ws = XLSX.utils.json_to_sheet(data);
@@ -177,8 +177,8 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
         {/* 4. USER LIST (Auth Table Style) */}
         <div className="space-y-4" role="list">
           {paginatedData.map((user: any) => {
-            const role = user.raw_user_meta_data?.role || 'talent';
-            const name = user.raw_user_meta_data?.full_name || user.raw_user_meta_data?.name || "No Name Set";
+            const role = user.user_metadata?.role || 'talent';
+            const name = user.user_metadata?.full_name || user.user_metadata?.name || "No Name Set";
             
             return (
               <div 
