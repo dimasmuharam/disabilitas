@@ -56,13 +56,7 @@ export function SiteHeader() {
 
   return (
     <>
-      {/* SKIP TO CONTENT (WAJIB AKSESIBILITAS) */}
-      <a 
-        href="#main-content" 
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-6 focus:py-4 focus:font-black focus:uppercase focus:outline-none focus:ring-4 focus:ring-yellow-400"
-      >
-        Lompat ke Konten Utama
-      </a>
+
 
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 print:hidden">
         <div className="container flex h-16 items-center justify-between px-4 sm:px-8">

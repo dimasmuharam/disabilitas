@@ -62,20 +62,27 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="relative flex min-h-screen flex-col">
             
-            {/* FITUR AKSESIBILITAS: SKIP LINK */}
+            {/* 1. FIXED SKIP LINK (SINGLE SOURCE) 
+                Dibuat 'fixed' agar selalu bisa diakses saat scroll, 
+                dan bergaya neubrutalism sesuai UI Mas Dimas.
+            */}
             <a 
               href="#main-content" 
-              className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-6 focus:py-4 focus:font-black focus:outline-none focus:ring-4 focus:ring-yellow-400"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-6 focus:left-6 focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-8 focus:py-5 focus:font-black focus:uppercase focus:rounded-2xl focus:border-4 focus:border-slate-900 focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none transition-all"
             >
               Lompat ke Konten Utama
             </a>
 
-            {/* SITE HEADER & FOOTER 
-              Komponen ini sekarang punya logika internal untuk sembunyi otomatis 
-              ketika mendeteksi path /admin (via usePathname di dalam komponennya).
+            {/* 2. HEADER
+                Ingat: Hapus skip link yang ada di dalam komponen SiteHeader 
+                agar tidak dobel lagi.
             */}
             <SiteHeader />
             
+            {/* 3. MAIN CONTENT
+                tabIndex={-1} penting agar browser bisa memindahkan fokus secara programmatik
+                tanpa menambahkan elemen ke urutan tab reguler.
+            */}
             <main id="main-content" className="flex-1 outline-none" tabIndex={-1}>
               {children}
             </main>
