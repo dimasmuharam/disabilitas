@@ -143,7 +143,7 @@ export default function IndexPage() {
                 </p>
                 <p className="flex items-start gap-3">
                   <Database className="mt-1 shrink-0 text-blue-600" />
-                  Menghilangkan "Asymmetric Information" yang selama ini menjadi penghambat utama rekrutmen inklusif.
+                  Menghilangkan &quot;Asymmetric Information&quot; yang selama ini menjadi penghambat utama rekrutmen inklusif.
                 </p>
                 <p className="flex items-start gap-3">
                   <ArrowRight className="mt-1 shrink-0 text-blue-600" />
