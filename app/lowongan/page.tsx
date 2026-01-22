@@ -126,7 +126,7 @@ export default function LowonganPage() {
             </div>
             
             <div className="flex items-center gap-3 rounded-2xl border-2 border-slate-200 bg-slate-100 p-2">
-              <ListFilter size={18} className="ml-2 text-slate-500" />
+              <ListFilter size={18} className="ml-2 text-slate-500" aria-hidden="true" />
               <select 
                 aria-label="Urutkan Lowongan"
                 value={sortBy} 
@@ -141,17 +141,18 @@ export default function LowonganPage() {
           
           <form onSubmit={(e) => { e.preventDefault(); fetchJobs(); }} className="flex max-w-5xl flex-col gap-4 md:flex-row">
             <div className="group relative flex-[2]">
-              <Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-600" />
+              <Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-600" aria-hidden="true" />
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari posisi pekerjaan..." 
+                aria-label="Cari posisi pekerjaan"
                 className="h-16 w-full rounded-3xl border-2 border-slate-100 bg-slate-50/50 pl-14 pr-4 font-bold shadow-inner outline-none transition-all focus:border-blue-600 focus:bg-white"
               />
             </div>
             <div className="relative flex-1">
-              <MapPin className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-red-500" />
+              <MapPin className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-red-500" aria-hidden="true" />
               <select 
                 aria-label="Pilih Kota"
                 value={selectedCity}
@@ -162,7 +163,7 @@ export default function LowonganPage() {
                 {INDONESIA_CITIES.map(city => <option key={city} value={city}>{city}</option>)}
               </select>
             </div>
-            <button type="submit" className="flex h-16 items-center justify-center gap-3 rounded-3xl bg-slate-900 px-10 text-xs font-black uppercase text-white shadow-xl transition-all hover:bg-blue-600 active:scale-95">
+            <button type="submit" className="flex h-16 items-center justify-center gap-3 rounded-3xl bg-slate-900 px-10 text-xs font-black uppercase text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95" aria-label="Cari lowongan pekerjaan">
               Cari Sekarang
             </button>
           </form>
@@ -172,14 +173,14 @@ export default function LowonganPage() {
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-6 py-12 lg:flex-row">
         
         {/* SIDEBAR FILTER: DEEP COMPETECE & ACCESS */}
-        <aside className="w-full space-y-8 lg:w-80">
+        <aside className="w-full space-y-8 lg:w-80" aria-label="Filter Lowongan Pekerjaan">
           <div className="sticky top-8 rounded-[3rem] border-2 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
             <div className="mb-8 flex items-center justify-between border-b-2 border-slate-50 pb-4">
               <h2 className="flex items-center gap-2 text-sm font-black uppercase italic">
-                <Filter size={18} className="text-blue-600" /> Filter Lanjutan
+                <Filter size={18} className="text-blue-600" aria-hidden="true" /> Filter Lanjutan
               </h2>
-              <button onClick={handleReset} className="rounded-xl p-2 text-red-500 transition-colors hover:bg-red-50" title="Reset Filter">
-                <RotateCcw size={18} />
+              <button onClick={handleReset} className="rounded-xl p-2 text-red-500 transition-colors hover:bg-red-50" title="Reset Filter" aria-label="Reset semua filter">
+                <RotateCcw size={18} aria-hidden="true" />
               </button>
             </div>
 
@@ -187,8 +188,8 @@ export default function LowonganPage() {
               
               {/* PENDIDIKAN */}
               <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] italic text-slate-400"><GraduationCap size={14}/> Jenjang Pendidikan</label>
-                <select value={selectedEducation} onChange={(e) => setSelectedEducation(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-blue-600">
+                <label htmlFor="education-filter" className="flex items-center gap-2 text-[10px] italic text-slate-400"><GraduationCap size={14} aria-hidden="true" /> Jenjang Pendidikan</label>
+                <select id="education-filter" value={selectedEducation} onChange={(e) => setSelectedEducation(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-blue-600" aria-label="Filter berdasarkan jenjang pendidikan">
                   <option value="">Semua Jenjang</option>
                   {EDUCATION_LEVELS.map(edu => <option key={edu} value={edu}>{edu}</option>)}
                 </select>
@@ -196,8 +197,8 @@ export default function LowonganPage() {
 
               {/* JURUSAN */}
               <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] italic text-slate-400"><BookOpen size={14}/> Fokus Jurusan</label>
-                <select value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-blue-600">
+                <label htmlFor="major-filter" className="flex items-center gap-2 text-[10px] italic text-slate-400"><BookOpen size={14} aria-hidden="true" /> Fokus Jurusan</label>
+                <select id="major-filter" value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-blue-600" aria-label="Filter berdasarkan jurusan pendidikan">
                   <option value="">Semua Jurusan</option>
                   {UNIVERSITY_MAJORS.map(major => <option key={major} value={major}>{major}</option>)}
                 </select>
@@ -205,8 +206,8 @@ export default function LowonganPage() {
 
               {/* SKILL UTAMA */}
               <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[10px] italic text-slate-400"><Wrench size={14}/> Spesialisasi Keahlian</label>
-                <select value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-emerald-600">
+                <label htmlFor="skill-filter" className="flex items-center gap-2 text-[10px] italic text-slate-400"><Wrench size={14} aria-hidden="true" /> Spesialisasi Keahlian</label>
+                <select id="skill-filter" value={selectedSkill} onChange={(e) => setSelectedSkill(e.target.value)} className="w-full rounded-2xl border-2 border-slate-50 bg-slate-50 p-4 text-[11px] font-bold outline-none transition-all focus:border-emerald-600" aria-label="Filter berdasarkan keahlian">
                   <option value="">Semua Skill</option>
                   {SKILLS_LIST.map(skill => <option key={skill} value={skill}>{skill}</option>)}
                 </select>
@@ -214,11 +215,11 @@ export default function LowonganPage() {
 
               {/* RANGE GAJI */}
               <div className="space-y-4 border-t border-slate-100 pt-4">
-                <label className="flex items-center justify-between text-[10px] italic text-slate-400">
-                  <span><DollarSign size={14} className="mb-0.5 inline"/> Min. Gaji</span>
-                  <span className="font-black text-slate-900">Rp {minSalary/1000000} Jt</span>
+                <label htmlFor="salary-range" className="flex items-center justify-between text-[10px] italic text-slate-400">
+                  <span><DollarSign size={14} className="mb-0.5 inline" aria-hidden="true" /> Min. Gaji</span>
+                  <span id="salary-value" className="font-black text-slate-900">Rp {minSalary/1000000} Jt</span>
                 </label>
-                <input type="range" min="0" max="25000000" step="1000000" value={minSalary} onChange={(e) => setMinSalary(parseInt(e.target.value))} className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-100 accent-slate-900" />
+                <input id="salary-range" type="range" min="0" max="25000000" step="1000000" value={minSalary} onChange={(e) => setMinSalary(parseInt(e.target.value))} className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-100 accent-slate-900" aria-label="Filter berdasarkan gaji minimum" aria-describedby="salary-value" />
               </div>
 
               {/* DUKUNGAN AKOMODASI (PENGGANTI RAGAM DISABILITAS) */}
@@ -231,7 +232,8 @@ export default function LowonganPage() {
                         type="checkbox" 
                         checked={selectedAccommodations.includes(item)}
                         onChange={() => handleFilterChange(item, 'acc')}
-                        className="size-5 rounded border-2 border-slate-200 text-blue-600" 
+                        className="size-5 rounded border-2 border-slate-200 text-blue-600"
+                        aria-label={`Filter berdasarkan dukungan ${item}`}
                       />
                       <span className="text-[10px] font-black leading-tight text-slate-600 group-hover:text-blue-700">{item}</span>
                     </label>
@@ -257,7 +259,7 @@ export default function LowonganPage() {
              </div>
           ) : jobs.length === 0 ? (
             <div className="rounded-[4rem] border-4 border-dashed border-slate-100 bg-white py-32 text-center">
-              <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-slate-50 text-slate-200"><Briefcase size={40} /></div>
+              <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-slate-50 text-slate-200"><Briefcase size={40} aria-hidden="true" /></div>
               <p className="text-sm font-black uppercase italic tracking-widest text-slate-300">Tidak ada data yang sesuai dengan kriteria riset Anda.</p>
               <button onClick={handleReset} className="mt-4 text-[10px] font-black uppercase text-blue-600 underline underline-offset-4">Bersihkan Filter</button>
             </div>
@@ -269,9 +271,9 @@ export default function LowonganPage() {
                   <div className="w-full flex-1 space-y-6 text-left">
                     <div className="space-y-2">
                       <div className="mb-2 flex items-center gap-2">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white"><Building2 size={16} /></div>
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white"><Building2 size={16} aria-hidden="true" /></div>
                         <span className="max-w-[200px] truncate text-[11px] font-black uppercase tracking-widest text-slate-500">{job.companies?.name}</span>
-                        {job.companies?.is_verified && <CheckCircle size={16} className="shrink-0 text-blue-500" />}
+                        {job.companies?.is_verified && <CheckCircle size={16} className="shrink-0 text-blue-500" aria-hidden="true" />}
                       </div>
                       <h2 className="text-2xl font-black uppercase italic leading-none tracking-tighter text-slate-900 transition-colors group-hover:text-blue-600 md:text-3xl">
                         {job.title}
@@ -279,9 +281,9 @@ export default function LowonganPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase italic tracking-tighter">
-                      <span className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-1.5 text-slate-500 shadow-sm"><MapPin size={12} className="text-red-500"/> {job.location}</span>
-                      <span className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 text-blue-600 shadow-sm"><GraduationCap size={12}/> {job.required_education_level}</span>
-                      <span className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-600 shadow-sm"><Monitor size={12}/> {job.work_mode}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-1.5 text-slate-500 shadow-sm"><MapPin size={12} className="text-red-500" aria-hidden="true" /> {job.location}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 text-blue-600 shadow-sm"><GraduationCap size={12} aria-hidden="true" /> {job.required_education_level}</span>
+                      <span className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-600 shadow-sm"><Monitor size={12} aria-hidden="true" /> {job.work_mode}</span>
                     </div>
 
                     {/* ACCOMMODATION TAGS: Tunjukkan kesiapan instansi */}
@@ -300,12 +302,12 @@ export default function LowonganPage() {
                     <div className="flex-1 space-y-1 text-left md:flex-none md:text-right">
                       <p className="text-[9px] font-black uppercase italic tracking-[0.2em] text-slate-300">Estimasi Gaji</p>
                       <p className="text-2xl font-black tracking-tighter text-slate-900">
-                        <DollarSign size={20} className="mb-1 inline text-emerald-500" />
+                        <DollarSign size={20} className="mb-1 inline text-emerald-500" aria-hidden="true" />
                         {job.salary_min > 0 ? `${(job.salary_min/1000000).toFixed(1)} - ${(job.salary_max/1000000).toFixed(1)} Jt` : "Kompetitif"}
                       </p>
                     </div>
-                    <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-xl transition-all active:scale-90 group-hover:translate-x-2 group-hover:bg-blue-600">
-                      <ChevronRight size={28} />
+                    <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-xl transition-all active:scale-90 group-hover:translate-x-2 group-hover:bg-blue-700">
+                      <ChevronRight size={28} aria-hidden="true" />
                     </div>
                   </div>
 

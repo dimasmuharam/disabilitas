@@ -109,17 +109,17 @@ export function SiteHeader() {
           {/* BAGIAN KANAN: Tools & Auth (Dark Mode, Translate, Font Tetap Ada) */}
           <div className="flex items-center space-x-2 md:space-x-4">
             
-            <div className="hidden items-center space-x-1 border-r border-slate-200 pr-3 dark:border-slate-800 sm:flex" role="group" aria-label="Pengaturan Aksesibilitas">
+            <aside className="hidden items-center space-x-1 border-r border-slate-200 pr-3 dark:border-slate-800 sm:flex" aria-label="Alat Aksesibilitas">
               <LanguageToggle />
               <FontToggle />
               <ThemeToggle />
-            </div>
+            </aside>
 
             <div className="flex items-center gap-2">
               {user ? (
                 <>
                   <Link href={isAdmin ? "/admin" : "/dashboard"}>
-                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow outline-none transition-all hover:bg-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600">
+                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow outline-none transition-all hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600">
                       {isAdmin ? "Portal Admin" : "Dashboard"}
                     </button>
                   </Link>
@@ -140,7 +140,7 @@ export function SiteHeader() {
                     Masuk
                   </Link>
                   <Link href="/daftar">
-                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg outline-none transition-colors hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500">
+                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-blue-700 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg outline-none transition-colors hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500">
                       Daftar
                     </button>
                   </Link>
