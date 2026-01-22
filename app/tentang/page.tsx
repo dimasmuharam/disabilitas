@@ -39,7 +39,7 @@ export default function TentangPage() {
                 Berawal dari ketimpangan akses informasi (asymmetric information) di pasar kerja Indonesia, <strong>Dimas Prasetyo Muharam</strong> membayangkan sebuah sistem di mana kompetensi talenta disabilitas dapat terpetakan secara ilmiah dan transparan.
               </p>
               <p>
-                Sebagai peneliti pendidikan inklusif dan praktisi tunanetra, ia menyadari bahwa tantangan utama bukan hanya pada SDM, melainkan pada ekosistem yang terfragmentasi. Disabilitas.com lahir untuk mengisi celah tersebut (Fill the Gap).
+                Sebagai peneliti pendidikan Inklusif dan praktisi tunanetra, ia menyadari bahwa tantangan utama bukan hanya pada SDM, melainkan pada ekosistem yang terfragmentasi. Disabilitas.com lahir untuk mengisi celah tersebut (Fill the Gap).
               </p>
             </div>
           </div>
@@ -75,11 +75,11 @@ export default function TentangPage() {
                <Microscope className="size-4" /> Peneliti Pendidikan Inklusif & Praktisi
             </p>
             <div className="mt-8 border-t-2 border-slate-100 pt-8 italic font-bold text-slate-500 leading-relaxed">
-              &ldquo;Keterbatasan penglihatan mengajarkan saya untuk memetakan peluang melalui data dan empati. Disabilitas.com adalah upaya kolektif membuktikan bahwa kompetensi fungsional melampaui batasan fisik.&rdquo;
+              &ldquo;Kehilangan penglihatan sejak usia 12 tahun mengajarkan saya untuk memetakan peluang melalui data dan empati. Disabilitas.com adalah upaya kolektif membuktikan bahwa kompetensi fungsional melampaui batasan fisik. Solusi teknologi dan aksesibilitas digital hadir untuk membongkar batasan-batasan itu dan membuka banyak peluang untuk penyandang disabilitas yang sebelumnya dianggap mustahil.&rdquo;
             </div>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
                <div className="flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-slate-100 px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-                  <ShieldCheck className="size-3.5 text-emerald-600" /> Ahli Aksesibilitas Digital
+                  <ShieldCheck className="size-3.5 text-emerald-600" /> Peneliti BRIN
                </div>
                <div className="flex items-center gap-1.5 rounded-xl border-2 border-slate-900 bg-slate-100 px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                   <Zap className="size-3.5 text-blue-600" /> Founder Forum ASN Inklusif
@@ -100,10 +100,10 @@ export default function TentangPage() {
           </p>
           <div className="flex flex-col justify-center gap-6 sm:flex-row">
             <Link 
-              href="/lowongan" 
+              href="/bisnis" 
               className="flex h-16 items-center justify-center rounded-2xl bg-blue-600 px-12 text-sm font-black uppercase italic tracking-[0.2em] text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-1 active:translate-y-0"
             >
-              Lihat Lowongan
+              Solusi Kami
             </Link>
             <Link 
               href="/kontak" 
