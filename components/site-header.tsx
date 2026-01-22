@@ -86,9 +86,9 @@ export function SiteHeader() {
             {/* NAVIGASI DESKTOP */}
             <nav className="hidden items-center gap-6 md:flex" aria-label="Navigasi Utama">
               {[
-                { href: "/lowongan", label: "Cari Lowongan" },
-                { href: "/pelatihan", label: "Tingkatkan Keterampilan" },
-                { href: "/bisnis", label: "Audit & Rekrutmen" },
+                { href: "/lowongan", label: "Lowongan" },
+                { href: "/pelatihan", label: "Pelatihan" },
+                { href: "/bisnis", label: "Solusi Inklusif" },
                 { href: "/tentang", label: "Tentang Kami" }
               ].map((link) => (
                 <Link
