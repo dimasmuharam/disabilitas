@@ -217,9 +217,9 @@ export default function LowonganPage() {
               <div className="space-y-4 border-t border-slate-100 pt-4">
                 <label htmlFor="salary-range" className="flex items-center justify-between text-[10px] italic text-slate-400">
                   <span><DollarSign size={14} className="mb-0.5 inline" aria-hidden="true" /> Min. Gaji</span>
-                  <span className="font-black text-slate-900">Rp {minSalary/1000000} Jt</span>
+                  <span id="salary-value" className="font-black text-slate-900">Rp {minSalary/1000000} Jt</span>
                 </label>
-                <input id="salary-range" type="range" min="0" max="25000000" step="1000000" value={minSalary} onChange={(e) => setMinSalary(parseInt(e.target.value))} className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-100 accent-slate-900" aria-label="Filter berdasarkan gaji minimum" />
+                <input id="salary-range" type="range" min="0" max="25000000" step="1000000" value={minSalary} onChange={(e) => setMinSalary(parseInt(e.target.value))} className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-100 accent-slate-900" aria-label="Filter berdasarkan gaji minimum" aria-describedby="salary-value" />
               </div>
 
               {/* DUKUNGAN AKOMODASI (PENGGANTI RAGAM DISABILITAS) */}
