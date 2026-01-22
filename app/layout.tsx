@@ -68,7 +68,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             */}
             <a 
               href="#main-content" 
-              className="sr-only focus:not-sr-only focus:fixed focus:top-6 focus:left-6 focus:z-[100] focus:bg-blue-600 focus:text-white focus:px-8 focus:py-5 focus:font-black focus:uppercase focus:rounded-2xl focus:border-4 focus:border-slate-900 focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] outline-none transition-all"
+              className="sr-only outline-none transition-all focus:not-sr-only focus:fixed focus:left-6 focus:top-6 focus:z-[100] focus:rounded-2xl focus:border-4 focus:border-slate-900 focus:bg-blue-600 focus:px-8 focus:py-5 focus:font-black focus:uppercase focus:text-white focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
             >
               Lompat ke Konten Utama
             </a>

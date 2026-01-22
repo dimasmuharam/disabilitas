@@ -59,7 +59,7 @@ export default function AuditAksesibilitasPage() {
       </section>
 
       {/* 2. CORE AUDIT MODULES: Fokus pada Digital sebagai Expertise Utama */}
-      <section className="py-24 bg-slate-50">
+      <section className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4">
           <div className="mb-16 text-center lg:text-left">
             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">Modul Evaluasi Profesional</h2>
@@ -95,7 +95,7 @@ export default function AuditAksesibilitasPage() {
                 <p className="mb-6 text-sm font-bold italic leading-relaxed text-slate-500">
                   {f.desc}
                 </p>
-                <ul className="space-y-2 border-t-2 border-slate-100 pt-6 mt-auto">
+                <ul className="mt-auto space-y-2 border-t-2 border-slate-100 pt-6">
                   {f.points.map(p => (
                     <li key={p} className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
                       <CheckCircle2 size={14} className="text-emerald-500" /> {p}
@@ -109,7 +109,7 @@ export default function AuditAksesibilitasPage() {
       </section>
 
       {/* 3. THE EDGE: User-Led Audit (Unique Selling Point) */}
-      <section className="py-24 border-y-8 border-slate-900 bg-white">
+      <section className="border-y-8 border-slate-900 bg-white py-24">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex flex-col items-center gap-16 lg:flex-row">
             <div className="flex-1 space-y-8">
@@ -136,7 +136,7 @@ export default function AuditAksesibilitasPage() {
             <div className="flex-1 rounded-[3rem] border-8 border-slate-900 bg-purple-100 p-12 shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
                <Zap className="mb-6 text-yellow-500" size={48} />
                <h3 className="text-3xl font-black uppercase italic leading-tight text-slate-900">Siap Menuju <br /> Inklusi Digital?</h3>
-               <p className="mt-4 font-bold text-purple-700 italic">Pastikan sistem dan lingkungan Anda siap mengoptimalkan potensi talenta tanpa hambatan aksesibilitas.</p>
+               <p className="mt-4 font-bold italic text-purple-700">Pastikan sistem dan lingkungan Anda siap mengoptimalkan potensi talenta tanpa hambatan aksesibilitas.</p>
                <Link 
                  href="/kontak" 
                  className="mt-10 inline-flex w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-slate-900 py-6 text-sm font-black uppercase italic tracking-widest text-white transition-all hover:bg-purple-600"

@@ -57,7 +57,7 @@ export default function BisnisPage() {
                 <Accessibility size={180} className="text-blue-500" />
                 <div className="absolute -left-8 top-10 rounded-3xl border-4 border-white bg-slate-900 p-6 text-white shadow-xl">
                   <ShieldCheck size={40} className="text-emerald-400" />
-                  <p className="mt-2 text-[10px] font-black uppercase italic text-center">User-Led Audit</p>
+                  <p className="mt-2 text-center text-[10px] font-black uppercase italic">User-Led Audit</p>
                 </div>
               </div>
             </div>
@@ -66,7 +66,7 @@ export default function BisnisPage() {
       </section>
 
       {/* STRATEGIC SERVICES GRID */}
-      <section id="layanan" className="py-24 bg-slate-50">
+      <section id="layanan" className="bg-slate-50 py-24">
         <div className="mx-auto max-w-7xl px-4">
           <div className="mb-16 text-left">
             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">Standar Inklusi 360&deg;</h2>
@@ -146,21 +146,21 @@ export default function BisnisPage() {
       </section>
 
       {/* WHY US: User-Led Difference */}
-      <section className="py-24 border-y-8 border-slate-900 bg-white">
+      <section className="border-y-8 border-slate-900 bg-white py-24">
         <div className="mx-auto max-w-7xl px-4">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="relative mx-auto w-full max-w-md">
               <div className="rounded-[2rem] border-4 border-slate-900 bg-blue-100 p-10 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
                 <Lightbulb className="mb-6 size-12 text-blue-600" />
-                <h4 className="text-2xl font-black uppercase italic mb-4 text-slate-900">Mengapa Kami Berbeda?</h4>
-                <p className="text-sm font-bold italic text-slate-600 leading-relaxed">
+                <h4 className="mb-4 text-2xl font-black uppercase italic text-slate-900">Mengapa Kami Berbeda?</h4>
+                <p className="text-sm font-bold italic leading-relaxed text-slate-600">
                   Kami tidak hanya menggunakan perangkat audit otomatis. Setiap sistem diuji langsung oleh praktisi tunanetra yang memahami hambatan fungsional nyata di lapangan.
                 </p>
               </div>
             </div>
             <div className="space-y-6">
               <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Validasi yang <br /> Menghilangkan Hambatan</h2>
-              <p className="text-lg font-bold italic text-slate-500 leading-relaxed">
+              <p className="text-lg font-bold italic leading-relaxed text-slate-500">
                 Platform ini membantu Anda menemukan talenta terbaik secara gratis, sementara layanan audit kami memastikan talenta tersebut dapat bekerja dengan produktivitas maksimal pada sistem Anda.
               </p>
             </div>

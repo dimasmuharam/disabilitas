@@ -71,17 +71,17 @@ export default function GovernmentLandingPage() {
              <div className="rounded-3xl border-4 border-slate-900 bg-white p-8 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
                 <Zap className="mb-4 text-yellow-500" size={32} />
                 <h4 className="text-xl font-black uppercase italic">Mitigasi Asumsi</h4>
-                <p className="mt-2 text-sm font-bold text-slate-500 italic">Kebijakan berdasarkan data riil pemetaan potensi di wilayah Mas Dimas.</p>
+                <p className="mt-2 text-sm font-bold italic text-slate-500">Kebijakan berdasarkan data riil pemetaan potensi di wilayah Mas Dimas.</p>
              </div>
              <div className="rounded-3xl border-4 border-slate-900 bg-white p-8 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
                 <ClipboardCheck className="mb-4 text-blue-600" size={32} />
                 <h4 className="text-xl font-black uppercase italic">Verifikasi Terpusat</h4>
-                <p className="mt-2 text-sm font-bold text-slate-500 italic">Otoritas tunggal untuk memvalidasi kepatuhan industri lokal terhadap UU Disabilitas.</p>
+                <p className="mt-2 text-sm font-bold italic text-slate-500">Otoritas tunggal untuk memvalidasi kepatuhan industri lokal terhadap UU Disabilitas.</p>
              </div>
              <div className="rounded-3xl border-4 border-slate-900 bg-white p-8 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
                 <PieChart className="mb-4 text-purple-600" size={32} />
                 <h4 className="text-xl font-black uppercase italic">Laporan Otomatis</h4>
-                <p className="mt-2 text-sm font-bold text-slate-500 italic">Hasil laporan statistik penempatan kerja untuk Kepala Daerah secara instan.</p>
+                <p className="mt-2 text-sm font-bold italic text-slate-500">Hasil laporan statistik penempatan kerja untuk Kepala Daerah secara instan.</p>
              </div>
           </div>
         </div>
@@ -131,14 +131,14 @@ export default function GovernmentLandingPage() {
       </section>
 
       {/* SIMULATION FOR CENTRAL GOV (Research-Driven) */}
-      <section className="bg-slate-50 border-y-8 border-slate-900 py-24">
+      <section className="border-y-8 border-slate-900 bg-slate-50 py-24">
          <div className="mx-auto max-w-7xl px-4">
             <div className="flex flex-col items-center gap-12 lg:flex-row">
                <div className="flex-1 space-y-6">
                   <h3 className="text-4xl font-black uppercase italic leading-none tracking-tighter">
                      Simulasi Formasi <br /> <span className="text-blue-600">CASN Inklusif</span>
                   </h3>
-                  <p className="text-lg font-bold text-slate-600 italic">
+                  <p className="text-lg font-bold italic text-slate-600">
                     Khusus Pemerintah Pusat: Gunakan data agregat nasional untuk menyimulasikan ketersediaan talenta disabilitas dengan kriteria spesifik sebelum pembukaan formasi nasional.
                   </p>
                </div>
@@ -147,7 +147,7 @@ export default function GovernmentLandingPage() {
                      <div className="h-4 w-full rounded-full bg-blue-500/20"><div className="h-full w-3/4 rounded-full bg-blue-500" /></div>
                      <div className="h-4 w-full rounded-full bg-emerald-500/20"><div className="h-full w-1/2 rounded-full bg-emerald-500" /></div>
                      <div className="h-4 w-full rounded-full bg-yellow-500/20"><div className="h-full w-2/3 rounded-full bg-yellow-500" /></div>
-                     <p className="pt-4 text-xs font-black uppercase tracking-widest text-blue-400 text-center">Data Simulation Engine Active</p>
+                     <p className="pt-4 text-center text-xs font-black uppercase tracking-widest text-blue-400">Data Simulation Engine Active</p>
                   </div>
                </div>
             </div>

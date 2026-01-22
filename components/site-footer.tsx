@@ -21,12 +21,12 @@ export function SiteFooter() {
               <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50">
                 Disabilitas.com
               </h2>
-              <p className="mt-4 text-sm font-bold leading-relaxed text-slate-500 dark:text-slate-400 italic">
+              <p className="mt-4 text-sm font-bold italic leading-relaxed text-slate-500 dark:text-slate-400">
                 Hub Digital Pengembangan Karir Inklusif. Menghubungkan potensi talenta dengan industri melalui validasi institusi dan standar aksesibilitas digital.
               </p>
             </div>
             
-            <div className="rounded-2xl border-2 border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-sm text-left transition-all hover:border-blue-500">
+            <div className="rounded-2xl border-2 border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:border-blue-500 dark:border-slate-800 dark:bg-slate-900">
               <span className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Pusat Keahlian</span>
               <a 
                 href="https://dimaster.co.id" 
@@ -46,27 +46,27 @@ export function SiteFooter() {
             </h3>
             <ul className="space-y-4 text-sm font-bold text-slate-600 dark:text-slate-400">
               <li>
-                <Link href="/talent" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/talent" className="transition-all hover:pl-1 hover:text-blue-600">
                   Portal Talenta
                 </Link>
               </li>
               <li>
-                <Link href="/perusahaan" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/perusahaan" className="transition-all hover:pl-1 hover:text-blue-600">
                   Portal Pemberi Kerja
                 </Link>
               </li>
               <li>
-                <Link href="/kampus" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/kampus" className="transition-all hover:pl-1 hover:text-blue-600">
                   Portal Perguruan Tinggi
                 </Link>
               </li>
               <li>
-                <Link href="/government" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/government" className="transition-all hover:pl-1 hover:text-blue-600">
                   Portal Pemerintah
                 </Link>
               </li>
               <li>
-                <Link href="/partner" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/partner" className="transition-all hover:pl-1 hover:text-blue-600">
                   Portal Mitra Organisasi
                 </Link>
               </li>
@@ -85,17 +85,17 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/aksesibilitas" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/aksesibilitas" className="transition-all hover:pl-1 hover:text-blue-600">
                   Pernyataan Aksesibilitas
                 </Link>
               </li>
               <li>
-                <Link href="/privasi" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/privasi" className="transition-all hover:pl-1 hover:text-blue-600">
                   Kebijakan Privasi
                 </Link>
               </li>
               <li>
-                <Link href="/kontak" className="transition-all hover:text-blue-600 hover:pl-1">
+                <Link href="/kontak" className="transition-all hover:pl-1 hover:text-blue-600">
                   Hubungi Kami
                 </Link>
               </li>
@@ -107,8 +107,8 @@ export function SiteFooter() {
             <h3 className="mb-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-slate-50">
               Kantor Pusat
             </h3>
-            <address className="space-y-4 text-sm not-italic font-bold text-slate-600 dark:text-slate-400">
-              <div className="flex items-start group">
+            <address className="space-y-4 text-sm font-bold not-italic text-slate-600 dark:text-slate-400">
+              <div className="group flex items-start">
                 <MapPin className="mr-3 size-5 shrink-0 text-blue-600 transition-transform group-hover:scale-110" aria-hidden="true" />
                 <span className="leading-relaxed">
                   Jl. Mulya Makarya No. A/1,<br />
@@ -116,13 +116,13 @@ export function SiteFooter() {
                   Banten 15154.
                 </span>
               </div>
-              <div className="flex items-center group">
+              <div className="group flex items-center">
                 <Mail className="mr-3 size-4 shrink-0 text-blue-600" aria-hidden="true" />
                 <a href="mailto:halo@disabilitas.com" className="transition-colors group-hover:text-blue-600">
                   halo@disabilitas.com
                 </a>
               </div>
-              <div className="flex items-center group">
+              <div className="group flex items-center">
                 <Phone className="mr-3 size-4 shrink-0 text-blue-600" aria-hidden="true" />
                 <a 
                   href="https://wa.me/6282310301799" 
