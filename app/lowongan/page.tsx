@@ -232,7 +232,8 @@ export default function LowonganPage() {
                         type="checkbox" 
                         checked={selectedAccommodations.includes(item)}
                         onChange={() => handleFilterChange(item, 'acc')}
-                        className="size-5 rounded border-2 border-slate-200 text-blue-600" 
+                        className="size-5 rounded border-2 border-slate-200 text-blue-600"
+                        aria-label={`Filter berdasarkan dukungan ${item}`}
                       />
                       <span className="text-[10px] font-black leading-tight text-slate-600 group-hover:text-blue-700">{item}</span>
                     </label>
