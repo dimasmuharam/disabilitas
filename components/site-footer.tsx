@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Globe, Mail, MapPin, Phone, ExternalLink, Zap } from "lucide-react"
+import { Globe, ShieldCheck, Mail, MapPin, Phone, ExternalLink, Zap } from "lucide-react"
 
 export function SiteFooter() {
   const pathname = usePathname()
