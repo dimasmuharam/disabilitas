@@ -203,8 +203,9 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
               setMsg("Kembali ke Analisis Nasional.");
             }}
             className="flex items-center gap-2 rounded-2xl bg-white px-6 py-4 text-[10px] font-black uppercase text-slate-900 shadow-xl transition-all hover:bg-blue-50"
+            aria-label="Kembali ke Analisis Nasional"
           >
-            <ArrowLeft size={16} /> Back to Overview
+            <ArrowLeft size={16} aria-hidden="true" /> Back to Overview
           </button>
         )}
       </header>

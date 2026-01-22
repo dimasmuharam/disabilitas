@@ -34,7 +34,7 @@ export function SiteFooter() {
                 target="_blank" 
                 rel="noopener noreferrer"
               >
-                <Zap className="mr-2 size-4 text-blue-600" aria-hidden="true" /> Dimaster Group <ExternalLink className="ml-1 size-3 opacity-30" />
+                <Zap className="mr-2 size-4 text-blue-600" aria-hidden="true" /> Dimaster Group <ExternalLink className="ml-1 size-3 opacity-30" aria-hidden="true" />
               </a>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function SiteFooter() {
               © {currentYear} PT Dimaster Education Berprestasi.
             </p>
             <div className="flex items-center gap-4 text-[9px] font-bold uppercase text-slate-400">
-              <span className="flex items-center gap-1"><ShieldCheck className="size-3 text-emerald-500" /> WCAG 2.1 AA Compliant</span>
+              <span className="flex items-center gap-1"><ShieldCheck className="size-3 text-emerald-500" aria-hidden="true" /> WCAG 2.1 AA Compliant</span>
               <span className="size-1 rounded-full bg-slate-300"></span>
               <span>ISO 27001 Ready</span>
             </div>

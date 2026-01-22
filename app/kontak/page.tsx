@@ -28,7 +28,7 @@ export default function KontakPage() {
           <div className="space-y-8 lg:col-span-1">
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] dark:bg-slate-900 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.1)]">
               <h2 className="mb-8 flex items-center gap-3 text-2xl font-black uppercase italic">
-                <Building className="size-6 text-blue-600" /> Kantor
+                <Building className="size-6 text-blue-600" aria-hidden="true" /> Kantor
               </h2>
               
               <div className="space-y-8">
@@ -87,7 +87,7 @@ export default function KontakPage() {
           <div className="lg:col-span-2">
             <div className="rounded-[3rem] border-4 border-slate-900 bg-slate-50 p-8 shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] dark:bg-slate-900 lg:p-12">
               <h2 className="mb-8 flex items-center gap-3 text-3xl font-black uppercase italic">
-                <MessageSquare className="size-8 text-blue-600" /> Kirim Pesan
+                <MessageSquare className="size-8 text-blue-600" aria-hidden="true" /> Kirim Pesan
               </h2>
               
               <form className="grid gap-6 md:grid-cols-2">
@@ -144,7 +144,7 @@ export default function KontakPage() {
                     type="submit" 
                     className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl border-4 border-slate-900 bg-blue-600 px-10 text-sm font-black uppercase italic tracking-widest text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:bg-slate-900"
                   >
-                    <Send className="size-5" /> Kirim Pesan Strategis
+                    <Send className="size-5" aria-hidden="true" /> Kirim Pesan Strategis
                   </button>
                 </div>
               </form>
