@@ -42,7 +42,7 @@ export default function IndexPage() {
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link
                 href="/talent"
-                className="group inline-flex h-14 items-center justify-center rounded-2xl bg-blue-600 px-10 text-sm font-black uppercase tracking-widest text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] active:translate-y-0.5"
+                className="group inline-flex h-14 items-center justify-center rounded-2xl bg-blue-700 px-10 text-sm font-black uppercase tracking-widest text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] active:translate-y-0.5"
               >
                 Eksplor Solusi Kami
               </Link>
@@ -50,7 +50,7 @@ export default function IndexPage() {
                 href="/lowongan"
                 className="group inline-flex h-14 items-center justify-center rounded-2xl border-4 border-slate-900 bg-white px-10 text-sm font-black uppercase tracking-widest text-slate-900 shadow-[8px_8px_0px_0px_rgba(37,99,235,1)] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] active:translate-y-0.5"
               >
-                <Search className="mr-2 size-5" /> Cari Lowongan
+                <Search className="mr-2 size-5" aria-hidden="true" /> Cari Lowongan
               </Link>
             </div>
           </div>
@@ -69,8 +69,8 @@ export default function IndexPage() {
             
             {/* TALENTA - TO /talent */}
             <Link href="/talent" className="group rounded-[2rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
-              <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-blue-600 text-white">
-                <Users size={28} />
+              <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-blue-700 text-white">
+                <Users size={28} aria-hidden="true" />
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic">Talenta</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
@@ -81,7 +81,7 @@ export default function IndexPage() {
             {/* PERUSAHAAN - TO /perusahaan */}
             <Link href="/perusahaan" className="group rounded-[2rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
               <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-orange-500 text-white">
-                <Building2 size={28} />
+                <Building2 size={28} aria-hidden="true" />
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic">Perusahaan</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
@@ -91,8 +91,8 @@ export default function IndexPage() {
 
             {/* MITRA PELATIHAN - TO /partner */}
             <Link href="/partner" className="group rounded-[2rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
-              <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-emerald-500 text-white">
-                <Handshake size={28} />
+              <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-emerald-600 text-white">
+                <Handshake size={28} aria-hidden="true" />
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic">Mitra Pelatihan & Organisasi</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
@@ -103,7 +103,7 @@ export default function IndexPage() {
             {/* KAMPUS - TO /kampus */}
             <Link href="/kampus" className="group rounded-[2rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
               <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-indigo-500 text-white">
-                <GraduationCap size={28} />
+                <GraduationCap size={28} aria-hidden="true" />
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic">Kampus (ULD)</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
@@ -114,7 +114,7 @@ export default function IndexPage() {
             {/* PEMERINTAH (ULD NAKER) - TO /government */}
             <Link href="/government" className="group rounded-[2rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
               <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-purple-600 text-white">
-                <Landmark size={28} />
+                <Landmark size={28} aria-hidden="true" />
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic">Pemerintah</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
@@ -124,8 +124,8 @@ export default function IndexPage() {
 
             {/* THE GAP FILLER (The Core Vision) */}
             <div className="group rounded-[2rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[8px_8px_0px_0px_rgba(37,99,235,1)]">
-              <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-blue-600 text-white">
-                <Zap size={28} />
+              <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-blue-700 text-white">
+                <Zap size={28} aria-hidden="true" />
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic text-blue-400">The Gap Filler</h3>
               <p className="text-sm font-bold leading-relaxed opacity-80">
@@ -146,15 +146,15 @@ export default function IndexPage() {
               </h2>
               <div className="space-y-4 font-bold italic text-slate-600">
                 <p className="flex items-start gap-3">
-                  <ShieldCheck className="mt-1 shrink-0 text-blue-600" />
+                  <ShieldCheck className="mt-1 shrink-0 text-blue-600" aria-hidden="true" />
                   Memvalidasi klaim kompetensi melalui verifikasi institusi mitra.
                 </p>
                 <p className="flex items-start gap-3">
-                  <Database className="mt-1 shrink-0 text-blue-600" />
+                  <Database className="mt-1 shrink-0 text-blue-600" aria-hidden="true" />
                   Menghilangkan hambatan informasi &quot;asymmetric information&quot; antara pencari kerja dan pemberi kerja.
                 </p>
                 <p className="flex items-start gap-3">
-                  <BarChartHorizontal className="mt-1 shrink-0 text-blue-600" />
+                  <BarChartHorizontal className="mt-1 shrink-0 text-blue-600" aria-hidden="true" />
                   Mendukung pengambilan kebijakan berbasis data riil di lapangan.
                 </p>
               </div>

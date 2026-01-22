@@ -11,7 +11,7 @@ export default function KontakPage() {
         
         {/* HEADER SECTION */}
         <div className="mb-16 text-center lg:text-left">
-          <div className="mb-4 inline-block rounded-lg border-2 border-slate-900 bg-blue-600 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+          <div className="mb-4 inline-block rounded-lg border-2 border-slate-900 bg-blue-700 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
             Contact & Support
           </div>
           <h1 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900 dark:text-slate-50 sm:text-6xl">
@@ -142,7 +142,7 @@ export default function KontakPage() {
                 <div className="md:col-span-2">
                   <button 
                     type="submit" 
-                    className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl border-4 border-slate-900 bg-blue-600 px-10 text-sm font-black uppercase italic tracking-widest text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:bg-slate-900"
+                    className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl border-4 border-slate-900 bg-blue-700 px-10 text-sm font-black uppercase italic tracking-widest text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:bg-slate-900"
                   >
                     <Send className="size-5" aria-hidden="true" /> Kirim Pesan Strategis
                   </button>
