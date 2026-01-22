@@ -13,6 +13,7 @@ import {
   BarChartHorizontal,
   Zap
 } from "lucide-react"
+export const metadata: Metadata = {
   title: "Disabilitas.com | Inklusi jadi Nyata",
   description: "Hub Digital Pengembangan Karir Inklusif. Platform terintegrasi yang menghubungkan Talenta, Pemberi Kerja, Mitra Pelatihan & organisasi, Perguruan Tinggi, dan Pemerintah dalam satu ekosistem inklusi nasional.",
 };
