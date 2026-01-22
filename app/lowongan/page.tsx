@@ -177,7 +177,7 @@ export default function LowonganPage() {
           <div className="sticky top-8 rounded-[3rem] border-2 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
             <div className="mb-8 flex items-center justify-between border-b-2 border-slate-50 pb-4">
               <h2 className="flex items-center gap-2 text-sm font-black uppercase italic">
-                <Filter size={18} className="text-blue-600" /> Filter Lanjutan
+                <Filter size={18} className="text-blue-600" aria-hidden="true" /> Filter Lanjutan
               </h2>
               <button onClick={handleReset} className="rounded-xl p-2 text-red-500 transition-colors hover:bg-red-50" title="Reset Filter" aria-label="Reset semua filter">
                 <RotateCcw size={18} aria-hidden="true" />
@@ -306,8 +306,8 @@ export default function LowonganPage() {
                         {job.salary_min > 0 ? `${(job.salary_min/1000000).toFixed(1)} - ${(job.salary_max/1000000).toFixed(1)} Jt` : "Kompetitif"}
                       </p>
                     </div>
-                    <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-xl transition-all active:scale-90 group-hover:translate-x-2 group-hover:bg-blue-700" aria-hidden="true">
-                      <ChevronRight size={28} />
+                    <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-xl transition-all active:scale-90 group-hover:translate-x-2 group-hover:bg-blue-700">
+                      <ChevronRight size={28} aria-hidden="true" />
                     </div>
                   </div>
 
