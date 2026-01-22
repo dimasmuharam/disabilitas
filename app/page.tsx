@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import Link from "next/link"
 import { 
   Building2, 
@@ -12,6 +13,9 @@ import {
   BarChartHorizontal,
   Zap
 } from "lucide-react"
+  title: "Disabilitas.com | Inklusi jadi Nyata",
+  description: "Hub Digital Pengembangan Karir Inklusif. Platform terintegrasi yang menghubungkan Talenta, Pemberi Kerja, Mitra Pelatihan & organisasi, Perguruan Tinggi, dan Pemerintah dalam satu ekosistem inklusi nasional.",
+};
 
 export default function IndexPage() {
   return (
