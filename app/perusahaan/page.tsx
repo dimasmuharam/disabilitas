@@ -30,7 +30,7 @@ export default function CompanyLandingPage() {
               </div>
               <h1 className="text-5xl font-black uppercase italic leading-none tracking-tighter sm:text-6xl md:text-7xl">
                 Rekrutmen Cerdas <br /> 
-                <span className="text-slate-900">Bukan Spekulasi.</span>
+                <span className="text-slate-900">Dapatkan Kualitas.</span>
               </h1>
               <p className="max-w-xl text-lg font-bold uppercase tracking-widest text-orange-50">
                 Temukan talenta disabilitas dengan kualifikasi yang tepat melalui database nasional yang sudah tervalidasi oleh Kampus dan Lembaga Pelatihan resmi.
