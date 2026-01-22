@@ -80,7 +80,7 @@ export default function IndexPage() {
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic">Perusahaan</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
-                Dapatkan akses ke database talenta nasional yang sudah tervalidasi skill-nya oleh institusi pendidikan resmi.
+                Dapatkan akses ke database talenta nasional yang sudah tervalidasi skill-nya oleh institusi pendidikan dan mitra pelatihan serta organisasi penyandang disabilitas.
               </p>
             </Link>
 
@@ -113,7 +113,7 @@ export default function IndexPage() {
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic">Pemerintah</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
-                Gunakan dashboard otoritas untuk memantau kepatuhan industri dan simulasi ketersediaan talenta nasional.
+                Solusi dashboard digital Unit Layanan Disabilitas Tenaga Kerja (ULD Naker) daerah memantau kepatuhan industri dan simulasi ketersediaan talenta dari tingkat daerah hingga nasional.
               </p>
             </Link>
 
@@ -124,7 +124,7 @@ export default function IndexPage() {
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic text-blue-400">The Gap Filler</h3>
               <p className="text-sm font-bold leading-relaxed opacity-80">
-                Satu-satunya sistem yang menjahit data terpisah menjadi satu jalur transisi dari pendidikan ke pekerjaan.
+                Platform digital terdepan di Indonesia yang mensinergikan data di lima stake holders (Talenta, Perusahaan, Mitra Pelatihan dan Organisasi, Perguruan Tinggi, serta Pemerintah) menjadi satu jalur transisi dari pendidikan ke pekerjaan yang inklusif untuk talenta disabilitas.
               </p>
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function IndexPage() {
                 </p>
                 <p className="flex items-start gap-3">
                   <Database className="mt-1 shrink-0 text-blue-600" />
-                  Menghilangkan hambatan informasi (*asymmetric information*) antara pencari kerja dan pemberi kerja.
+                  Menghilangkan hambatan informasi &quot;asymmetric information&quot; antara pencari kerja dan pemberi kerja.
                 </p>
                 <p className="flex items-start gap-3">
                   <BarChartHorizontal className="mt-1 shrink-0 text-blue-600" />
@@ -154,25 +154,41 @@ export default function IndexPage() {
                 </p>
               </div>
             </div>
-            <div className="rounded-[3rem] border-8 border-slate-900 bg-slate-100 p-8 shadow-2xl dark:bg-slate-800">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-                  <span className="font-black uppercase italic">National Integration</span>
-                  <span className="text-3xl font-black text-blue-600">DONE</span>
-                </div>
-                <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-                  <span className="font-black uppercase italic">Institutional Trust</span>
-                  <span className="text-3xl font-black text-emerald-600">HIGH</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-black uppercase italic">Stakeholder Sync</span>
-                  <span className="text-3xl font-black text-orange-500">READY</span>
-                </div>
-              </div>
-            </div>
+      {/* Bagian Status yang Dioptimalkan untuk Screen Reader */}
+      <div 
+        className="rounded-[3rem] border-8 border-slate-900 bg-slate-100 p-8 shadow-2xl dark:bg-slate-800"
+        role="region" 
+        aria-label="Status Kesiapan Infrastruktur"
+      >
+        <div className="space-y-6">
+          <div 
+            className="flex items-center justify-between border-b-2 border-slate-900 pb-4"
+            aria-label="Status Integrasi Nasional: Tercapai"
+          >
+            <span className="font-black uppercase italic">Integrasi Nasional</span>
+            <span className="text-3xl font-black text-blue-600" aria-hidden="true">TERCAPAI</span>
+          </div>
+          
+          <div 
+            className="flex items-center justify-between border-b-2 border-slate-900 pb-4"
+            aria-label="Kepercayaan Institusi: Tinggi"
+          >
+            <span className="font-black uppercase italic">Kepercayaan Institusi</span>
+            <span className="text-3xl font-black text-emerald-600" aria-hidden="true">TINGGI</span>
+          </div>
+          
+          <div 
+            className="flex items-center justify-between"
+            aria-label="Sinkronisasi Stakeholder: Siap"
+          >
+            <span className="font-black uppercase italic">Sinkronisasi Stakeholder</span>
+            <span className="text-3xl font-black text-orange-500" aria-hidden="true">SIAP</span>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* 4. FINAL CTA */}
       <section className="w-full bg-blue-600 py-24 text-white">
