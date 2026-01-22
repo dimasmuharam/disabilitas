@@ -194,7 +194,7 @@ export default function IndexPage() {
       <section className="w-full bg-blue-600 py-24 text-white">
         <div className="container px-4 text-center md:px-6">
           <h2 className="mb-6 text-4xl font-black uppercase italic leading-none tracking-tighter sm:text-6xl md:text-7xl">
-            Satu Ekosistem. <br /> Sejuta Peluang Berbasis Data.
+            Satu Ekosistem. <br /> Pengembangan Karir Inklusif  Berbasis Data.
           </h2>
           <div className="mt-12 flex flex-col justify-center gap-6 sm:flex-row">
             <Link
