@@ -112,7 +112,7 @@ export default function CompanyLandingPage() {
               <p className="mt-6 text-lg font-bold italic leading-relaxed text-slate-600">
                 Kami menyediakan data kesiapan aksesibilitas talenta dan membantu Anda melakukan audit kesiapan lingkungan kerja. Pastikan talenta hebat yang Anda rekrut mendapatkan akomodasi yang layak untuk performa maksimal.
               </p>
-              <Link href="/bisnis" className="mt-8 inline-flex items-center gap-2 font-black uppercase italic text-orange-600 hover:gap-4 transition-all">
+              <Link href="/bisnis" className="mt-8 inline-flex items-center gap-2 font-black uppercase italic text-orange-600 transition-all hover:gap-4">
                 Pelajari Layanan Audit Aksesibilitas <ArrowRight size={20} />
               </Link>
             </div>

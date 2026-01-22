@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans antialiased text-slate-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
       
       {/* 1. HEADER KHUSUS ADMIN (NAVIGASI MINIMALIS) */}
       <nav className="sticky top-0 z-50 border-b-4 border-slate-900 bg-white px-6 py-4 shadow-sm">
@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Tombol Kembali ke Beranda Publik */}
             <button 
               onClick={() => router.push("/")}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 transition-all"
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-black uppercase text-slate-500 transition-all hover:bg-slate-100"
               aria-label="Kembali ke Beranda"
             >
               <Home size={16} /> Home
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Tombol Keluar Mandiri */}
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-xl bg-rose-50 px-4 py-2 text-[10px] font-black uppercase text-rose-600 border-2 border-transparent hover:border-rose-200 transition-all shadow-sm"
+              className="flex items-center gap-2 rounded-xl border-2 border-transparent bg-rose-50 px-4 py-2 text-[10px] font-black uppercase text-rose-600 shadow-sm transition-all hover:border-rose-200"
             >
               <LogOut size={16} /> Keluar
             </button>

@@ -23,7 +23,7 @@ export function LanguageToggle() {
       aria-label={label}
       title={label}
     >
-      <Languages className="mr-2 size-4" />
+      <Languages className="mr-2 size-4" aria-hidden="true" />
       <span>{lang === "id" ? "ID" : "EN"}</span>
     </button>
   )

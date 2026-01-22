@@ -141,8 +141,8 @@ export default function TalentLandingPage() {
                 "Hubungkan Institusi Pendidikan/Pelatihan",
                 "Muncul di Dashboard Rekrutmen Nasional"
               ].map((step, idx) => (
-                <div key={idx} className="flex items-center gap-3 font-black uppercase italic tracking-tighter text-sm">
-                  <div className="flex size-6 items-center justify-center rounded-full bg-blue-500 text-[10px] text-white not-italic">{idx + 1}</div>
+                <div key={idx} className="flex items-center gap-3 text-sm font-black uppercase italic tracking-tighter">
+                  <div className="flex size-6 items-center justify-center rounded-full bg-blue-500 text-[10px] not-italic text-white">{idx + 1}</div>
                   {step}
                 </div>
               ))}

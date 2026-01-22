@@ -28,7 +28,7 @@ export default function KontakPage() {
           <div className="space-y-8 lg:col-span-1">
             <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] dark:bg-slate-900 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.1)]">
               <h2 className="mb-8 flex items-center gap-3 text-2xl font-black uppercase italic">
-                <Building className="size-6 text-blue-600" /> Kantor
+                <Building className="size-6 text-blue-600" aria-hidden="true" /> Kantor
               </h2>
               
               <div className="space-y-8">
@@ -52,26 +52,26 @@ export default function KontakPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 group">
+                <div className="group flex items-center gap-4">
                   <div className="rounded-xl border-2 border-slate-900 bg-emerald-50 p-2 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
                     <Mail className="size-5 text-emerald-600" />
                   </div>
-                  <a href="mailto:halo@disabilitas.com" className="text-sm font-black uppercase italic hover:text-blue-600 transition-colors">
+                  <a href="mailto:halo@disabilitas.com" className="text-sm font-black uppercase italic transition-colors hover:text-blue-600">
                     halo@disabilitas.com
                   </a>
                 </div>
 
-                <div className="flex items-center gap-4 group">
+                <div className="group flex items-center gap-4">
                   <div className="rounded-xl border-2 border-slate-900 bg-green-50 p-2 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
                     <Phone className="size-5 text-green-600" />
                   </div>
-                  <a href="https://wa.me/6282310301799" target="_blank" rel="noopener noreferrer" className="text-sm font-black uppercase italic hover:text-green-600 transition-colors">
+                  <a href="https://wa.me/6282310301799" target="_blank" rel="noopener noreferrer" className="text-sm font-black uppercase italic transition-colors hover:text-green-600">
                     +62 823-1030-1799
                   </a>
                 </div>
 
                 <div className="border-t-2 border-slate-100 pt-6">
-                  <h3 className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <h3 className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                     <Clock size={14} /> Jam Operasional
                   </h3>
                   <ul className="space-y-1 text-xs font-black uppercase italic text-slate-500">
@@ -87,7 +87,7 @@ export default function KontakPage() {
           <div className="lg:col-span-2">
             <div className="rounded-[3rem] border-4 border-slate-900 bg-slate-50 p-8 shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] dark:bg-slate-900 lg:p-12">
               <h2 className="mb-8 flex items-center gap-3 text-3xl font-black uppercase italic">
-                <MessageSquare className="size-8 text-blue-600" /> Kirim Pesan
+                <MessageSquare className="size-8 text-blue-600" aria-hidden="true" /> Kirim Pesan
               </h2>
               
               <form className="grid gap-6 md:grid-cols-2">
@@ -115,7 +115,7 @@ export default function KontakPage() {
                   <label htmlFor="subjek" className="text-[10px] font-black uppercase tracking-widest">Tujuan Menghubungi</label>
                   <select 
                     id="subjek" 
-                    className="flex h-14 w-full rounded-xl border-4 border-slate-900 bg-white px-4 font-bold outline-none focus:bg-blue-50 dark:bg-slate-950 appearance-none"
+                    className="flex h-14 w-full appearance-none rounded-xl border-4 border-slate-900 bg-white px-4 font-bold outline-none focus:bg-blue-50 dark:bg-slate-950"
                   >
                     <option>Konsultasi Audit Aksesibilitas Digital (Expertise)</option>
                     <option>Sinergi Ekosistem & Riset BRIN</option>
@@ -130,7 +130,7 @@ export default function KontakPage() {
                   <textarea 
                     id="pesan" 
                     required 
-                    className="flex min-h-[150px] w-full rounded-xl border-4 border-slate-900 bg-white px-4 py-4 font-bold outline-none focus:bg-blue-50 dark:bg-slate-950" 
+                    className="flex min-h-[150px] w-full rounded-xl border-4 border-slate-900 bg-white p-4 font-bold outline-none focus:bg-blue-50 dark:bg-slate-950" 
                     placeholder="Tuliskan pesan atau detail tantangan inklusi di organisasi Anda..." 
                   />
                 </div>
@@ -144,7 +144,7 @@ export default function KontakPage() {
                     type="submit" 
                     className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl border-4 border-slate-900 bg-blue-600 px-10 text-sm font-black uppercase italic tracking-widest text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:bg-slate-900"
                   >
-                    <Send className="size-5" /> Kirim Pesan Strategis
+                    <Send className="size-5" aria-hidden="true" /> Kirim Pesan Strategis
                   </button>
                 </div>
               </form>

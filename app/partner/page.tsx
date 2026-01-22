@@ -68,11 +68,11 @@ export default function PartnerLandingPage() {
                 <Handshake size={180} className="text-emerald-600" />
                 <div className="absolute -left-8 top-10 rounded-3xl border-4 border-slate-900 bg-blue-500 p-6 text-white shadow-xl">
                   <LineChart size={40} />
-                  <p className="mt-2 text-[10px] font-black uppercase italic text-center">Impact Tracking</p>
+                  <p className="mt-2 text-center text-[10px] font-black uppercase italic">Impact Tracking</p>
                 </div>
                 <div className="absolute -right-8 bottom-10 rounded-3xl border-4 border-slate-900 bg-yellow-400 p-6 text-slate-900 shadow-xl">
                   <Zap size={40} />
-                  <p className="mt-2 text-[10px] font-black uppercase italic text-center">Skill Validation</p>
+                  <p className="mt-2 text-center text-[10px] font-black uppercase italic">Skill Validation</p>
                 </div>
               </div>
             </div>

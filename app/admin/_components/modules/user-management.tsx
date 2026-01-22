@@ -170,20 +170,20 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
               checked={selectedIds.length === paginatedData.length && paginatedData.length > 0}
               onChange={toggleSelectAll}
             />
-            <label htmlFor="bulk-select-all" className="text-xs font-black uppercase italic text-slate-400 cursor-pointer">Pilih Halaman Ini</label>
+            <label htmlFor="bulk-select-all" className="cursor-pointer text-xs font-black uppercase italic text-slate-400">Pilih Halaman Ini</label>
           </div>
 
           {selectedIds.length > 0 && (
             <div className="flex gap-2">
               <button 
                 onClick={() => onAction("BULK_CONFIRM", selectedIds)} 
-                className="rounded-xl bg-blue-600 px-4 py-2 text-[9px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all"
+                className="rounded-xl bg-blue-600 px-4 py-2 text-[9px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-1 hover:shadow-none"
               >
                 Konfirmasi ({selectedIds.length})
               </button>
               <button 
                 onClick={() => onAction("BULK_DELETE", selectedIds)} 
-                className="rounded-xl bg-rose-600 px-4 py-2 text-[9px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all"
+                className="rounded-xl bg-rose-600 px-4 py-2 text-[9px] font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-1 hover:shadow-none"
               >
                 Hapus Massal
               </button>
@@ -198,8 +198,8 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
               key={user.id} 
               role="listitem"
               className={cn(
-                "flex flex-col gap-4 rounded-3xl border-4 border-slate-900 p-5 lg:flex-row lg:items-center lg:justify-between transition-all",
-                selectedIds.includes(user.id) ? "bg-blue-50 border-blue-600 ring-4 ring-blue-100" : "bg-white"
+                "flex flex-col gap-4 rounded-3xl border-4 border-slate-900 p-5 transition-all lg:flex-row lg:items-center lg:justify-between",
+                selectedIds.includes(user.id) ? "border-blue-600 bg-blue-50 ring-4 ring-blue-100" : "bg-white"
               )}
             >
               <div className="flex items-center gap-5">
@@ -231,7 +231,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
                     <span className="rounded-md bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase italic text-white">
                       {user.role}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
                       <MapPin size={10}/> {user.city || "Lokasi Global"}
                     </span>
                   </div>
@@ -239,7 +239,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
               </div>
 
               {/* 5. ACTION BUTTONS */}
-              <div className="flex flex-wrap items-center gap-2 pt-4 border-t-2 border-slate-50 lg:pt-0 lg:border-t-0">
+              <div className="flex flex-wrap items-center gap-2 border-t-2 border-slate-50 pt-4 lg:border-t-0 lg:pt-0">
                 {!user.email_confirmed_at && (
                   <ActionButton 
                     icon={<RotateCcw size={12}/>} 
@@ -253,7 +253,7 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
                 <ActionButton icon={<Ban size={12}/>} label="Suspend" onClick={() => onAction("SUSPEND", user.id)} color="hover:bg-rose-900" />
                 <button 
                   onClick={() => onAction("DELETE_USER", user.id)} 
-                  className="p-2 ml-2 text-slate-300 hover:text-rose-600 transition-all rounded-lg focus:ring-4 focus:ring-rose-100"
+                  className="ml-2 rounded-lg p-2 text-slate-300 transition-all hover:text-rose-600 focus:ring-4 focus:ring-rose-100"
                   aria-label={`Hapus permanen user ${user.full_name}`}
                 >
                   <Trash2 size={20} />
@@ -268,10 +268,10 @@ export default function UserManagement({ allUsers = [], onAction }: any) {
           <nav className="mt-10 flex items-center justify-between border-t-4 border-slate-50 pt-8" aria-label="Navigasi Halaman">
             <p className="text-[10px] font-black uppercase text-slate-400">Page {currentPage} of {totalPages}</p>
             <div className="flex gap-2">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(v => v-1)} className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all" aria-label="Halaman Sebelumnya">
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(v => v-1)} className="rounded-xl border-4 border-slate-900 p-3 transition-all hover:bg-slate-900 hover:text-white disabled:opacity-20" aria-label="Halaman Sebelumnya">
                 <ChevronLeft size={20}/>
               </button>
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(v => v+1)} className="p-3 border-4 border-slate-900 rounded-xl disabled:opacity-20 hover:bg-slate-900 hover:text-white transition-all" aria-label="Halaman Selanjutnya">
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(v => v+1)} className="rounded-xl border-4 border-slate-900 p-3 transition-all hover:bg-slate-900 hover:text-white disabled:opacity-20" aria-label="Halaman Selanjutnya">
                 <ChevronRight size={20}/>
               </button>
             </div>
@@ -289,7 +289,7 @@ function StatCard({ label, val, bg, icon }: any) {
         <p className="text-[9px] font-black uppercase tracking-widest opacity-70">{label}</p>
         <p className="mt-1 text-2xl font-black italic">{val}</p>
       </div>
-      <div className="absolute -right-2 -bottom-2 scale-150 opacity-20 transform rotate-12" aria-hidden="true">
+      <div className="absolute -bottom-2 -right-2 rotate-12 scale-150 opacity-20" aria-hidden="true">
         {icon}
       </div>
     </div>
@@ -301,7 +301,7 @@ function ActionButton({ icon, label, onClick, color }: any) {
     <button 
       onClick={onClick} 
       className={cn(
-        "flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-[8px] font-black uppercase text-slate-600 transition-all hover:text-white border-2 border-slate-100 focus:outline-none focus:ring-4 focus:ring-blue-100",
+        "flex items-center gap-2 rounded-xl border-2 border-slate-100 bg-slate-50 px-3 py-2 text-[8px] font-black uppercase text-slate-600 transition-all hover:text-white focus:outline-none focus:ring-4 focus:ring-blue-100",
         color
       )}
       aria-label={label}

@@ -3,18 +3,36 @@ export const runtime = 'edge';
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+// Runtime check for environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+// Only initialize if we have the required credentials
+let supabaseAdmin: ReturnType<typeof createClient> | null = null;
+
+if (supabaseUrl && supabaseKey) {
+  supabaseAdmin = createClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
-  }
-)
+  )
+}
 
 export async function POST(request: Request) {
+  // Check if Supabase is properly configured
+  if (!supabaseAdmin) {
+    console.error("Supabase admin client not initialized. Missing environment variables.");
+    return NextResponse.json(
+      { error: "Server configuration error. Please contact administrator." },
+      { status: 500 }
+    );
+  }
+
   try {
     const { action, userId, email } = await request.json()
 

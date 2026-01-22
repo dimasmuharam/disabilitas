@@ -23,7 +23,7 @@ export default function AuditHub({ logs = [], onMerge, canAction = true }: any) 
       {/* 2. INFO BANNER */}
       <div className="rounded-2xl border-4 border-slate-900 bg-slate-50 p-6 text-left">
         <p className="text-[10px] font-black uppercase italic leading-relaxed text-slate-600">
-          <AlertTriangle className="inline-block mr-2 text-orange-500" size={16}/>
+          <AlertTriangle className="mr-2 inline-block text-orange-500" size={16}/>
           Daftar di bawah ini adalah input manual dari user yang tidak ada dalam database pilihan. 
           Gunakan fitur <strong className="text-slate-900">Merge</strong> untuk menggabungkan data ke variabel resmi agar statistik nasional akurat.
         </p>
@@ -32,7 +32,7 @@ export default function AuditHub({ logs = [], onMerge, canAction = true }: any) 
       {/* 3. AUDIT TABLE */}
       <div className="overflow-hidden rounded-[2.5rem] border-4 border-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse" summary="Tabel log input manual yang membutuhkan standarisasi">
+          <table className="w-full border-collapse text-left" summary="Tabel log input manual yang membutuhkan standarisasi">
             <thead className="bg-slate-900 text-[10px] font-black uppercase text-slate-400">
               <tr>
                 <th scope="col" className="px-10 py-6">Field Name</th>
@@ -47,13 +47,13 @@ export default function AuditHub({ logs = [], onMerge, canAction = true }: any) 
                   <td className="px-10 py-6 font-black text-blue-600">
                     <span className="rounded-lg bg-blue-50 px-3 py-1">{log.field_name}</span>
                   </td>
-                  <td className="px-10 py-6 text-slate-900 font-bold">{log.input_value}</td>
+                  <td className="px-10 py-6 font-bold text-slate-900">{log.input_value}</td>
                   <td className="px-10 py-6 text-center">
                      <div className="flex flex-col items-center gap-1">
                         <span className="rounded-full border-2 border-slate-900 bg-white px-6 py-2 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                           {log.occurrence_count}
                         </span>
-                        <span className="text-[8px] font-black text-slate-400 mt-2">KALI INPUT</span>
+                        <span className="mt-2 text-[8px] font-black text-slate-400">KALI INPUT</span>
                      </div>
                   </td>
                   <td className="px-10 py-6 text-right">
@@ -67,7 +67,7 @@ export default function AuditHub({ logs = [], onMerge, canAction = true }: any) 
                         Merge <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                       </button>
                     ) : (
-                      <span className="text-[9px] font-black text-slate-300 uppercase italic">View Only</span>
+                      <span className="text-[9px] font-black uppercase italic text-slate-300">View Only</span>
                     )}
                   </td>
                 </tr>

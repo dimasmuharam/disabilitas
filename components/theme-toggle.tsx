@@ -27,9 +27,9 @@ export function ThemeToggle() {
       title={isDark ? "Mode Saat Ini: Gelap" : "Mode Saat Ini: Terang"}
     >
       {isDark ? (
-        <Moon className="size-5 transition-all" />
+        <Moon className="size-5 transition-all" aria-hidden="true" />
       ) : (
-        <Sun className="size-5 text-orange-500 transition-all" />
+        <Sun className="size-5 text-orange-500 transition-all" aria-hidden="true" />
       )}
       <span className="sr-only">
         {isDark ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}

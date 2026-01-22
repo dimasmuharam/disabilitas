@@ -62,7 +62,7 @@ export default function IndexPage() {
         <div className="container px-4 md:px-6">
           <div className="mb-20 text-center">
             <h2 className="text-4xl font-black uppercase italic tracking-tighter sm:text-5xl">Hub Koneksi Inklusif</h2>
-            <p className="mt-4 font-bold uppercase tracking-widest text-slate-500 italic">Pilih peran Anda dalam ekosistem ini:</p>
+            <p className="mt-4 font-bold uppercase italic tracking-widest text-slate-500">Pilih peran Anda dalam ekosistem ini:</p>
           </div>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -144,7 +144,7 @@ export default function IndexPage() {
               <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter sm:text-6xl">
                 Integritas Data <br /><span className="text-blue-600">Inklusi Nyata</span>
               </h2>
-              <div className="space-y-4 font-bold text-slate-600 italic">
+              <div className="space-y-4 font-bold italic text-slate-600">
                 <p className="flex items-start gap-3">
                   <ShieldCheck className="mt-1 shrink-0 text-blue-600" />
                   Memvalidasi klaim kompetensi melalui verifikasi institusi mitra.

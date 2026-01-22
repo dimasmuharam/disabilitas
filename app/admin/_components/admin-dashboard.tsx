@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { 
   BarChart3, Users, ShieldCheck, AlertTriangle, 
   Loader2, ArrowLeft 
@@ -39,31 +39,13 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
   const [allUsers, setAllUsers] = useState<any[]>([])
 
-  // Sinkronisasi Awal
-  useEffect(() => {
-    refreshData()
-  }, [])
-
-  // Fokus aksesibilitas untuk NVDA/Screen Reader
-  useEffect(() => {
-    if (msg && announcementRef.current) {
-      announcementRef.current.focus();
-    }
-  }, [msg])
-
-  useEffect(() => {
-    if (moduleHeadingRef.current) {
-      moduleHeadingRef.current.focus();
-    }
-  }, [activeTab])
-
   /**
    * REFRESH DATA MENCALONKAN 3 SUMBER:
    * 1. Data riset profil (National Stats)
    * 2. Log audit input manual
    * 3. Gabungan 5 tabel (User Management)
    */
-  async function refreshData() {
+  const refreshData = useCallback(async () => {
     if (!loading) setMsg("Menyinkronkan data pusat...");
     
     try {
@@ -83,7 +65,25 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
       setMsg("Gagal menyinkronkan data.");
       setLoading(false);
     }
-  }
+  }, [loading])
+
+  // Sinkronisasi Awal
+  useEffect(() => {
+    refreshData()
+  }, [refreshData])
+
+  // Fokus aksesibilitas untuk NVDA/Screen Reader
+  useEffect(() => {
+    if (msg && announcementRef.current) {
+      announcementRef.current.focus();
+    }
+  }, [msg])
+
+  useEffect(() => {
+    if (moduleHeadingRef.current) {
+      moduleHeadingRef.current.focus();
+    }
+  }, [activeTab])
 
   /**
    * HANDLER AKSI USER (AUTH & DATABASE)
@@ -160,7 +160,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status">
         <Loader2 className="size-12 animate-spin text-blue-600" />
-        <p className="font-black uppercase italic tracking-widest text-slate-400 text-[10px]">Menghubungkan ke Command Center...</p>
+        <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">Menghubungkan ke Command Center...</p>
       </div>
     )
   }
@@ -180,9 +180,9 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
       </div>
 
       {/* 1. HEADER UTAMA */}
-      <header role="banner" className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row text-left">
+      <header role="banner" className="flex flex-col items-center justify-between gap-8 rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-left text-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] xl:flex-row">
         <div className="flex items-center gap-6">
-          <div className="size-20 flex items-center justify-center rounded-3xl bg-blue-600 shadow-lg" aria-hidden="true">
+          <div className="flex size-20 items-center justify-center rounded-3xl bg-blue-600 shadow-lg" aria-hidden="true">
             <ShieldCheck size={40} />
           </div>
           <div>
@@ -203,8 +203,9 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
               setMsg("Kembali ke Analisis Nasional.");
             }}
             className="flex items-center gap-2 rounded-2xl bg-white px-6 py-4 text-[10px] font-black uppercase text-slate-900 shadow-xl transition-all hover:bg-blue-50"
+            aria-label="Kembali ke Analisis Nasional"
           >
-            <ArrowLeft size={16} /> Back to Overview
+            <ArrowLeft size={16} aria-hidden="true" /> Back to Overview
           </button>
         )}
       </header>
@@ -225,7 +226,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-3 whitespace-nowrap rounded-[1.8rem] px-8 py-5 text-[10px] font-black uppercase tracking-widest transition-all
                 ${activeTab === tab.id 
-                  ? "bg-slate-900 text-white shadow-lg translate-y-[-2px]" 
+                  ? "translate-y-[-2px] bg-slate-900 text-white shadow-lg" 
                   : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
             >
               <tab.icon size={18} aria-hidden="true" /> {tab.label}

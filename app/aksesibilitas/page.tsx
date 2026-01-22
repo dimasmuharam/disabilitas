@@ -38,7 +38,7 @@ export default function AksesibilitasPage() {
                 <p className="text-lg font-bold leading-relaxed text-slate-600 dark:text-slate-300">
                   Disabilitas.com dikembangkan di bawah supervisi teknis <strong>Dimas Prasetyo Muharam</strong>, seorang peneliti pendidikan inklusif dan praktisi tunanetra.
                 </p>
-                <p className="font-medium leading-relaxed text-slate-500 italic">
+                <p className="font-medium italic leading-relaxed text-slate-500">
                   Kami percaya bahwa aksesibilitas sejati tercapai ketika metodologi riset yang ketat bertemu dengan pengalaman hidup nyata sebagai pengguna teknologi asistif.
                 </p>
               </div>

@@ -65,10 +65,10 @@ export function SiteHeader() {
           <div className="flex gap-6 md:gap-10">
             <Link 
               href="/" 
-              className="flex items-center space-x-2 rounded-md focus-visible:ring-4 focus-visible:ring-blue-600 outline-none"
+              className="flex items-center space-x-2 rounded-md outline-none focus-visible:ring-4 focus-visible:ring-blue-600"
               aria-label="Disabilitas.com - Kembali ke Beranda"
             >
-              <div className="relative size-8 overflow-hidden rounded-md bg-white p-0.5 border border-slate-200">
+              <div className="relative size-8 overflow-hidden rounded-md border border-slate-200 bg-white p-0.5">
                 <Image 
                   src="/logo.png" 
                   alt="Logo Disabilitas.com" 
@@ -95,7 +95,7 @@ export function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "text-sm font-bold uppercase tracking-tight transition-colors hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600 outline-none",
+                    "text-sm font-bold uppercase tracking-tight outline-none transition-colors hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600",
                     pathname === link.href ? "text-blue-600" : "text-muted-foreground"
                   )}
                   aria-current={pathname === link.href ? "page" : undefined}
@@ -119,13 +119,13 @@ export function SiteHeader() {
               {user ? (
                 <>
                   <Link href={isAdmin ? "/admin" : "/dashboard"}>
-                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow transition-all hover:bg-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600 outline-none">
+                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow outline-none transition-all hover:bg-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600">
                       {isAdmin ? "Portal Admin" : "Dashboard"}
                     </button>
                   </Link>
                   <button 
                     onClick={handleLogout}
-                    className="inline-flex h-9 items-center justify-center rounded-md border-2 border-slate-900 px-3 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-2 focus-visible:ring-rose-600 outline-none dark:border-slate-100 dark:text-white"
+                    className="inline-flex h-9 items-center justify-center rounded-md border-2 border-slate-900 px-3 text-[10px] font-black uppercase tracking-widest text-slate-900 outline-none transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-2 focus-visible:ring-rose-600 dark:border-slate-100 dark:text-white"
                     aria-label="Keluar dari akun"
                   >
                     Keluar
@@ -135,12 +135,12 @@ export function SiteHeader() {
                 <>
                   <Link 
                     href="/masuk" 
-                    className="hidden px-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-blue-600 sm:block focus-visible:ring-2 focus-visible:ring-blue-600 outline-none"
+                    className="hidden px-2 text-[10px] font-black uppercase tracking-widest text-slate-500 outline-none hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600 sm:block"
                   >
                     Masuk
                   </Link>
                   <Link href="/daftar">
-                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-colors hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none">
+                    <button className="inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg outline-none transition-colors hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500">
                       Daftar
                     </button>
                   </Link>
