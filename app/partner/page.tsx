@@ -41,7 +41,7 @@ export default function PartnerLandingPage() {
                 Training & Community Partnership
               </div>
               <h1 className="text-5xl font-black uppercase italic leading-none tracking-tighter sm:text-6xl md:text-7xl">
-                Pastikan Pelatihan <br /> Menjadi Pekerjaan
+                Buat Pelatihan <br /> Menjadi Pekerjaan
               </h1>
               <p className="max-w-xl text-lg font-bold uppercase tracking-widest text-emerald-50">
                 Hubungkan alumni pelatihan Anda langsung dengan radar industri. Pantau dampak program Anda melalui sistem pelacakan transisi karier yang akurat dan terintegrasi.
