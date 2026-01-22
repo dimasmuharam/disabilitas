@@ -30,7 +30,7 @@ export default function IndexPage() {
                 <span className="text-blue-600">Karir Inklusif</span>
               </h1>
               <p className="mx-auto max-w-[800px] text-lg font-bold uppercase tracking-tight text-slate-500 dark:text-slate-400 md:text-2xl">
-                Menghubungkan Talenta disabilitas, pemberi kerja yang mencari kualitas, Mitra pelatihan dan Organisasi, Perguruan Tinggi, serta Pemerintah dalam satu platform terintegrasi.
+                Menghubungkan Talenta disabilitas, pemberi kerja yang mencari kualitas, Mitra pelatihan & Organisasi, Perguruan Tinggi, serta Pemerintah dalam satu platform terintegrasi.
               </p>
             </div>
             
@@ -89,7 +89,7 @@ export default function IndexPage() {
               <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-emerald-500 text-white">
                 <Handshake size={28} />
               </div>
-              <h3 className="mb-3 text-2xl font-black uppercase italic">Mitra Pelatihan</h3>
+              <h3 className="mb-3 text-2xl font-black uppercase italic">Mitra Pelatihan & Organisasi</h3>
               <p className="text-sm font-bold leading-relaxed text-slate-600">
                 Validasi kompetensi alumni Anda dan pantau keterserapan kerja mereka setelah mengikuti program pelatihan.
               </p>
@@ -124,7 +124,7 @@ export default function IndexPage() {
               </div>
               <h3 className="mb-3 text-2xl font-black uppercase italic text-blue-400">The Gap Filler</h3>
               <p className="text-sm font-bold leading-relaxed opacity-80">
-                Platform digital terdepan di Indonesia yang mensinergikan data di lima stake holders (Talenta, Perusahaan, Mitra Pelatihan dan Organisasi, Perguruan Tinggi, serta Pemerintah) menjadi satu jalur transisi dari pendidikan ke pekerjaan yang inklusif untuk talenta disabilitas.
+                Platform digital terdepan di Indonesia yang mensinergikan data di lima stake holders (Talenta, Perusahaan, Mitra Pelatihan & Organisasi, Perguruan Tinggi, serta Pemerintah) menjadi satu jalur transisi dari pendidikan ke pekerjaan yang inklusif untuk talenta disabilitas.
               </p>
             </div>
           </div>
