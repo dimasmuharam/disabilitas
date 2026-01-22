@@ -26,12 +26,11 @@ export default function IndexPage() {
                 National Inclusion Infrastructure
               </div>
               <h1 className="text-4xl font-black uppercase italic leading-none tracking-tighter text-slate-900 dark:text-white sm:text-6xl md:text-7xl lg:text-8xl">
-                Berhenti Menebak <br />
-                <span className="text-blue-600">Petakan Potensi</span>
+                Hub Digital<br />
+                <span className="text-blue-600">Karir Inklusif</span>
               </h1>
               <p className="mx-auto max-w-[800px] text-lg font-bold uppercase tracking-tight text-slate-500 dark:text-slate-400 md:text-2xl">
-                Bukan SDM yang rendah, melainkan potensi yang belum terpetakan. 
-                Kami menjembatani gap data antara Talenta, Kampus, Industri, dan Pemerintah.
+                Menghubungkan Talenta disabilitas, pemberi kerja yang mencari kualitas, Mitra pelatihan dan Organisasi, Perguruan Tinggi, serta Pemerintah dalam satu platform terintegrasi.
               </p>
             </div>
             

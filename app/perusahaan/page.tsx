@@ -81,7 +81,7 @@ export default function CompanyLandingPage() {
               { 
                 icon: MapPin, 
                 title: "Matching Berbasis Domisili", 
-                desc: "Cari talenta hebat yang berada di area operasional Mas Dimas untuk mempermudah mobilisasi dan dukungan akomodasi lokal." 
+                desc: "Cari talenta hebat yang berada di area operasional Anda untuk mempermudah mobilisasi dan dukungan akomodasi lokal." 
               },
               { 
                 icon: ShieldCheck, 
@@ -110,7 +110,7 @@ export default function CompanyLandingPage() {
             <div className="text-left md:w-1/2">
               <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter">Bukan Hanya <br /> <span className="text-orange-600">Papan Lowongan.</span></h2>
               <p className="mt-6 text-lg font-bold italic leading-relaxed text-slate-600">
-                Kami menyediakan data kesiapan aksesibilitas talenta dan membantu Mas Dimas melakukan audit kesiapan lingkungan kerja. Pastikan talenta hebat yang Mas rekrut mendapatkan akomodasi yang layak untuk performa maksimal.
+                Kami menyediakan data kesiapan aksesibilitas talenta dan membantu Anda melakukan audit kesiapan lingkungan kerja. Pastikan talenta hebat yang Mas rekrut mendapatkan akomodasi yang layak untuk performa maksimal.
               </p>
               <Link href="/bisnis" className="mt-8 inline-flex items-center gap-2 font-black uppercase italic text-orange-600 hover:gap-4 transition-all">
                 Pelajari Layanan Audit Aksesibilitas <ArrowRight size={20} />
@@ -135,7 +135,7 @@ export default function CompanyLandingPage() {
         <div className="mx-auto max-w-5xl px-4 text-center">
           <div className="rounded-[4rem] border-8 border-slate-900 bg-orange-500 p-16 text-white shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
               <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter md:text-6xl">
-                Dapatkan Talenta <br /> Terbaik Mas Dimas.
+                Dapatkan Talenta <br /> Terbaik Anda.
               </h2>
               <p className="mx-auto mt-8 max-w-2xl text-lg font-bold uppercase tracking-widest text-orange-100/70">
                 Bangun budaya inklusi yang nyata dan fungsional di organisasi Anda bersama ekosistem data kami.
