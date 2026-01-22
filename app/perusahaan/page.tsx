@@ -86,7 +86,7 @@ export default function CompanyLandingPage() {
               { 
                 icon: ShieldCheck, 
                 title: "Kepatuhan Regulasi", 
-                desc: "Pantau penyerapan tenaga kerja disabilitas di perusahaan Mas secara real-time untuk laporan kepatuhan kepada pemerintah." 
+                desc: "Pantau penyerapan tenaga kerja disabilitas di perusahaan Anda secara real-time untuk laporan kepatuhan kepada pemerintah." 
               }
             ].map((f, i) => (
               <div key={i} className="group flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
@@ -110,7 +110,7 @@ export default function CompanyLandingPage() {
             <div className="text-left md:w-1/2">
               <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter">Bukan Hanya <br /> <span className="text-orange-600">Papan Lowongan.</span></h2>
               <p className="mt-6 text-lg font-bold italic leading-relaxed text-slate-600">
-                Kami menyediakan data kesiapan aksesibilitas talenta dan membantu Anda melakukan audit kesiapan lingkungan kerja. Pastikan talenta hebat yang Mas rekrut mendapatkan akomodasi yang layak untuk performa maksimal.
+                Kami menyediakan data kesiapan aksesibilitas talenta dan membantu Anda melakukan audit kesiapan lingkungan kerja. Pastikan talenta hebat yang Anda rekrut mendapatkan akomodasi yang layak untuk performa maksimal.
               </p>
               <Link href="/bisnis" className="mt-8 inline-flex items-center gap-2 font-black uppercase italic text-orange-600 hover:gap-4 transition-all">
                 Pelajari Layanan Audit Aksesibilitas <ArrowRight size={20} />
