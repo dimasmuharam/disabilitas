@@ -49,7 +49,7 @@ export default function TalentLandingPage() {
                 <span className="text-blue-600">Kini Terukur.</span>
               </h1>
               <p className="max-w-xl text-lg font-bold uppercase tracking-widest text-slate-500">
-                Hancurkan stigma dengan data. Bangun profil profesional yang memetakan skill, sertifikasi, dan kebutuhan akomodasi Anda secara transparan bagi industri.
+                Tunjukkan Kompetensimu dengan data. Bangun profil profesional yang memetakan skill, sertifikasi, dan kebutuhan akomodasi Anda secara transparan bagi industri.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Link
@@ -108,7 +108,7 @@ export default function TalentLandingPage() {
               { 
                 icon: MapPin, 
                 title: "Radar ULD Naker", 
-                desc: "Profil Anda otomatis muncul pada dashboard Unit Layanan Disabilitas di daerah domisili Mas Dimas untuk matchmaking kerja lokal." 
+                desc: "Profil Anda otomatis muncul pada dashboard Unit Layanan Disabilitas di daerah domisili Anda untuk matchmaking kerja lokal." 
               }
             ].map((f, i) => (
               <div key={i} className="group flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
