@@ -7,21 +7,21 @@ import {
   FileText, 
   CheckCircle2, 
   ArrowRight,
-  Search,
   Zap,
   Accessibility
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Layanan Audit Aksesibilitas Digital (SPBE) & Fisik | WCAG 2.1",
-  description: "Layanan audit aksesibilitas profesional berbasis riset BRIN. Membantu kepatuhan SPBE dan standar inklusi internasional melalui pengujian fungsional nyata.",
+  title: "Audit Aksesibilitas Digital (SPBE) & Fisik | Standar WCAG 2.1",
+  description: "Layanan audit profesional untuk memastikan sistem digital dan infrastruktur fisik Anda aksesibel bagi semua orang. Pengujian fungsional oleh praktisi disabilitas.",
+  keywords: ["Audit Aksesibilitas", "WCAG 2.1", "Kepatuhan SPBE", "VPAT Indonesia", "Audit Disabilitas"],
 };
 
 export default function AuditAksesibilitasPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white text-slate-900 selection:bg-purple-100">
       
-      {/* HERO SECTION - Purple Authority Theme */}
+      {/* 1. HERO SECTION - Fokus pada Otoritas & Kepatuhan */}
       <section className="border-b-8 border-slate-900 bg-purple-600 py-20 text-white lg:py-32">
         <div className="mx-auto max-w-7xl px-4 text-center lg:text-left">
           <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -34,7 +34,7 @@ export default function AuditAksesibilitasPage() {
                 <span className="text-slate-900">Kompromi.</span>
               </h1>
               <p className="max-w-xl text-lg font-bold uppercase tracking-widest text-purple-50">
-                Transformasi ekosistem kerja Mas Dimas menjadi inklusif melalui audit fungsional berbasis riset BRIN dan standar internasional WCAG 2.1.
+                Transformasi ekosistem organisasi menjadi inklusif melalui audit fungsional berbasis metodologi riset dan standar internasional WCAG 2.1.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Link
@@ -58,12 +58,12 @@ export default function AuditAksesibilitasPage() {
         </div>
       </section>
 
-      {/* CORE AUDIT SERVICES */}
+      {/* 2. CORE AUDIT MODULES: Fokus pada Digital sebagai Expertise Utama */}
       <section className="py-24 bg-slate-50">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="mb-16 text-center">
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">Modul Audit Profesional</h2>
-            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-purple-600">Standardisasi Inklusi Nasional</p>
+          <div className="mb-16 text-center lg:text-left">
+            <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">Modul Evaluasi Profesional</h2>
+            <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-purple-600">Standardisasi Inklusi Berbasis Pengalaman Pengguna Nyata</p>
           </div>
 
           <div className="grid gap-10 md:grid-cols-3">
@@ -71,20 +71,20 @@ export default function AuditAksesibilitasPage() {
               { 
                 icon: Monitor, 
                 title: "Audit Digital (SPBE)", 
-                desc: "Evaluasi website dan aplikasi berdasarkan standar WCAG 2.1 Level AA. Pengujian menggunakan Screen Reader dan teknologi asistif nyata.",
-                points: ["VPAT Reporting", "Kepatuhan SPBE", "User Experience Disabilitas"]
+                desc: "Evaluasi mendalam website dan aplikasi mobile berdasarkan standar internasional WCAG 2.1 Level AA. Pengujian dilakukan secara manual oleh pakar teknologi asistif.",
+                points: ["VPAT Reporting", "Kepatuhan Standar SPBE", "Pengujian User Tunanetra"]
               },
               { 
                 icon: Building, 
                 title: "Audit Fisik", 
-                desc: "Penilaian aksesibilitas gedung dan ruang kerja untuk mobilitas kursi roda serta keamanan sensorik bagi disabilitas netra/rungu.",
-                points: ["Ramp & Toilet Akses", "Guiding Block System", "Safety & Emergency Exit"]
+                desc: "Penilaian aksesibilitas lingkungan kerja untuk memastikan kemandirian mobilitas bagi talenta dengan disabilitas fisik dan sensorik.",
+                points: ["Aksesibilitas Arsitektur", "Sistem Guiding Block", "Standardisasi Ruang Kerja"]
               },
               { 
                 icon: FileText, 
-                title: "Roadmap Inklusi", 
-                desc: "Penyusunan rencana strategis transformasi organisasi menuju inklusi fungsional yang berkelanjutan dan terukur.",
-                points: ["Kebijakan Internal", "Budgeting Akomodasi", "Sertifikasi Inklusi"]
+                title: "Roadmap Strategis", 
+                desc: "Penyusunan rencana transformasi organisasi jangka panjang untuk membangun budaya kerja yang inklusif dan akomodatif.",
+                points: ["Kebijakan Inklusi", "Sertifikasi Internal", "Panduan Etika Interaksi"]
               }
             ].map((f, i) => (
               <div key={i} className="group flex flex-col rounded-[2.5rem] border-4 border-slate-900 bg-white p-10 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all hover:-translate-y-2">
@@ -95,7 +95,7 @@ export default function AuditAksesibilitasPage() {
                 <p className="mb-6 text-sm font-bold italic leading-relaxed text-slate-500">
                   {f.desc}
                 </p>
-                <ul className="space-y-2 border-t-2 border-slate-100 pt-6">
+                <ul className="space-y-2 border-t-2 border-slate-100 pt-6 mt-auto">
                   {f.points.map(p => (
                     <li key={p} className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400">
                       <CheckCircle2 size={14} className="text-emerald-500" /> {p}
@@ -108,20 +108,20 @@ export default function AuditAksesibilitasPage() {
         </div>
       </section>
 
-      {/* METHODOLOGY: The Research Edge */}
-      <section className="py-24 border-y-8 border-slate-900">
+      {/* 3. THE EDGE: User-Led Audit (Unique Selling Point) */}
+      <section className="py-24 border-y-8 border-slate-900 bg-white">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex flex-col items-center gap-16 lg:flex-row">
             <div className="flex-1 space-y-8">
-              <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter sm:text-6xl">Metodologi <br /> <span className="text-purple-600">Berbasis Bukti.</span></h2>
+              <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter sm:text-6xl">Validasi <br /> <span className="text-purple-600">Fungsional Nyata.</span></h2>
               <p className="text-lg font-bold italic leading-relaxed text-slate-600">
-                Audit kami bukan sekadar centang daftar tugas. Metodologi ini dikembangkan melalui penelitian di <strong>BRIN</strong> dan divalidasi oleh pengalaman hidup praktisi disabilitas langsung.
+                Kami melampaui audit otomatis. Metodologi kami melibatkan pengujian langsung oleh praktisi disabilitas profesional (Access Squad) untuk menemukan hambatan akses yang sering terlewatkan oleh mesin.
               </p>
               <div className="space-y-4">
                  {[
-                   { t: "Observasi & Data", d: "Pengumpulan data lapangan secara mendalam." },
-                   { t: "Analisis Gap Standar Global", d: "Membandingkan infrastruktur Anda dengan WCAG 2.1 AA." },
-                   { t: "Rekomendasi Fungsional", d: "Bukan teori, tapi langkah konkret perbaikan." }
+                   { t: "Analisis Teknis Berbasis Riset", d: "Menggunakan metodologi yang tervalidasi secara akademis." },
+                   { t: "Pengujian Teknologi Asistif", d: "Verifikasi fungsional menggunakan screen reader dan perangkat khusus." },
+                   { t: "Laporan VPAT Komprehensif", d: "Dokumentasi standar internasional yang diakui secara profesional." }
                  ].map((item, idx) => (
                    <div key={idx} className="flex items-center gap-4">
                       <div className="flex size-10 items-center justify-center rounded-full border-4 border-slate-900 bg-yellow-400 text-xs font-black">{idx + 1}</div>
@@ -135,13 +135,13 @@ export default function AuditAksesibilitasPage() {
             </div>
             <div className="flex-1 rounded-[3rem] border-8 border-slate-900 bg-purple-100 p-12 shadow-[20px_20px_0px_0px_rgba(15,23,42,1)]">
                <Zap className="mb-6 text-yellow-500" size={48} />
-               <h3 className="text-3xl font-black uppercase italic leading-tight">Siap Memulai <br /> Audit Organisasi?</h3>
-               <p className="mt-4 font-bold text-purple-700 italic">Dapatkan laporan VPAT profesional yang diakui secara nasional dan internasional.</p>
+               <h3 className="text-3xl font-black uppercase italic leading-tight text-slate-900">Siap Menuju <br /> Inklusi Digital?</h3>
+               <p className="mt-4 font-bold text-purple-700 italic">Pastikan sistem dan lingkungan Anda siap mengoptimalkan potensi talenta tanpa hambatan aksesibilitas.</p>
                <Link 
                  href="/kontak" 
                  className="mt-10 inline-flex w-full items-center justify-center rounded-2xl border-4 border-slate-900 bg-slate-900 py-6 text-sm font-black uppercase italic tracking-widest text-white transition-all hover:bg-purple-600"
                >
-                 Jadwalkan Konsultasi <ArrowRight size={20} className="ml-2" />
+                 Konsultasi Bersama Pakar <ArrowRight size={20} className="ml-2" />
                </Link>
             </div>
           </div>
