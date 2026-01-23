@@ -200,12 +200,12 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
                     </div>
                     <div className="mt-1 text-[9px] font-bold text-slate-400 uppercase italic">@ {log.company_name}</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <p className="max-w-xs text-[10px] font-medium text-slate-600 italic">
-                      "{log.hrd_notes_snapshot || 'Tidak ada catatan khusus.'}"
-                    </p>
-                  </td>
-                </tr>
+{/* GANTI BARIS YANG ADA DI SEKITAR SINI */}
+<td className="px-6 py-4">
+  <p className="max-w-xs text-[10px] font-medium text-slate-600 italic">
+    &quot;{log.hrd_notes_snapshot || 'Tidak ada catatan khusus.'}&quot;
+  </p>
+</td>                </tr>
               ))}
             </tbody>
           </table>
