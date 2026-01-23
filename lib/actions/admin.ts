@@ -29,7 +29,6 @@ export async function getAllSystemUsers() {
 
     if (authError) throw authError;
 
-    // 2. Buat Map dari Database untuk mempercepat pencarian (Lookup Table)
     const dbMap = new Map();
     
     talents?.forEach(u => dbMap.set(u.id, { ...u, role: 'talent' }));
@@ -38,7 +37,6 @@ export async function getAllSystemUsers() {
     campuses?.forEach(u => dbMap.set(u.id, { ...u, role: 'campus', full_name: u.name, city: u.location }));
     government?.forEach(u => dbMap.set(u.id, { ...u, role: 'government', full_name: u.name, city: u.location }));
 
-    // 3. Loop utama berdasarkan Auth
     const unified = authUsers.users.map(au => {
       const dbData = dbMap.get(au.id);
       const meta = au.user_metadata; 
@@ -66,15 +64,16 @@ export async function getAllSystemUsers() {
 }
 
 /**
- * AMBIL DATA RISET MENTAH (The Research Engine V2)
- * Mengambil data profil untuk National Analytics DAN logs untuk Hiring Analytics.
+ * AMBIL DATA RISET MENTAH (The Research Engine V4 - TRUE Longitudinal Edition)
+ * Mengambil Profil, Log Hiring, dan Analisis Perjalanan Karir dari View.
  */
 export async function getRawResearchData() {
   try {
     const admin = createAdminClient();
 
-    // Ambil data profil (National Analytics) dan Logs (Hiring Transition Research) secara paralel
-    const [resProfiles, resLogs] = await Promise.all([
+    // Ambil data riset. Catatan: Kita memanggil View 'research_longitudinal_career' 
+    // karena sudah menyertakan logika graduation_date untuk menghitung "Masa Tunggu Sebenarnya".
+    const [resProfiles, resLogs, resCareerHistory] = await Promise.all([
       admin.from("profiles").select("*"),
       admin.from("application_logs").select(`
         id,
@@ -92,13 +91,15 @@ export async function getRawResearchData() {
         ),
         jobs:job_id ( title ),
         companies:company_id ( name )
-      `).order('created_at', { ascending: false })
+      `).order('created_at', { ascending: false }),
+      admin.from("research_longitudinal_career").select("*").order('changed_at', { ascending: false })
     ]);
 
     if (resProfiles.error) throw resProfiles.error;
     if (resLogs.error) throw resLogs.error;
+    if (resCareerHistory.error) throw resCareerHistory.error;
 
-    // Formatting logs agar 'flat' dan siap digunakan oleh komponen TransitionHiringAnalytics
+    // Formatting logs hiring (Aktivitas)
     const researchLogs = resLogs.data?.map((log: any) => ({
       id: log.id,
       log_time: log.log_time,
@@ -109,21 +110,24 @@ export async function getRawResearchData() {
       disability_type: log.profiles?.disability_type,
       education_level: log.profiles?.education_level,
       university: log.profiles?.university,
-      education_model: log.profiles?.education_model, // SUDAH DITAMBAHKAN
+      education_model: log.profiles?.education_model,
       major: log.profiles?.major,
       job_title: log.jobs?.title,
       company_name: log.companies?.name
     })) || [];
 
-    // Mengembalikan objek gabungan
+    // Data riwayat karir dari View (Sudah termasuk days_since_origin)
+    const careerTimeline = resCareerHistory.data || [];
+
     return {
       profiles: resProfiles.data || [],
-      researchLogs: researchLogs
+      researchLogs: researchLogs,
+      careerTimeline: careerTimeline 
     };
 
   } catch (err: any) {
     console.error("Research Data Error:", err.message);
-    return { profiles: [], researchLogs: [] };
+    return { profiles: [], researchLogs: [], careerTimeline: [] };
   }
 }
 

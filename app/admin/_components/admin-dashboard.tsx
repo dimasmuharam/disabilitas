@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { 
   BarChart3, Users, ShieldCheck, AlertTriangle, 
-  Loader2, ArrowLeft 
+  Loader2, ArrowLeft, TrendingUp 
 } from "lucide-react"
 
 // IMPORT MODUL MODULAR
 import NationalAnalytics from "./modules/national-analytics"
 import UserManagement from "./modules/user-management"
 import TransitionHiringAnalytics from "./modules/transition-hiring-analytics"
+import LongitudinalCareerResearch from "./modules/longitudinal-career-research"
 import AuditHub from "./modules/audit-hub"
 
 // IMPORT ACTIONS
@@ -36,15 +37,16 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const moduleHeadingRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
-const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchLogs: [] })
+  const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchLogs: [], careerTimeline: [] })
   const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
   const [allUsers, setAllUsers] = useState<any[]>([])
 
   /**
-   * REFRESH DATA MENCALONKAN 3 SUMBER:
+   * REFRESH DATA MENCALONKAN 4 SUMBER:
    * 1. Data riset profil (National Stats)
-   * 2. Log audit input manual
-   * 3. Gabungan 5 tabel (User Management)
+   * 2. Log hiring (Hiring Analytics)
+   * 3. Riwayat karir (Longitudinal Research)
+   * 4. Gabungan 5 tabel (User Management)
    */
   const refreshData = useCallback(async () => {
     if (!loading) setMsg("Menyinkronkan data pusat...");
@@ -60,10 +62,10 @@ const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchL
       setAuditLogs(resAudit || []);
       setAllUsers(resUnified || []);
       setLoading(false);
-      setMsg("Data berhasil diperbarui.");
+      setMsg("Data pusat berhasil diperbarui.");
     } catch (e) {
       console.error("Sync error:", e);
-      setMsg("Gagal menyinkronkan data.");
+      setMsg("Gagal menyinkronkan data. Silakan periksa koneksi.");
       setLoading(false);
     }
   }, [loading])
@@ -73,13 +75,14 @@ const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchL
     refreshData()
   }, [refreshData])
 
-  // Fokus aksesibilitas untuk NVDA/Screen Reader
+  // Fokus aksesibilitas untuk NVDA/Screen Reader saat ada pesan status
   useEffect(() => {
     if (msg && announcementRef.current) {
       announcementRef.current.focus();
     }
   }, [msg])
 
+  // Fokus aksesibilitas otomatis ke kontainer modul saat tab berubah
   useEffect(() => {
     if (moduleHeadingRef.current) {
       moduleHeadingRef.current.focus();
@@ -95,30 +98,23 @@ const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchL
 
     try {
       switch (actionType) {
-        // --- AKSI AUTH (manageUserAuth) ---
         case "DELETE_USER":
           if (confirm("PERINGATAN: Hapus user ini dari AUTH & DATABASE? Tindakan ini permanen.")) {
             result = await manageUserAuth("DELETE_USER", payload);
           }
           break;
-
         case "RESET_PASSWORD":
-          result = await manageUserAuth("RESET_PASSWORD", "", payload); // payload = email
+          result = await manageUserAuth("RESET_PASSWORD", "", payload);
           break;
-
         case "SUSPEND_USER":
           result = await manageUserAuth("BAN_USER", payload);
           break;
-
         case "VERIFY_EMAIL":
           result = await manageUserAuth("VERIFY_EMAIL", payload);
           break;
-
         case "RESEND_CONFIRMATION":
-          result = await manageUserAuth("RESEND_CONFIRMATION", "", payload); // payload = email
+          result = await manageUserAuth("RESEND_CONFIRMATION", "", payload);
           break;
-        
-        // --- AKSI DATABASE (manageAdminUser) ---
         case "BULK_VERIFY":
           result = await manageAdminUser("BULK_UPDATE", "profiles", { 
             ids: payload, 
@@ -126,13 +122,11 @@ const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchL
             is_verified: true 
           });
           break;
-
         case "BULK_DELETE":
           if (confirm(`Hapus ${payload.length} data terpilih secara permanen?`)) {
             result = await manageAdminUser("BULK_DELETE", "profiles", payload);
           }
           break;
-
         case "VERIFY":
           result = await manageAdminUser("UPDATE", "profiles", { 
             id: payload, 
@@ -140,7 +134,6 @@ const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchL
             is_verified: true 
           });
           break;
-
         default:
           console.warn("Aksi tidak dikenali:", actionType);
           return;
@@ -149,7 +142,7 @@ const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchL
       if (result?.error) {
         setMsg("Gagal: " + (result.error.message || result.error));
       } else {
-        setMsg("Operasi sukses.");
+        setMsg("Operasi sukses dilaksanakan.");
         refreshData();
       }
     } catch (err: any) {
@@ -157,21 +150,22 @@ const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchL
     }
   }
 
-if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
-  return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status">
-      <Loader2 className="size-12 animate-spin text-blue-600" />
-      <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">
-        Menghubungkan ke Command Center...
-      </p>
-    </div>
-  )
-}
+  // State loading awal jika data belum ada sama sekali
+  if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status" aria-label="Memuat Dashboard">
+        <Loader2 className="size-12 animate-spin text-blue-600" />
+        <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">
+          Menghubungkan ke Command Center...
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-8 px-6 pb-20 duration-700 animate-in fade-in">
       
-      {/* 0. LIVE ANNOUNCEMENT (NVDA) */}
+      {/* 0. LIVE ANNOUNCEMENT (NVDA/Screen Reader) */}
       <div 
         ref={announcementRef} 
         className="sr-only" 
@@ -219,7 +213,8 @@ if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
           {[
             { id: "national_stats", label: "National Analytics", icon: BarChart3 },
             { id: "user_mgmt", label: "User Management", icon: Users },
-{ id: "hiring_analytics", label: "Hiring Research", icon: BarChart3 },
+            { id: "hiring_analytics", label: "Hiring Research", icon: BarChart3 },
+            { id: "longitudinal_research", label: "Longitudinal Study", icon: TrendingUp },
             { id: "audit", label: "Data Audit Hub", icon: AlertTriangle }
           ].map((tab) => (
             <button
@@ -227,7 +222,10 @@ if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
               role="tab"
               aria-selected={activeTab === tab.id}
               aria-controls={`panel-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setMsg(`Membuka modul ${tab.label}`);
+              }}
               className={`flex items-center gap-3 whitespace-nowrap rounded-[1.8rem] px-8 py-5 text-[10px] font-black uppercase tracking-widest transition-all
                 ${activeTab === tab.id 
                   ? "translate-y-[-2px] bg-slate-900 text-white shadow-lg" 
@@ -239,15 +237,17 @@ if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
         </div>
       </nav>
 
-      {/* 3. KONTEN MODUL */}
+      {/* 3. KONTEN MODUL (Focusable for Screen Reader) */}
       <main 
         id={`panel-${activeTab}`} 
         role="tabpanel" 
         tabIndex={-1} 
         ref={moduleHeadingRef} 
         className="min-h-[600px] outline-none"
+        aria-label={`Konten Modul ${activeTab.replace('_', ' ')}`}
       >
-{activeTab === "national_stats" && <NationalAnalytics rawData={stats.profiles || []} />}        
+        {activeTab === "national_stats" && <NationalAnalytics rawData={stats.profiles || []} />}        
+        
         {activeTab === "user_mgmt" && (
           <UserManagement 
             allUsers={allUsers} 
@@ -255,8 +255,14 @@ if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
           />
         )}
         
+        {activeTab === "hiring_analytics" && (
+          <TransitionHiringAnalytics logs={stats.researchLogs || []} />
+        )}
 
-{activeTab === "hiring_analytics" && <TransitionHiringAnalytics logs={stats.researchLogs || []} />}
+        {activeTab === "longitudinal_research" && (
+          <LongitudinalCareerResearch careerTimeline={stats.careerTimeline || []} />
+        )}
+        
         {activeTab === "audit" && (
           <AuditHub 
             logs={auditLogs} 
