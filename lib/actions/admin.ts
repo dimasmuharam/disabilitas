@@ -38,10 +38,10 @@ export async function getAllSystemUsers() {
     campuses?.forEach(u => dbMap.set(u.id, { ...u, role: 'campus', full_name: u.name, city: u.location }));
     government?.forEach(u => dbMap.set(u.id, { ...u, role: 'government', full_name: u.name, city: u.location }));
 
-    // 3. Loop utama berdasarkan Auth (Menggunakan user_metadata sesuai aturan TypeScript)
+    // 3. Loop utama berdasarkan Auth
     const unified = authUsers.users.map(au => {
       const dbData = dbMap.get(au.id);
-      const meta = au.user_metadata; // Perbaikan: Pakai user_metadata
+      const meta = au.user_metadata; 
       
       return {
         id: au.id,
@@ -66,15 +66,63 @@ export async function getAllSystemUsers() {
 }
 
 /**
- * AMBIL DATA RISET MENTAH (Dashboard Analytics)
+ * AMBIL DATA RISET MENTAH (The Research Engine V2)
+ * Mengambil data profil untuk National Analytics DAN logs untuk Hiring Analytics.
  */
 export async function getRawResearchData() {
   try {
     const admin = createAdminClient();
-    const { data: profiles, error } = await admin.from("profiles").select("*");
-    if (error) throw error;
-    return profiles || [];
-  } catch (err: any) { return []; }
+
+    // Ambil data profil (National Analytics) dan Logs (Hiring Transition Research) secara paralel
+    const [resProfiles, resLogs] = await Promise.all([
+      admin.from("profiles").select("*"),
+      admin.from("application_logs").select(`
+        id,
+        log_time:created_at,
+        old_status,
+        new_status,
+        hrd_notes_snapshot,
+        profiles:applicant_id (
+          full_name,
+          disability_type,
+          education_level,
+          university,
+          major
+        ),
+        jobs:job_id ( title ),
+        companies:company_id ( name )
+      `).order('created_at', { ascending: false })
+    ]);
+
+    if (resProfiles.error) throw resProfiles.error;
+    if (resLogs.error) throw resLogs.error;
+
+    // Formatting logs agar 'flat' dan siap digunakan oleh komponen TransitionHiringAnalytics
+    const researchLogs = resLogs.data?.map((log: any) => ({
+      id: log.id,
+      log_time: log.log_time,
+      old_status: log.old_status,
+      new_status: log.new_status,
+      hrd_notes_snapshot: log.hrd_notes_snapshot,
+      talent_name: log.profiles?.full_name,
+      disability_type: log.profiles?.disability_type,
+      education_level: log.profiles?.education_level,
+      university: log.profiles?.university,
+      major: log.profiles?.major,
+      job_title: log.jobs?.title,
+      company_name: log.companies?.name
+    })) || [];
+
+    // Mengembalikan objek gabungan
+    return {
+      profiles: resProfiles.data || [],
+      researchLogs: researchLogs
+    };
+
+  } catch (err: any) {
+    console.error("Research Data Error:", err.message);
+    return { profiles: [], researchLogs: [] };
+  }
 }
 
 /**

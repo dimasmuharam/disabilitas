@@ -9,6 +9,7 @@ import {
 // IMPORT MODUL MODULAR
 import NationalAnalytics from "./modules/national-analytics"
 import UserManagement from "./modules/user-management"
+import TransitionHiringAnalytics from "./modules/transition-hiring-analytics"
 import AuditHub from "./modules/audit-hub"
 
 // IMPORT ACTIONS
@@ -35,7 +36,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const moduleHeadingRef = useRef<HTMLDivElement>(null)
 
   // -- STATES DATA --
-  const [stats, setStats] = useState<any>(serverStats || [])
+const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchLogs: [] })
   const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
   const [allUsers, setAllUsers] = useState<any[]>([])
 
@@ -156,14 +157,16 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     }
   }
 
-  if (loading && (!stats || stats.length === 0)) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status">
-        <Loader2 className="size-12 animate-spin text-blue-600" />
-        <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">Menghubungkan ke Command Center...</p>
-      </div>
-    )
-  }
+if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status">
+      <Loader2 className="size-12 animate-spin text-blue-600" />
+      <p className="text-[10px] font-black uppercase italic tracking-widest text-slate-400">
+        Menghubungkan ke Command Center...
+      </p>
+    </div>
+  )
+}
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-8 px-6 pb-20 duration-700 animate-in fade-in">
@@ -216,6 +219,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
           {[
             { id: "national_stats", label: "National Analytics", icon: BarChart3 },
             { id: "user_mgmt", label: "User Management", icon: Users },
+{ id: "hiring_analytics", label: "Hiring Research", icon: BarChart3 },
             { id: "audit", label: "Data Audit Hub", icon: AlertTriangle }
           ].map((tab) => (
             <button
@@ -243,8 +247,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
         ref={moduleHeadingRef} 
         className="min-h-[600px] outline-none"
       >
-        {activeTab === "national_stats" && <NationalAnalytics rawData={stats} />}
-        
+{activeTab === "national_stats" && <NationalAnalytics rawData={stats.profiles || []} />}        
         {activeTab === "user_mgmt" && (
           <UserManagement 
             allUsers={allUsers} 
@@ -252,6 +255,8 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
           />
         )}
         
+
+{activeTab === "hiring_analytics" && <TransitionHiringAnalytics logs={stats.researchLogs || []} />}
         {activeTab === "audit" && (
           <AuditHub 
             logs={auditLogs} 
