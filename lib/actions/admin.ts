@@ -87,6 +87,7 @@ export async function getRawResearchData() {
           disability_type,
           education_level,
           university,
+          education_model,
           major
         ),
         jobs:job_id ( title ),
@@ -108,6 +109,7 @@ export async function getRawResearchData() {
       disability_type: log.profiles?.disability_type,
       education_level: log.profiles?.education_level,
       university: log.profiles?.university,
+      education_model: log.profiles?.education_model, // SUDAH DITAMBAHKAN
       major: log.profiles?.major,
       job_title: log.jobs?.title,
       company_name: log.companies?.name

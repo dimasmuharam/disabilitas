@@ -44,6 +44,25 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
     return Object.values(eduMap);
   }, [logs]);
 
+  // 3. Analisis Sukses Rate berdasarkan Model Pendidikan (Inklusi vs SLB vs Reguler)
+  const modelSuccessRate = useMemo(() => {
+    const modelMap = logs.reduce((acc: any, log) => {
+      const model = log.education_model || "Lainnya";
+      if (!acc[model]) acc[model] = { name: model, hired: 0, total: 0 };
+      acc[model].total += 1;
+      if (log.new_status === 'hired' || log.new_status === 'accepted') {
+        acc[model].hired += 1;
+      }
+      return acc;
+    }, {});
+
+    return Object.values(modelMap).map((m: any) => ({
+      name: m.name,
+      rate: Math.round((m.hired / m.total) * 100) || 0,
+      total: m.total
+    })).sort((a, b) => b.rate - a.rate);
+  }, [logs]);
+
   // --- FITUR EKSPOR ---
   const exportToExcel = () => {
     const dataToExport = logs.map(log => ({
@@ -52,6 +71,7 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
       Disabilitas: log.disability_type,
       Pendidikan: log.education_level,
       Kampus: log.university,
+      Model_Sekolah: log.education_model,
       Perusahaan: log.company_name,
       Status_Lama: log.old_status,
       Status_Baru: log.new_status,
@@ -98,7 +118,7 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
       </section>
 
       {/* GRID GRAFIK */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
         
         {/* CHART 1: DROP-OFF ANALYSIS */}
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
@@ -125,7 +145,7 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
         {/* CHART 2: EDUCATION IMPACT */}
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
           <h3 className="mb-6 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-500">
-            <GraduationCap size={18} /> Sukses Rate per Jenjang
+            <GraduationCap size={18} /> Populasi per Jenjang
           </h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -147,6 +167,28 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
                 <Tooltip />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} />
               </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* CHART 3: SUCCESS RATE BY EDUCATION MODEL */}
+        <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
+          <h3 className="mb-6 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-slate-500">
+            <ArrowUpRight size={18} /> Success Rate by Model
+          </h3>
+          <div className="h-[300px] w-full" role="img" aria-label="Grafik persentase kesuksesan berdasarkan model sekolah">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={modelSuccessRate} margin={{ top: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fontWeight: 'bold' }} />
+                <YAxis tick={{ fontSize: 10 }} unit="%" />
+                <Tooltip formatter={(value) => [`${value}% Success`, 'Rate']} />
+                <Bar dataKey="rate" radius={[10, 10, 0, 0]}>
+                  {modelSuccessRate.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -189,7 +231,7 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
                   <td className="px-6 py-4">
                     <div className="text-[11px] font-black text-slate-900">{log.talent_name}</div>
                     <div className="text-[9px] font-bold uppercase text-blue-600 flex items-center gap-1">
-                      <GraduationCap size={12} /> {log.education_level} - {log.university}
+                      <GraduationCap size={12} /> {log.education_level} - {log.university} ({log.education_model || 'N/A'})
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -200,12 +242,12 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
                     </div>
                     <div className="mt-1 text-[9px] font-bold text-slate-400 uppercase italic">@ {log.company_name}</div>
                   </td>
-{/* GANTI BARIS YANG ADA DI SEKITAR SINI */}
-<td className="px-6 py-4">
-  <p className="max-w-xs text-[10px] font-medium text-slate-600 italic">
-    &quot;{log.hrd_notes_snapshot || 'Tidak ada catatan khusus.'}&quot;
-  </p>
-</td>                </tr>
+                  <td className="px-6 py-4">
+                    <p className="max-w-xs text-[10px] font-medium text-slate-600 italic">
+                      &quot;{log.hrd_notes_snapshot || 'Tidak ada catatan khusus.'}&quot;
+                    </p>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
