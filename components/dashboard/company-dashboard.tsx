@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FileText, Settings, Search, ShieldCheck, MapPin, Zap, 
   ExternalLink, Share2, PieChart, GraduationCap, ArrowRight, Accessibility,
   MessageCircle
-} from "lucide-center";
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 // Modul Anak
