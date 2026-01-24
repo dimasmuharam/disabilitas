@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users2, Building2, Settings, Calculator,
   AlertTriangle, CheckCircle2, 
   FileSpreadsheet, FileText, Eye, Bell, ShieldCheck, Loader2,
-  ArrowRight, Lock, MapPin, Search
+  ArrowRight, Lock, MapPin, Search, AlertCircle, XCircle
 } from "lucide-react";
 
 import { exportGovTalentReport } from "./gov/export-logic";
@@ -107,7 +107,7 @@ export default function GovDashboard({ user }: { user: any }) {
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
       <div className="sr-only" aria-live="polite">{announcement}</div>
       
-      {/* TOP UTILITY BAR - Hanya muncul jika verified */}
+      {/* TOP UTILITY BAR */}
       <nav className="sticky top-0 z-40 flex items-center justify-between border-b-4 border-slate-900 bg-white px-6 py-3 shadow-sm" aria-label="Navigasi Atas">
         <div className="flex items-center gap-2">
           <ShieldCheck className={isVerified ? "text-blue-600" : "text-slate-400"} size={20} />
@@ -162,7 +162,7 @@ export default function GovDashboard({ user }: { user: any }) {
             </p>
           </div>
 
-          {/* Widget Kelengkapan - Sembunyikan jika sudah 100% dan Verified */}
+          {/* Widget Kelengkapan */}
           {(!isVerified || profileCompletion.percent < 100) && (
             <div className="max-w-xs rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
               <div className="mb-4 flex items-center justify-between">
@@ -245,7 +245,7 @@ export default function GovDashboard({ user }: { user: any }) {
                     ariaLabel="Buka Pengaturan Akun"
                   />
 
-                  {/* EXPORT SECTION - Hanya verified */}
+                  {/* EXPORT SECTION */}
                   <div className="mt-6 rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(59,130,246,1)]">
                     <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Export Data Wilayah</p>
                     <div className="grid grid-cols-2 gap-3">
@@ -283,17 +283,36 @@ export default function GovDashboard({ user }: { user: any }) {
           <main className="min-h-[60vh] transition-all duration-500">
             {!isVerified ? (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                <div className="flex items-center gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl">
-                  <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg">
-                    <AlertTriangle size={40} />
+                
+                {/* LOGIKA PESAN VERIFIKASI (PENDING VS REJECTED) */}
+                {govData?.verification_status === 'rejected' ? (
+                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-red-500 bg-red-50 p-10 shadow-xl transition-all">
+                    <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-red-500 text-white shadow-lg">
+                      <XCircle size={40} />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-black uppercase italic tracking-tighter text-red-900">Verifikasi Ditolak</h2>
+                      <p className="text-sm font-bold leading-relaxed text-red-800">
+                        Alasan Admin: <span className="underline italic">{govData?.admin_notes || "Dokumen atau informasi tidak valid."}</span>
+                      </p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-red-600/60 mt-2">
+                        Silakan perbarui data profil atau dokumen resmi Anda di bawah untuk pengajuan ulang.
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-black uppercase italic tracking-tighter text-amber-900">Menunggu Verifikasi</h2>
-                    <p className="text-sm font-bold leading-relaxed text-amber-800/80">
-                      Pastikan Anda telah mengisi <strong>Wilayah Otoritas</strong> dan mengunggah <strong>Dokumen Resmi</strong> pada form di bawah ini. Admin akan melakukan validasi dalam 1-2 hari kerja.
-                    </p>
+                ) : (
+                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl transition-all">
+                    <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg">
+                      <AlertCircle size={40} />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-black uppercase italic tracking-tighter text-amber-900">Menunggu Verifikasi</h2>
+                      <p className="text-sm font-bold leading-relaxed text-amber-800/80">
+                        Pastikan Anda telah mengisi <strong>Wilayah Otoritas</strong> dan mengunggah <strong>Dokumen Resmi</strong> pada form di bawah ini. Admin akan melakukan validasi dalam 1-2 hari kerja.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <GovProfileEditor 
                   user={user} 
@@ -324,7 +343,7 @@ export default function GovDashboard({ user }: { user: any }) {
   );
 }
 
-// NavButton Component dengan Standar Neobrutalism
+// NavButton Component
 function NavButton({ active, onClick, icon, label, ariaLabel }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; ariaLabel: string }) {
   return (
     <button 
