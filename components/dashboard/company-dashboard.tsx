@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FileText, Settings, Search, ShieldCheck, MapPin, Zap, 
   ExternalLink, Share2, PieChart, GraduationCap, ArrowRight, Accessibility,
   MessageCircle
-} from "lucide-react";
+} from "lucide-center";
 import { QRCodeSVG } from "qrcode.react";
 
 // Modul Anak
@@ -37,18 +37,17 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const headerRef = useRef<HTMLHeadingElement>(null);
 
   const fetchDashboardData = useCallback(async () => {
-    // Jangan set loading true jika hanya refresh data setelah simpan agar tidak flickr
     try {
       const { data: latestComp } = await supabase.from("companies").select("*").eq("id", user.id).single();
       if (latestComp) setCompany(latestComp);
 
-      const [statsData, ratingData, { count: pendingCount }] = await Promise.all([
+      const [statsData, ratingData, pendingRes] = await Promise.all([
         getCompanyStats(user.id),
         getCompanyRatingAggregate(user.id),
         supabase.from("applications").select("*", { count: 'exact', head: true }).eq("company_id", user.id).eq("status", "applied")
       ]);
       
-      setStats({ ...statsData, pendingAction: pendingCount || 0 });
+      setStats({ ...statsData, pendingAction: pendingRes.count || 0 });
       setRatings(ratingData);
 
       const city = latestComp?.location || "Jakarta";
@@ -209,7 +208,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       </div>
     </div>
   );
-};
+
   if (loading) return <div role="status" className="animate-pulse p-40 text-center font-black uppercase italic tracking-widest text-slate-400">Sinkronisasi Portal Perusahaan...</div>;
 
   return (
@@ -231,71 +230,77 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
               <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600">{company?.industry} | {company?.location}</p>
             </div>
           </div>
-{company?.is_verified && (
-          <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] border-2 border-slate-100 bg-slate-50 p-2 shadow-inner">
-            {[
-              { id: "overview", label: "Overview", icon: LayoutDashboard },
-              { id: "applicants", label: "Applicants", icon: Users },
-              { id: "jobs", label: "Jobs", icon: FileText },
-              { id: "simulator", label: "Simulator", icon: Search },
-              { id: "profile", label: "Profile", icon: Settings },
-              { id: "settings", label: "Account", icon: ShieldCheck },
-            ].map(tab => (
-              <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex items-center gap-3 rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'scale-105 bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-white'}`}>
-                <tab.icon size={16} /> {tab.label}
-              </button>
-            ))}
-          </nav>
-)}
+
+          {company?.is_verified && (
+            <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] border-2 border-slate-100 bg-slate-50 p-2 shadow-inner">
+              {[
+                { id: "overview", label: "Overview", icon: LayoutDashboard },
+                { id: "applicants", label: "Applicants", icon: Users },
+                { id: "jobs", label: "Jobs", icon: FileText },
+                { id: "simulator", label: "Simulator", icon: Search },
+                { id: "profile", label: "Profile", icon: Settings },
+                { id: "settings", label: "Account", icon: ShieldCheck },
+              ].map(tab => (
+                <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex items-center gap-3 rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'scale-105 bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-white'}`}>
+                  <tab.icon size={16} /> {tab.label}
+                </button>
+              ))}
+            </nav>
+          )}
         </header>
 
         <main id="main-content" className="min-h-[60vh]">
-  {!company?.is_verified ? (
-    <div className="space-y-8">
-      {/* Opsional: Tambahkan pesan peringatan di atas form */}
-      <div className="rounded-3xl border-2 border-amber-500 bg-amber-50 p-6 text-amber-900 font-bold text-xs uppercase italic flex items-center gap-3">
-        <AlertCircle /> Akun Anda sedang dalam tahap verifikasi. Harap lengkapi profil untuk membuka akses penuh.
-      </div>
-      
-      <ProfileEditor 
-        company={company} 
-        user={user} 
-        onSuccess={() => {
-          fetchDashboardData();
-          setAnnouncement("Profil diperbarui, menunggu verifikasi admin.");
-        }} 
-      />
-    </div>
-  ) : (
-    /* JIKA SUDAH VERIFIED: Tampilkan Dashboard Normal seperti biasa */
-          {activeTab === "overview" && renderOverview()}
-          {activeTab === "applicants" && <ApplicantTracker company={company} />}
-          {activeTab === "jobs" && <JobManager company={company} onSuccess={fetchDashboardData} />}
-          {activeTab === "simulator" && <RecruitmentSimulator company={company} />}
-          {activeTab === "profile" && (
-            <ProfileEditor 
-              company={company} 
-              user={user} 
-              onSuccess={() => {
-                fetchDashboardData();
-                setActiveTab("overview"); // LOGIKA BALIK KE OVERVIEW
-              }} 
-            />
+          {!company?.is_verified ? (
+            <div className="space-y-8 animate-in fade-in duration-500">
+              <div className="rounded-3xl border-2 border-amber-500 bg-amber-50 p-6 text-amber-900 font-bold text-xs uppercase italic flex items-center gap-3">
+                <AlertCircle /> Akun Anda sedang dalam tahap verifikasi. Harap lengkapi profil untuk membuka akses penuh.
+              </div>
+              
+              <ProfileEditor 
+                company={company} 
+                user={user} 
+                onSuccess={() => {
+                  fetchDashboardData();
+                  setAnnouncement("Profil diperbarui, menunggu verifikasi admin.");
+                }} 
+              />
+            </div>
+          ) : (
+            <>
+              {activeTab === "overview" && renderOverview()}
+              {activeTab === "applicants" && <ApplicantTracker company={company} />}
+              {activeTab === "jobs" && <JobManager company={company} onSuccess={fetchDashboardData} />}
+              {activeTab === "simulator" && <RecruitmentSimulator company={company} />}
+              {activeTab === "profile" && (
+                <ProfileEditor 
+                  company={company} 
+                  user={user} 
+                  onSuccess={() => {
+                    fetchDashboardData();
+                    setActiveTab("overview");
+                  }} 
+                />
+              )}
+              {activeTab === "settings" && <AccountSettings user={user} onSuccess={fetchDashboardData} />}
+            </>
           )}
-          {activeTab === "settings" && <AccountSettings user={user} onSuccess={fetchDashboardData} />}
-        </> 
-      )}
-    </main>
+        </main>
 
-        {activeTab === "overview" && (
+        {activeTab === "overview" && company?.is_verified && (
           <div className="fixed bottom-10 right-10 z-50 flex flex-col gap-3">
-            <button onClick={() => handleShareInclusionCard(cardRef, company, ratings, setIsProcessing, setAnnouncement, "native")} disabled={isProcessing}
-              className="group flex items-center gap-4 rounded-full bg-slate-900 p-2 pr-8 text-white shadow-2xl transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-50">
+            <button 
+              onClick={() => handleShareInclusionCard(cardRef, company, ratings, setIsProcessing, setAnnouncement, "native")} 
+              disabled={isProcessing}
+              className="group flex items-center gap-4 rounded-full bg-slate-900 p-2 pr-8 text-white shadow-2xl transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-50"
+            >
               <div className="flex size-14 items-center justify-center rounded-full bg-white text-slate-900 shadow-inner group-hover:text-blue-600"><Share2 size={24} /></div>
               <div className="text-left"><p className="text-[10px] font-black uppercase leading-none">Share Card</p><p className="text-[8px] font-bold uppercase opacity-60">All Social Media</p></div>
             </button>
-            <button onClick={() => handleShareInclusionCard(cardRef, company, ratings, setIsProcessing, setAnnouncement, "whatsapp")} disabled={isProcessing}
-              className="group flex items-center gap-4 rounded-full bg-emerald-600 p-2 pr-8 text-white shadow-2xl transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50">
+            <button 
+              onClick={() => handleShareInclusionCard(cardRef, company, ratings, setIsProcessing, setAnnouncement, "whatsapp")} 
+              disabled={isProcessing}
+              className="group flex items-center gap-4 rounded-full bg-emerald-600 p-2 pr-8 text-white shadow-2xl transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+            >
               <div className="flex size-14 items-center justify-center rounded-full bg-white text-emerald-600 shadow-inner group-hover:text-emerald-700"><MessageCircle size={24} /></div>
               <div className="text-left"><p className="text-[10px] font-black uppercase leading-none">WhatsApp</p><p className="text-[8px] font-bold uppercase opacity-60">Direct Message</p></div>
             </button>
@@ -303,6 +308,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         )}
       </div>
 
+      {/* Card Hidden for Screenshot */}
       <div className="pointer-events-none fixed left-[-9999px] top-[-9999px] opacity-0" aria-hidden="true">
         <div ref={cardRef} className="flex h-[450px] w-[800px] flex-col justify-between border-[16px] border-slate-900 bg-white p-12 text-left font-sans">
             <div className="flex items-center justify-between border-b-4 border-blue-600 pb-6">
