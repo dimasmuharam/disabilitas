@@ -8,7 +8,7 @@ import {
   ShieldCheck, LayoutDashboard,
   Activity, Award, Lock, 
   Zap, User, Timer, ExternalLink, GraduationCap,
-  UserCheck, MessageCircle, Share2, ArrowRight, AlertTriangle, CheckCircle2, Loader2
+  UserCheck, MessageCircle, Share2, ArrowRight, AlertTriangle, CheckCircle2, Loader2, Eye, Bell
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -57,7 +57,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
           setPendingTraineesCount(count || 0);
         }
       } else {
-        // Jika belum verified, kunci di tab profile jika completion masih rendah
+        // Jika belum verified, paksa ke tab profile
         setActiveTab("profile");
       }
 
@@ -101,7 +101,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
   const genMap = partner?.stats_gender_map || { male: 0, female: 0 };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-left font-sans text-slate-900">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-left font-sans text-slate-900 selection:bg-blue-100">
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
       {/* HEADER SECTION */}
@@ -165,7 +165,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
         )}
       </header>
 
-      {/* NAVIGATION - Hidden if not verified */}
+      {/* NAVIGATION */}
       <nav className="no-scrollbar flex gap-3 overflow-x-auto pb-2" aria-label="Menu Dashboard">
         {[
           { id: "overview", label: "Ringkasan", icon: LayoutDashboard, count: 0, protected: false },
@@ -195,21 +195,25 @@ export default function PartnerDashboard({ user }: { user: any }) {
       </nav>
 
       <main id="main-content">
-        {/* GATEKEEPING ALERT */}
+        {/* GATEKEEPING ALERT & ADMIN NOTES */}
         {!isVerified && (
           <div className="mb-10 space-y-6 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex flex-col gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl md:flex-row md:items-center">
-              <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg">
-                <AlertTriangle size={40} />
+            <div className={`flex flex-col gap-6 rounded-[3rem] border-4 p-10 shadow-xl md:flex-row md:items-center ${partner?.verification_status === 'rejected' ? 'border-rose-500 bg-rose-50' : 'border-amber-500 bg-amber-50'}`}>
+              <div className={`flex size-20 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg ${partner?.verification_status === 'rejected' ? 'bg-rose-500' : 'bg-amber-500'}`}>
+                {partner?.verification_status === 'rejected' ? <AlertTriangle size={40} /> : <Timer size={40} />}
               </div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-black uppercase italic tracking-tighter text-amber-900">Akses Terbatas</h2>
-                <p className="text-sm font-bold leading-relaxed text-amber-800/80">
-                  Dashboard Anda sedang dalam tahap tinjauan. Selesaikan pengisian profil dan unggah dokumen verifikasi agar Admin dapat mengaktifkan fitur program pelatihan dan database alumni.
+                <h2 className={`text-2xl font-black uppercase italic tracking-tighter ${partner?.verification_status === 'rejected' ? 'text-rose-900' : 'text-amber-900'}`}>
+                  {partner?.verification_status === 'rejected' ? "Verifikasi Ditolak" : "Akses Terbatas"}
+                </h2>
+                <p className="text-sm font-bold leading-relaxed opacity-80 text-slate-800">
+                  {partner?.verification_status === 'rejected' 
+                    ? "Mohon periksa catatan di bawah dan perbarui dokumen verifikasi Anda agar Admin dapat meninjau kembali."
+                    : "Dashboard Anda sedang dalam tahap tinjauan. Selesaikan pengisian profil dan unggah dokumen verifikasi agar Admin dapat mengaktifkan fitur operasional."}
                 </p>
                 {partner?.admin_notes && (
-                  <div className="mt-4 rounded-xl border-2 border-amber-200 bg-white/50 p-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Catatan Admin:</p>
+                  <div className={`mt-4 rounded-xl border-2 p-4 bg-white/50 ${partner?.verification_status === 'rejected' ? 'border-rose-200' : 'border-amber-200'}`}>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${partner?.verification_status === 'rejected' ? 'text-rose-600' : 'text-amber-600'}`}>Catatan Admin:</p>
                     <p className="text-sm font-bold italic text-slate-700">&quot;{partner.admin_notes}&quot;</p>
                   </div>
                 )}
@@ -218,7 +222,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
           </div>
         )}
 
-        {/* OVERVIEW CONTENT - Only if verified or active tab */}
+        {/* OVERVIEW CONTENT */}
         {activeTab === "overview" && (
           <div className="space-y-12 duration-700 animate-in fade-in">
             <h2 ref={moduleHeadingRef} tabIndex={-1} className="sr-only">Ringkasan Statistik</h2>
@@ -243,8 +247,8 @@ export default function PartnerDashboard({ user }: { user: any }) {
                   <button onClick={() => navigateTo("selection", "Seleksi")} className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase underline decoration-2 underline-offset-4">Buka Seleksi <ArrowRight size={14}/></button>
                 </div>
               ) : (
-                <div className="flex flex-col justify-center rounded-[2.5rem] border-4 border-dashed border-slate-200 p-8 text-slate-400">
-                   <Lock size={24} className="mb-2 opacity-30" />
+                <div className="flex flex-col justify-center rounded-[2.5rem] border-4 border-dashed border-slate-200 p-8 text-slate-400 text-center">
+                   <Lock size={24} className="mb-2 opacity-30 mx-auto" />
                    <p className="text-[10px] font-black uppercase italic">Menu Terkunci</p>
                 </div>
               )}
@@ -323,7 +327,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
            {isVerified && activeTab === "tracer" && <TalentTracer partnerName={partner?.name} partnerId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
            {activeTab === "profile" && (
              <ProfileEditor 
-               campus={partner} // Komponen ProfileEditor partner menggunakan prop campus secara internal
+               partner={partner} 
                onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} 
                onBack={() => navigateTo("overview", "Dashboard")} 
              />
