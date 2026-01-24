@@ -209,7 +209,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
       </div>
     </div>
   );
-
+};
   if (loading) return <div role="status" className="animate-pulse p-40 text-center font-black uppercase italic tracking-widest text-slate-400">Sinkronisasi Portal Perusahaan...</div>;
 
   return (
