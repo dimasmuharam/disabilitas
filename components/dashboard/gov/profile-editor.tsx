@@ -94,7 +94,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
   // AKSI 1: SIMPAN PROFIL (Tanpa Pop-up)
   const handleSaveProfile = async () => {
     if (!isNasional && !formData.location) {
-      setAnnouncement("Kesalahan: Harap tentukan wilayah otoritas.");
+      setAnnouncement("Kesalahan: Harap tentukan wilayah otoritas terlebih dahulu.");
       return;
     }
 
@@ -124,8 +124,14 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
 
   // AKSI 2: AJUKAN VERIFIKASI (Tanpa Pop-up)
   const handleRequestVerification = async () => {
+    // VALIDASI AKSESIBEL: Cek dokumen sebelum memproses
+    if (!formData.verification_document_link || !formData.verification_document_link.trim()) {
+      setAnnouncement("Kesalahan: Dokumen verifikasi kosong. Harap isi link Google Drive terlebih dahulu.");
+      return;
+    }
+
     if (!formData.verification_document_link.includes("drive.google.com")) {
-      setAnnouncement("Kesalahan: Link Google Drive Dokumen Resmi tidak valid.");
+      setAnnouncement("Kesalahan: Link dokumen tidak valid. Gunakan link Google Drive resmi.");
       return;
     }
 
@@ -163,7 +169,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
   return (
     <div className="mx-auto max-w-4xl space-y-10 pb-20 text-left animate-in fade-in duration-500">
       
-      {/* Live Region untuk Screen Reader */}
+      {/* Live Region untuk Screen Reader - MENANGKAP SEMUA PESAN ERROR/SUKSES */}
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
       <div className="grid gap-10">
@@ -346,7 +352,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
         {/* FOOTER: STATUS INLINE & TOMBOL AKSI */}
         <div className="space-y-6 border-t border-slate-100 pt-10">
           
-          {/* Pesan Status Inline */}
+          {/* Pesan Status Inline Berdasarkan State announcement */}
           {announcement && (
             <div className={`flex items-center gap-3 rounded-2xl border-4 p-5 text-[10px] font-black uppercase italic tracking-widest border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
               ${announcement.includes("Sukses") ? "bg-emerald-400 text-slate-900" : 
