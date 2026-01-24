@@ -117,7 +117,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
               <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
               <div>
                 <h2 className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Akses Dashboard</h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan dokumen permohonan kerjasama (G-Drive)</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan link ke surat pengajuan kerjasama resmi dari perusahaan Anda dalam file PDF yang disimpan di Google Drive </p>
               </div>
             </div>
             
