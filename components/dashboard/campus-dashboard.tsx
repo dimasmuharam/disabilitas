@@ -217,9 +217,20 @@ export default function CampusDashboard({ user }: { user: any }) {
               <button onClick={() => navigateTo("hub", "Career Hub")} className="flex items-center gap-3 rounded-[2rem] bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600">
                 <Briefcase size={18} /> Career Hub
               </button>
-              <button onClick={() => shareNative({ name: campus?.name, score: campus?.inclusion_score, url: `https://disabilitas.com/kampus/${campus?.id}` })} className="rounded-2xl border-4 border-slate-900 bg-white px-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:shadow-none">
-                <Share2 size={20} />
-              </button>
+<button 
+  onClick={() => shareNative({ 
+    name: campus?.name, 
+    score: campus?.inclusion_score || 0, 
+    url: `https://disabilitas.com/kampus/${campus?.id}`,
+    total: Number(campus?.stats_academic_total || 0), // Tambahkan ini
+    rate: campus?.stats_academic_total > 0 
+      ? Math.round((campus.stats_academic_hired / campus.stats_academic_total) * 100) 
+      : 0 // Tambahkan ini
+  })} 
+  className="rounded-2xl border-4 border-slate-900 bg-white px-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:shadow-none"
+>
+  <Share2 size={20} />
+</button>
             </div>
           )}
         </header>
