@@ -328,6 +328,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
            {activeTab === "profile" && (
              <ProfileEditor 
                partner={partner} 
+               user={user}
                onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} 
                onBack={() => navigateTo("overview", "Dashboard")} 
              />
