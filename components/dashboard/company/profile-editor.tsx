@@ -7,7 +7,7 @@ import {
   MapPin, FileText, Search, ChevronDown, CheckCircle2,
   AlertCircle, Link2, Loader2
 } from "lucide-react";
-import { updateCompanyMaster } from "@/lib/actions/company";
+import { supabase } from "@/lib/supabase"; // Import langsung client
 import { 
   INDONESIA_CITIES, 
   ACCOMMODATION_TYPES, 
@@ -41,11 +41,10 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
     total_employees: company?.total_employees || 0,
     total_employees_with_disability: company?.total_employees_with_disability || 0,
     master_accommodations_provided: (company?.master_accommodations_provided as string[]) || [],
-    // KOLOM BARU SESUAI SKEMA VERIFIKASI
     verification_document_link: company?.verification_document_link || ""
   });
 
-  // LOGIKA SINKRONISASI DAFTAR NAMA BERDASARKAN KATEGORI
+  // Sinkronisasi Nama Instansi berdasarkan Kategori
   const filteredList = useMemo(() => {
     let list: string[] = [];
     if (formData.category === "Instansi Pemerintah (ASN)") list = GOVERNMENT_AGENCIES_LIST;
@@ -76,48 +75,72 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
     }));
   };
 
+  // HANDLER SUBMIT LANGSUNG (Tanpa file Action eksternal)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // VALIDASI TAMBAHAN UNTUK VERIFIKASI
     if (!formData.name) {
       setAnnouncement("Pilih nama instansi terlebih dahulu.");
       return;
     }
     if (!formData.verification_document_link.includes("drive.google.com")) {
-      setAnnouncement("Harap masukkan link Google Drive yang valid untuk dokumen verifikasi.");
+      setAnnouncement("Harap masukkan link Google Drive yang valid.");
       return;
     }
     
     setLoading(true);
-    setAnnouncement(`Sedang menyimpan profil ${formData.name}...`);
+    setAnnouncement(`Sedang menyinkronkan profil ${formData.name} ke server...`);
 
-    const result = await updateCompanyMaster(user.id, formData);
+    try {
+      // 1. Update Tabel Companies (Langsung menggunakan RLS user)
+      const { error: companyError } = await supabase
+        .from("companies")
+        .upsert({
+          id: user.id,
+          ...formData,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
 
-    if (result.data) {
-      setAnnouncement("Berhasil memperbarui profil. Menunggu verifikasi admin.");
+      if (companyError) throw companyError;
+
+      // 2. Kirim Tiket ke Verification Requests
+      const { error: requestError } = await supabase
+        .from("verification_requests")
+        .upsert({
+          target_id: user.id,
+          target_type: 'company',
+          document_url: formData.verification_document_link,
+          status: 'pending' // Selalu paksa pending saat update dokumen
+        }, { onConflict: 'target_id' });
+
+      if (requestError) console.error("Tiket Antrean Gagal:", requestError.message);
+
+      setAnnouncement("Profil Berhasil Disinkronkan! Menunggu verifikasi.");
       onSuccess(); 
-    } else {
-      setAnnouncement("Gagal menyimpan data.");
+    } catch (error: any) {
+      console.error("Sync Error:", error.message);
+      setAnnouncement(`Gagal menyimpan: ${error.message}`);
+      alert(`Kesalahan Sinkronisasi: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
     <div className="mx-auto max-w-6xl pb-20 text-left animate-in slide-in-from-bottom-4">
-      {/* Aksesibilitas: Live Region untuk Screen Reader */}
+      {/* Live Region Aksesibilitas */}
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
         
-        {/* SEKSI 0: DOKUMEN VERIFIKASI (KRUSIAL UNTUK GATEKEEPING) */}
+        {/* SEKSI 0: VERIFIKASI */}
         {!company?.is_verified && (
           <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-10 shadow-xl">
             <div className="mb-6 flex items-center gap-4">
               <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
               <div>
                 <h2 className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Akses Dashboard</h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan link ke surat pengajuan kerjasama resmi dari perusahaan Anda dalam file PDF yang disimpan di Google Drive </p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan link PDF Surat Pengajuan Kerjasama (Google Drive)</p>
               </div>
             </div>
             
@@ -127,15 +150,15 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                 id="comp-verify-link"
                 required
                 type="url"
-                placeholder="https://drive.google.com/file/..."
+                placeholder="https://drive.google.com/..."
                 value={formData.verification_document_link}
                 onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
                 className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white"
               />
               <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
-                <AlertCircle size={16} className="text-blue-600 mt-1 flex-shrink-0" />
+                <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" />
                 <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
-                  Pastikan akses Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong> agar Admin dapat memverifikasi profil Anda dengan cepat.
+                  Pastikan akses Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong>.
                 </p>
               </div>
             </div>
@@ -147,7 +170,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
           <div className="flex items-center gap-4 border-b pb-8">
             <div className="rounded-2xl bg-slate-900 p-3 text-white"><Building2 size={24} /></div>
             <div>
-              <h2 className="text-xl font-black uppercase italic tracking-tighter">Informasi Resmi Instansi</h2>
+              <h2 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">Informasi Resmi Instansi</h2>
               <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Sinkronisasi data master pemberi kerja nasional</p>
             </div>
           </div>
@@ -203,7 +226,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                           setIsDropdownOpen(false);
                           setAnnouncement(`Terpilih: ${item}`);
                         }}
-                        className="w-full rounded-xl p-3 text-left text-[10px] font-black uppercase hover:bg-blue-50 hover:text-blue-600"
+                        className="w-full rounded-xl p-3 text-left text-[10px] font-black uppercase hover:bg-blue-50"
                       >
                         {item}
                       </button>
@@ -221,7 +244,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
 
               <div className="space-y-2">
                 <label htmlFor="comp-nib" className="ml-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400"><FileBadge size={12} /> NIB / Nomor Registrasi</label>
-                <input id="comp-nib" required placeholder="Contoh: 123456789..." value={formData.nib_number} onChange={e => setFormData({...formData, nib_number: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 font-black tracking-widest outline-none focus:border-blue-600" />
+                <input id="comp-nib" required placeholder="13 digit nomor..." value={formData.nib_number} onChange={e => setFormData({...formData, nib_number: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 font-black tracking-widest outline-none focus:border-blue-600" />
               </div>
             </div>
 
@@ -259,11 +282,11 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
           </div>
         </section>
 
-        {/* SEKSI 2: RISET KARYAWAN & DATA AKOMODASI */}
+        {/* SEKSI 2: RISET KARYAWAN */}
         <section className="space-y-12 rounded-[3rem] border-2 border-slate-100 bg-white p-10 shadow-sm">
           <div className="grid gap-10 md:grid-cols-2">
             <div className="space-y-6">
-              <div className="mb-2 flex items-center gap-3 text-slate-900">
+              <div className="flex items-center gap-3">
                 <Users size={24} className="text-blue-600" />
                 <h2 className="text-sm font-black uppercase tracking-tight">Statistik Karyawan</h2>
               </div>
@@ -280,29 +303,28 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
             </div>
 
             <div className="space-y-6">
-              <div className="mb-2 flex items-center gap-3 text-slate-900">
+              <div className="flex items-center gap-3">
                 <FileText size={24} className="text-blue-600" />
                 <h2 className="text-sm font-black uppercase tracking-tight">Visi & Komitmen Inklusi</h2>
               </div>
               <div className="space-y-2">
                 <label htmlFor="comp-desc" className="ml-2 text-[10px] font-black uppercase text-slate-400">Profil / Bio Instansi</label>
-                <textarea id="comp-desc" rows={8} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 text-sm font-medium outline-none focus:border-blue-600 shadow-inner" placeholder="Jelaskan bagaimana budaya kerja di instansi Anda..." />
+                <textarea id="comp-desc" rows={8} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 text-sm font-medium outline-none focus:border-blue-600 shadow-inner" placeholder="Jelaskan budaya kerja inklusif di instansi Anda..." />
               </div>
             </div>
           </div>
 
-          {/* FASILITAS */}
           <div className="space-y-6 border-t pt-10">
             <div className="flex items-center gap-3">
               <Accessibility size={24} className="text-emerald-600" />
               <div>
                 <h2 className="text-sm font-black uppercase italic tracking-tighter">Master Fasilitas Inklusi</h2>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Data ini membantu talenta dalam memilih lingkungan kerja yang sesuai</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Membantu talenta menyesuaikan kebutuhan akomodasi</p>
               </div>
             </div>
             
             <fieldset>
-              <legend className="sr-only">Daftar Fasilitas Akomodasi</legend>
+              <legend className="sr-only">Daftar Fasilitas</legend>
               <div className="flex flex-wrap gap-3">
                 {ACCOMMODATION_TYPES.map((acc) => {
                   const isChecked = formData.master_accommodations_provided.includes(acc);
@@ -322,10 +344,10 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
           </div>
         </section>
 
-        {/* SUBMIT */}
+        {/* FOOTER SUBMIT */}
         <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-100 pt-10 md:flex-row">
           <p className="text-[9px] font-black uppercase italic text-slate-400 max-w-sm">
-            * Menyimpan data ini berarti Anda menyatakan informasi di atas adalah benar untuk keperluan riset ketenagakerjaan inklusif.
+            * Menyimpan data ini berarti Anda menyatakan informasi di atas benar untuk keperluan riset ketenagakerjaan nasional.
           </p>
           <button 
             type="submit" 
@@ -333,7 +355,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
             className="flex w-full items-center justify-center gap-3 rounded-[2.5rem] bg-slate-900 px-16 py-6 text-sm font-black uppercase tracking-widest text-white shadow-2xl transition-all hover:bg-blue-600 disabled:opacity-50 md:w-auto"
           >
             {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
-            {loading ? "MENYIMPAN..." : "SIMPAN & AJUKAN VERIFIKASI"}
+            {loading ? "MENYINKRONKAN..." : "SIMPAN & AJUKAN VERIFIKASI"}
           </button>
         </div>
       </form>
