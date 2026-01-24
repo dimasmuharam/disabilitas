@@ -48,10 +48,6 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
       
       if (data) {
         setFormData(prev => ({ ...prev, ...data }));
-        // Inisialisasi search query jika sudah ada location
-        if (data.location && data.location !== "Nasional") {
-          setSearchQuery(data.location);
-        }
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
@@ -71,7 +67,6 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [fetchProfile]);
 
-  // LOGIKA PENCARIAN WILAYAH AKSESIBEL
   const handleSearchRegion = (query: string) => {
     setSearchQuery(query);
     if (query.length < 2) {
@@ -83,12 +78,10 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
     let filtered: any[] = [];
 
     if (isProvCategory) {
-      // Filter dari PROVINCE_LIST (data-static)
       filtered = PROVINCE_LIST
         .filter(p => p.toLowerCase().includes(query.toLowerCase()))
         .map(p => ({ name: p, type: 'PROVINSI' }));
     } else {
-      // Filter dari semua kota di PROVINCE_MAP (data-static)
       const allCities = Object.values(PROVINCE_MAP).flat();
       filtered = Array.from(new Set(allCities))
         .filter(c => c.toLowerCase().includes(query.toLowerCase()))
@@ -96,17 +89,6 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
     }
 
     setRegionResults(filtered.slice(0, 6));
-  };
-
-  const selectRegion = (name: string) => {
-    setFormData({
-      ...formData,
-      location: name,
-      name: `${formData.category} ${name}`
-    });
-    setSearchQuery(name);
-    setRegionResults([]);
-    setAnnouncement(`Wilayah ${name} terpilih.`);
   };
 
   // AKSI 1: SIMPAN PROFIL
@@ -177,7 +159,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
   };
 
   if (fetching) return (
-    <div className="flex h-64 flex-col items-center justify-center gap-4" role="status">
+    <div className="flex h-64 flex-col items-center justify-center gap-4" role="status" aria-label="Memuat data">
       <Loader2 className="animate-spin text-blue-600" size={40} />
       <p className="font-black uppercase italic tracking-widest text-slate-400">Sinkronisasi Data Otoritas...</p>
     </div>
@@ -194,10 +176,10 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
         {!company?.is_verified && (
           <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-10 shadow-xl" aria-labelledby="section-verif">
             <div className="mb-6 flex items-center gap-4">
-              <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
+              <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} aria-hidden="true" /></div>
               <div>
                 <h2 id="section-verif" className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Otoritas Resmi</h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan link Google Drive surat permohonan resmi instansi Anda</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan tautan PDF Surat Pengajuan kerjasama dari instansi (Google Drive)</p>
               </div>
             </div>
             
@@ -212,9 +194,9 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
                 className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
               />
               <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
-                <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" />
+                <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" aria-hidden="true" />
                 <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
-                  Pastikan akses Google Drive diatur ke <strong>&quot;Anyone with the link&quot;</strong>.
+                  Pastikan akses Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong>.
                 </p>
               </div>
             </div>
@@ -224,7 +206,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
         {/* SECTION 1: PENETAPAN OTORITAS */}
         <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]" aria-labelledby="section-otoritas">
           <div className="mb-8 flex items-center gap-4 border-b-2 border-slate-100 pb-4">
-            <MapPin className="text-blue-600" size={28} />
+            <MapPin className="text-blue-600" size={28} aria-hidden="true" />
             <div>
               <h2 id="section-otoritas" className="text-xl font-black uppercase italic tracking-tight">Cakupan Wilayah Kerja</h2>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Identitas administratif instansi pemerintah</p>
@@ -246,7 +228,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
                     location: isNowNasional ? "Nasional" : "",
                     name: isNowNasional ? "" : formData.name 
                   });
-                  setSearchQuery(isNowNasional ? "" : searchQuery);
+                  setSearchQuery("");
                 }}
                 className="w-full rounded-2xl border-4 border-slate-900 bg-slate-50 p-4 font-bold outline-none focus:ring-4 focus:ring-blue-100"
               >
@@ -272,7 +254,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
               <div className="relative space-y-2" ref={searchRef}>
                 <label htmlFor="search-region" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Cari Wilayah Otoritas</label>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
                   <input 
                     id="search-region"
                     type="text"
@@ -281,29 +263,33 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
                     aria-autocomplete="list"
                     aria-expanded={regionResults.length > 0}
                     aria-controls="region-results-list"
-                    placeholder={formData.location || "Ketik nama kota/provinsi..."}
+                    placeholder={formData.location || "Ketik min. 2 huruf..."}
                     value={searchQuery}
                     onChange={(e) => handleSearchRegion(e.target.value)}
                     className="w-full rounded-2xl border-4 border-slate-900 p-4 pl-12 font-bold outline-none focus:ring-4 focus:ring-blue-100"
                   />
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} aria-hidden="true" />
                 </div>
 
                 {regionResults.length > 0 && (
-                  <ul 
-                    id="region-results-list"
-                    role="listbox" 
-                    className="absolute z-50 mt-2 max-h-60 w-full overflow-y-auto rounded-2xl border-4 border-slate-900 bg-white shadow-2xl"
-                  >
+                  <ul id="region-results-list" role="listbox" className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border-4 border-slate-900 bg-white shadow-2xl">
                     {regionResults.map((region, idx) => (
                       <li 
                         key={idx}
                         role="option"
                         aria-selected={formData.location === region.name}
-                        onClick={() => selectRegion(region.name)}
-                        onKeyDown={(e) => e.key === 'Enter' && selectRegion(region.name)}
                         tabIndex={0}
-                        className="group flex cursor-pointer items-center justify-between p-4 hover:bg-slate-900 focus:bg-slate-900 outline-none"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            location: region.name,
+                            name: `${formData.category} ${region.name}`
+                          });
+                          setSearchQuery("");
+                          setRegionResults([]);
+                        }}
+                        onKeyDown={(e) => { if(e.key === 'Enter') e.currentTarget.click(); }}
+                        className="group flex cursor-pointer items-center justify-between p-4 hover:bg-slate-900 focus:bg-slate-900 focus:outline-none"
                       >
                         <span className="font-black uppercase italic group-hover:text-white group-focus:text-white">{region.name}</span>
                         <span className="text-[10px] font-bold text-slate-400 group-hover:text-blue-400">{region.type}</span>
@@ -319,7 +305,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
         {/* SECTION 2: ATRIBUT OPERASIONAL */}
         <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]" aria-labelledby="section-kontak">
           <div className="mb-8 flex items-center gap-4 border-b-2 border-slate-100 pb-4">
-            <Globe className="text-emerald-600" size={28} />
+            <Globe className="text-emerald-600" size={28} aria-hidden="true" />
             <h2 id="section-kontak" className="text-xl font-black uppercase italic tracking-tight">Atribut Operasional</h2>
           </div>
 
@@ -327,7 +313,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
             <div className="space-y-2">
               <label htmlFor="wa" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">WhatsApp Official</label>
               <div className="relative">
-                <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
                 <input 
                   id="wa"
                   type="text" 
@@ -339,7 +325,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
               </div>
             </div>
             <div className="space-y-2">
-              <label htmlFor="seal" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">URL Logo Resmi</label>
+              <label htmlFor="seal" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">URL Logo/Stempel Resmi</label>
               <input 
                 id="seal"
                 type="url" 
@@ -364,9 +350,8 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
           </div>
         </section>
 
-        {/* FOOTER: STATUS & TOMBOL AKSI */}
+        {/* FOOTER: STATUS INLINE & TOMBOL AKSI */}
         <div className="space-y-6 border-t border-slate-100 pt-10">
-          
           {announcement && (
             <div className={`flex items-center gap-3 rounded-2xl border-4 p-5 text-[10px] font-black uppercase italic tracking-widest border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
               ${announcement.includes("Sukses") ? "bg-emerald-400 text-slate-900" : 
@@ -407,7 +392,6 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );
