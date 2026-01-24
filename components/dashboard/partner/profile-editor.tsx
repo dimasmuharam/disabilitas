@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Building2, Globe, MapPin, Save, ShieldCheck, 
-  CheckCircle2, AlertCircle, FileText, ChevronDown, ArrowLeft
+  CheckCircle2, AlertCircle, FileText, ChevronDown, ArrowLeft,
+  Link2, Loader2
 } from "lucide-react";
 import { 
   ACCOMMODATION_TYPES, 
@@ -14,13 +15,14 @@ import {
 
 interface ProfileEditorProps {
   partner: any;
+  user: any; // Pastikan user dilempar dari parent
   onUpdate: () => void;
   onBack: () => void;
 }
 
-export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEditorProps) {
+export default function ProfileEditor({ partner, user, onUpdate, onBack }: ProfileEditorProps) {
   const [loading, setLoading] = useState(false);
-  const [statusMsg, setStatusMsg] = useState("");
+  const [announcement, setAnnouncement] = useState("");
   const [isCustomName, setIsCustomName] = useState(false);
   
   const manualNameRef = useRef<HTMLInputElement>(null);
@@ -32,7 +34,8 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
     location: partner?.location || "",
     nib_number: partner?.nib_number || "",
     manual_name: "",
-    master_accommodations_provided: partner?.master_accommodations_provided || []
+    master_accommodations_provided: partner?.master_accommodations_provided || [],
+    verification_document_link: partner?.verification_document_link || ""
   });
 
   useEffect(() => {
@@ -43,40 +46,81 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
     }
   }, [partner.name, formData.name]);
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setStatusMsg("Menyinkronkan data riset...");
-    
+  // AKSI 1: SIMPAN PROFIL (Hanya Data Operasional)
+  async function handleSaveProfile() {
     const finalName = formData.name === "LAINNYA" ? formData.manual_name : formData.name;
+    if (!finalName) {
+      setAnnouncement("Kesalahan: Nama lembaga harus diisi.");
+      return;
+    }
 
+    setLoading(true);
+    setAnnouncement("Sedang menyimpan perubahan profil mitra...");
+    
     try {
       if (formData.name === "LAINNYA" && formData.manual_name) {
-        await supabase.from("manual_input_logs").insert([{
+        await supabase.from("manual_input_logs").upsert([{
           field_name: "partner_name_manual",
           input_value: formData.manual_name
-        }]);
+        }], { onConflict: 'input_value' });
       }
 
       const { error } = await supabase
         .from("partners")
-        .update({
+        .upsert({
+          id: user.id, // Gunakan UID untuk keamanan
           name: finalName,
           description: formData.description,
           website: formData.website,
           location: formData.location,
           nib_number: formData.nib_number,
           master_accommodations_provided: formData.master_accommodations_provided,
-          updated_at: new Date()
-        })
-        .eq("id", partner.id);
+          verification_document_link: formData.verification_document_link,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
 
       if (error) throw error;
 
-      setStatusMsg("Profil Berhasil Diperbarui!");
+      setAnnouncement("Sukses: Profil Berhasil Diperbarui!");
       setTimeout(() => onUpdate(), 1500);
     } catch (err: any) {
-      setStatusMsg("Gagal: " + err.message);
+      setAnnouncement(`Gagal: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // AKSI 2: AJUKAN VERIFIKASI (Input ke verification_requests)
+  async function handleRequestVerification() {
+    if (!formData.verification_document_link || !formData.verification_document_link.trim()) {
+      setAnnouncement("Kesalahan: Harap isi link Google Drive dokumen legalitas.");
+      return;
+    }
+
+    if (!formData.verification_document_link.includes("drive.google.com")) {
+      setAnnouncement("Kesalahan: Link dokumen harus berasal dari Google Drive.");
+      return;
+    }
+
+    setLoading(true);
+    setAnnouncement("Sedang mengirimkan permohonan verifikasi ke Admin...");
+
+    try {
+      const { error } = await supabase
+        .from("verification_requests")
+        .upsert({
+          target_id: user.id,
+          target_type: 'partner',
+          document_url: formData.verification_document_link,
+          status: 'pending'
+        }, { onConflict: 'target_id' });
+
+      if (error) throw error;
+
+      setAnnouncement("Sukses: Permohonan verifikasi berhasil dikirim.");
+      setTimeout(() => onUpdate(), 2000);
+    } catch (err: any) {
+      setAnnouncement(`Gagal: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -91,36 +135,69 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-10 pb-20 duration-500 animate-in fade-in">
+    <div className="mx-auto max-w-6xl space-y-10 pb-20 duration-500 animate-in fade-in">
+      {/* Live Region untuk Screen Reader */}
+      <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
+
       {/* HEADER NAV */}
-      <div className="mb-10 flex items-center justify-between border-b-4 border-slate-900 pb-6">
-        <button onClick={onBack} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-slate-900">
+      <div className="mb-10 flex flex-col justify-between gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-center">
+        <button onClick={onBack} className="flex h-fit w-fit items-center gap-2 rounded-xl border-2 border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:border-slate-900 hover:text-slate-900">
           <ArrowLeft size={16} /> Batal & Kembali
         </button>
-        <div className="text-right text-slate-900">
-          <h2 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Profil Institusi Mitra</h2>
-          <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-blue-600">Lengkapi Profil Institusi untuk Menjangkau Talenta Inklusif yang Terafiliasi dengan Anda</p>
+        <div className="text-left md:text-right">
+          <h2 className="text-3xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Profil Institusi Mitra</h2>
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-blue-600">Manajemen Kredensial & Fasilitas Pelatihan Inklusif</p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-        <div className="space-y-8 text-left lg:col-span-2">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+        <div className="space-y-10 lg:col-span-2">
+          
+          {/* SEKSI 0: VERIFIKASI (Hanya jika belum verified) */}
+          {!partner?.is_verified && (
+            <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-10 shadow-xl">
+              <div className="mb-6 flex items-center gap-4">
+                <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
+                <div>
+                  <h3 className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Kemitraan Resmi</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan NIB atau Dokumen Pendirian Lembaga (PDF di G-Drive)</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <label htmlFor="part-verify-link" className="ml-2 text-[10px] font-black uppercase text-blue-900">Link Google Drive Dokumen Resmi</label>
+                <input 
+                  id="part-verify-link"
+                  type="url"
+                  placeholder="https://drive.google.com/..."
+                  value={formData.verification_document_link}
+                  onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
+                  className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
+                />
+                <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
+                  <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" />
+                  <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
+                    Pastikan akses file Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong>.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* IDENTITAS UTAMA */}
           <section className="space-y-8 rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
             <h3 className="flex items-center gap-2 text-xs font-black uppercase italic tracking-widest text-blue-600">
-              <Building2 size={20} /> Kredensial Resmi
+              <Building2 size={20} /> Kredensial Resmi Lembaga
             </h3>
             
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              {/* NAMA PENYELENGGARA */}
               <div className="space-y-3 md:col-span-2">
-                <label id="inst-name-label" htmlFor="inst-name" className="ml-1 text-[10px] font-black uppercase text-slate-400">Nama Lembaga Pelatihan (List Resmi)</label>
+                <label id="inst-name-label" htmlFor="inst-name" className="ml-1 text-[10px] font-black uppercase text-slate-400">Nama Lembaga Pelatihan</label>
                 {!isCustomName ? (
                   <div className="relative">
                     <select 
                       id="inst-name"
                       required
-                      aria-labelledby="inst-name-label"
                       className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
                       value={formData.name}
                       onChange={(e) => {
@@ -157,7 +234,6 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                 )}
               </div>
 
-              {/* WEBSITE RESMI (FIX: SEBELUMNYA TIDAK ADA) */}
               <div className="space-y-3 md:col-span-2">
                 <label htmlFor="inst-website" className="ml-1 text-[10px] font-black uppercase text-slate-400">Website Resmi Institusi</label>
                 <div className="relative">
@@ -165,21 +241,19 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                    <input 
                     id="inst-website"
                     type="url"
-                    className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 pl-12 font-bold outline-none focus:border-slate-900 focus:bg-white"
-                    placeholder="https://www.nama-lembaga.com"
+                    className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
+                    placeholder="https://..."
                     value={formData.website}
                     onChange={(e) => setFormData({...formData, website: e.target.value})}
                   />
                 </div>
               </div>
 
-              {/* LOKASI STANDAR */}
               <div className="space-y-3">
-                <label id="inst-loc-label" htmlFor="inst-loc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Domisili Kota (Operasional)</label>
+                <label htmlFor="inst-loc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Domisili Kota (Pusat)</label>
                 <div className="relative">
                   <select 
                     id="inst-loc"
-                    aria-labelledby="inst-loc-label"
                     className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold outline-none focus:border-slate-900 focus:bg-white"
                     value={formData.location}
                     onChange={(e) => setFormData({...formData, location: e.target.value})}
@@ -192,7 +266,6 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                 </div>
               </div>
 
-              {/* NIB / IZIN */}
               <div className="space-y-3">
                 <label htmlFor="inst-nib" className="ml-1 text-[10px] font-black uppercase text-slate-400">Nomor Legalitas (NIB/Izin)</label>
                 <input 
@@ -204,14 +277,13 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
                 />
               </div>
 
-              {/* VISI/DESKRIPSI */}
               <div className="space-y-3 md:col-span-2">
-                <label htmlFor="inst-desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Mengenai Institusi Anda</label>
+                <label htmlFor="inst-desc" className="ml-1 text-[10px] font-black uppercase text-slate-400">Visi & Deskripsi Singkat</label>
                 <textarea 
                   id="inst-desc"
                   rows={4}
                   className="w-full rounded-3xl border-2 border-slate-100 bg-slate-50 p-6 font-medium leading-relaxed outline-none focus:border-slate-900 focus:bg-white"
-                  placeholder="Jelaskan bagaimana institusi Anda melatih talenta disabilitas secara inklusif..."
+                  placeholder="Ceritakan visi inklusi institusi Anda..."
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                 />
@@ -220,26 +292,25 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
           </section>
         </div>
 
-        {/* KOLOM KANAN: AKOMODASI & SAVE */}
+        {/* KOLOM KANAN: AKOMODASI & AKSI */}
         <div className="space-y-8">
-          <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
-            <legend className="sr-only">Akomodasi Aksesibilitas yang Tersedia</legend>
-            <h3 id="audit-title" className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase italic tracking-widest text-blue-400">
-              <ShieldCheck size={18} /> Akomodasi Aksesibilitas yang Tersedia
+          <fieldset className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-left text-white shadow-2xl">
+            <legend className="sr-only">Akomodasi Aksesibilitas</legend>
+            <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase italic tracking-widest text-blue-400">
+              <ShieldCheck size={18} /> Fasilitas Aksesibel
             </h3>
-            <div className="no-scrollbar max-h-[380px] space-y-3 overflow-y-auto pr-2">
+            <div className="no-scrollbar max-h-[400px] space-y-3 overflow-y-auto pr-2">
               {ACCOMMODATION_TYPES.map((item, idx) => {
                 const isSelected = formData.master_accommodations_provided.includes(item);
                 return (
                   <label key={item} className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all focus-within:ring-4 focus-within:ring-blue-500/30 ${isSelected ? "border-blue-500 bg-blue-600/20" : "border-slate-800 bg-slate-800/50 hover:border-slate-700"}`}>
                     <input
                       type="checkbox"
-                      aria-labelledby={`audit-title opt-acc-${idx}`}
                       className="mt-1 size-5 rounded border-gray-700 bg-slate-800 text-blue-600 accent-blue-500"
                       checked={isSelected}
                       onChange={() => toggleAccommodation(item)}
                     />
-                    <span id={`opt-acc-${idx}`} className={`text-[9px] font-black uppercase leading-tight tracking-widest ${isSelected ? "text-white" : "text-slate-500"}`}>
+                    <span className={`text-[9px] font-black uppercase leading-tight tracking-widest ${isSelected ? "text-white" : "text-slate-500"}`}>
                       {item}
                     </span>
                     {isSelected && <CheckCircle2 className="ml-auto shrink-0 text-blue-400" size={14} />}
@@ -249,28 +320,50 @@ export default function ProfileEditor({ partner, onUpdate, onBack }: ProfileEdit
             </div>
           </fieldset>
 
-          <div className="space-y-4">
-            {statusMsg && (
-              <div aria-live="polite" className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase animate-in zoom-in-95 ${statusMsg.includes("Gagal") ? 'border-red-100 bg-red-50 text-red-600' : 'border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
-                {statusMsg.includes("Gagal") ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
-                {statusMsg}
+          {/* AREA NOTIFIKASI & TOMBOL */}
+          <div className="space-y-6 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-lg">
+            
+            {/* Banner Status Inline */}
+            {announcement && (
+              <div className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase tracking-widest animate-in zoom-in-95
+                ${announcement.includes("Sukses") ? "border-emerald-500 bg-emerald-50 text-emerald-700" : 
+                  announcement.includes("Sedang") ? "border-blue-500 bg-blue-50 text-blue-700" : 
+                  "border-amber-500 bg-amber-50 text-amber-700"}`}>
+                {announcement.includes("Sukses") ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                {announcement}
               </div>
             )}
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 text-xs font-black uppercase italic tracking-[0.2em] text-white shadow-xl shadow-blue-100 transition-all hover:bg-slate-900 active:scale-[0.98] disabled:opacity-50"
-            >
-              {loading ? "SINKRONISASI..." : (
-                <>
-                  <Save size={20} /> PERBARUI DATA MITRA
-                </>
+            <div className="flex flex-col gap-4">
+              <button 
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] border-4 border-slate-900 bg-white py-5 text-[11px] font-black uppercase italic text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
+              >
+                {loading && !announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                Simpan Profil
+              </button>
+
+              {!partner?.is_verified && (
+                <button 
+                  type="button"
+                  onClick={handleRequestVerification}
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] bg-blue-600 py-5 text-[11px] font-black uppercase italic text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                >
+                  {loading && announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
+                  Ajukan Verifikasi
+                </button>
               )}
-            </button>
+            </div>
+            
+            <p className="text-[8px] font-black uppercase italic text-slate-400">
+              * Verifikasi kemitraan resmi diperlukan untuk mempublikasikan program pelatihan Anda secara nasional.
+            </p>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

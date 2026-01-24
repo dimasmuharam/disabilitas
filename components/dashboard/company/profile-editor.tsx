@@ -94,6 +94,12 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
 
   // AKSI 2: AJUKAN VERIFIKASI (Aksesibel, No Pop-up)
   const handleRequestVerification = async () => {
+    // Validasi Kelengkapan Dokumen agar tidak mandek
+    if (!formData.verification_document_link || !formData.verification_document_link.trim()) {
+      setAnnouncement("Kesalahan: Harap isi link dokumen verifikasi sebelum mengajukan.");
+      return;
+    }
+
     if (!formData.verification_document_link.includes("drive.google.com")) {
       setAnnouncement("Kesalahan: Harap masukkan link Google Drive yang valid.");
       return;
@@ -344,13 +350,13 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
         {/* FOOTER: DUA TOMBOL AKSI + INLINE ANNOUNCEMENT */}
         <div className="space-y-6 border-t border-slate-100 pt-10">
           
-          {/* Pesan Status Inline Berdasarkan Announcement */}
+          {/* Pesan Status Inline Berdasarkan State announcement */}
           {announcement && (
-            <div className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-[10px] font-black uppercase italic tracking-widest
-              ${announcement.includes("Sukses") ? "border-emerald-500 bg-emerald-50 text-emerald-700" : 
-                announcement.includes("Sedang") ? "border-blue-500 bg-blue-50 text-blue-700" : 
-                "border-amber-500 bg-amber-50 text-amber-700"}`}>
-              {announcement.includes("Sukses") ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+            <div className={`flex items-center gap-3 rounded-2xl border-4 p-5 text-[10px] font-black uppercase italic tracking-widest border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
+              ${announcement.includes("Sukses") ? "bg-emerald-400 text-slate-900" : 
+                announcement.includes("Sedang") ? "bg-blue-400 text-white" : 
+                "bg-rose-400 text-white"}`}>
+              {announcement.includes("Sukses") ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
               {announcement}
             </div>
           )}
@@ -362,7 +368,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={loading} 
-                className="flex items-center gap-3 rounded-3xl border-2 border-slate-900 bg-white px-10 py-5 text-[11px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
+                className="flex items-center gap-4 rounded-3xl border-2 border-slate-900 bg-white px-10 py-5 text-[11px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
               >
                 {loading && !announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                 Simpan Profil
@@ -374,7 +380,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                   type="button"
                   onClick={handleRequestVerification}
                   disabled={loading} 
-                  className="flex items-center gap-3 rounded-3xl bg-blue-600 px-10 py-5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                  className="flex items-center gap-4 rounded-3xl bg-blue-600 px-10 py-5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
                 >
                   {loading && announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
                   Ajukan Verifikasi
