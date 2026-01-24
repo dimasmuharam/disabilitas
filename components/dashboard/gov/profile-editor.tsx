@@ -264,6 +264,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
                     autoComplete="off"
                     aria-autocomplete="list"
                     aria-expanded={regionResults.length > 0}
+  aria-controls="region-results-list" 
                     placeholder={formData.location || "Ketik min. 2 huruf..."}
                     value={searchQuery}
                     onChange={(e) => handleSearchRegion(e.target.value)}

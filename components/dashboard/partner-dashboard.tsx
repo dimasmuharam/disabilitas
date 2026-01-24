@@ -210,7 +210,7 @@ export default function PartnerDashboard({ user }: { user: any }) {
                 {partner?.admin_notes && (
                   <div className="mt-4 rounded-xl border-2 border-amber-200 bg-white/50 p-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Catatan Admin:</p>
-                    <p className="text-sm font-bold italic text-slate-700">"{partner.admin_notes}"</p>
+                    <p className="text-sm font-bold italic text-slate-700">&quot;{partner.admin_notes}&quot;</p>
                   </div>
                 )}
               </div>

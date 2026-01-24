@@ -9,7 +9,7 @@ import {
   Zap, User, School,
   MousePointerClick, Briefcase, Sparkles, TrendingUp,
   ExternalLink, ChevronRight, CheckCircle2,
-  Medal, AlertCircle, PieChart, Bell, Loader2
+  Medal, Eye, AlertCircle, PieChart, Bell, Loader2
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
