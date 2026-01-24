@@ -2,11 +2,12 @@ import { supabase } from "@/lib/supabase"
 
 /**
  * Memperbarui atau mendaftarkan profil master perusahaan
- * Menggunakan ID Tunggal (id = userId)
+ * Serta otomatis mengirimkan permohonan verifikasi ke Admin jika dokumen disertakan.
  */
 export async function updateCompanyMaster(userId: string, companyData: any) {
   try {
-    const { data, error } = await supabase
+    // 1. Update data utama di tabel companies
+    const { data, error: companyError } = await supabase
       .from("companies")
       .upsert({
         id: userId,
@@ -21,6 +22,7 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
         total_employees: Number(companyData.total_employees) || 0,
         total_employees_with_disability: Number(companyData.total_employees_with_disability) || 0,
         master_accommodations_provided: companyData.master_accommodations_provided,
+        verification_document_link: companyData.verification_document_link, // Kolom G-Drive
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'id'
@@ -28,9 +30,23 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
       .select()
       .single()
 
-    if (error) {
-      console.error("Supabase Error:", error.message);
-      throw error;
+    if (companyError) throw companyError;
+
+    // 2. OTOMATISASI: Jika ada link dokumen, kirim/update request ke verification_requests
+    // Ini agar Admin mendapatkan notifikasi di "Verification Hub"
+    if (companyData.verification_document_link) {
+      const { error: requestError } = await supabase
+        .from("verification_requests")
+        .upsert({
+          target_id: userId,
+          target_type: 'company',
+          document_url: companyData.verification_document_link,
+          status: 'pending' // Reset ke pending setiap kali link diupdate
+        }, {
+          onConflict: 'target_id' 
+        })
+      
+      if (requestError) console.error("Request Queue Error:", requestError.message);
     }
     
     return { data, error: null }
@@ -42,30 +58,26 @@ export async function updateCompanyMaster(userId: string, companyData: any) {
 
 /**
  * Mengambil data statistik perusahaan untuk dashboard (Job & Pelamar)
- * UPDATE: Sekarang memfilter pelamar langsung via kolom company_id
  */
 export async function getCompanyStats(companyId: string) {
   try {
-    // 1. Ambil jumlah lowongan perusahaan
-    const { count: jobCount, error: jobError } = await supabase
-      .from("jobs")
-      .select("*", { count: "exact", head: true })
-      .eq("company_id", companyId)
+    const [jobRes, appRes] = await Promise.all([
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", companyId),
+      supabase
+        .from("applications")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", companyId)
+    ])
 
-    if (jobError) throw jobError
-
-    // 2. Ambil jumlah pelamar
-    // SINKRONISASI: Sekarang memfilter langsung ke kolom company_id di tabel applications
-    const { count: appCount, error: appError } = await supabase
-      .from("applications")
-      .select("*", { count: "exact", head: true })
-      .eq("company_id", companyId)
-
-    if (appError) throw appError
+    if (jobRes.error) throw jobRes.error
+    if (appRes.error) throw appRes.error
 
     return { 
-      jobCount: jobCount || 0, 
-      applicantCount: appCount || 0,
+      jobCount: jobRes.count || 0, 
+      applicantCount: appRes.count || 0,
       error: null 
     }
   } catch (error: any) {
@@ -75,16 +87,16 @@ export async function getCompanyStats(companyId: string) {
 }
 
 /**
- * FUNGSI ADMIN: Verifikasi Perusahaan (Centang Biru)
+ * Mengambil profil lengkap perusahaan berdasarkan ID
  */
-export async function verifyCompanyStatus(companyId: string, status: boolean) {
+export async function getCompanyProfile(companyId: string) {
   try {
     const { data, error } = await supabase
       .from("companies")
-      .update({ is_verified: status })
+      .select("*")
       .eq("id", companyId)
-      .select()
-    
+      .single()
+
     if (error) throw error
     return { data, error: null }
   } catch (error: any) {
