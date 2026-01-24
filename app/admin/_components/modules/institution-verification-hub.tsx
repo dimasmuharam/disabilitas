@@ -219,7 +219,7 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
                       <div className="group">
                         <label className="text-[8px] font-black text-slate-400 uppercase">Deskripsi Lembaga</label>
                         <p className="text-[10px] leading-relaxed font-medium text-slate-500 italic">
-                          "{targetProfile?.description || 'Tidak ada deskripsi profil.'}"
+&quot;{targetProfile?.description || 'Tidak ada deskripsi profil.'}&quot;
                         </p>
                       </div>
                     </div>

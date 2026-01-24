@@ -135,7 +135,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
               <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
                 <AlertCircle size={16} className="text-blue-600 mt-1 flex-shrink-0" />
                 <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
-                  Pastikan akses Google Drive diatur ke <strong>"Anyone with the link / Siapa saja yang memiliki link"</strong> agar Admin dapat memverifikasi profil Anda dengan cepat.
+                  Pastikan akses Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong> agar Admin dapat memverifikasi profil Anda dengan cepat.
                 </p>
               </div>
             </div>
