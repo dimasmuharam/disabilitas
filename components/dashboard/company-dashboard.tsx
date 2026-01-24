@@ -231,6 +231,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
               <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600">{company?.industry} | {company?.location}</p>
             </div>
           </div>
+{company?.is_verified && (
           <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] border-2 border-slate-100 bg-slate-50 p-2 shadow-inner">
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -245,9 +246,28 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
               </button>
             ))}
           </nav>
+)}
         </header>
 
         <main id="main-content" className="min-h-[60vh]">
+  {!company?.is_verified ? (
+    <div className="space-y-8">
+      {/* Opsional: Tambahkan pesan peringatan di atas form */}
+      <div className="rounded-3xl border-2 border-amber-500 bg-amber-50 p-6 text-amber-900 font-bold text-xs uppercase italic flex items-center gap-3">
+        <AlertCircle /> Akun Anda sedang dalam tahap verifikasi. Harap lengkapi profil untuk membuka akses penuh.
+      </div>
+      
+      <ProfileEditor 
+        company={company} 
+        user={user} 
+        onSuccess={() => {
+          fetchDashboardData();
+          setAnnouncement("Profil diperbarui, menunggu verifikasi admin.");
+        }} 
+      />
+    </div>
+  ) : (
+    /* JIKA SUDAH VERIFIED: Tampilkan Dashboard Normal seperti biasa */
           {activeTab === "overview" && renderOverview()}
           {activeTab === "applicants" && <ApplicantTracker company={company} />}
           {activeTab === "jobs" && <JobManager company={company} onSuccess={fetchDashboardData} />}
@@ -263,7 +283,9 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
             />
           )}
           {activeTab === "settings" && <AccountSettings user={user} onSuccess={fetchDashboardData} />}
-        </main>
+        </> 
+      )}
+    </main>
 
         {activeTab === "overview" && (
           <div className="fixed bottom-10 right-10 z-50 flex flex-col gap-3">
