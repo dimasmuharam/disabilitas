@@ -316,7 +316,7 @@ export default function GovDashboard({ user }: { user: any }) {
 
                 <GovProfileEditor 
                   user={user} 
-                  company={govData} 
+                  govData={govData} 
                   onSaveSuccess={handleSaveSuccess} 
                 />
               </div>
@@ -329,7 +329,7 @@ export default function GovDashboard({ user }: { user: any }) {
                 {activeTab === "profile" && (
                   <GovProfileEditor 
                     user={user} 
-                    company={govData}
+                    govData={govData}
                     onSaveSuccess={handleSaveSuccess} 
                   />
                 )}

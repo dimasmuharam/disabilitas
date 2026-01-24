@@ -12,11 +12,11 @@ import {
 
 interface GovProfileEditorProps {
   user: any;
-  company?: any; // Menggunakan prop company untuk konsistensi pengecekan is_verified
+  govData?: any;
   onSaveSuccess?: () => void;
 }
 
-export default function GovProfileEditor({ user, company, onSaveSuccess }: GovProfileEditorProps) {
+export default function GovProfileEditor({ user, govData, onSaveSuccess }: GovProfileEditorProps) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [announcement, setAnnouncement] = useState("");
@@ -91,7 +91,6 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
     setRegionResults(filtered.slice(0, 6));
   };
 
-  // AKSI 1: SIMPAN PROFIL
   const handleSaveProfile = async () => {
     if (!isNasional && !formData.location) {
       setAnnouncement("Kesalahan: Harap tentukan wilayah otoritas terlebih dahulu.");
@@ -122,7 +121,6 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
     }
   };
 
-  // AKSI 2: AJUKAN VERIFIKASI
   const handleRequestVerification = async () => {
     if (!formData.verification_document_link || !formData.verification_document_link.trim()) {
       setAnnouncement("Kesalahan: Dokumen verifikasi kosong. Harap isi link Google Drive terlebih dahulu.");
@@ -173,13 +171,13 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
       <div className="grid gap-10">
         
         {/* SEKSI 0: VERIFIKASI DOKUMEN */}
-        {!company?.is_verified && (
+        {!govData?.is_verified && (
           <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-10 shadow-xl" aria-labelledby="section-verif">
             <div className="mb-6 flex items-center gap-4">
               <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} aria-hidden="true" /></div>
               <div>
                 <h2 id="section-verif" className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Otoritas Resmi</h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan tautan PDF Surat Pengajuan Otoritas (Google Drive)</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Cantumkan tautan surat resmi permohonan kerjasama dari instansi Anda yang diunggah ke Google Drive</p>
               </div>
             </div>
             
@@ -240,7 +238,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
 
             {isNasional ? (
               <div className="space-y-2">
-                <label htmlFor="manual-name" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Lengkap Instansi</label>
+                <label htmlFor="manual-name" className="ml-2 text-[10px) font-black uppercase tracking-widest text-slate-500">Nama Lengkap Instansi</label>
                 <input 
                   id="manual-name"
                   type="text"
@@ -374,7 +372,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
                 Simpan Profil Otoritas
               </button>
 
-              {!company?.is_verified && (
+              {!govData?.is_verified && (
                 <button 
                   type="button"
                   onClick={handleRequestVerification}
