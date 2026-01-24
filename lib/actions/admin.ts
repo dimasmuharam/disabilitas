@@ -71,8 +71,6 @@ export async function getRawResearchData() {
   try {
     const admin = createAdminClient();
 
-    // Ambil data riset. Catatan: Kita memanggil View 'research_longitudinal_career' 
-    // karena sudah menyertakan logika graduation_date untuk menghitung "Masa Tunggu Sebenarnya".
     const [resProfiles, resLogs, resCareerHistory] = await Promise.all([
       admin.from("profiles").select("*"),
       admin.from("application_logs").select(`
@@ -99,7 +97,6 @@ export async function getRawResearchData() {
     if (resLogs.error) throw resLogs.error;
     if (resCareerHistory.error) throw resCareerHistory.error;
 
-    // Formatting logs hiring (Aktivitas)
     const researchLogs = resLogs.data?.map((log: any) => ({
       id: log.id,
       log_time: log.log_time,
@@ -116,7 +113,6 @@ export async function getRawResearchData() {
       company_name: log.companies?.name
     })) || [];
 
-    // Data riwayat karir dari View (Sudah termasuk days_since_origin)
     const careerTimeline = resCareerHistory.data || [];
 
     return {
@@ -145,6 +141,77 @@ export async function getManualInputAudit() {
     return data || [];
   } catch (err) {
     return [];
+  }
+}
+
+/**
+ * VERIFIKASI HUB: Ambil Antrean Verifikasi Lembaga (New Feature)
+ * Mengambil data dari verification_requests yang berstatus pending.
+ */
+export async function getVerificationQueue() {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("verification_requests")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err: any) {
+    console.error("Verification Queue Error:", err.message);
+    return [];
+  }
+}
+
+/**
+ * PROSES VERIFIKASI LEMBAGA (Approve/Reject)
+ * Fungsi universal untuk mengubah status di tabel request dan tabel institusi target.
+ */
+export async function processVerification(requestId: string, targetId: string, targetType: string, isApprove: boolean, notes?: string) {
+  try {
+    const admin = createAdminClient();
+    const newStatus = isApprove ? 'verified' : 'rejected';
+    
+    // 1. Update Tabel Antrean Request
+    const { error: requestError } = await admin
+      .from("verification_requests")
+      .update({ 
+        status: newStatus, 
+        admin_notes: notes,
+        processed_at: new Date().toISOString()
+      })
+      .eq("id", requestId);
+
+    if (requestError) throw requestError;
+
+    // 2. Update Tabel Institusi (Trigger sync_verification_status akan otomatis memproses is_verified)
+    const tableMap: Record<string, string> = {
+      'company': 'companies',
+      'partner': 'partners',
+      'campus': 'campuses',
+      'government': 'government'
+    };
+
+    const targetTable = tableMap[targetType];
+    if (!targetTable) throw new Error("Target type institusi tidak valid");
+
+    const { error: entityError } = await admin
+      .from(targetTable)
+      .update({ 
+        verification_status: newStatus,
+        admin_notes: notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", targetId);
+
+    if (entityError) throw entityError;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Processing Verification Error:", err.message);
+    return { success: false, error: err.message };
   }
 }
 

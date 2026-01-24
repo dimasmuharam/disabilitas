@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { 
   BarChart3, Users, ShieldCheck, AlertTriangle, 
-  Loader2, ArrowLeft, TrendingUp 
+  Loader2, ArrowLeft, TrendingUp, ClipboardCheck 
 } from "lucide-react"
 
 // IMPORT MODUL MODULAR
@@ -11,6 +11,7 @@ import NationalAnalytics from "./modules/national-analytics"
 import UserManagement from "./modules/user-management"
 import TransitionHiringAnalytics from "./modules/transition-hiring-analytics"
 import LongitudinalCareerResearch from "./modules/longitudinal-career-research"
+import InstitutionVerificationHub from "./modules/institution-verification-hub"
 import AuditHub from "./modules/audit-hub"
 
 // IMPORT ACTIONS
@@ -19,7 +20,8 @@ import {
   getManualInputAudit,
   getAllSystemUsers,
   manageUserAuth,
-  manageAdminUser
+  manageAdminUser,
+  getVerificationQueue // Action baru untuk antrean lembaga
 } from "@/lib/actions/admin"
 
 interface AdminDashboardProps {
@@ -34,33 +36,34 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   const [msg, setMsg] = useState("")
   
   const announcementRef = useRef<HTMLDivElement>(null)
-  const moduleHeadingRef = useRef<HTMLDivElement>(null)
+  const moduleHeadingRef = useRef<HTMLHeadingElement>(null)
 
   // -- STATES DATA --
   const [stats, setStats] = useState<any>(serverStats || { profiles: [], researchLogs: [], careerTimeline: [] })
   const [auditLogs, setAuditLogs] = useState<any[]>(serverAudit || [])
   const [allUsers, setAllUsers] = useState<any[]>([])
+  const [verificationQueue, setVerificationQueue] = useState<any[]>([])
 
   /**
-   * REFRESH DATA MENCALONKAN 4 SUMBER:
-   * 1. Data riset profil (National Stats)
-   * 2. Log hiring (Hiring Analytics)
-   * 3. Riwayat karir (Longitudinal Research)
-   * 4. Gabungan 5 tabel (User Management)
+   * REFRESH DATA PUSAT (Sync V4)
+   * Mengambil data riset, log audit, data user terpadu, dan antrean verifikasi lembaga.
    */
   const refreshData = useCallback(async () => {
     if (!loading) setMsg("Menyinkronkan data pusat...");
     
     try {
-      const [resProfiles, resAudit, resUnified] = await Promise.all([
+      const [resProfiles, resAudit, resUnified, resQueue] = await Promise.all([
         getRawResearchData(),
         getManualInputAudit(),
-        getAllSystemUsers()
+        getAllSystemUsers(),
+        getVerificationQueue()
       ]);
 
       setStats(resProfiles);
       setAuditLogs(resAudit || []);
       setAllUsers(resUnified || []);
+      setVerificationQueue(resQueue || []);
+      
       setLoading(false);
       setMsg("Data pusat berhasil diperbarui.");
     } catch (e) {
@@ -82,7 +85,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     }
   }, [msg])
 
-  // Fokus aksesibilitas otomatis ke kontainer modul saat tab berubah
+  // Fokus aksesibilitas otomatis ke Judul Modul saat tab berubah
   useEffect(() => {
     if (moduleHeadingRef.current) {
       moduleHeadingRef.current.focus();
@@ -150,7 +153,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
     }
   }
 
-  // State loading awal jika data belum ada sama sekali
+  // State loading awal
   if (loading && (!stats?.profiles || stats.profiles.length === 0)) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4" role="status" aria-label="Memuat Dashboard">
@@ -165,7 +168,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
   return (
     <div className="mx-auto max-w-[1600px] space-y-8 px-6 pb-20 duration-700 animate-in fade-in">
       
-      {/* 0. LIVE ANNOUNCEMENT (NVDA/Screen Reader) */}
+      {/* 0. LIVE ANNOUNCEMENT (Aksesibilitas NVDA) */}
       <div 
         ref={announcementRef} 
         className="sr-only" 
@@ -215,6 +218,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
             { id: "user_mgmt", label: "User Management", icon: Users },
             { id: "hiring_analytics", label: "Hiring Research", icon: BarChart3 },
             { id: "longitudinal_research", label: "Longitudinal Study", icon: TrendingUp },
+            { id: "institution_verify", label: "Institution Verify", icon: ClipboardCheck },
             { id: "audit", label: "Data Audit Hub", icon: AlertTriangle }
           ].map((tab) => (
             <button
@@ -232,20 +236,33 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
                   : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
             >
               <tab.icon size={18} aria-hidden="true" /> {tab.label}
+              {tab.id === 'institution_verify' && verificationQueue.length > 0 && (
+                <span className="ml-2 bg-red-500 text-white text-[8px] px-2 py-0.5 rounded-full animate-pulse">
+                  {verificationQueue.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
       </nav>
 
-      {/* 3. KONTEN MODUL (Focusable for Screen Reader) */}
+      {/* 3. KONTEN MODUL */}
       <main 
         id={`panel-${activeTab}`} 
         role="tabpanel" 
-        tabIndex={-1} 
-        ref={moduleHeadingRef} 
         className="min-h-[600px] outline-none"
-        aria-label={`Konten Modul ${activeTab.replace('_', ' ')}`}
+        aria-labelledby={`heading-${activeTab}`}
       >
+        {/* HEADING MODUL UNTUK FOKUS AKSESIBILITAS */}
+        <h2 
+          id={`heading-${activeTab}`}
+          ref={moduleHeadingRef}
+          tabIndex={-1}
+          className="sr-only"
+        >
+          {activeTab.replace('_', ' ').toUpperCase()} Module Loaded
+        </h2>
+
         {activeTab === "national_stats" && <NationalAnalytics rawData={stats.profiles || []} />}        
         
         {activeTab === "user_mgmt" && (
@@ -261,6 +278,13 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
 
         {activeTab === "longitudinal_research" && (
           <LongitudinalCareerResearch careerTimeline={stats.careerTimeline || []} />
+        )}
+
+        {activeTab === "institution_verify" && (
+          <InstitutionVerificationHub 
+            queue={verificationQueue} 
+            onRefresh={refreshData} 
+          />
         )}
         
         {activeTab === "audit" && (
