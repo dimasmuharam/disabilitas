@@ -7,19 +7,19 @@ import { PROVINCE_LIST, PROVINCE_MAP } from "@/lib/constants/locations";
 import { 
   Building2, MapPin, Search, Save, 
   Loader2, Globe, MessageSquare, 
-  CheckCircle2, AlertCircle
+  CheckCircle2, AlertCircle, ShieldCheck, Link2, ChevronDown
 } from "lucide-react";
 
-// SINKRONISASI 1: Tambahkan onSaveSuccess ke Interface
 interface GovProfileEditorProps {
   user: any;
+  company?: any; // Menggunakan prop company untuk konsistensi pengecekan is_verified
   onSaveSuccess?: () => void;
 }
 
-export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEditorProps) {
+export default function GovProfileEditor({ user, company, onSaveSuccess }: GovProfileEditorProps) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [message, setMessage] = useState<{ msg: string; type: 'success' | 'error' | null }>({ msg: "", type: null });
+  const [announcement, setAnnouncement] = useState("");
   
   const [searchQuery, setSearchQuery] = useState("");
   const [regionResults, setRegionResults] = useState<any[]>([]);
@@ -32,7 +32,8 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
     location: "",
     whatsapp_official: "",
     official_seal_url: "",
-    email: user?.email || ""
+    email: user?.email || "",
+    verification_document_link: ""
   });
 
   const isNasional = formData.category.includes("Kementerian") || formData.category.includes("Lembaga");
@@ -66,11 +67,6 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [fetchProfile]);
 
-  const notify = (msg: string, type: 'success' | 'error') => {
-    setMessage({ msg, type });
-    setTimeout(() => setMessage({ msg: "", type: null }), 5000);
-  };
-
   const handleSearchRegion = (query: string) => {
     setSearchQuery(query);
     if (query.length < 2) {
@@ -95,13 +91,16 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
     setRegionResults(filtered.slice(0, 6));
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // AKSI 1: SIMPAN PROFIL (Tanpa Pop-up)
+  const handleSaveProfile = async () => {
     if (!isNasional && !formData.location) {
-      return notify("Harap tentukan wilayah otoritas", "error");
+      setAnnouncement("Kesalahan: Harap tentukan wilayah otoritas.");
+      return;
     }
 
     setLoading(true);
+    setAnnouncement("Sedang menyimpan profil otoritas...");
+    
     try {
       const { error } = await supabase
         .from("government")
@@ -109,19 +108,46 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
           id: user.id,
           ...formData,
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'id' });
 
       if (error) throw error;
       
-      notify("Profil Otoritas Berhasil Diperbarui", "success");
-      
-      // SINKRONISASI 2: Panggil callback agar dashboard utama terupdate
-      if (onSaveSuccess) {
-        onSaveSuccess();
-      }
+      setAnnouncement("Sukses: Profil Otoritas Berhasil Diperbarui.");
+      if (onSaveSuccess) onSaveSuccess();
       
     } catch (err: any) {
-      notify(err.message, "error");
+      setAnnouncement(`Gagal: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // AKSI 2: AJUKAN VERIFIKASI (Tanpa Pop-up)
+  const handleRequestVerification = async () => {
+    if (!formData.verification_document_link.includes("drive.google.com")) {
+      setAnnouncement("Kesalahan: Link Google Drive Dokumen Resmi tidak valid.");
+      return;
+    }
+
+    setLoading(true);
+    setAnnouncement("Mengirimkan permohonan verifikasi ke Admin...");
+
+    try {
+      const { error } = await supabase
+        .from("verification_requests")
+        .upsert({
+          target_id: user.id,
+          target_type: 'government',
+          document_url: formData.verification_document_link,
+          status: 'pending'
+        }, { onConflict: 'target_id' });
+
+      if (error) throw error;
+      
+      setAnnouncement("Sukses: Permohonan verifikasi berhasil dikirim.");
+      if (onSaveSuccess) setTimeout(() => onSaveSuccess(), 2000);
+    } catch (err: any) {
+      setAnnouncement(`Gagal: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -135,20 +161,44 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
   );
 
   return (
-    <div className="max-w-4xl space-y-10 pb-20">
+    <div className="mx-auto max-w-4xl space-y-10 pb-20 text-left animate-in fade-in duration-500">
       
-      {/* NOTIFIKASI DENGAN ARIA-LIVE */}
-      <div role="status" aria-live="polite">
-        {message.msg && (
-          <div className={`fixed bottom-10 right-10 z-[60] flex items-center gap-3 rounded-2xl border-4 border-slate-900 px-6 py-4 font-black uppercase italic shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] ${message.type === 'success' ? 'bg-emerald-400' : 'bg-rose-400'}`}>
-            {message.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
-            <span>{message.msg}</span>
-          </div>
-        )}
-      </div>
+      {/* Live Region untuk Screen Reader */}
+      <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
-      <form onSubmit={handleSave} className="grid gap-10">
+      <div className="grid gap-10">
         
+        {/* SEKSI 0: VERIFIKASI DOKUMEN */}
+        {!company?.is_verified && (
+          <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-10 shadow-xl" aria-labelledby="section-verif">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} aria-hidden="true" /></div>
+              <div>
+                <h2 id="section-verif" className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Otoritas Resmi</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Unggah Surat Penugasan/SK Pembentukan ULD (Google Drive)</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <label htmlFor="gov-verify-link" className="ml-2 text-[10px] font-black uppercase text-blue-900">Link Google Drive Dokumen Resmi</label>
+              <input 
+                id="gov-verify-link"
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={formData.verification_document_link}
+                onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
+                className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
+              />
+              <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
+                <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" aria-hidden="true" />
+                <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
+                  Pastikan akses Google Drive diatur ke <strong>&quot;Siapa saja yang memiliki link&quot;</strong> agar Admin dapat memvalidasi instansi Anda.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* SECTION 1: PENETAPAN OTORITAS */}
         <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]" aria-labelledby="section-otoritas">
           <div className="mb-8 flex items-center gap-4 border-b-2 border-slate-100 pb-4">
@@ -161,7 +211,7 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
 
           <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="category" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Level Otoritas</label>
+              <label htmlFor="category" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Level Otoritas</label>
               <select 
                 id="category"
                 value={formData.category}
@@ -186,7 +236,7 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
 
             {isNasional ? (
               <div className="space-y-2">
-                <label htmlFor="manual-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Lengkap Instansi (Manual)</label>
+                <label htmlFor="manual-name" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Lengkap Instansi</label>
                 <input 
                   id="manual-name"
                   type="text"
@@ -194,38 +244,35 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="w-full rounded-2xl border-4 border-slate-900 p-4 font-bold outline-none focus:ring-4 focus:ring-blue-100"
-                  aria-required="true"
                 />
               </div>
             ) : (
               <div className="relative space-y-2" ref={searchRef}>
-                <label htmlFor="search-region" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cari Wilayah Otoritas</label>
+                <label htmlFor="search-region" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Cari Wilayah Otoritas</label>
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
                   <input 
                     id="search-region"
                     type="text"
-  role="combobox"
+                    role="combobox"
                     autoComplete="off"
                     aria-autocomplete="list"
                     aria-expanded={regionResults.length > 0}
-                    aria-haspopup="listbox"
-                    aria-controls="region-results"
                     placeholder={formData.location || "Ketik min. 2 huruf..."}
                     value={searchQuery}
                     onChange={(e) => handleSearchRegion(e.target.value)}
                     className="w-full rounded-2xl border-4 border-slate-900 p-4 pl-12 font-bold outline-none focus:ring-4 focus:ring-blue-100"
                   />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} aria-hidden="true" />
                 </div>
 
                 {regionResults.length > 0 && (
-                  <ul id="region-results" role="listbox" className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border-4 border-slate-900 bg-white shadow-2xl transition-all">
+                  <ul role="listbox" className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border-4 border-slate-900 bg-white shadow-2xl">
                     {regionResults.map((region, idx) => (
                       <li 
                         key={idx}
                         role="option"
                         aria-selected={formData.location === region.name}
-                        tabIndex={0}
                         onClick={() => {
                           setFormData({
                             ...formData,
@@ -235,10 +282,9 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
                           setSearchQuery("");
                           setRegionResults([]);
                         }}
-                        onKeyDown={(e) => { if(e.key === 'Enter') e.currentTarget.click(); }}
-                        className="group flex cursor-pointer items-center justify-between p-4 hover:bg-slate-900 focus:bg-slate-900 focus:outline-none"
+                        className="group flex cursor-pointer items-center justify-between p-4 hover:bg-slate-900"
                       >
-                        <span className="font-black uppercase italic group-hover:text-white group-focus:text-white">{region.name}</span>
+                        <span className="font-black uppercase italic group-hover:text-white">{region.name}</span>
                         <span className="text-[10px] font-bold text-slate-400 group-hover:text-blue-400">{region.type}</span>
                       </li>
                     ))}
@@ -258,7 +304,7 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
 
           <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="wa" className="text-[10px] font-black uppercase tracking-widest text-slate-500">WhatsApp Official</label>
+              <label htmlFor="wa" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">WhatsApp Official</label>
               <div className="relative">
                 <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
                 <input 
@@ -272,7 +318,7 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
               </div>
             </div>
             <div className="space-y-2">
-              <label htmlFor="seal" className="text-[10px] font-black uppercase tracking-widest text-slate-500">URL Logo/Stempel Resmi</label>
+              <label htmlFor="seal" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">URL Logo/Stempel Resmi</label>
               <input 
                 id="seal"
                 type="url" 
@@ -285,7 +331,7 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
           </div>
 
           <div className="mt-8 space-y-2">
-            <label htmlFor="desc" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Deskripsi Instansi</label>
+            <label htmlFor="desc" className="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Deskripsi Instansi</label>
             <textarea 
               id="desc"
               value={formData.description || ""} 
@@ -297,16 +343,54 @@ export default function GovProfileEditor({ user, onSaveSuccess }: GovProfileEdit
           </div>
         </section>
 
-        <button 
-          type="submit" 
-          disabled={loading}
-          className="group relative flex w-full items-center justify-center gap-4 rounded-[2rem] border-4 border-slate-900 bg-slate-900 py-6 text-xl font-black uppercase italic text-white shadow-[10px_10px_0px_0px_rgba(59,130,246,1)] transition-all hover:bg-blue-600 hover:shadow-none active:translate-x-1 active:translate-y-1 disabled:opacity-50"
-        >
-          {loading ? <Loader2 className="animate-spin" /> : <Save size={24} />}
-          <span>{loading ? "Menyimpan..." : "Simpan Profil Otoritas"}</span>
-        </button>
+        {/* FOOTER: STATUS INLINE & TOMBOL AKSI */}
+        <div className="space-y-6 border-t border-slate-100 pt-10">
+          
+          {/* Pesan Status Inline */}
+          {announcement && (
+            <div className={`flex items-center gap-3 rounded-2xl border-4 p-5 text-[10px] font-black uppercase italic tracking-widest border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
+              ${announcement.includes("Sukses") ? "bg-emerald-400 text-slate-900" : 
+                announcement.includes("Sedang") ? "bg-blue-400 text-white" : 
+                "bg-rose-400 text-white"}`}>
+              {announcement.includes("Sukses") ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+              {announcement}
+            </div>
+          )}
 
-      </form>
+          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+            <div className="flex flex-wrap gap-4">
+              {/* TOMBOL 1: SIMPAN PROFIL */}
+              <button 
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={loading} 
+                className="flex items-center gap-4 rounded-3xl border-4 border-slate-900 bg-white px-10 py-5 text-[11px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
+              >
+                {loading && !announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                Simpan Profil Otoritas
+              </button>
+
+              {/* TOMBOL 2: AJUKAN VERIFIKASI */}
+              {!company?.is_verified && (
+                <button 
+                  type="button"
+                  onClick={handleRequestVerification}
+                  disabled={loading} 
+                  className="flex items-center gap-4 rounded-3xl bg-blue-600 px-10 py-5 text-[11px] font-black uppercase tracking-widest text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                >
+                  {loading && announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={20} /> : <ShieldCheck size={20} />}
+                  Ajukan Verifikasi
+                </button>
+              )}
+            </div>
+
+            <p className="max-w-xs text-right text-[9px] font-black uppercase italic text-slate-400">
+              * Otoritas OMP (Official Mission Partner) membutuhkan validasi administratif manual oleh Admin Nasional.
+            </p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
