@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Users, BarChart3, Settings, 
@@ -9,7 +9,7 @@ import {
   Zap, User, School,
   MousePointerClick, Briefcase, Sparkles, TrendingUp,
   ExternalLink, ChevronRight, CheckCircle2,
-  Medal, AlertCircle, PieChart
+  Medal, AlertCircle, PieChart, Bell, Loader2
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
@@ -39,6 +39,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     total: 0
   });
 
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const labelTalent = "Mahasiswa";
   const labelAlumni = "Alumni Disabilitas";
 
@@ -55,7 +56,7 @@ export default function CampusDashboard({ user }: { user: any }) {
       
       setUnverifiedCount(pending || 0);
 
-      const { data: verifiedTalents, error } = await supabase
+      const { data: verifiedTalents } = await supabase
         .from("campus_verifications")
         .select(`
           profile_id,
@@ -75,24 +76,16 @@ export default function CampusDashboard({ user }: { user: any }) {
           if (!p) return acc;
 
           acc.total++;
-          
-          // Gender
           if (p.gender === 'male') acc.male++;
           if (p.gender === 'female') acc.female++;
-
-          // Disabilitas
           if (p.disability_type) {
             acc.disabilityMap[p.disability_type] = (acc.disabilityMap[p.disability_type] || 0) + 1;
           }
-
-          // Mahasiswa vs Alumni
           if (p.graduation_date && Number(p.graduation_date) <= currentYear) {
             acc.alumni++;
           } else {
             acc.mahasiswa++;
           }
-
-          // Karir
           const workingStatus = ['Pegawai Swasta', 'Pegawai BUMN / BUMD', 'ASN (PNS / PPPK)', 'Wiraswasta / Entrepreneur', 'Freelancer / Tenaga Lepas'];
           if (workingStatus.includes(p.career_status)) acc.bekerja++;
 
@@ -122,6 +115,11 @@ export default function CampusDashboard({ user }: { user: any }) {
         const filled = fields.filter(f => campusData[f] && campusData[f].length > 0).length;
         const acc = (campusData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
         setProfileCompletion(Math.round(((filled + acc) / (fields.length + 1)) * 100));
+
+        // Forced redirect jika belum verified
+        if (!campusData.is_verified) {
+          setActiveTab("profile");
+        }
       }
       await fetchRealtimeData();
     } finally { 
@@ -131,11 +129,6 @@ export default function CampusDashboard({ user }: { user: any }) {
 
   useEffect(() => { 
     fetchDashboardData(); 
-    const link = document.querySelector("link[rel='canonical']") || document.createElement("link");
-    link.setAttribute("rel", "canonical");
-    link.setAttribute("href", "https://disabilitas.com/dashboard/campus");
-    if (!document.head.contains(link)) document.head.appendChild(link);
-
     const channel = supabase
       .channel('realtime_campus_verifications')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campus_verifications', filter: `campus_id=eq.${user.id}` }, () => fetchRealtimeData())
@@ -144,7 +137,10 @@ export default function CampusDashboard({ user }: { user: any }) {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, fetchDashboardData, fetchRealtimeData]);
 
-  // LOGIKA NARASI STRATEGIS (Employability)
+  useEffect(() => {
+    if (headingRef.current) headingRef.current.focus();
+  }, [activeTab]);
+
   const dynamicNarrative = useMemo(() => {
     const rate = platformStats.alumni > 0 ? Math.round((platformStats.bekerja / platformStats.alumni) * 100) : 0;
     if (rate > 70) return `Luar biasa! Tingkat keterserapan alumni Anda mencapai ${rate}%. Fokus pada penguatan pilar Digital untuk mempertahankan performa.`;
@@ -158,20 +154,7 @@ export default function CampusDashboard({ user }: { user: any }) {
     { subject: 'Output', A: campus?.inclusion_score_output || 0 },
   ], [campus]);
 
-  const handleShare = () => {
-    const data = {
-      name: campus?.name || "Institusi",
-      total: Number(campus?.stats_academic_total || 0),
-      rate: campus?.stats_academic_total > 0 ? Math.round((campus.stats_academic_hired / campus.stats_academic_total) * 100) : 0,
-      score: campus?.inclusion_score || 0,
-      url: `https://disabilitas.com/kampus/${campus?.id}`
-    };
-    if (typeof window !== "undefined" && (window.navigator as any).share) {
-      shareNative(data);
-    } else {
-      shareToWhatsApp(data);
-    }
-  };
+  const isVerified = campus?.is_verified;
 
   const navigateTo = (tabId: string, label: string) => {
     setActiveTab(tabId);
@@ -180,207 +163,204 @@ export default function CampusDashboard({ user }: { user: any }) {
   };
 
   if (loading) return (
-    <div role="status" className="flex min-h-screen animate-pulse flex-col items-center justify-center font-black uppercase italic tracking-tighter text-slate-400">
-      <Activity className="mb-4 animate-spin text-emerald-500" size={48} aria-hidden="true" />
-      Menyiapkan Portal Inklusi...
+    <div role="status" className="flex min-h-screen flex-col items-center justify-center bg-[#F8FAFC]">
+      <Loader2 className="mb-4 animate-spin text-emerald-600" size={48} />
+      <p className="font-black uppercase italic tracking-widest text-slate-400">Sinkronisasi Portal Akademik...</p>
     </div>
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 text-left text-slate-900 selection:bg-emerald-100">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900">
       <div className="sr-only" aria-live="assertive">{announcement}</div>
 
-      {/* HEADER */}
-      <header className="flex flex-col items-start justify-between gap-6 border-b-4 border-slate-900 pb-10 md:flex-row md:items-end">
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-600 p-2 text-white shadow-lg"><School size={28} aria-hidden="true" /></div>
-            <div>
-              <p className="text-[10px] font-black uppercase leading-none tracking-[0.3em] text-emerald-600">
-                Profil Almamater • {profileCompletion}% Lengkap
-              </p>
-              <h1 className="mt-1 text-4xl font-black uppercase italic leading-none tracking-tighter">{campus?.name}</h1>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className={`flex items-center gap-2 rounded-full border-2 border-slate-900 ${campus?.inclusion_score >= 80 ? 'bg-slate-100' : 'bg-white'} px-4 py-1.5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]`}>
-              <Award size={16} className="text-slate-900" aria-hidden="true" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Skor Inklusi: {campus?.inclusion_score || 0}</span>
-            </div>
-            <a href={`/kampus/${campus?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-[10px] font-black uppercase text-slate-500 shadow-sm transition-all hover:border-slate-900">
-              <ExternalLink size={14} aria-hidden="true" /> Profil Publik
+      {/* TOP UTILITY BAR */}
+      <nav className="sticky top-0 z-40 flex items-center justify-between border-b-4 border-slate-900 bg-white px-6 py-3 shadow-sm" aria-label="Navigasi Atas">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className={isVerified ? "text-emerald-600" : "text-slate-400"} size={20} />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+            {isVerified ? `Portal Akademik Inklusi • ${campus?.location}` : "Verifikasi Identitas Kampus Diperlukan"}
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <button className="rounded-full p-2 text-slate-400 hover:bg-slate-100" aria-label="Notifikasi">
+            <Bell size={20} />
+          </button>
+          {isVerified && (
+            <a href={`/kampus/${campus?.id}`} target="_blank" className="flex items-center gap-2 rounded-xl border-2 border-slate-900 bg-white px-4 py-1.5 text-[10px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none">
+              <Eye size={14} /> Profil Publik
             </a>
-          </div>
+          )}
         </div>
-        <div className="flex w-full gap-3 md:w-auto">
-          <button onClick={() => navigateTo("hub", "Career Hub")} className="group flex flex-1 items-center justify-center gap-3 rounded-2xl bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600 md:flex-none">
-            <Briefcase size={18} aria-hidden="true" /> Career & Skill Hub
-          </button>
-          <button onClick={handleShare} aria-label="Bagikan Dashboard" className="rounded-2xl border-2 border-slate-100 bg-white px-6 shadow-sm transition-all hover:border-slate-900">
-            <Share2 size={20} aria-hidden="true" />
-          </button>
-        </div>
-      </header>
-
-      {/* NAVIGATION TABS */}
-      <nav className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist">
-        {[
-          { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-          { id: "hub", label: "Career & Hub", icon: Zap },
-          { id: "tracer", label: "Talent Tracer", icon: BarChart3 },
-          { id: "profile", label: "Lengkapi Profil", icon: Settings },
-          { id: "account", label: "Akun", icon: Lock },
-        ].map((tab) => (
-          <button 
-            key={tab.id} 
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            onClick={() => navigateTo(tab.id, tab.label)} 
-            className={`flex items-center gap-3 whitespace-nowrap rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? "-translate-y-1 bg-slate-900 text-white shadow-xl" : "border-2 border-slate-100 bg-white text-slate-400 hover:border-slate-900"}`}
-          >
-            <tab.icon size={16} aria-hidden="true" /> {tab.label}
-          </button>
-        ))}
       </nav>
 
-      <main id="main-content">
-        {activeTab === "overview" && (
-          <div className="space-y-10 duration-500 animate-in fade-in slide-in-from-bottom-4">
-            
-            {/* ANALISIS RADAR */}
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-              <section className="rounded-[3rem] border-2 border-slate-100 bg-white p-8 lg:col-span-2">
-                <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase leading-none tracking-widest">
-                  <Activity size={16} className="text-emerald-500" aria-hidden="true" /> Keseimbangan Pilar Inklusi
-                </h3>
-                {/* ACCESSIBLE RADAR CHART */}
-                <div 
-                  className="h-[220px] w-full" 
-                  role="img" 
-                  aria-label={`Grafik Radar Inklusi. Skor Fisik: ${radarData[0].A}, Skor Digital: ${radarData[1].A}, Skor Output: ${radarData[2].A}`}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={radarData}>
-                      <PolarGrid stroke="#f1f5f9" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 800 }} />
-                      <Radar dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
-
-              <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] lg:col-span-3">
-                <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase leading-none tracking-widest text-emerald-600">
-                  <Sparkles size={18} aria-hidden="true" /> Insight Strategis (Platform AI)
-                </h3>
-                <p className="text-2xl font-black italic leading-tight tracking-tighter text-slate-800 md:text-3xl">
-                  &quot;{dynamicNarrative}&quot;
+      <div className="mx-auto max-w-7xl px-6 pt-10">
+        
+        {/* HEADER SECTION */}
+        <header className="mb-12 flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-emerald-600 p-3 text-white shadow-lg"><School size={32} /></div>
+              <div>
+                <h1 ref={headingRef} tabIndex={-1} className="text-4xl font-black uppercase italic leading-none tracking-tighter outline-none md:text-5xl">
+                  {isVerified ? campus?.name : "Validasi Institusi"}
+                </h1>
+                <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
+                  {isVerified ? `Skor Inklusi: ${campus?.inclusion_score || 0}` : "Lengkapi profil untuk membuka fitur dashboard"}
                 </p>
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {[1,2,3].map(i => <div key={i} className="size-8 rounded-full border-2 border-white bg-slate-200" />)}
-                  </div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Dianalisis dari {platformStats.total} talenta aktif</p>
-                </div>
-              </section>
-            </div>
-
-            {/* DUA DIMENSI DATA */}
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-10">
-                <h4 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-                  <Settings size={16} aria-hidden="true" /> Estimasi Internal (Input Kampus)
-                </h4>
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-slate-400">Total {labelTalent}</p>
-                    <p className="text-5xl font-black leading-tight tracking-tighter text-slate-900" aria-label={`${campus?.stats_academic_total || 0} Mahasiswa sesuai data internal`}>
-                      {campus?.stats_academic_total || 0}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-slate-400">Terpantau Kerja</p>
-                    <p className="text-5xl font-black leading-tight tracking-tighter text-emerald-600">
-                      {campus?.stats_academic_hired || 0}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-[2.5rem] border-4 border-emerald-600 bg-emerald-50 p-10 shadow-[8px_8px_0px_0px_rgba(16,185,129,1)]">
-                <h4 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-700">
-                  <Zap size={16} aria-hidden="true" /> Realitas Platform (Verified)
-                </h4>
-                <div className="grid grid-cols-3 gap-4 text-left">
-                  <div>
-                    <p className="text-[9px] font-black uppercase text-emerald-600">Terdaftar</p>
-                    <p className="text-4xl font-black text-slate-900">{platformStats.mahasiswa}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black uppercase text-emerald-600">{labelAlumni}</p>
-                    <p className="text-4xl font-black text-slate-900">{platformStats.alumni}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black uppercase text-emerald-600">Bekerja</p>
-                    <p className="text-4xl font-black text-blue-600">{platformStats.bekerja}</p>
-                  </div>
-                </div>
-                
-                <div className="mt-8 border-t border-emerald-200 pt-6">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div>
-                      <p className="mb-3 flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-600"><User size={12}/> Gender</p>
-                      <div className="flex gap-2">
-                        <div className="rounded-lg border border-emerald-100 bg-white px-3 py-1.5 text-[10px] font-black">L: {platformStats.male}</div>
-                        <div className="rounded-lg border border-emerald-100 bg-white px-3 py-1.5 text-[10px] font-black">P: {platformStats.female}</div>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="mb-3 flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-600"><PieChart size={12}/> Ragam Disabilitas</p>
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(platformStats.disabilityMap).slice(0, 3).map(([type, count]) => (
-                          <div key={type} className="rounded-lg border border-emerald-100 bg-white px-3 py-1.5 text-[9px] font-black uppercase">
-                            {type}: {count as number}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            {/* VERIFIKASI ALERT BOX */}
-            <section className="relative flex flex-col items-center justify-between gap-8 overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl md:flex-row">
-              <div className="relative z-10 space-y-2">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <AlertCircle size={20} aria-hidden="true" />
-                  <p className="text-xs font-black uppercase leading-none tracking-widest">Verifikasi Almamater</p>
-                </div>
-                <h4 className="text-3xl font-black uppercase italic tracking-tight" aria-live="polite">
-                  {unverifiedCount} Mahasiswa Menunggu Antrean
-                </h4>
               </div>
-              <button 
-                onClick={() => navigateTo("tracer", "Talent Tracer")} 
-                aria-label={`Buka halaman tracer untuk memproses ${unverifiedCount} antrean`}
-                className="relative z-10 rounded-2xl bg-emerald-500 px-10 py-5 font-black uppercase italic text-slate-900 shadow-xl transition-all hover:bg-white active:scale-95"
-              >
-                Proses Sekarang <MousePointerClick size={18} className="ml-2 inline" aria-hidden="true" />
-              </button>
-              <School className="absolute -bottom-10 -right-10 opacity-10" size={250} aria-hidden="true" />
-            </section>
+            </div>
           </div>
-        )}
 
-        {/* MODUL TAB COMPONENTS */}
-        <div className="mt-4">
-          {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
-          {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => navigateTo("overview", "Dashboard")} />}
-          {activeTab === "profile" && <ProfileEditor campus={campus} onUpdate={() => { fetchDashboardData(); navigateTo("overview", "Dashboard"); }} onBack={() => navigateTo("overview", "Dashboard")} />}
-          {activeTab === "account" && <AccountSettings user={user} onBack={() => navigateTo("overview", "Dashboard")} />}
+          {isVerified && (
+            <div className="flex gap-3">
+              <button onClick={() => navigateTo("hub", "Career Hub")} className="flex items-center gap-3 rounded-[2rem] bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600">
+                <Briefcase size={18} /> Career Hub
+              </button>
+              <button onClick={() => shareNative({ name: campus?.name, score: campus?.inclusion_score, url: `https://disabilitas.com/kampus/${campus?.id}` })} className="rounded-2xl border-4 border-slate-900 bg-white px-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:shadow-none">
+                <Share2 size={20} />
+              </button>
+            </div>
+          )}
+        </header>
+
+        <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
+          {/* SIDEBAR NAVIGATION */}
+          <aside className="space-y-6">
+            <nav className="sticky top-24 flex flex-col gap-3" role="tablist">
+              {isVerified ? (
+                <>
+                  {[
+                    { id: "overview", label: "Overview", icon: LayoutDashboard },
+                    { id: "hub", label: "Career & Skill", icon: Zap },
+                    { id: "tracer", label: "Talent Tracer", icon: BarChart3 },
+                    { id: "profile", label: "Edit Profil", icon: Settings },
+                    { id: "account", label: "Keamanan", icon: Lock },
+                  ].map((tab) => (
+                    <button 
+                      key={tab.id}
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      onClick={() => navigateTo(tab.id, tab.label)}
+                      className={`group flex items-center gap-4 rounded-2xl border-4 p-4 outline-none transition-all ${activeTab === tab.id ? 'border-slate-900 bg-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] -translate-y-1' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                    >
+                      <tab.icon size={20} className={activeTab === tab.id ? 'text-emerald-600' : ''} />
+                      <span className="text-sm font-black uppercase italic tracking-tight">{tab.label}</span>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <div className="rounded-[2.5rem] border-4 border-dashed border-slate-200 p-8 text-center">
+                  <Lock className="mx-auto mb-4 text-slate-300" size={40} />
+                  <p className="text-[10px] font-black uppercase italic leading-relaxed text-slate-400">
+                    Fitur Analitik & Tracer akan terbuka setelah verifikasi selesai.
+                  </p>
+                </div>
+              )}
+            </nav>
+          </aside>
+
+          {/* MAIN CONTENT */}
+          <main className="min-h-[60vh]">
+            {!isVerified ? (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                {/* REJECTION / PENDING ALERT */}
+                <div className={`flex items-center gap-6 rounded-[3rem] border-4 p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,0.1)] ${campus?.verification_status === 'rejected' ? 'border-rose-500 bg-rose-50' : 'border-amber-500 bg-amber-50'}`}>
+                  <div className={`flex size-20 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg ${campus?.verification_status === 'rejected' ? 'bg-rose-500' : 'bg-amber-500'}`}>
+                    <AlertCircle size={40} />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className={`text-2xl font-black uppercase italic tracking-tighter ${campus?.verification_status === 'rejected' ? 'text-rose-900' : 'text-amber-900'}`}>
+                      {campus?.verification_status === 'rejected' ? "Verifikasi Ditolak" : "Menunggu Verifikasi"}
+                    </h2>
+                    <p className="text-sm font-bold leading-relaxed opacity-80 text-slate-800">
+                      {campus?.admin_notes || "Unggah berkas resmi universitas (SK/NIB) pada form di bawah ini agar Admin dapat memvalidasi identitas almamater Anda."}
+                    </p>
+                  </div>
+                </div>
+
+                <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => {}} />
+              </div>
+            ) : (
+              <div className="animate-in fade-in duration-500">
+                {activeTab === "overview" && (
+                  <div className="space-y-10">
+                    {/* RADAR & INSIGHT */}
+                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
+                      <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.05)] lg:col-span-2">
+                        <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                          <Activity size={16} className="text-emerald-500" /> Keseimbangan Pilar
+                        </h3>
+                        <div className="h-[220px] w-full" role="img" aria-label="Radar Chart Inklusi">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart data={radarData}>
+                              <PolarGrid stroke="#f1f5f9" />
+                              <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 800 }} />
+                              <Radar dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
+                            </RadarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </section>
+
+                      <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(16,185,129,0.2)] lg:col-span-3">
+                        <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-400">
+                          <Sparkles size={18} /> Insight Strategis
+                        </h3>
+                        <p className="text-2xl font-black italic leading-tight tracking-tighter md:text-3xl">
+                          &quot;{dynamicNarrative}&quot;
+                        </p>
+                      </section>
+                    </div>
+
+                    {/* STATS CARDS */}
+                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                      <section className="rounded-[2.5rem] border-4 border-slate-100 bg-white p-10 shadow-sm">
+                        <h4 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400">Data Internal</h4>
+                        <div className="grid grid-cols-2 gap-8">
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-slate-400">Mahasiswa</p>
+                            <p className="text-5xl font-black tracking-tighter">{campus?.stats_academic_total || 0}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-slate-400">Alumni Bekerja</p>
+                            <p className="text-5xl font-black tracking-tighter text-emerald-600">{campus?.stats_academic_hired || 0}</p>
+                          </div>
+                        </div>
+                      </section>
+
+                      <section className="rounded-[2.5rem] border-4 border-emerald-600 bg-emerald-50 p-10 shadow-[8px_8px_0px_0px_rgba(16,185,129,1)]">
+                        <h4 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-700"><Zap size={16} /> Verified Platform</h4>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div><p className="text-[9px] font-black uppercase text-emerald-600">Terdaftar</p><p className="text-4xl font-black">{platformStats.mahasiswa}</p></div>
+                          <div><p className="text-[9px] font-black uppercase text-emerald-600">Alumni</p><p className="text-4xl font-black">{platformStats.alumni}</p></div>
+                          <div><p className="text-[9px] font-black uppercase text-emerald-600">Bekerja</p><p className="text-4xl font-black text-blue-600">{platformStats.bekerja}</p></div>
+                        </div>
+                      </section>
+                    </div>
+
+                    {/* TRACER CTA */}
+                    <section className="relative flex flex-col items-center justify-between gap-8 overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl md:flex-row">
+                      <div className="relative z-10 space-y-2">
+                        <p className="text-xs font-black uppercase tracking-widest text-emerald-400">Verifikasi Almamater</p>
+                        <h4 className="text-3xl font-black uppercase italic tracking-tight">{unverifiedCount} Antrean Mahasiswa</h4>
+                      </div>
+                      <button onClick={() => navigateTo("tracer", "Talent Tracer")} className="relative z-10 rounded-2xl bg-emerald-500 px-10 py-5 font-black uppercase italic text-slate-900 shadow-xl transition-all hover:bg-white">
+                        Proses Sekarang <MousePointerClick size={18} className="ml-2 inline" />
+                      </button>
+                      <School className="absolute -bottom-10 -right-10 opacity-10" size={250} />
+                    </section>
+                  </div>
+                )}
+
+                {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
+                {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => setActiveTab("overview")} />}
+                {activeTab === "profile" && <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => setActiveTab("overview")} />}
+                {activeTab === "account" && <AccountSettings user={user} onBack={() => setActiveTab("overview")} />}
+              </div>
+            )}
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
