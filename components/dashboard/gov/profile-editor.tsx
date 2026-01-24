@@ -179,7 +179,7 @@ export default function GovProfileEditor({ user, company, onSaveSuccess }: GovPr
               <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} aria-hidden="true" /></div>
               <div>
                 <h2 id="section-verif" className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Otoritas Resmi</h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan tautan PDF Surat Pengajuan kerjasama dari instansi (Google Drive)</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan tautan PDF Surat Pengajuan Otoritas (Google Drive)</p>
               </div>
             </div>
             
