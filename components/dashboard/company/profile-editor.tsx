@@ -64,12 +64,15 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // AKSI 1: HANYA SIMPAN PROFIL
+  // AKSI 1: SIMPAN PROFIL (Aksesibel, No Pop-up)
   const handleSaveProfile = async () => {
-    if (!formData.name) return alert("Nama instansi harus diisi!");
+    if (!formData.name) {
+      setAnnouncement("Kesalahan: Nama instansi harus diisi.");
+      return;
+    }
     
     setLoading(true);
-    setAnnouncement("Menyimpan perubahan profil...");
+    setAnnouncement("Sedang menyimpan perubahan profil...");
 
     try {
       const { error } = await supabase
@@ -81,23 +84,23 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
         }, { onConflict: 'id' });
 
       if (error) throw error;
-      alert("Profil berhasil diperbarui!");
-      setAnnouncement("Profil Berhasil Disimpan.");
+      setAnnouncement("Sukses: Profil berhasil diperbarui.");
     } catch (error: any) {
-      alert(`Gagal simpan profil: ${error.message}`);
+      setAnnouncement(`Gagal menyimpan profil: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // AKSI 2: HANYA AJUKAN VERIFIKASI
+  // AKSI 2: AJUKAN VERIFIKASI (Aksesibel, No Pop-up)
   const handleRequestVerification = async () => {
     if (!formData.verification_document_link.includes("drive.google.com")) {
-      return alert("Harap masukkan link Google Drive yang valid sebelum mengajukan!");
+      setAnnouncement("Kesalahan: Harap masukkan link Google Drive yang valid.");
+      return;
     }
 
     setLoading(true);
-    setAnnouncement("Mengirimkan permohonan verifikasi ke Admin...");
+    setAnnouncement("Sedang mengirimkan permohonan verifikasi ke Admin...");
 
     try {
       const { error } = await supabase
@@ -111,10 +114,10 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
 
       if (error) throw error;
       
-      alert("Permohonan verifikasi berhasil dikirim! Admin akan segera meninjau profil Anda.");
-      onSuccess(); 
+      setAnnouncement("Sukses: Permohonan verifikasi berhasil dikirim.");
+      setTimeout(() => onSuccess(), 2000); 
     } catch (error: any) {
-      alert(`Gagal mengirim verifikasi: ${error.message}`);
+      setAnnouncement(`Gagal mengirim verifikasi: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -131,6 +134,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
 
   return (
     <div className="mx-auto max-w-6xl pb-20 text-left animate-in fade-in duration-500">
+      {/* Live Region Aksesibilitas untuk Screen Reader */}
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
       <div className="space-y-10">
@@ -337,37 +341,51 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
           </div>
         </section>
 
-        {/* FOOTER: DUA TOMBOL AKSI */}
-        <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-100 pt-10 md:flex-row">
-          <div className="flex flex-wrap gap-4">
-            {/* TOMBOL 1: SIMPAN PROFIL */}
-            <button 
-              type="button"
-              onClick={handleSaveProfile}
-              disabled={loading} 
-              className="flex items-center gap-3 rounded-3xl border-2 border-slate-900 bg-white px-10 py-5 text-[11px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              Simpan Profil
-            </button>
+        {/* FOOTER: DUA TOMBOL AKSI + INLINE ANNOUNCEMENT */}
+        <div className="space-y-6 border-t border-slate-100 pt-10">
+          
+          {/* Pesan Status Inline Berdasarkan Announcement */}
+          {announcement && (
+            <div className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-[10px] font-black uppercase italic tracking-widest
+              ${announcement.includes("Sukses") ? "border-emerald-500 bg-emerald-50 text-emerald-700" : 
+                announcement.includes("Sedang") ? "border-blue-500 bg-blue-50 text-blue-700" : 
+                "border-amber-500 bg-amber-50 text-amber-700"}`}>
+              {announcement.includes("Sukses") ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              {announcement}
+            </div>
+          )}
 
-            {/* TOMBOL 2: AJUKAN VERIFIKASI (Hanya jika belum verified) */}
-            {!company?.is_verified && (
+          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+            <div className="flex flex-wrap gap-4">
+              {/* TOMBOL 1: SIMPAN PROFIL */}
               <button 
                 type="button"
-                onClick={handleRequestVerification}
+                onClick={handleSaveProfile}
                 disabled={loading} 
-                className="flex items-center gap-3 rounded-3xl bg-blue-600 px-10 py-5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-3 rounded-3xl border-2 border-slate-900 bg-white px-10 py-5 text-[11px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
               >
-                {loading ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
-                Ajukan Verifikasi
+                {loading && !announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                Simpan Profil
               </button>
-            )}
-          </div>
 
-          <p className="text-[9px] font-bold uppercase italic text-slate-400 max-w-xs text-right">
-            * Data statistik digunakan untuk riset nasional. Verifikasi dokumen diperlukan untuk otorisasi penuh.
-          </p>
+              {/* TOMBOL 2: AJUKAN VERIFIKASI */}
+              {!company?.is_verified && (
+                <button 
+                  type="button"
+                  onClick={handleRequestVerification}
+                  disabled={loading} 
+                  className="flex items-center gap-3 rounded-3xl bg-blue-600 px-10 py-5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                >
+                  {loading && announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
+                  Ajukan Verifikasi
+                </button>
+              )}
+            </div>
+
+            <p className="text-[9px] font-bold uppercase italic text-slate-400 max-w-xs text-right">
+              * Data statistik digunakan untuk riset nasional. Verifikasi dokumen diperlukan untuk otorisasi penuh.
+            </p>
+          </div>
         </div>
       </div>
     </div>
