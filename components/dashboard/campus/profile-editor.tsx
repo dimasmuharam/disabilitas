@@ -172,7 +172,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                 <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
                 <div>
                   <h2 className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Akses Kampus</h2>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan berkas penetapan ULD atau SK Institusi</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Cantumkan link surat permohonan kerjasama resmi dari instansi yang diunggah ke Google Drive</p>
                 </div>
               </div>
               <div className="space-y-4">
