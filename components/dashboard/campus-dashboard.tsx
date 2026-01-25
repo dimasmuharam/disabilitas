@@ -170,7 +170,16 @@ export default function CampusDashboard({ user }: { user: any }) {
           </div>
           {isVerified && (
             <div className="flex gap-4 items-center">
-                <button onClick={() => shareNative({ name: campus.name, url: `https://disabilitas.com/kampus/${campus.id}` })} className="p-2 rounded-xl border-2 border-slate-900 hover:bg-slate-50 transition-all"><Share2 size={18}/></button>
+<button onClick={() => shareNative({ 
+    name: campus.name, 
+    url: `https://disabilitas.com/kampus/${campus.id}`,
+    total: platformStats.total,
+    rate: platformStats.alumni > 0 ? Math.round((platformStats.bekerja / platformStats.alumni) * 100) : 0,
+    score: campus.inclusion_score || 0
+})} className="p-2 rounded-xl border-2 border-slate-900 hover:bg-slate-50 transition-all">
+    <Share2 size={18}/>
+</button>
+
                 <Link href={`/kampus/${campus.id}`} target="_blank" className="text-[10px] font-black uppercase italic border-b-2 border-slate-900">Lihat Profil Publik</Link>
             </div>
           )}
