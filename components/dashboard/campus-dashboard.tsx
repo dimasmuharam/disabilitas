@@ -110,7 +110,7 @@ export default function CampusDashboard({ user }: { user: any }) {
       if (campusData) {
         setCampus(campusData);
         
-        // HITUNG KELENGKAPAN (Refined)
+        // HITUNG KELENGKAPAN (Untuk Widget di Header)
         const fields = [
             { key: 'name', label: 'Nama Kampus' },
             { key: 'description', label: 'Deskripsi' },
@@ -129,6 +129,7 @@ export default function CampusDashboard({ user }: { user: any }) {
             missing: missing
         });
 
+        // Forced redirect ke Profile Tab HANYA jika belum verified
         if (!campusData.is_verified) {
           setActiveTab("profile");
         }
@@ -142,7 +143,7 @@ export default function CampusDashboard({ user }: { user: any }) {
   useEffect(() => { 
     fetchDashboardData(); 
     const channel = supabase
-      .channel('realtime_campus_verifications')
+      .channel('realtime_campus_verifications_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campus_verifications', filter: `campus_id=eq.${user.id}` }, () => fetchRealtimeData())
       .subscribe();
 
@@ -224,7 +225,7 @@ export default function CampusDashboard({ user }: { user: any }) {
             </div>
           </div>
 
-          {/* WIDGET KELENGKAPAN PROFIL (Selalu Muncul Jika Belum 100%) */}
+          {/* WIDGET KELENGKAPAN PROFIL (Tetap muncul jika belum 100%) */}
           {profileCompletion.percent < 100 && (
             <div className="w-full max-w-xs rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] animate-in slide-in-from-right-4">
               <div className="mb-4 flex items-center justify-between">
@@ -247,6 +248,26 @@ export default function CampusDashboard({ user }: { user: any }) {
                   Sisa: {profileCompletion.missing.join(", ")}
                 </p>
               )}
+            </div>
+          )}
+
+          {isVerified && (
+            <div className="flex gap-3">
+              <button onClick={() => navigateTo("hub", "Career Hub")} className="flex items-center gap-3 rounded-[2rem] bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600">
+                <Briefcase size={18} /> Career Hub
+              </button>
+              <button 
+                onClick={() => shareNative({ 
+                  name: campus?.name, 
+                  score: campus?.inclusion_score || 0, 
+                  url: `https://disabilitas.com/kampus/${campus?.id}`,
+                  total: Number(campus?.stats_academic_total || 0),
+                  rate: campus?.stats_academic_total > 0 ? Math.round((campus.stats_academic_hired / campus.stats_academic_total) * 100) : 0
+                })} 
+                className="rounded-2xl border-4 border-slate-900 bg-white px-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:shadow-none"
+              >
+                <Share2 size={20} />
+              </button>
             </div>
           )}
         </header>
@@ -288,11 +309,10 @@ export default function CampusDashboard({ user }: { user: any }) {
 
           <main className="min-h-[60vh]">
             {!isVerified ? (
+              /* TAMPILAN LOCKDOWN (Jika belum verified) */
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                
-                {/* REJECTION / PENDING ALERT (Dinamis dengan Admin Notes) */}
                 {campus?.verification_status === 'rejected' ? (
-                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-rose-500 bg-rose-50 p-10 shadow-xl transition-all">
+                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-rose-500 bg-rose-50 p-10 shadow-xl">
                     <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg">
                       <XCircle size={40} />
                     </div>
@@ -302,12 +322,12 @@ export default function CampusDashboard({ user }: { user: any }) {
                         Alasan Admin: <span className="underline italic">{campus?.admin_notes || "Dokumen belum sesuai persyaratan."}</span>
                       </p>
                       <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-rose-600/60">
-                        Mohon perbaiki data profil atau link dokumen Anda di bawah untuk pengajuan ulang.
+                        Mohon perbaiki profil atau link dokumen Anda di bawah untuk pengajuan ulang.
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl transition-all">
+                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl">
                     <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg">
                       <AlertCircle size={40} />
                     </div>
@@ -319,20 +339,19 @@ export default function CampusDashboard({ user }: { user: any }) {
                     </div>
                   </div>
                 )}
-
                 <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => {}} />
               </div>
             ) : (
+              /* TAMPILAN FULL DASHBOARD (Jika sudah verified) */
               <div className="animate-in fade-in duration-500">
                 {activeTab === "overview" && (
                   <div className="space-y-10">
-                    {/* RADAR & INSIGHT */}
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
                       <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.05)] lg:col-span-2">
                         <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
                           <Activity size={16} className="text-emerald-500" /> Keseimbangan Pilar
                         </h3>
-                        <div className="h-[220px] w-full" role="img" aria-label="Radar Chart Inklusi">
+                        <div className="h-[220px] w-full">
                           <ResponsiveContainer width="100%" height="100%">
                             <RadarChart data={radarData}>
                               <PolarGrid stroke="#f1f5f9" />
@@ -343,7 +362,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                         </div>
                       </section>
 
-                      <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white shadow-[12px_12px_0px_0px_rgba(16,185,129,0.2)] lg:col-span-3">
+                      <section className="flex flex-col justify-center rounded-[3rem] border-4 border-slate-900 bg-slate-900 p-10 text-white lg:col-span-3">
                         <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-400">
                           <Sparkles size={18} /> Insight Strategis
                         </h3>
@@ -353,7 +372,6 @@ export default function CampusDashboard({ user }: { user: any }) {
                       </section>
                     </div>
 
-                    {/* STATS CARDS */}
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                       <section className="rounded-[2.5rem] border-4 border-slate-100 bg-white p-10 shadow-sm">
                         <h4 className="mb-6 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-slate-400">Data Internal</h4>
@@ -379,7 +397,6 @@ export default function CampusDashboard({ user }: { user: any }) {
                       </section>
                     </div>
 
-                    {/* TRACER CTA */}
                     <section className="relative flex flex-col items-center justify-between gap-8 overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl md:flex-row">
                       <div className="relative z-10 space-y-2">
                         <p className="text-xs font-black uppercase tracking-widest text-emerald-400">Verifikasi Almamater</p>
