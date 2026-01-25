@@ -1,95 +1,79 @@
-export const INCLUSION_INDICATORS = {
+/**
+ * inclusion-mapping.ts
+ * Memisahkan indikator akomodasi berdasarkan role institusi.
+ * Urutan index 0-13 harus tetap sinkron antar role untuk keperluan kalkulasi skor.
+ */
+
+export const ROLE_ACCOMMODATIONS = {
+  // 1. VERSI CAMPUS (Pendidikan Tinggi)
   campus: [
-    // FISIK (0-4)
     "Ramp, Lift, dan Jalur Mobilitas Aksesibel",
-    "Toilet Khusus Disabilitas Standar",
-    "Jalur Pemandu (Guiding Block) & Penanda Tekstur",
-    "Area Parkir & Drop-off Prioritas",
-    "Ruang Belajar Tenang & Cahaya Kontras",
-    // DIGITAL (5-9)
+    "Toilet Khusus Disabilitas yang Standar",
+    "Jalur Pemandu (Guiding Block) dan Penanda Tekstur",
+    "Area Parkir dan Drop-off Prioritas Disabilitas",
+    "Ruang Belajar Tenang dan Pencahayaan Kontras",
     "Website Portal Kampus Standar WCAG 2.1",
     "LMS (Learning Management System) Aksesibel",
-    "Dokumen Digital Kuliah (EPUB/Tagged-PDF)",
-    "Lisensi Software Alat Bantu (Screen Reader)",
-    "Informasi Pengumuman Visual & Audio",
-    // OUTPUT/KEBIJAKAN (10-13)
-    "Unit Layanan Disabilitas (ULD) Resmi",
-    "Layanan JBI & Notulensi Real-time",
-    "Modifikasi Kurikulum & Ujian Fleksibel",
-    "Pendampingan Karir & Job Coach"
+    "Dokumen Digital Kuliah Format EPUB/Tagged-PDF",
+    "Lisensi Software Alat Bantu (Screen Reader/Magnifier)",
+    "Sistem Informasi Pengumuman Visual dan Audio",
+    "Unit Layanan Disabilitas (ULD) Resmi Institusi",
+    "Layanan Juru Bahasa Isyarat dan Notulensi Real-time",
+    "Modifikasi Kurikulum dan Metode Ujian Fleksibel",
+    "Pendampingan Karir dan Transisi Kerja (Job Coach)"
   ],
+
+  // 2. VERSI COMPANY (Dunia Kerja/Default/Talent)
   company: [
-    // FISIK (0-4)
     "Workstation & Jalur Mobilitas Kantor",
     "Toilet & Fasilitas Gedung Aksesibel",
     "Signage Braille & Jalur Pemandu Area Kantor",
     "Area Parkir & Lobby Prioritas Karyawan",
     "Ruang Tenang (Sensory Room) & Fokus",
-    // DIGITAL (5-9)
     "Portal Karyawan & ERP Standar WCAG 2.1",
     "Tools Meeting Aksesibel (Captions/Reader)",
     "Dokumen SOP & Panduan Kerja Aksesibel",
-    "Dukungan Lisensi Software Alat Bantu Kerja",
+    "Dukungan Lisensi Software Alat Bantu Kerja Digital",
     "Komunikasi Internal Multimodal (Audio/Teks)",
-    // OUTPUT/KEBIJAKAN (10-13)
-    "Kebijakan Afirmasi Rekrutmen Disabilitas",
+    "Kebijakan Rekrutmen Khusus Disabilitas",
     "Layanan JBI untuk Rapat & Pelatihan",
     "Akomodasi Deskripsi Kerja (Job-Carving)",
     "Program Mentoring & Career Path Inklusif"
   ],
+
+  // 3. VERSI PARTNER (Lembaga Pelatihan/Kursus)
   partner: [
-    // FISIK (0-4)
     "Area Pelatihan & Workshop Aksesibel",
     "Toilet Disabilitas di Lokasi Pelatihan",
     "Jalur Pemandu di Area Pusat Belajar",
     "Area Kedatangan Prioritas Peserta",
     "Meja Praktik & Alat Peraga Adaptif",
-    // DIGITAL (5-9)
     "Platform E-Learning Standar WCAG 2.1",
     "Materi Video dengan Subtitle & JBI",
     "Modul Pelatihan Format Digital Aksesibel",
     "Akses Software Pembaca Layar Pelatihan",
     "Sistem Asesmen/Ujian yang Akomodatif",
-    // OUTPUT/KEBIJAKAN (10-13)
     "Instruktur Terlatih Interaksi Disabilitas",
-    "Layanan Pendampingan (Mentor/Shadow)",
+    "Layanan Pendampingan (Mentor/Shadow Teacher)",
     "Kurikulum Pelatihan Berbasis Industri",
     "Jaringan Mitra Penyalur Kerja (Placement)"
   ],
+
+  // 4. VERSI GOVERNMENT (Pelayanan Publik)
   government: [
-    // FISIK (0-4)
     "Ruang Pelayanan Publik Aksesibel",
     "Toilet Ramah Disabilitas di Area Publik",
     "Pedestrian & Jalur Pemandu Standar",
     "Area Parkir Khusus Layanan Publik",
     "Loket Pelayanan Prioritas & Ramah Sensori",
-    // DIGITAL (5-9)
     "Situs Layanan Publik Standar WCAG 2.1",
     "Aplikasi Mobile Pelayanan Aksesibel",
     "Publikasi Data/Regulasi Format Aksesibel",
     "Kiosk Informasi dengan Pembaca Layar",
     "Sistem Peringatan Dini Visual & Audio",
-    // OUTPUT/KEBIJAKAN (10-13)
     "Unit Layanan Inklusi / Pokja Disabilitas",
     "Petugas Pelayanan Fasih Bahasa Isyarat",
     "Regulasi & Anggaran Pro-Disabilitas",
-    "Program Pemberdayaan & Monitoring Inklusi"
+    "Program Monitoring & Evaluasi Inklusi"
   ]
 };
-
-  export const getInclusionLabel = (index: number, role: string = 'company') => {
-  // Mapping role ke kunci yang tersedia
-  const roleMap: Record<string, string> = {
-    'talent': 'company',
-    'company': 'company',
-    'partner': 'partner',
-    'campus': 'campus',
-    'government': 'government'
-  };
-
-  const activeRole = roleMap[role] || 'company'; // Default ke company
-  const set = INCLUSION_INDICATORS[activeRole as keyof typeof INCLUSION_INDICATORS];
-  
-  return set[index] || "Indikator Tidak Terdefinisi";
-};
- 

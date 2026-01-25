@@ -4,7 +4,7 @@ import { ALL_UNIVERSITIES } from './constants/universities';
 import { ALL_MAJORS } from './constants/majors';
 import { ALL_INDONESIA_CITIES, PROVINCE_MAP, PROVINCE_LIST } from './constants/locations';
 import { ALL_GOV_INSTITUTIONS } from './constants/institutions';
-import { INCLUSION_INDICATORS, getInclusionLabel } from "./constants/inclusion-mapping";
+import { ROLE_ACCOMMODATIONS } from "./constants/inclusion-mapping";
 
 export const USER_ROLES = {
   TALENT: "talent",
@@ -254,33 +254,35 @@ export const STUDY_RELEVANCE_LEVELS = [
   "Belum Bekerja"
 ];
 
-// 1. Export Standar (Agar import di file lain tidak patah)
-// Secara default, variabel ini akan berisi list versi Company
-export const ACCOMMODATION_TYPES = INCLUSION_INDICATORS.company;
+/**
+ * 1. VARIABEL DEFAULT (ACCOMMODATION_TYPES)
+ * Tetap diekspor agar tidak merusak import di file lain.
+ * Default menggunakan versi 'company' (yang juga digunakan oleh role 'talent').
+ */
+export const ACCOMMODATION_TYPES = ROLE_ACCOMMODATIONS.company;
 
-// 2. Export Fungsi Helper (Untuk digunakan di dashboard agar dinamis)
-export { getInclusionLabel };
+/**
+ * 2. FUNGSI HELPER CERDAS (getAccommodationsByRole)
+ * Gunakan fungsi ini di file Dashboard/ProfileEditor agar list indikator
+ * berubah sesuai dengan role user yang sedang login.
+ */
+export const getAccommodationsByRole = (role: string = 'company') => {
+  // Jika role adalah talent, arahkan ke kamus company
+  if (role === 'talent') return ROLE_ACCOMMODATIONS.company;
+  
+  // Mengambil list berdasarkan role, jika tidak ditemukan default ke company
+  return ROLE_ACCOMMODATIONS[role as keyof typeof ROLE_ACCOMMODATIONS] || ROLE_ACCOMMODATIONS.company;
+};
 
-// 3. Kategori yang disinkronkan dengan index (0-4, 5-9, 10-13)
+/**
+ * 3. KATEGORI INDIKATOR (ACCOMMODATION_CATEGORIES)
+ * Digunakan untuk visualisasi (Progress Bar / Radar Chart) 
+ * karena index 0-13 sudah sinkron di semua role.
+ */
 export const ACCOMMODATION_CATEGORIES = [
-  { 
-    title: "Aksesibilitas Fisik", 
-    weight: "30%", 
-    range: [0, 4],
-    icon: "Activity" 
-  },
-  { 
-    title: "Infrastruktur Digital", 
-    weight: "40%", 
-    range: [5, 9],
-    icon: "Zap" 
-  },
-  { 
-    title: "Kebijakan & Output", 
-    weight: "30%", 
-    range: [10, 13],
-    icon: "Target" 
-  }
+  { title: "Aksesibilitas Fisik", weight: "30%", range: [0, 4] },
+  { title: "Infrastruktur Digital", weight: "40%", range: [5, 9] },
+  { title: "Kebijakan & Output", weight: "30%", range: [10, 13] }
 ];
 export const DISABILITY_TOOLS = [
   "Screen Reader - NVDA",
