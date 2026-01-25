@@ -9,7 +9,7 @@ import {
   Zap, User, School,
   MousePointerClick, Briefcase, Sparkles, TrendingUp,
   ExternalLink, ChevronRight, CheckCircle2,
-  Medal, Eye, AlertCircle, PieChart, Bell, Loader2
+  Medal, Eye, AlertCircle, PieChart, Bell, Loader2, XCircle
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
@@ -25,7 +25,7 @@ export default function CampusDashboard({ user }: { user: any }) {
   const [campus, setCampus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [announcement, setAnnouncement] = useState("");
-  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [profileCompletion, setProfileCompletion] = useState({ percent: 0, missing: [] as string[] });
   
   // STATE DATA REAL-TIME PLATFORM
   const [unverifiedCount, setUnverifiedCount] = useState(0);
@@ -40,8 +40,6 @@ export default function CampusDashboard({ user }: { user: any }) {
   });
 
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const labelTalent = "Mahasiswa";
-  const labelAlumni = "Alumni Disabilitas";
 
   const fetchRealtimeData = useCallback(async () => {
     if (!user?.id) return;
@@ -111,12 +109,26 @@ export default function CampusDashboard({ user }: { user: any }) {
       
       if (campusData) {
         setCampus(campusData);
-        const fields = ["name", "description", "location", "website", "nib_number"];
-        const filled = fields.filter(f => campusData[f] && campusData[f].length > 0).length;
-        const acc = (campusData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
-        setProfileCompletion(Math.round(((filled + acc) / (fields.length + 1)) * 100));
+        
+        // HITUNG KELENGKAPAN (Refined)
+        const fields = [
+            { key: 'name', label: 'Nama Kampus' },
+            { key: 'description', label: 'Deskripsi' },
+            { key: 'location', label: 'Lokasi' },
+            { key: 'website', label: 'Website' },
+            { key: 'nib_number', label: 'NIB/SK' },
+            { key: 'verification_document_link', label: 'Dokumen Verifikasi' }
+        ];
+        const missing = fields.filter(f => !campusData[f.key] || campusData[f.key].length === 0).map(f => f.label);
+        const accBonus = (campusData.master_accommodations_provided?.length || 0) > 0 ? 1 : 0;
+        const totalPossible = fields.length + 1;
+        const currentFilled = (fields.length - missing.length) + accBonus;
+        
+        setProfileCompletion({ 
+            percent: Math.round((currentFilled / totalPossible) * 100),
+            missing: missing
+        });
 
-        // Forced redirect jika belum verified
         if (!campusData.is_verified) {
           setActiveTab("profile");
         }
@@ -212,29 +224,34 @@ export default function CampusDashboard({ user }: { user: any }) {
             </div>
           </div>
 
-          {isVerified && (
-            <div className="flex gap-3">
-              <button onClick={() => navigateTo("hub", "Career Hub")} className="flex items-center gap-3 rounded-[2rem] bg-slate-900 px-8 py-5 text-[11px] font-black uppercase italic tracking-widest text-white shadow-xl transition-all hover:bg-emerald-600">
-                <Briefcase size={18} /> Career Hub
-              </button>
-              <button 
-                onClick={() => shareNative({ 
-                  name: campus?.name, 
-                  score: campus?.inclusion_score || 0, 
-                  url: `https://disabilitas.com/kampus/${campus?.id}`,
-                  total: Number(campus?.stats_academic_total || 0),
-                  rate: campus?.stats_academic_total > 0 ? Math.round((campus.stats_academic_hired / campus.stats_academic_total) * 100) : 0
-                })} 
-                className="rounded-2xl border-4 border-slate-900 bg-white px-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] transition-all hover:shadow-none"
-              >
-                <Share2 size={20} />
-              </button>
+          {/* WIDGET KELENGKAPAN PROFIL (Selalu Muncul Jika Belum 100%) */}
+          {profileCompletion.percent < 100 && (
+            <div className="w-full max-w-xs rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] animate-in slide-in-from-right-4">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 italic">Kesiapan Profil</span>
+                <span className="text-sm font-black text-emerald-600">{profileCompletion.percent}%</span>
+              </div>
+              <div className="h-4 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
+                <div 
+                  className="h-full bg-emerald-500 transition-all duration-1000" 
+                  style={{ width: `${profileCompletion.percent}%` }}
+                  role="progressbar"
+                  aria-valuenow={profileCompletion.percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                />
+              </div>
+              {profileCompletion.missing.length > 0 && (
+                <p className="mt-4 text-[9px] font-bold leading-relaxed text-slate-400 italic">
+                  <AlertCircle size={10} className="mr-1 inline text-amber-500" />
+                  Sisa: {profileCompletion.missing.join(", ")}
+                </p>
+              )}
             </div>
           )}
         </header>
 
         <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
-          {/* SIDEBAR NAVIGATION */}
           <aside className="space-y-6">
             <nav className="sticky top-24 flex flex-col gap-3" role="tablist">
               {isVerified ? (
@@ -269,24 +286,39 @@ export default function CampusDashboard({ user }: { user: any }) {
             </nav>
           </aside>
 
-          {/* MAIN CONTENT */}
           <main className="min-h-[60vh]">
             {!isVerified ? (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                {/* REJECTION / PENDING ALERT */}
-                <div className={`flex items-center gap-6 rounded-[3rem] border-4 p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,0.1)] ${campus?.verification_status === 'rejected' ? 'border-rose-500 bg-rose-50' : 'border-amber-500 bg-amber-50'}`}>
-                  <div className={`flex size-20 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg ${campus?.verification_status === 'rejected' ? 'bg-rose-500' : 'bg-amber-500'}`}>
-                    <AlertCircle size={40} />
+                
+                {/* REJECTION / PENDING ALERT (Dinamis dengan Admin Notes) */}
+                {campus?.verification_status === 'rejected' ? (
+                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-rose-500 bg-rose-50 p-10 shadow-xl transition-all">
+                    <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg">
+                      <XCircle size={40} />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-black uppercase italic tracking-tighter text-rose-900">Verifikasi Ditolak</h2>
+                      <p className="text-sm font-bold leading-relaxed text-rose-800">
+                        Alasan Admin: <span className="underline italic">{campus?.admin_notes || "Dokumen belum sesuai persyaratan."}</span>
+                      </p>
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-rose-600/60">
+                        Mohon perbaiki data profil atau link dokumen Anda di bawah untuk pengajuan ulang.
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <h2 className={`text-2xl font-black uppercase italic tracking-tighter ${campus?.verification_status === 'rejected' ? 'text-rose-900' : 'text-amber-900'}`}>
-                      {campus?.verification_status === 'rejected' ? "Verifikasi Ditolak" : "Menunggu Verifikasi"}
-                    </h2>
-                    <p className="text-sm font-bold leading-relaxed opacity-80 text-slate-800">
-                      {campus?.admin_notes || "Unggah berkas resmi universitas (SK/NIB) pada form di bawah ini agar Admin dapat memvalidasi identitas almamater Anda."}
-                    </p>
+                ) : (
+                  <div className="flex items-center gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl transition-all">
+                    <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg">
+                      <AlertCircle size={40} />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-black uppercase italic tracking-tighter text-amber-900">Menunggu Verifikasi</h2>
+                      <p className="text-sm font-bold leading-relaxed text-amber-800/80">
+                        Admin sedang meninjau dokumen universitas Anda. Pastikan <strong>NIB/SK</strong> dan <strong>Link Google Drive</strong> sudah benar pada form di bawah.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => {}} />
               </div>

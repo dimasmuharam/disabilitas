@@ -104,6 +104,8 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
       if (evalError) throw evalError;
 
       setAnnouncement("Sukses: Profil dan Data Riset berhasil diperbarui.");
+      // Refresh data agar status sinkron
+      setTimeout(() => onUpdate(), 1000);
     } catch (error: any) {
       setAnnouncement(`Gagal: ${error.message}`);
     } finally {
@@ -149,7 +151,6 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
 
   return (
     <main className="text-left duration-500 animate-in fade-in slide-in-from-bottom-4">
-      {/* Live Region untuk Screen Reader */}
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
       <header className="mb-10 flex flex-col justify-between gap-4 border-b-4 border-slate-900 pb-6 md:flex-row md:items-center">
@@ -167,9 +168,9 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
           
-          {/* SEKSI VERIFIKASI (Tampil jika belum verified) */}
+          {/* SEKSI VERIFIKASI (Smart Hiding: Hanya tampil jika belum verified) */}
           {!campus?.is_verified && (
-            <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-8 shadow-xl">
+            <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-8 shadow-xl animate-in zoom-in-95 duration-300">
               <div className="mb-6 flex items-center gap-4">
                 <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
                 <div>
@@ -187,6 +188,9 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                   onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
                   className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
                 />
+                <p className="ml-2 text-[8px] font-bold text-blue-400 italic italic">
+                  * Pastikan dokumen dapat diakses (Public Link/Anyone with the link)
+                </p>
               </div>
             </section>
           )}
@@ -294,9 +298,10 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                 className="group flex w-full items-center justify-center gap-3 rounded-[2rem] border-4 border-slate-900 bg-white py-6 text-xs font-black uppercase italic tracking-widest text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
               >
                 {loading && !announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                Simpan Draft Profil
+                Update Profil Kampus
               </button>
 
+              {/* Smart Hiding: Tombol verifikasi hilang jika sudah verified */}
               {!campus?.is_verified && (
                 <button 
                   type="button"
