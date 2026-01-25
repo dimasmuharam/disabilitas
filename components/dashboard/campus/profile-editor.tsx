@@ -159,9 +159,6 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
         </button>
         <div className="text-left md:text-right">
           <h1 className="text-2xl font-black uppercase italic leading-tight tracking-tighter">Integrasi Profil Akademik</h1>
-          <p className="text-[9px] font-bold uppercase italic tracking-[0.2em] text-blue-600">
-            National Inclusion Sync Protocol v2026
-          </p>
         </div>
       </header>
 
