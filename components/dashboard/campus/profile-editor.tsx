@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Save, ArrowLeft, Globe, MapPin, Info, 
   FileText, Building2, CheckCircle2, AlertCircle,
-  ListChecks, ChevronDown, TrendingUp, ShieldCheck, Link2, Loader2
+  ListChecks, ChevronDown, ShieldCheck, Link2, Loader2, X
 } from "lucide-react";
 
 // MENGACU KETAT PADA DATA-STATIC.TS
@@ -42,17 +42,30 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
   const [loading, setLoading] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   
+  // State Pencarian (Combobox)
+  const [searchUni, setSearchUni] = useState("");
+  const [showUniList, setShowUniList] = useState(false);
+  const [searchLoc, setSearchLoc] = useState("");
+  const [showLocList, setShowLocList] = useState(false);
+
   const [formData, setFormData] = useState({
     name: campus?.name || "",
     description: campus?.description || "",
     website: campus?.website || "",
     location: campus?.location || "",
     nib_number: campus?.nib_number || "",
-    stats_academic_total: campus?.stats_academic_total || 0,
-    stats_academic_hired: campus?.stats_academic_hired || 0,
     master_accommodations_provided: campus?.master_accommodations_provided || [],
     verification_document_link: campus?.verification_document_link || ""
   });
+
+  // Filter List berdasarkan input
+  const filteredUnis = useMemo(() => 
+    UNIVERSITIES.filter(u => u.toLowerCase().includes(searchUni.toLowerCase())), 
+  [searchUni]);
+
+  const filteredLocs = useMemo(() => 
+    INDONESIA_CITIES.filter(c => c.toLowerCase().includes(searchLoc.toLowerCase())), 
+  [searchLoc]);
 
   const handleCheckboxChange = (item: string) => {
     const current = [...formData.master_accommodations_provided];
@@ -62,7 +75,6 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
     setFormData({ ...formData, master_accommodations_provided: current });
   };
 
-  // AKSI 1: SIMPAN DATA PROFIL & UPDATE SKOR INKLUSI
   const handleSaveProfile = async () => {
     if (!formData.name) {
       setAnnouncement("Kesalahan: Nama institusi harus dipilih.");
@@ -70,10 +82,9 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
     }
 
     setLoading(true);
-    setAnnouncement("Sedang menyinkronkan data profil dan index inklusi...");
+    setAnnouncement("Sedang menyinkronkan data profil...");
 
     try {
-      // 1. UPDATE TABEL CAMPUSES
       const { error: campusError } = await supabase
         .from("campuses")
         .update({
@@ -84,27 +95,15 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
 
       if (campusError) throw campusError;
 
-      // 2. UPSERT KE TABEL CAMPUS_EVALUATIONS (Pemicu National Inclusion Score)
-      const evalPayload: any = { 
-        campus_id: campus.id, 
-        year: 2026 
-      };
-      
+      const evalPayload: any = { campus_id: campus.id, year: 2026 };
       ACCOMMODATION_TYPES.forEach(item => {
         const dbColumn = DB_MAP[item];
-        if (dbColumn) {
-          evalPayload[dbColumn] = formData.master_accommodations_provided.includes(item);
-        }
+        if (dbColumn) evalPayload[dbColumn] = formData.master_accommodations_provided.includes(item);
       });
 
-      const { error: evalError } = await supabase
-        .from("campus_evaluations")
-        .upsert(evalPayload, { onConflict: 'campus_id, year' });
+      await supabase.from("campus_evaluations").upsert(evalPayload, { onConflict: 'campus_id, year' });
 
-      if (evalError) throw evalError;
-
-      setAnnouncement("Sukses: Profil dan Data Riset berhasil diperbarui.");
-      // Refresh data agar status sinkron
+      setAnnouncement("Sukses: Profil berhasil diperbarui.");
       setTimeout(() => onUpdate(), 1000);
     } catch (error: any) {
       setAnnouncement(`Gagal: ${error.message}`);
@@ -113,20 +112,14 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
     }
   };
 
-  // AKSI 2: AJUKAN VERIFIKASI DOKUMEN (Anti-Mandek)
   const handleRequestVerification = async () => {
-    if (!formData.verification_document_link || !formData.verification_document_link.trim()) {
-      setAnnouncement("Kesalahan: Tautan dokumen kosong. Harap isi link Google Drive.");
-      return;
-    }
-
-    if (!formData.verification_document_link.includes("drive.google.com")) {
-      setAnnouncement("Kesalahan: Tautan tidak valid. Harus menggunakan link Google Drive resmi.");
+    if (!formData.verification_document_link?.includes("drive.google.com")) {
+      setAnnouncement("Kesalahan: Gunakan link Google Drive resmi.");
       return;
     }
 
     setLoading(true);
-    setAnnouncement("Mengirimkan berkas verifikasi ke sistem pusat...");
+    setAnnouncement("Mengirimkan berkas verifikasi...");
 
     try {
       const { error } = await supabase
@@ -139,11 +132,10 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
         }, { onConflict: 'target_id' });
 
       if (error) throw error;
-      
       setAnnouncement("Sukses: Permohonan verifikasi berhasil dikirim.");
       setTimeout(() => onUpdate(), 2000);
     } catch (error: any) {
-      setAnnouncement(`Gagal verifikasi: ${error.message}`);
+      setAnnouncement(`Gagal: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -154,167 +146,139 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
       <header className="mb-10 flex flex-col justify-between gap-4 border-b-4 border-slate-900 pb-6 md:flex-row md:items-center">
-        <button onClick={onBack} aria-label="Batal dan kembali ke dashboard" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-slate-900">
-          <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Batal & Kembali
+        <button onClick={onBack} className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-slate-900">
+          <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Dashboard
         </button>
         <div className="text-left md:text-right">
-          <h1 className="text-2xl font-black uppercase italic leading-tight tracking-tighter">Integrasi Profil Akademik</h1>
+          <h1 className="text-2xl font-black uppercase italic leading-tight tracking-tighter text-slate-900">Integrasi Profil Akademik</h1>
         </div>
       </header>
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
           
-          {/* SEKSI VERIFIKASI (Smart Hiding: Hanya tampil jika belum verified) */}
+          {/* SEKSI VERIFIKASI - SMART HIDING */}
           {!campus?.is_verified && (
-            <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-8 shadow-xl animate-in zoom-in-95 duration-300">
+            <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-8 shadow-xl">
               <div className="mb-6 flex items-center gap-4">
-                <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
+                <div className="rounded-2xl bg-blue-600 p-3 text-white"><Link2 size={24} /></div>
                 <div>
-                  <h2 className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Akses Kampus</h2>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Cantumkan link surat permohonan kerjasama resmi dari instansi yang diunggah ke Google Drive</p>
+                  <h2 className="text-xl font-black uppercase italic tracking-tighter text-blue-900 leading-none">Validasi Akses</h2>
+                  <p className="mt-2 text-[10px] font-bold text-blue-500 uppercase tracking-widest">Sertakan link SK/Dokumen Penetapan ULD dari G-Drive</p>
                 </div>
               </div>
-              <div className="space-y-4">
-                <label htmlFor="campus-verify-link" className="ml-2 text-[10px] font-black uppercase text-blue-900">Link Berkas G-Drive (PDF)</label>
-                <input 
-                  id="campus-verify-link"
-                  type="url"
-                  placeholder="https://drive.google.com/..."
-                  value={formData.verification_document_link}
-                  onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
-                  className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
-                />
-                <p className="ml-2 text-[8px] font-bold text-blue-400 italic italic">
-                  * Pastikan dokumen dapat diakses (Public Link/Anyone with the link)
-                </p>
-              </div>
+              <input 
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={formData.verification_document_link}
+                onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
+                className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 bg-white text-blue-900"
+              />
             </section>
           )}
 
           {/* IDENTITAS UTAMA */}
-          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-6 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] md:p-10">
+          <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              <div className="space-y-3 md:col-span-2">
-                <label htmlFor="uni-select" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  <Building2 size={14} /> Nama Institusi Terdaftar
+              
+              {/* COMBOBOX KAMPUS */}
+              <div className="relative space-y-3 md:col-span-2">
+                <label className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <Building2 size={14} /> Nama Perguruan Tinggi
                 </label>
                 <div className="relative">
-                  <select id="uni-select" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="block w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:border-slate-900" required>
-                    <option value="">-- Pilih Universitas --</option>
-                    {UNIVERSITIES.map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                  <input 
+                    type="text"
+                    value={showUniList ? searchUni : formData.name}
+                    onChange={(e) => { setSearchUni(e.target.value); setShowUniList(true); }}
+                    onFocus={() => setShowUniList(true)}
+                    placeholder="Ketik nama kampus Anda..."
+                    className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none focus:border-slate-900"
+                  />
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 </div>
+                {showUniList && (
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border-4 border-slate-900 bg-white p-2 shadow-2xl">
+                    {filteredUnis.map(u => (
+                      <button key={u} onClick={() => { setFormData({...formData, name: u}); setShowUniList(false); }} className="w-full p-3 text-left text-[10px] font-black uppercase hover:bg-blue-50 hover:text-blue-600 rounded-lg">{u}</button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-3 md:col-span-2">
-                <label htmlFor="location-select" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  <MapPin size={14} /> Lokasi Wilayah
+              {/* COMBOBOX LOKASI */}
+              <div className="relative space-y-3 md:col-span-2">
+                <label className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <MapPin size={14} /> Wilayah Otoritas
                 </label>
                 <div className="relative">
-                  <select id="location-select" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="block w-full appearance-none rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none transition-all focus:border-slate-900" required>
-                    <option value="">-- Pilih Kota --</option>
-                    {INDONESIA_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                  <input 
+                    type="text"
+                    value={showLocList ? searchLoc : formData.location}
+                    onChange={(e) => { setSearchLoc(e.target.value); setShowLocList(true); }}
+                    onFocus={() => setShowLocList(true)}
+                    placeholder="Ketik nama kota..."
+                    className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none focus:border-slate-900"
+                  />
+                  <MapPin className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 </div>
-              </div>
-
-              {/* TRACER DATA */}
-              <div className="space-y-6 rounded-[2rem] border-4 border-slate-900 bg-slate-900 p-8 text-white md:col-span-2">
-                <div className="flex items-center gap-3">
-                  <TrendingUp size={24} className="text-emerald-400" />
-                  <div>
-                    <h3 className="text-lg font-black uppercase italic leading-none tracking-tighter">Snapshot Keterserapan Kerja</h3>
-                    <p className="mt-1 text-[9px] font-bold uppercase italic tracking-widest text-slate-400">Mempengaruhi 15% dari Skor Inklusi Nasional</p>
+                {showLocList && (
+                  <div className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border-4 border-slate-900 bg-white p-2 shadow-2xl">
+                    {filteredLocs.map(c => (
+                      <button key={c} onClick={() => { setFormData({...formData, location: c}); setShowLocList(false); }} className="w-full p-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 rounded-lg">{c}</button>
+                    ))}
                   </div>
-                </div>
-                <div className="grid grid-cols-1 gap-6 text-left md:grid-cols-2">
-                  <div className="space-y-3">
-                    <label htmlFor="total-alumni" className="text-[10px] font-black uppercase text-slate-400">Total Mahasiswa Disabilitas</label>
-                    <input id="total-alumni" type="number" value={formData.stats_academic_total} onChange={(e) => setFormData({...formData, stats_academic_total: parseInt(e.target.value) || 0})} className="block w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 font-black text-emerald-400 outline-none focus:border-emerald-400" />
-                  </div>
-                  <div className="space-y-3">
-                    <label htmlFor="hired-alumni" className="text-[10px] font-black uppercase text-slate-400">Lulusan Sudah Bekerja</label>
-                    <input id="hired-alumni" type="number" value={formData.stats_academic_hired} onChange={(e) => setFormData({...formData, stats_academic_hired: parseInt(e.target.value) || 0})} className="block w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 font-black text-emerald-400 outline-none focus:border-emerald-400" />
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="space-y-3">
-                <label htmlFor="website-url" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400"><Globe size={14} /> Website Resmi</label>
-                <input id="website-url" type="url" value={formData.website} onChange={(e) => setFormData({...formData, website: e.target.value})} className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none focus:border-slate-900" placeholder="https://..." />
+                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">Website</label>
+                <input type="url" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold" placeholder="https://..." />
               </div>
+              
               <div className="space-y-3">
-                <label htmlFor="nib-input" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400"><FileText size={14} /> Nomor NIB / Izin</label>
-                <input id="nib-input" type="text" value={formData.nib_number} onChange={(e) => setFormData({...formData, nib_number: e.target.value})} className="block w-full rounded-2xl border-2 border-slate-100 bg-slate-50 px-5 py-4 font-bold outline-none focus:border-slate-900" placeholder="0000-0000" />
+                <label className="ml-1 text-[10px] font-black uppercase text-slate-400">NIB / SK Mendikbud</label>
+                <input type="text" value={formData.nib_number} onChange={e => setFormData({...formData, nib_number: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 font-bold" />
               </div>
 
-              <div className="space-y-3 text-left md:col-span-2">
-                <label htmlFor="description-text" className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400"><Info size={14} /> Deskripsi Layanan Inklusi</label>
-                <textarea id="description-text" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={4} className="block w-full rounded-[2rem] border-2 border-slate-100 bg-slate-50 px-6 py-5 font-medium leading-relaxed outline-none focus:border-slate-900" />
+              <div className="space-y-3 md:col-span-2">
+                <label className="ml-1 flex items-center gap-2 text-[10px] font-black uppercase text-slate-400"><Info size={14} /> Deskripsi Layanan Inklusi</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={4} className="w-full rounded-[2rem] border-2 border-slate-100 bg-slate-50 px-6 py-5 font-medium leading-relaxed outline-none focus:border-slate-900" placeholder="Jelaskan visi atau unit layanan disabilitas Anda..." />
               </div>
             </div>
           </section>
         </div>
 
-        {/* INDIKATOR DAN AKSI */}
+        {/* SIDEBAR AKSI */}
         <div className="space-y-8">
-          <fieldset className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 text-left text-white shadow-2xl">
-            <legend className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase italic tracking-widest text-blue-400">
-              <ListChecks size={18} /> 14 Indikator Validasi
-            </legend>
-            <div className="custom-scrollbar relative z-10 max-h-[500px] space-y-3 overflow-y-auto pr-2" role="group">
-              {ACCOMMODATION_TYPES.map((item) => (
-                <label key={item} className="group flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10">
-                  <input type="checkbox" className="mt-1 size-5 rounded border-slate-700 bg-slate-800 text-blue-500 focus:ring-blue-500" checked={formData.master_accommodations_provided.includes(item)} onChange={() => handleCheckboxChange(item)} />
-                  <span className="text-[10px] font-black uppercase leading-tight text-slate-300 transition-colors group-hover:text-white">{item}</span>
+          <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
+            <legend className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase text-blue-400"><ListChecks size={18} /> 14 Indikator Inklusi</legend>
+            <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2 custom-scrollbar">
+              {ACCOMMODATION_TYPES.map(item => (
+                <label key={item} className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-all">
+                  <input type="checkbox" checked={formData.master_accommodations_provided.includes(item)} onChange={() => handleCheckboxChange(item)} className="mt-1 size-5 accent-blue-500" />
+                  <span className="text-[9px] font-black uppercase leading-tight text-slate-300">{item}</span>
                 </label>
               ))}
             </div>
           </fieldset>
 
-          {/* AREA NOTIFIKASI DAN TOMBOL */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {announcement && (
-              <div className={`flex items-center gap-3 rounded-2xl border-4 p-5 text-[10px] font-black uppercase italic tracking-widest border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
-                ${announcement.includes("Sukses") ? "bg-emerald-400 text-slate-900" : 
-                  announcement.includes("Sedang") ? "bg-blue-400 text-white" : 
-                  "bg-rose-400 text-white"}`}>
-                {announcement.includes("Sukses") ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-                {announcement}
+              <div className="rounded-2xl border-4 border-slate-900 bg-emerald-400 p-4 text-[10px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+                <CheckCircle2 size={16} /> {announcement}
               </div>
             )}
-
-            <div className="flex flex-col gap-4">
-              <button 
-                type="button"
-                onClick={handleSaveProfile}
-                disabled={loading} 
-                className="group flex w-full items-center justify-center gap-3 rounded-[2rem] border-4 border-slate-900 bg-white py-6 text-xs font-black uppercase italic tracking-widest text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
-              >
-                {loading && !announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                Update Profil Kampus
-              </button>
-
-              {/* Smart Hiding: Tombol verifikasi hilang jika sudah verified */}
-              {!campus?.is_verified && (
-                <button 
-                  type="button"
-                  onClick={handleRequestVerification}
-                  disabled={loading} 
-                  className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 text-xs font-black uppercase italic tracking-widest text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
-                >
-                  {loading && announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={20} /> : <ShieldCheck size={20} />}
-                  Ajukan Verifikasi
-                </button>
-              )}
-            </div>
             
-            <p className="text-center text-[8px] font-bold uppercase italic leading-relaxed tracking-widest text-slate-400">
-              Data Profil diproses untuk National Inclusion Score. <br /> Verifikasi diperlukan untuk otorisasi penuh.
-            </p>
+            <button onClick={handleSaveProfile} disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-[2rem] border-4 border-slate-900 bg-white py-6 font-black uppercase text-slate-900 hover:bg-slate-50">
+              {loading ? <Loader2 className="animate-spin" /> : <Save />} Update Profil
+            </button>
+
+            {!campus?.is_verified && (
+              <button onClick={handleRequestVerification} disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-6 font-black uppercase text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] hover:bg-blue-700">
+                <ShieldCheck /> Ajukan Verifikasi
+              </button>
+            )}
           </div>
         </div>
       </div>
