@@ -39,13 +39,13 @@ export default function CampusDashboard({ user }: { user: any }) {
 
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // LOGIKA AGREGASI LIVE (Sesuai Kebutuhan Riset Mas)
-  const fetchRealtimeAnalytics = useCallback(async () => {
-    if (!user?.id) return;
+  // LOGIKA AGREGASI LIVE: Mendeteksi Talent via String Matching Nama Universitas
+  const fetchRealtimeAnalytics = useCallback(async (campusName: string) => {
+    if (!campusName) return;
     const currentYear = new Date().getFullYear();
 
     try {
-      // 1. Hitung Antrean Mahasiswa yang menunggu verifikasi manual dari kampus
+      // 1. Antrean Verifikasi (Data dari tabel jembatan)
       const { count: pending } = await supabase
         .from("campus_verifications")
         .select("*", { count: 'exact', head: true })
@@ -54,25 +54,14 @@ export default function CampusDashboard({ user }: { user: any }) {
       
       setUnverifiedCount(pending || 0);
 
-      // 2. Tarik Data Semua Profil untuk Agregasi Live
-      const { data: allAffiliated } = await supabase
-        .from("campus_verifications")
-        .select(`
-          status,
-          profiles (
-            gender,
-            graduation_date,
-            career_status,
-            disability_type
-          )
-        `)
-        .eq("campus_id", user.id);
+      // 2. Scan Langsung Tabel Profiles (Mencari Talent yang mencantumkan nama kampus ini)
+      const { data: allTalents } = await supabase
+        .from("profiles")
+        .select("gender, graduation_date, career_status, disability_type")
+        .eq("university", campusName);
 
-      if (allAffiliated) {
-        const stats = allAffiliated.reduce((acc: any, item: any) => {
-          const p = item.profiles;
-          if (!p) return acc;
-
+      if (allTalents) {
+        const stats = allTalents.reduce((acc: any, p: any) => {
           acc.total++;
           if (p.gender === 'male') acc.male++;
           if (p.gender === 'female') acc.female++;
@@ -81,10 +70,10 @@ export default function CampusDashboard({ user }: { user: any }) {
             acc.disabilityMap[p.disability_type] = (acc.disabilityMap[p.disability_type] || 0) + 1;
           }
 
-          // Bedakan Mahasiswa vs Alumni berdasarkan Tahun Lulus
+          // Identifikasi Mahasiswa vs Alumni (Live Coding)
           if (p.graduation_date && Number(p.graduation_date) <= currentYear) {
             acc.alumni++;
-            // Cek Status Karir (Bekerja)
+            // Hitung Alumni Bekerja
             const workingStatus = ['Pegawai Swasta', 'Pegawai BUMN / BUMD', 'ASN (PNS / PPPK)', 'Wiraswasta / Entrepreneur', 'Freelancer / Tenaga Lepas'];
             if (workingStatus.includes(p.career_status)) acc.bekerja++;
           } else {
@@ -97,7 +86,7 @@ export default function CampusDashboard({ user }: { user: any }) {
         setPlatformStats(stats);
       }
     } catch (err) {
-      console.error("Critical Analytics Error:", err);
+      console.error("Live Analysis Error:", err);
     }
   }, [user?.id]);
 
@@ -114,7 +103,7 @@ export default function CampusDashboard({ user }: { user: any }) {
       if (campusData) {
         setCampus(campusData);
         
-        // Hitung Kelengkapan untuk Sidebar Asisten
+        // Hitung Skor Kelengkapan
         const fields = [
             { key: 'name', label: 'Nama Kampus' },
             { key: 'description', label: 'Deskripsi' },
@@ -131,8 +120,10 @@ export default function CampusDashboard({ user }: { user: any }) {
         });
 
         if (!campusData.is_verified) setActiveTab("profile");
+        
+        // Jalankan Analitik Live berdasarkan Nama Kampus
+        await fetchRealtimeAnalytics(campusData.name);
       }
-      await fetchRealtimeAnalytics();
     } finally { 
       setLoading(false); 
     }
@@ -151,7 +142,7 @@ export default function CampusDashboard({ user }: { user: any }) {
   if (loading) return (
     <div className="flex h-screen flex-col items-center justify-center bg-[#F8FAFC]" role="status">
       <Loader2 className="animate-spin text-emerald-600" size={48} />
-      <p className="mt-4 font-black uppercase italic tracking-widest text-slate-400">Menyusun Data Riset...</p>
+      <p className="mt-4 font-black uppercase italic tracking-widest text-slate-400">Menyinkronkan Data Riset...</p>
     </div>
   );
 
@@ -159,27 +150,26 @@ export default function CampusDashboard({ user }: { user: any }) {
     <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900 text-left">
       <div className="sr-only" aria-live="polite">{announcement}</div>
 
-      {/* STICKY NAVBAR */}
+      {/* HEADER NAVBAR */}
       <nav className="sticky top-0 z-40 border-b-4 border-slate-900 bg-white px-6 py-4 shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
             <ShieldCheck className={isVerified ? "text-emerald-600" : "text-slate-300"} size={24} />
             <h1 ref={headingRef} tabIndex={-1} className="text-xl font-black uppercase italic tracking-tighter outline-none">
-              {campus?.name || "Portal Kampus"}
+              {campus?.name || "Portal Institusi"}
             </h1>
           </div>
           {isVerified && (
             <div className="flex gap-4 items-center">
-<button onClick={() => shareNative({ 
-    name: campus.name, 
-    url: `https://disabilitas.com/kampus/${campus.id}`,
-    total: platformStats.total,
-    rate: platformStats.alumni > 0 ? Math.round((platformStats.bekerja / platformStats.alumni) * 100) : 0,
-    score: campus.inclusion_score || 0
-})} className="p-2 rounded-xl border-2 border-slate-900 hover:bg-slate-50 transition-all">
-    <Share2 size={18}/>
-</button>
-
+                <button onClick={() => shareNative({ 
+                    name: campus.name, 
+                    url: `https://disabilitas.com/kampus/${campus.id}`,
+                    total: platformStats.total,
+                    rate: platformStats.alumni > 0 ? Math.round((platformStats.bekerja / platformStats.alumni) * 100) : 0,
+                    score: campus.inclusion_score || 0
+                })} className="p-2 rounded-xl border-2 border-slate-900 hover:bg-slate-50 transition-all">
+                    <Share2 size={18}/>
+                </button>
                 <Link href={`/kampus/${campus.id}`} target="_blank" className="text-[10px] font-black uppercase italic border-b-2 border-slate-900">Lihat Profil Publik</Link>
             </div>
           )}
@@ -208,15 +198,15 @@ export default function CampusDashboard({ user }: { user: any }) {
                   ))}
                 </>
               ) : (
-                <div className="rounded-3xl border-4 border-dashed border-slate-200 p-8 text-center bg-white shadow-sm">
+                <div className="rounded-3xl border-4 border-dashed border-slate-200 p-8 text-center bg-white">
                   <Lock className="mx-auto mb-4 text-slate-300" size={32} />
-                  <p className="text-[10px] font-black uppercase italic text-slate-400">Dashboard Terkunci</p>
+                  <p className="text-[10px] font-black uppercase italic text-slate-400 leading-relaxed">Fitur Terkunci <br/> Menunggu Verifikasi</p>
                 </div>
               )}
 
-              {/* SIDEBAR WIDGET: KELENGKAPAN PROFIL */}
+              {/* SIDEBAR WIDGET: PROGRESS */}
               <div className="rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] mt-6">
-                <p className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest text-center italic">Status Kelengkapan</p>
+                <p className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest text-center italic">Kesiapan Data</p>
                 <div className="flex items-center justify-center mb-2 font-black text-2xl text-emerald-600">
                     {profileCompletion.percent}%
                 </div>
@@ -225,7 +215,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                 </div>
                 {profileCompletion.missing.length > 0 && (
                    <div className="mt-4 space-y-1">
-                      <p className="text-[8px] font-black text-slate-400 uppercase">Perlu diisi:</p>
+                      <p className="text-[8px] font-black text-slate-400 uppercase">Data Kurang:</p>
                       {profileCompletion.missing.slice(0,2).map(m => (
                         <p key={m} className="text-[8px] font-bold text-rose-500 uppercase flex items-center gap-1"><AlertCircle size={8}/> {m}</p>
                       ))}
@@ -238,41 +228,37 @@ export default function CampusDashboard({ user }: { user: any }) {
           {/* MAIN CONTENT AREA */}
           <main className="space-y-12">
             {!isVerified ? (
-              /* --- DASHBOARD BELUM TERVERIFIKASI --- */
+              /* --- DASHBOARD LOCKDOWN MODE --- */
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                 {campus?.verification_status === 'rejected' ? (
                   <div className="flex items-center gap-6 rounded-[2.5rem] border-4 border-rose-500 bg-rose-50 p-10 shadow-xl transition-all">
-                    <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg">
-                      <XCircle size={40} />
-                    </div>
+                    <XCircle className="text-rose-500 shrink-0" size={40} />
                     <div className="space-y-2">
                       <h2 className="text-2xl font-black uppercase italic tracking-tighter text-rose-900 leading-none">Verifikasi Ditolak</h2>
-                      <p className="text-sm font-bold leading-relaxed text-rose-800">Alasan: {campus?.admin_notes}</p>
+                      <p className="text-sm font-bold leading-relaxed text-rose-800">Alasan: {campus?.admin_notes || "Dokumen belum sesuai standar."}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl transition-all">
-                    <div className="flex size-20 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg">
-                      <AlertCircle size={40} />
-                    </div>
+                    <AlertCircle className="text-amber-500 shrink-0" size={40} />
                     <div className="space-y-2 text-amber-900">
                       <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Menunggu Verifikasi</h2>
-                      <p className="text-sm font-bold leading-relaxed opacity-80 italic">Data Anda sedang ditinjau oleh tim pusat untuk pembukaan akses penuh.</p>
+                      <p className="text-sm font-bold leading-relaxed opacity-80 italic">Lengkapi profil untuk membuka fitur Database Talenta dan Skill Hub.</p>
                     </div>
                   </div>
                 )}
                 <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => {}} />
               </div>
             ) : (
-              /* --- DASHBOARD SUDAH TERVERIFIKASI (Full Data) --- */
-              <div className="space-y-12 animate-in fade-in duration-500">
+              /* --- DASHBOARD VERIFIED MODE --- */
+              <div className="space-y-12 animate-in fade-in">
                 {activeTab === "overview" && (
                   <>
-                    {/* BARIS 1: KOMPARASI DATA RISET */}
+                    {/* STATS: COMPARISON CLAIMS VS LIVE */}
                     <section className="space-y-6">
                         <div className="flex items-center gap-3">
                             <ClipboardList className="text-blue-600" size={20}/>
-                            <h2 className="text-sm font-black uppercase italic tracking-widest text-slate-400 border-b-2 border-slate-100 pb-2 flex-1">Komparasi Validitas Data</h2>
+                            <h2 className="text-sm font-black uppercase italic tracking-widest text-slate-400 border-b-2 border-slate-100 pb-2 flex-1">Integrasi Validitas Data Akademik</h2>
                         </div>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                             <div className="rounded-[2.5rem] border-4 border-slate-100 bg-white p-8">
@@ -294,38 +280,37 @@ export default function CampusDashboard({ user }: { user: any }) {
                         </div>
                     </section>
 
-                    {/* BARIS 2: ANALISA PROPORSI */}
+                    {/* STATS: PROPORTIONS */}
                     <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                         <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
-                            <h3 className="text-[10px] font-black uppercase text-slate-400 mb-8 tracking-widest border-b pb-4">Proporsi Gender di Platform</h3>
+                            <h3 className="text-[10px] font-black uppercase text-slate-400 mb-8 tracking-widest border-b pb-4 italic">Proporsi Gender (Platform)</h3>
                             <div className="grid grid-cols-2 gap-8 text-center">
                                 <div>
-                                    <p className="text-5xl font-black text-blue-600 italic">{platformStats.male}</p>
+                                    <p className="text-5xl font-black text-blue-600 italic leading-none">{platformStats.male}</p>
                                     <p className="text-[10px] font-black uppercase mt-3 tracking-tighter">Laki-Laki</p>
                                 </div>
                                 <div>
-                                    <p className="text-5xl font-black text-pink-500 italic">{platformStats.female}</p>
+                                    <p className="text-5xl font-black text-pink-500 italic leading-none">{platformStats.female}</p>
                                     <p className="text-[10px] font-black uppercase mt-3 tracking-tighter">Perempuan</p>
                                 </div>
                             </div>
                         </div>
-
                         <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
-                            <h3 className="text-[10px] font-black uppercase text-slate-400 mb-8 tracking-widest border-b pb-4">Sebaran Ragam Disabilitas</h3>
+                            <h3 className="text-[10px] font-black uppercase text-slate-400 mb-8 tracking-widest border-b pb-4 italic">Ragam Disabilitas (Platform)</h3>
                             <div className="max-h-[100px] overflow-y-auto custom-scrollbar pr-3 space-y-3">
                                 {Object.entries(platformStats.disabilityMap).length > 0 ? (
                                     Object.entries(platformStats.disabilityMap).map(([k,v]) => (
                                         <div key={k} className="flex justify-between text-[10px] font-black uppercase border-b border-slate-50 pb-2">
                                             <span className="truncate max-w-[200px]">{k}</span>
-                                            <span className="text-blue-600">{v}</span>
+                                            <span className="text-blue-600 font-black">{v}</span>
                                         </div>
                                     ))
-                                ) : <p className="text-xs italic text-slate-400">Belum ada data ragam terdaftar.</p>}
+                                ) : <p className="text-xs italic text-slate-400">Belum ada talenta terafiliasi.</p>}
                             </div>
                         </div>
                     </section>
 
-                    {/* BARIS 3: VISUALISASI & AKSI */}
+                    {/* RADAR & QUEUE */}
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
                       <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 lg:col-span-2">
                         <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase text-slate-400 tracking-widest"><Activity size={16}/> Index Pilar Inklusi</h3>
@@ -341,9 +326,9 @@ export default function CampusDashboard({ user }: { user: any }) {
                       </section>
                       <section className="rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl lg:col-span-3 flex flex-col justify-between">
                          <div className="space-y-4">
-                            <p className="text-emerald-400 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2"><Sparkles size={16}/> Snapshot Strategis</p>
+                            <p className="text-emerald-400 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 italic"><Sparkles size={16}/> Snapshot Strategis</p>
                             <h3 className="text-3xl font-black italic tracking-tighter leading-none">
-                                Terdeteksi <span className="text-emerald-400">{unverifiedCount} Mahasiswa</span> baru menunggu verifikasi ijazah & status almamater.
+                                Terdeteksi <span className="text-emerald-400">{unverifiedCount} Mahasiswa</span> baru menunggu verifikasi ijazah/status almamater.
                             </h3>
                          </div>
                          <button onClick={() => setActiveTab("tracer")} className="w-full bg-emerald-500 py-6 rounded-2xl text-slate-900 font-black uppercase italic tracking-widest shadow-xl hover:bg-white transition-all flex items-center justify-center gap-3 active:scale-95">
@@ -354,7 +339,6 @@ export default function CampusDashboard({ user }: { user: any }) {
                   </>
                 )}
 
-                {/* MODUL-MODUL ANAK (Verified Only) */}
                 {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
                 {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => setActiveTab("overview")} />}
                 {activeTab === "profile" && <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => setActiveTab("overview")} />}
