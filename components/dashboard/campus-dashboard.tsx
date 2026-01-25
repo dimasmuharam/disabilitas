@@ -7,7 +7,7 @@ import {
   Users, BarChart3, Settings, ShieldCheck, Share2, LayoutDashboard,
   Activity, Zap, MousePointerClick, Sparkles, TrendingUp,
   Loader2, XCircle, Lock, Target, MessageSquareQuote, AlertCircle,
-  Briefcase, GraduationCap, HeartHandshake, PieChart
+  Briefcase, GraduationCap, HeartHandshake, PieChart, RefreshCw
 } from "lucide-react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
@@ -21,6 +21,7 @@ export default function CampusDashboard({ user }: { user: any }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [campus, setCampus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [unverifiedCount, setUnverifiedCount] = useState(0);
   const [profileCompletion, setProfileCompletion] = useState({ percent: 0, missing: [] as string[] });
 
@@ -68,13 +69,33 @@ export default function CampusDashboard({ user }: { user: any }) {
 
   useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
 
-  // LOGIKA: Employability Rate
+  // FITUR BARU: Paksa Hitung Ulang Skor Inklusi (Trigger v3)
+  const handleRecalculate = async () => {
+    setIsSyncing(true);
+    try {
+      // Trik dummy update untuk memicu trigger tr_process_eval_v3
+      const { error } = await supabase
+        .from("campus_evaluations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("campus_id", user.id);
+
+      if (error) throw error;
+      
+      // Ambil data terbaru setelah trigger selesai bekerja
+      await fetchDashboardData();
+    } catch (err) {
+      console.error("Sync Error:", err);
+      alert("Gagal memperbarui skor. Pastikan data evaluasi sudah terisi.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const employabilityRate = useMemo(() => {
     if (!campus?.stats_academic_total || campus.stats_academic_total === 0) return 0;
     return Math.round((campus.stats_academic_hired / campus.stats_academic_total) * 100);
   }, [campus]);
 
-  // LOGIKA: Narasi Aksesibilitas Otomatis
   const inclusionNarration = useMemo(() => {
     const score = campus?.inclusion_score || 0;
     if (score >= 80) return "Kampus Anda merupakan pionir inklusivitas dengan fasilitas yang sangat memadai bagi disabilitas.";
@@ -90,7 +111,7 @@ export default function CampusDashboard({ user }: { user: any }) {
 
   const isVerified = campus?.is_verified;
 
-  if (loading) return (
+  if (loading && !isSyncing) return (
     <div className="flex h-screen flex-col items-center justify-center bg-[#F8FAFC]" aria-busy="true">
       <Loader2 className="animate-spin text-emerald-600" size={48} />
       <p className="mt-4 font-black uppercase italic text-slate-400 tracking-widest">Memuat Insights Riset...</p>
@@ -187,7 +208,6 @@ export default function CampusDashboard({ user }: { user: any }) {
               <div className="space-y-12 animate-in fade-in">
                 {activeTab === "overview" && (
                   <>
-                    {/* BARIS 1: KEY PERFORMANCE INDICATORS */}
                     <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
                             <div className="flex items-center gap-2 mb-2">
@@ -213,16 +233,30 @@ export default function CampusDashboard({ user }: { user: any }) {
                             <p className="text-5xl font-black italic tracking-tighter text-blue-600">{employabilityRate}%</p>
                         </div>
 
-                        <div className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-white">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Sparkles size={16} className="text-emerald-400" />
-                                <p className="text-[9px] font-black uppercase text-emerald-400 italic">Inclusion Score</p>
+                        <div className="relative rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-white overflow-hidden">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <Sparkles size={16} className="text-emerald-400" />
+                                    <p className="text-[9px] font-black uppercase text-emerald-400 italic">Inclusion Score</p>
+                                </div>
+                                <button 
+                                  onClick={handleRecalculate}
+                                  disabled={isSyncing}
+                                  className="group relative z-10 p-1.5 rounded-lg hover:bg-white/10 transition-all active:scale-90"
+                                  title="Hitung ulang skor berdasarkan data terbaru"
+                                >
+                                  <RefreshCw size={14} className={`${isSyncing ? 'animate-spin text-emerald-400' : 'text-slate-500 group-hover:text-emerald-400'}`} />
+                                </button>
                             </div>
                             <p className="text-5xl font-black italic tracking-tighter text-white">{campus?.inclusion_score || 0}</p>
+                            {isSyncing && (
+                              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
+                                <span className="text-[8px] font-black uppercase tracking-widest animate-pulse text-emerald-400">Recalculating...</span>
+                              </div>
+                            )}
                         </div>
                     </section>
 
-                    {/* BARIS 2: ANALISIS DEMOGRAFI & RAGAM */}
                     <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                         <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
                             <h3 className="text-xs font-black uppercase text-slate-400 mb-8 tracking-widest border-b pb-4 flex items-center gap-2">
@@ -236,7 +270,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                                     </div>
                                     <div className="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden border-2 border-slate-900">
                                         <div 
-                                          style={{ width: `${(campus?.stats_gender_map?.male / campus?.stats_academic_total) * 100 || 50}%` }} 
+                                          style={{ width: `${(campus?.stats_gender_map?.male / (campus?.stats_academic_total || 1)) * 100}%` }} 
                                           className="h-full bg-blue-500 border-r-2 border-slate-900" 
                                         />
                                         <div className="h-full bg-pink-500 flex-1" />
@@ -259,7 +293,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                                             <span className="text-[10px] font-black uppercase text-slate-600 group-hover:text-slate-900 transition-colors">{k}</span>
                                             <div className="flex items-center gap-3">
                                                 <div className="h-2 w-24 bg-slate-100 rounded-full overflow-hidden border border-slate-900 hidden md:block">
-                                                    <div style={{ width: `${(v / campus?.stats_academic_total) * 100}%` }} className="h-full bg-emerald-400" />
+                                                    <div style={{ width: `${(v / (campus?.stats_academic_total || 1)) * 100}%` }} className="h-full bg-emerald-400" />
                                                 </div>
                                                 <span className="text-xs font-black italic text-slate-900">{v}</span>
                                             </div>
@@ -270,7 +304,6 @@ export default function CampusDashboard({ user }: { user: any }) {
                         </div>
                     </section>
 
-                    {/* BARIS 3: RADAR SCORE & NARRATIVE */}
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
                       <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 lg:col-span-2 flex flex-col items-center">
                         <h3 className="mb-4 text-[11px] font-black uppercase text-slate-400 tracking-widest italic flex items-center gap-2">
@@ -323,7 +356,6 @@ export default function CampusDashboard({ user }: { user: any }) {
                   </>
                 )}
 
-                {/* MODUL-MODUL ANAK */}
                 {activeTab === "hub" && <CareerSkillHub campusName={campus?.name} campusId={user.id} />}
                 {activeTab === "tracer" && <TalentTracer campusName={campus?.name} campusId={user.id} onBack={() => setActiveTab("overview")} />}
                 {activeTab === "profile" && <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => setActiveTab("overview")} />}
