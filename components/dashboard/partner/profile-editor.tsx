@@ -8,14 +8,14 @@ import {
   Link2, Loader2
 } from "lucide-react";
 import { 
-  ACCOMMODATION_TYPES, 
+  getAccommodationsByRole, // Menggunakan helper cerdas
   INDONESIA_CITIES,
   TRAINING_PARTNERS 
 } from "@/lib/data-static";
 
 interface ProfileEditorProps {
   partner: any;
-  user: any; // Pastikan user dilempar dari parent
+  user: any; 
   onUpdate: () => void;
   onBack: () => void;
 }
@@ -26,6 +26,9 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
   const [isCustomName, setIsCustomName] = useState(false);
   
   const manualNameRef = useRef<HTMLInputElement>(null);
+
+  // Mendapatkan list akomodasi khusus role partner
+  const partnerAccommodations = getAccommodationsByRole('partner');
 
   const [formData, setFormData] = useState({
     name: partner?.name || "",
@@ -39,14 +42,13 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
   });
 
   useEffect(() => {
-    // Cek jika nama saat ini adalah input manual (tidak ada di list standar)
     if (formData.name && !TRAINING_PARTNERS.includes(formData.name)) {
       setIsCustomName(true);
       setFormData(prev => ({ ...prev, manual_name: partner.name, name: "LAINNYA" }));
     }
   }, [partner.name, formData.name]);
 
-  // AKSI 1: SIMPAN PROFIL (Hanya Data Operasional)
+  // AKSI 1: SIMPAN PROFIL
   async function handleSaveProfile() {
     const finalName = formData.name === "LAINNYA" ? formData.manual_name : formData.name;
     if (!finalName) {
@@ -68,13 +70,14 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
       const { error } = await supabase
         .from("partners")
         .upsert({
-          id: user.id, // Gunakan UID untuk keamanan
+          id: user.id,
           name: finalName,
           description: formData.description,
           website: formData.website,
           location: formData.location,
           nib_number: formData.nib_number,
           master_accommodations_provided: formData.master_accommodations_provided,
+          // Link tetap disimpan namun inputnya disembunyikan di UI jika sudah verified
           verification_document_link: formData.verification_document_link,
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
@@ -90,7 +93,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
     }
   }
 
-  // AKSI 2: AJUKAN VERIFIKASI (Input ke verification_requests)
+  // AKSI 2: AJUKAN VERIFIKASI
   async function handleRequestVerification() {
     if (!formData.verification_document_link || !formData.verification_document_link.trim()) {
       setAnnouncement("Kesalahan: Harap isi link Google Drive dokumen legalitas.");
@@ -136,7 +139,6 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 pb-20 duration-500 animate-in fade-in">
-      {/* Live Region untuk Screen Reader */}
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
       {/* HEADER NAV */}
@@ -153,7 +155,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="space-y-10 lg:col-span-2">
           
-          {/* SEKSI 0: VERIFIKASI (Hanya jika belum verified) */}
+          {/* SEKSI 0: VERIFIKASI - OTOMATIS HILANG JIKA SUDAH VERIFIED */}
           {!partner?.is_verified && (
             <section className="rounded-[3rem] border-4 border-dashed border-blue-600 bg-blue-50 p-10 shadow-xl">
               <div className="mb-6 flex items-center gap-4">
@@ -297,10 +299,10 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
           <fieldset className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-left text-white shadow-2xl">
             <legend className="sr-only">Akomodasi Aksesibilitas</legend>
             <h3 className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase italic tracking-widest text-blue-400">
-              <ShieldCheck size={18} /> Fasilitas Aksesibel
+              <ShieldCheck size={18} /> Fasilitas Pelatihan Inklusif
             </h3>
             <div className="no-scrollbar max-h-[400px] space-y-3 overflow-y-auto pr-2">
-              {ACCOMMODATION_TYPES.map((item, idx) => {
+              {partnerAccommodations.map((item, idx) => {
                 const isSelected = formData.master_accommodations_provided.includes(item);
                 return (
                   <label key={item} className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition-all focus-within:ring-4 focus-within:ring-blue-500/30 ${isSelected ? "border-blue-500 bg-blue-600/20" : "border-slate-800 bg-slate-800/50 hover:border-slate-700"}`}>
@@ -323,7 +325,6 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
           {/* AREA NOTIFIKASI & TOMBOL */}
           <div className="space-y-6 rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-lg">
             
-            {/* Banner Status Inline */}
             {announcement && (
               <div className={`flex items-center gap-3 rounded-2xl border-2 p-5 text-[10px] font-black uppercase tracking-widest animate-in zoom-in-95
                 ${announcement.includes("Sukses") ? "border-emerald-500 bg-emerald-50 text-emerald-700" : 
@@ -335,6 +336,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
             )}
 
             <div className="flex flex-col gap-4">
+              {/* TOMBOL 1: SIMPAN KE TABLE */}
               <button 
                 type="button"
                 onClick={handleSaveProfile}
@@ -345,6 +347,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
                 Simpan Profil
               </button>
 
+              {/* TOMBOL 2: AJUKAN VERIFIKASI - HILANG JIKA SUDAH VERIFIED */}
               {!partner?.is_verified && (
                 <button 
                   type="button"
