@@ -69,28 +69,43 @@ const fetchTalents = useCallback(async () => {
 }, [campusName]);
   useEffect(() => { fetchTalents(); }, [fetchTalents]);
 
-  const handleAction = async (ids: string[], status: 'verified' | 'rejected' | 'pending') => {
+const handleAction = async (ids: string[], status: 'verified' | 'rejected' | 'pending') => {
     try {
-      const upserts = ids.map(id => ({
-        campus_id: campusId,
-        profile_id: id,
-        status: status,
-        verified_at: status === 'verified' ? new Date().toISOString() : null
-      }));
+      setLoading(true);
+      
+      // 1. UPDATE STATUS (Gunakan .update agar lolos RLS Kampus)
+      const { error: updateError } = await supabase
+        .from("campus_verifications")
+        .update({ 
+          status: status,
+          verified_at: status === 'verified' ? new Date().toISOString() : null
+        })
+        .in("profile_id", ids) 
+        .eq("campus_id", campusId); 
 
-      const { error } = await supabase.from("campus_verifications").upsert(upserts);
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // 2. PEMICU RE-KALKULASI (Agar angka di Overview berubah otomatis)
+      // Kita "colek" kolom updated_at di table campuses
+      await supabase
+        .from("campuses")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", campusId);
 
       setToast({ 
-        msg: `${ids.length} Talenta diperbarui ke status ${status}`, 
+        msg: `${ids.length} Talenta diperbarui ke status ${status.toUpperCase()}`, 
         type: 'success' 
       });
       
       setSelectedIds([]);
-      fetchTalents();
+      await fetchTalents(); // Tarik ulang data ke tabel
+      
       setTimeout(() => setToast({ msg: "", type: null }), 4000);
-    } catch (err) {
-      setToast({ msg: "Gagal memproses aksi", type: 'error' });
+    } catch (err: any) {
+      console.error("Action Error:", err.message);
+      setToast({ msg: `GAGAL: ${err.message.toUpperCase()}`, type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
