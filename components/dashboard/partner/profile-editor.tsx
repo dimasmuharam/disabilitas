@@ -162,7 +162,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
                 <div className="rounded-2xl bg-blue-600 p-3 text-white shadow-lg"><Link2 size={24} /></div>
                 <div>
                   <h3 className="text-xl font-black uppercase italic tracking-tighter text-blue-900">Validasi Kemitraan Resmi</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan NIB atau Dokumen Pendirian Lembaga (PDF di G-Drive)</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Cantunkan tautan surat permohonan kerjasama resmi dari lembaga Anda (format PDF) yang diunggah ke Google Drive</p>
                 </div>
               </div>
               
