@@ -4,6 +4,7 @@ import { ALL_UNIVERSITIES } from './constants/universities';
 import { ALL_MAJORS } from './constants/majors';
 import { ALL_INDONESIA_CITIES, PROVINCE_MAP, PROVINCE_LIST } from './constants/locations';
 import { ALL_GOV_INSTITUTIONS } from './constants/institutions';
+import { INCLUSION_INDICATORS, getInclusionLabel } from "./constants/inclusion-mapping";
 
 export const USER_ROLES = {
   TALENT: "talent",
@@ -252,28 +253,35 @@ export const STUDY_RELEVANCE_LEVELS = [
   "Tidak Relevan (Bekerja di bidang berbeda total)",
   "Belum Bekerja"
 ];
-export const ACCOMMODATION_TYPES = [
-  // KLASTER 1: AKSESIBILITAS FISIK (BOBOT 30%)
-  "Ramp, Lift, dan Jalur Mobilitas Aksesibel",
-  "Toilet Khusus Disabilitas yang Standar",
-  "Jalur Pemandu (Guiding Block) dan Penanda Tekstur",
-  "Area Parkir dan Drop-off Prioritas Disabilitas",
-  "Ruang Belajar Tenang dan Pencahayaan Kontras",
 
-  // KLASTER 2: AKSESIBILITAS DIGITAL (BOBOT 40% - SALES TRIGGER)
-  "Website Portal Kampus Standar WCAG 2.1",
-  "LMS (Learning Management System) Aksesibel",
-  "Dokumen Digital Kuliah Format EPUB/Tagged-PDF",
-  "Lisensi Software Alat Bantu (Screen Reader/Magnifier)",
-  "Sistem Informasi Pengumuman Visual dan Audio",
+// 1. Export Standar (Agar import di file lain tidak patah)
+// Secara default, variabel ini akan berisi list versi Company
+export const ACCOMMODATION_TYPES = INCLUSION_INDICATORS.company;
 
-  // KLASTER 3: AKOMODASI AKADEMIK & OUTPUT (BOBOT 30%)
-  "Unit Layanan Disabilitas (ULD) Resmi Institusi",
-  "Layanan Juru Bahasa Isyarat dan Notulensi Real-time",
-  "Modifikasi Kurikulum dan Metode Ujian Fleksibel",
-  "Pendampingan Karir dan Transisi Kerja (Job Coach)"
+// 2. Export Fungsi Helper (Untuk digunakan di dashboard agar dinamis)
+export { getInclusionLabel };
+
+// 3. Kategori yang disinkronkan dengan index (0-4, 5-9, 10-13)
+export const ACCOMMODATION_CATEGORIES = [
+  { 
+    title: "Aksesibilitas Fisik", 
+    weight: "30%", 
+    range: [0, 4],
+    icon: "Activity" 
+  },
+  { 
+    title: "Infrastruktur Digital", 
+    weight: "40%", 
+    range: [5, 9],
+    icon: "Zap" 
+  },
+  { 
+    title: "Kebijakan & Output", 
+    weight: "30%", 
+    range: [10, 13],
+    icon: "Target" 
+  }
 ];
-
 export const DISABILITY_TOOLS = [
   "Screen Reader - NVDA",
   "Screen Reader - JAWS",
