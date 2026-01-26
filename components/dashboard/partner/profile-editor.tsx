@@ -143,7 +143,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
 
       {/* HEADER NAV */}
       <div className="mb-10 flex flex-col justify-between gap-6 border-b-4 border-slate-900 pb-8 md:flex-row md:items-center">
-        <button onClick={onBack} className="flex h-fit w-fit items-center gap-2 rounded-xl border-2 border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:border-slate-900 hover:text-slate-900">
+        <button onClick={onBack} className="flex size-fit items-center gap-2 rounded-xl border-2 border-slate-200 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:border-slate-900 hover:text-slate-900">
           <ArrowLeft size={16} /> Batal & Kembali
         </button>
         <div className="text-left md:text-right">
@@ -174,11 +174,11 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
                   placeholder="https://drive.google.com/..."
                   value={formData.verification_document_link}
                   onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
-                  className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
+                  className="w-full rounded-2xl border-2 border-blue-200 bg-white p-5 font-bold text-blue-900 shadow-inner outline-none focus:border-blue-600"
                 />
-                <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
-                  <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" />
-                  <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
+                <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white/50 p-4">
+                  <AlertCircle size={16} className="mt-1 shrink-0 text-blue-600" />
+                  <p className="text-[10px] font-bold italic leading-relaxed text-blue-800">
                     Pastikan akses file Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong>.
                   </p>
                 </div>
@@ -341,7 +341,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] border-4 border-slate-900 bg-white py-5 text-[11px] font-black uppercase italic text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-3 rounded-3xl border-4 border-slate-900 bg-white py-5 text-[11px] font-black uppercase italic text-slate-900 transition-all hover:bg-slate-50 disabled:opacity-50"
               >
                 {loading && !announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                 Simpan Profil
@@ -353,7 +353,7 @@ export default function ProfileEditor({ partner, user, onUpdate, onBack }: Profi
                   type="button"
                   onClick={handleRequestVerification}
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-3 rounded-[1.5rem] bg-blue-600 py-5 text-[11px] font-black uppercase italic text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-3 rounded-3xl bg-blue-600 py-5 text-[11px] font-black uppercase italic text-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
                 >
                   {loading && announcement.includes("verifikasi") ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
                   Ajukan Verifikasi

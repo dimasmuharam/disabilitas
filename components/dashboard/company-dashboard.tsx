@@ -122,16 +122,16 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         <section className={`rounded-[2.5rem] border-2 border-slate-900 ${inclusionScoreData.bg} p-8 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]`}>
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className={`rounded-xl p-3 bg-white shadow-sm ${inclusionScoreData.color}`}><Trophy size={24} /></div>
+              <div className={`rounded-xl bg-white p-3 shadow-sm ${inclusionScoreData.color}`}><Trophy size={24} /></div>
               <div>
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Inclusion Score</p>
                 <h3 className={`text-xl font-black italic tracking-tighter ${inclusionScoreData.color}`}>{inclusionScoreData.label}</h3>
               </div>
             </div>
             <div className="space-y-2">
-               <div className="flex justify-between items-end"><span className="text-4xl font-black italic leading-none">{company?.inclusion_score || 0}<span className="text-sm opacity-30">/100</span></span></div>
+               <div className="flex items-end justify-between"><span className="text-4xl font-black italic leading-none">{company?.inclusion_score || 0}<span className="text-sm opacity-30">/100</span></span></div>
                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200"><div className={`h-full transition-all duration-1000 ${inclusionScoreData.color.replace('text', 'bg')}`} style={{ width: `${company?.inclusion_score || 0}%` }} /></div>
-               <p className="text-[9px] font-bold leading-relaxed text-slate-500 italic">{inclusionScoreData.desc}</p>
+               <p className="text-[9px] font-bold italic leading-relaxed text-slate-500">{inclusionScoreData.desc}</p>
             </div>
           </div>
         </section>
@@ -149,7 +149,7 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
             <ArrowRight className="text-blue-600 transition-transform group-hover:translate-x-2" />
           </button>
         ) : (
-          <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm flex items-center gap-6">
+          <section className="flex items-center gap-6 rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
               <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><CheckCircle2 size={32} /></div>
               <div className="text-left">
                 <h2 className="text-xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Terkendali</h2>
@@ -308,9 +308,9 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
         <main id="main-content" className="min-h-[60vh]">
           {!company?.is_verified ? (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              <div className="rounded-3xl border-2 border-amber-500 bg-amber-50 p-8 text-amber-900 font-bold text-xs uppercase italic flex items-center gap-4 shadow-sm">
-                <div className="p-3 bg-amber-500 text-white rounded-2xl shadow-lg"><AlertCircle size={24} /></div>
+            <div className="space-y-8 duration-500 animate-in fade-in">
+              <div className="flex items-center gap-4 rounded-3xl border-2 border-amber-500 bg-amber-50 p-8 text-xs font-bold uppercase italic text-amber-900 shadow-sm">
+                <div className="rounded-2xl bg-amber-500 p-3 text-white shadow-lg"><AlertCircle size={24} /></div>
                 <div>
                   <p>Akun Anda memerlukan verifikasi dokumen.</p>
                   <p className="text-[10px] opacity-70">Lengkapi profil dan tautan Google Drive untuk membuka akses dashboard penuh.</p>

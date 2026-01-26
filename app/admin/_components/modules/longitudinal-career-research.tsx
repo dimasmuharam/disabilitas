@@ -83,18 +83,18 @@ export default function LongitudinalCareerResearch({ careerTimeline }: Longitudi
   const COLORS = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a'];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 duration-700 animate-in fade-in">
       
       {/* HEADER RISET */}
       <section className="rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[8px_8px_0px_0px_rgba(37,99,235,1)]">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-4">
-            <div className="bg-blue-600 p-4 rounded-3xl">
+            <div className="rounded-3xl bg-blue-600 p-4">
               <TrendingUp size={32} />
             </div>
             <div>
               <h2 className="text-2xl font-black uppercase italic tracking-tighter">Longitudinal Career Tracker</h2>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Memantau Transisi & Stabilitas Karir Jangka Panjang</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Memantau Transisi & Stabilitas Karir Jangka Panjang</p>
             </div>
           </div>
           <button 
@@ -107,7 +107,7 @@ export default function LongitudinalCareerResearch({ careerTimeline }: Longitudi
       </section>
 
       {/* ANALYTICS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
         
         {/* CHART 1: WAITING TIME DISTRIBUTION */}
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
@@ -152,11 +152,11 @@ export default function LongitudinalCareerResearch({ careerTimeline }: Longitudi
           </h3>
           <div className="space-y-4">
             {careerTimeline.slice(0, 3).map((item, i) => (
-              <div key={i} className="flex items-start gap-3 border-l-4 border-blue-600 pl-4 py-1">
+              <div key={i} className="flex items-start gap-3 border-l-4 border-blue-600 py-1 pl-4">
                 <div>
                   <p className="text-[11px] font-black uppercase text-slate-900">{item.talent_name}</p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                    {item.old_status} <ArrowRight size={10} className="inline mx-1" /> {item.new_status}
+                  <p className="text-[9px] font-bold uppercase tracking-tighter text-slate-400">
+                    {item.old_status} <ArrowRight size={10} className="mx-1 inline" /> {item.new_status}
                   </p>
                 </div>
               </div>
@@ -166,15 +166,15 @@ export default function LongitudinalCareerResearch({ careerTimeline }: Longitudi
       </div>
 
       {/* DETAILED TIMELINE TABLE */}
-      <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] overflow-hidden">
-        <div className="bg-slate-50 p-6 border-b-4 border-slate-900 flex justify-between items-center">
+      <section className="overflow-hidden rounded-[2.5rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+        <div className="flex items-center justify-between border-b-4 border-slate-900 bg-slate-50 p-6">
           <h3 className="font-black uppercase italic tracking-tight">Timeline Perjalanan Karir</h3>
           <div className="relative w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
               placeholder="Cari Riwayat Talent..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border-2 border-slate-900 text-[10px] font-bold outline-none"
+              className="w-full rounded-xl border-2 border-slate-900 py-2 pl-10 pr-4 text-[10px] font-bold outline-none"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
@@ -182,7 +182,7 @@ export default function LongitudinalCareerResearch({ careerTimeline }: Longitudi
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+              <tr className="bg-slate-900 text-[10px] font-black uppercase tracking-widest text-white">
                 <th className="p-6">Talent & Latar Belakang</th>
                 <th className="p-6">Transisi Karir</th>
                 <th className="p-6">Masa Tunggu / Durasi</th>
@@ -193,18 +193,18 @@ export default function LongitudinalCareerResearch({ careerTimeline }: Longitudi
               {careerTimeline
                 .filter(t => t.talent_name?.toLowerCase().includes(searchTerm.toLowerCase()))
                 .map((log, i) => (
-                <tr key={i} className="hover:bg-slate-50 transition-colors">
+                <tr key={i} className="transition-colors hover:bg-slate-50">
                   <td className="p-6">
                     <div className="text-[11px] font-black text-slate-900">{log.talent_name}</div>
-                    <div className="text-[9px] font-bold text-blue-600 uppercase italic">
+                    <div className="text-[9px] font-bold uppercase italic text-blue-600">
                       {log.education_model} • Lulus {log.graduation_date || 'N/A'}
                     </div>
                   </td>
                   <td className="p-6">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-500">{log.old_status || 'Start'}</span>
+                      <span className="rounded bg-slate-100 px-2 py-1 text-[9px] font-bold text-slate-500">{log.old_status || 'Start'}</span>
                       <ArrowRight size={12} className="text-slate-400" />
-                      <span className="text-[9px] font-black bg-blue-600 px-2 py-1 rounded text-white">{log.new_status}</span>
+                      <span className="rounded bg-blue-600 px-2 py-1 text-[9px] font-black text-white">{log.new_status}</span>
                     </div>
                   </td>
                   <td className="p-6">
@@ -212,7 +212,7 @@ export default function LongitudinalCareerResearch({ careerTimeline }: Longitudi
                       <Clock size={14} className="text-blue-500" />
                       {log.days_since_origin ? `${log.days_since_origin} Hari` : '--'}
                     </div>
-                    <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic">
+                    <div className="text-[8px] font-bold uppercase italic tracking-widest text-slate-400">
                       {log.old_status ? 'Durasi Status Sebelumnya' : 'Masa Tunggu Sejak Lulus'}
                     </div>
                   </td>

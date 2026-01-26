@@ -114,12 +114,12 @@ export default function CampusDashboard({ user }: { user: any }) {
   if (loading && !isSyncing) return (
     <div className="flex h-screen flex-col items-center justify-center bg-[#F8FAFC]" aria-busy="true">
       <Loader2 className="animate-spin text-emerald-600" size={48} />
-      <p className="mt-4 font-black uppercase italic text-slate-400 tracking-widest">Memuat Insights Riset...</p>
+      <p className="mt-4 font-black uppercase italic tracking-widest text-slate-400">Memuat Insights Riset...</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20 font-sans text-slate-900 text-left">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20 text-left font-sans text-slate-900">
       <nav className="sticky top-0 z-40 border-b-4 border-slate-900 bg-white px-6 py-4 shadow-sm" role="navigation">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ export default function CampusDashboard({ user }: { user: any }) {
             </h1>
           </div>
           {isVerified && (
-            <div className="flex gap-4 items-center">
+            <div className="flex items-center gap-4">
                 <button 
                   onClick={() => shareNative({ 
                       name: campus.name, 
@@ -139,11 +139,11 @@ export default function CampusDashboard({ user }: { user: any }) {
                       score: campus.inclusion_score || 0
                   })} 
                   aria-label="Bagikan profil riset kampus"
-                  className="p-2 rounded-xl border-2 border-slate-900 hover:bg-slate-50 transition-all"
+                  className="rounded-xl border-2 border-slate-900 p-2 transition-all hover:bg-slate-50"
                 >
                     <Share2 size={18}/>
                 </button>
-                <Link href={`/kampus/${campus.id}`} target="_blank" className="text-[10px] font-black uppercase italic border-b-2 border-slate-900">Publik Profil</Link>
+                <Link href={`/kampus/${campus.id}`} target="_blank" className="border-b-2 border-slate-900 text-[10px] font-black uppercase italic">Publik Profil</Link>
             </div>
           )}
         </div>
@@ -168,7 +168,7 @@ export default function CampusDashboard({ user }: { user: any }) {
                       role="tab"
                       aria-selected={activeTab === tab.id}
                       onClick={() => setActiveTab(tab.id)} 
-                      className={`flex items-center gap-4 rounded-2xl border-4 p-4 transition-all ${activeTab === tab.id ? 'border-slate-900 bg-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] -translate-y-1' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                      className={`flex items-center gap-4 rounded-2xl border-4 p-4 transition-all ${activeTab === tab.id ? '-translate-y-1 border-slate-900 bg-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                     >
                       <tab.icon size={20} className={activeTab === tab.id ? 'text-emerald-600' : ''} aria-hidden="true" />
                       <span className="text-sm font-black uppercase italic">{tab.label}</span>
@@ -176,16 +176,16 @@ export default function CampusDashboard({ user }: { user: any }) {
                   ))}
                 </>
               ) : (
-                <div className="rounded-3xl border-4 border-dashed border-slate-200 p-8 text-center bg-white shadow-sm">
+                <div className="rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
                   <Lock className="mx-auto mb-4 text-slate-300" size={32} />
                   <p className="text-[10px] font-black uppercase italic text-slate-400">Dashboard Terkunci</p>
                 </div>
               )}
 
-              <div className="rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] mt-6 text-center">
-                <p className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest italic">Kesiapan Data</p>
-                <div className="mb-2 font-black text-2xl text-emerald-600">{profileCompletion.percent}%</div>
-                <div className="h-3 w-full bg-slate-100 border-2 border-slate-900 rounded-full overflow-hidden">
+              <div className="mt-6 rounded-3xl border-4 border-slate-900 bg-white p-6 text-center shadow-[10px_10px_0px_0px_rgba(15,23,42,1)]">
+                <p className="mb-4 text-[10px] font-black uppercase italic tracking-widest text-slate-400">Kesiapan Data</p>
+                <div className="mb-2 text-2xl font-black text-emerald-600">{profileCompletion.percent}%</div>
+                <div className="h-3 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
                     <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${profileCompletion.percent}%` }} />
                 </div>
               </div>
@@ -197,9 +197,9 @@ export default function CampusDashboard({ user }: { user: any }) {
               <div className="space-y-8 animate-in fade-in">
                 <div className="flex items-center gap-6 rounded-[3rem] border-4 border-amber-500 bg-amber-50 p-10 shadow-xl">
                     <AlertCircle className="text-amber-500" size={40} />
-                    <div className="text-amber-900 text-left">
-                      <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Menunggu Validasi</h2>
-                      <p className="text-sm font-bold opacity-80 italic">Data akademik akan terbuka otomatis setelah verifikasi selesai.</p>
+                    <div className="text-left text-amber-900">
+                      <h2 className="text-2xl font-black uppercase italic leading-none tracking-tighter">Menunggu Validasi</h2>
+                      <p className="text-sm font-bold italic opacity-80">Data akademik akan terbuka otomatis setelah verifikasi selesai.</p>
                     </div>
                 </div>
                 <ProfileEditor campus={campus} onUpdate={fetchDashboardData} onBack={() => {}} />
@@ -210,39 +210,39 @@ export default function CampusDashboard({ user }: { user: any }) {
                   <>
                     <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="mb-2 flex items-center gap-2">
                                 <Users size={16} className="text-slate-400" />
-                                <p className="text-[9px] font-black uppercase text-slate-400 italic">Talenta Terdaftar</p>
+                                <p className="text-[9px] font-black uppercase italic text-slate-400">Talenta Terdaftar</p>
                             </div>
                             <p className="text-5xl font-black italic tracking-tighter text-slate-900">{campus?.stats_academic_total || 0}</p>
                         </div>
                         
                         <div className="rounded-[2.5rem] border-4 border-emerald-600 bg-emerald-50 p-8 shadow-[8px_8px_0px_0px_rgba(16,185,129,1)]">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="mb-2 flex items-center gap-2">
                                 <Briefcase size={16} className="text-emerald-600" />
-                                <p className="text-[9px] font-black uppercase text-emerald-600 italic">Sudah Bekerja</p>
+                                <p className="text-[9px] font-black uppercase italic text-emerald-600">Sudah Bekerja</p>
                             </div>
                             <p className="text-5xl font-black italic tracking-tighter text-emerald-600">{campus?.stats_academic_hired || 0}</p>
                         </div>
 
                         <div className="rounded-[2.5rem] border-4 border-blue-600 bg-blue-50 p-8 shadow-[8px_8px_0px_0px_rgba(37,99,235,1)]">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="mb-2 flex items-center gap-2">
                                 <TrendingUp size={16} className="text-blue-600" />
-                                <p className="text-[9px] font-black uppercase text-blue-600 italic">Employability Rate</p>
+                                <p className="text-[9px] font-black uppercase italic text-blue-600">Employability Rate</p>
                             </div>
                             <p className="text-5xl font-black italic tracking-tighter text-blue-600">{employabilityRate}%</p>
                         </div>
 
-                        <div className="relative rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] text-white overflow-hidden">
-                            <div className="flex items-center justify-between mb-2">
+                        <div className="relative overflow-hidden rounded-[2.5rem] border-4 border-slate-900 bg-slate-900 p-8 text-white shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+                            <div className="mb-2 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Sparkles size={16} className="text-emerald-400" />
-                                    <p className="text-[9px] font-black uppercase text-emerald-400 italic">Inclusion Score</p>
+                                    <p className="text-[9px] font-black uppercase italic text-emerald-400">Inclusion Score</p>
                                 </div>
                                 <button 
                                   onClick={handleRecalculate}
                                   disabled={isSyncing}
-                                  className="group relative z-10 p-1.5 rounded-lg hover:bg-white/10 transition-all active:scale-90"
+                                  className="group relative z-10 rounded-lg p-1.5 transition-all hover:bg-white/10 active:scale-90"
                                   title="Hitung ulang skor berdasarkan data terbaru"
                                 >
                                   <RefreshCw size={14} className={`${isSyncing ? 'animate-spin text-emerald-400' : 'text-slate-500 group-hover:text-emerald-400'}`} />
@@ -250,16 +250,16 @@ export default function CampusDashboard({ user }: { user: any }) {
                             </div>
                             <p className="text-5xl font-black italic tracking-tighter text-white">{campus?.inclusion_score || 0}</p>
                             {isSyncing && (
-                              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
-                                <span className="text-[8px] font-black uppercase tracking-widest animate-pulse text-emerald-400">Recalculating...</span>
+                              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-[1px]">
+                                <span className="animate-pulse text-[8px] font-black uppercase tracking-widest text-emerald-400">Recalculating...</span>
                               </div>
                             )}
                         </div>
                     </section>
 
                     <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                        <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
-                            <h3 className="text-xs font-black uppercase text-slate-400 mb-8 tracking-widest border-b pb-4 flex items-center gap-2">
+                        <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+                            <h3 className="mb-8 flex items-center gap-2 border-b pb-4 text-xs font-black uppercase tracking-widest text-slate-400">
                                 <PieChart size={18}/> Proporsi Gender & Almamater
                             </h3>
                             <div className="space-y-8">
@@ -268,31 +268,31 @@ export default function CampusDashboard({ user }: { user: any }) {
                                         <span>Pria ({campus?.stats_gender_map?.male || 0})</span>
                                         <span>Wanita ({campus?.stats_gender_map?.female || 0})</span>
                                     </div>
-                                    <div className="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden border-2 border-slate-900">
+                                    <div className="flex h-4 w-full overflow-hidden rounded-full border-2 border-slate-900 bg-slate-100">
                                         <div 
                                           style={{ width: `${(campus?.stats_gender_map?.male / (campus?.stats_academic_total || 1)) * 100}%` }} 
-                                          className="h-full bg-blue-500 border-r-2 border-slate-900" 
+                                          className="h-full border-r-2 border-slate-900 bg-blue-500" 
                                         />
-                                        <div className="h-full bg-pink-500 flex-1" />
+                                        <div className="h-full flex-1 bg-pink-500" />
                                     </div>
                                 </div>
-                                <p className="text-[11px] font-medium text-slate-500 leading-relaxed italic">
+                                <p className="text-[11px] font-medium italic leading-relaxed text-slate-500">
                                     Data menunjukkan distribusi talenta yang terafiliasi secara resmi dengan institusi Anda di dalam sistem.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] text-left">
-                            <h3 className="text-xs font-black uppercase text-slate-400 mb-8 tracking-widest border-b pb-4 flex items-center gap-2">
+                        <div className="rounded-[3rem] border-4 border-slate-900 bg-white p-10 text-left shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+                            <h3 className="mb-8 flex items-center gap-2 border-b pb-4 text-xs font-black uppercase tracking-widest text-slate-400">
                                 <Activity size={18}/> Sebaran Ragam Disabilitas
                             </h3>
-                            <div className="max-h-[140px] overflow-y-auto custom-scrollbar space-y-3 pr-4">
+                            <div className="custom-scrollbar max-h-[140px] space-y-3 overflow-y-auto pr-4">
                                 {Object.entries(campus?.stats_disability_map || {}).length > 0 ? (
                                     Object.entries(campus?.stats_disability_map || {}).map(([k,v]: any) => (
-                                        <div key={k} className="flex justify-between items-center group">
-                                            <span className="text-[10px] font-black uppercase text-slate-600 group-hover:text-slate-900 transition-colors">{k}</span>
+                                        <div key={k} className="group flex items-center justify-between">
+                                            <span className="text-[10px] font-black uppercase text-slate-600 transition-colors group-hover:text-slate-900">{k}</span>
                                             <div className="flex items-center gap-3">
-                                                <div className="h-2 w-24 bg-slate-100 rounded-full overflow-hidden border border-slate-900 hidden md:block">
+                                                <div className="hidden h-2 w-24 overflow-hidden rounded-full border border-slate-900 bg-slate-100 md:block">
                                                     <div style={{ width: `${(v / (campus?.stats_academic_total || 1)) * 100}%` }} className="h-full bg-emerald-400" />
                                                 </div>
                                                 <span className="text-xs font-black italic text-slate-900">{v}</span>
@@ -305,8 +305,8 @@ export default function CampusDashboard({ user }: { user: any }) {
                     </section>
 
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-                      <section className="rounded-[3rem] border-4 border-slate-900 bg-white p-8 lg:col-span-2 flex flex-col items-center">
-                        <h3 className="mb-4 text-[11px] font-black uppercase text-slate-400 tracking-widest italic flex items-center gap-2">
+                      <section className="flex flex-col items-center rounded-[3rem] border-4 border-slate-900 bg-white p-8 lg:col-span-2">
+                        <h3 className="mb-4 flex items-center gap-2 text-[11px] font-black uppercase italic tracking-widest text-slate-400">
                            <Activity size={16}/> Index Pilar Inklusi
                         </h3>
                         <div className="h-[240px] w-full">
@@ -320,24 +320,24 @@ export default function CampusDashboard({ user }: { user: any }) {
                         </div>
                       </section>
                       
-                      <section className="rounded-[3.5rem] bg-slate-900 p-10 text-white shadow-2xl lg:col-span-3 flex flex-col justify-between relative overflow-hidden text-left">
+                      <section className="relative flex flex-col justify-between overflow-hidden rounded-[3.5rem] bg-slate-900 p-10 text-left text-white shadow-2xl lg:col-span-3">
                          <div className="relative z-10 space-y-6">
                             <div className="flex items-center gap-2">
                                 <MessageSquareQuote size={20} className="text-emerald-400" />
-                                <p className="text-emerald-400 font-black uppercase text-[10px] tracking-[0.2em] italic">Insight Aksesibilitas</p>
+                                <p className="text-[10px] font-black uppercase italic tracking-[0.2em] text-emerald-400">Insight Aksesibilitas</p>
                             </div>
                             <div className="space-y-4">
-                                <h3 className="text-3xl font-black italic tracking-tighter leading-tight text-slate-100">
+                                <h3 className="text-3xl font-black italic leading-tight tracking-tighter text-slate-100">
                                    {inclusionNarration}
                                 </h3>
-                                <p className="text-sm font-medium text-slate-400 leading-relaxed italic border-l-4 border-emerald-500 pl-4">
+                                <p className="border-l-4 border-emerald-500 pl-4 text-sm font-medium italic leading-relaxed text-slate-400">
                                    {campus?.smart_narrative_summary || "Analisis mendalam terhadap data akomodasi kampus Anda sedang disiapkan oleh sistem pusat."}
                                 </p>
                             </div>
                          </div>
-                         <div className="mt-8 flex gap-4 relative z-10">
-                            <div className="rounded-2xl border-2 border-white/20 bg-white/5 p-4 flex-1">
-                                <div className="flex items-center gap-2 mb-1">
+                         <div className="relative z-10 mt-8 flex gap-4">
+                            <div className="flex-1 rounded-2xl border-2 border-white/20 bg-white/5 p-4">
+                                <div className="mb-1 flex items-center gap-2">
                                     <Target size={14} className="text-emerald-400"/>
                                     <p className="text-[9px] font-black uppercase text-emerald-400">Task Antrean</p>
                                 </div>
@@ -345,12 +345,12 @@ export default function CampusDashboard({ user }: { user: any }) {
                             </div>
                             <button 
                               onClick={() => setActiveTab("tracer")} 
-                              className="bg-emerald-500 px-8 rounded-2xl text-slate-900 font-black uppercase italic text-xs hover:bg-white transition-all flex items-center gap-2 active:scale-95 shadow-lg"
+                              className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-8 text-xs font-black uppercase italic text-slate-900 shadow-lg transition-all hover:bg-white active:scale-95"
                             >
                                <MousePointerClick size={16}/> Proses Sekarang
                             </button>
                          </div>
-                         <div className="absolute -right-10 -bottom-10 opacity-10 text-white" aria-hidden="true"><TrendingUp size={240}/></div>
+                         <div className="absolute -bottom-10 -right-10 text-white opacity-10" aria-hidden="true"><TrendingUp size={240}/></div>
                       </section>
                     </div>
                   </>
