@@ -7,7 +7,7 @@ import {
   Building2, Briefcase, Users, Star, TrendingUp, AlertCircle, CheckCircle2, 
   LayoutDashboard, FileText, Settings, Search, ShieldCheck, MapPin, Zap, 
   ExternalLink, Share2, PieChart, GraduationCap, ArrowRight, Accessibility,
-  MessageCircle, Loader2
+  MessageCircle, Loader2, RefreshCw, Trophy
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -35,9 +35,10 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLHeadingElement>(null);
 
-  // REFACTOR: Panggil data statistik langsung tanpa lib/actions/company.ts
+  // REFACTOR: Panggil data statistik langsung
   const fetchDashboardData = useCallback(async () => {
     try {
+      setIsProcessing(true);
       // 1. Ambil Profil Perusahaan Terbaru
       const { data: latestComp } = await supabase.from("companies").select("*").eq("id", user.id).single();
       if (latestComp) setCompany(latestComp);
@@ -49,7 +50,6 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         getCompanyRatingAggregate(user.id)
       ]);
       
-      // Hitung tindakan yang tertunda (status applied)
       const pendingCount = (appsRes.data as any[])?.filter(a => a.status === 'applied').length || 0;
       
       setStats({ 
@@ -69,16 +69,27 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
         finalSkills.forEach(t => t.skills?.forEach((s: string) => counts[s] = (counts[s] || 0) + 1));
         setTrendingSkills(Object.entries(counts).map(([skill, count]) => ({ skill, count })).sort((a,b) => b.count - a.count).slice(0, 3));
       }
+      
+      setAnnouncement("Data berhasil disinkronisasi!");
     } catch (err) {
       console.error("Dashboard Sync Error:", err);
     } finally { 
       setLoading(false); 
+      setIsProcessing(false);
     }
   }, [user.id]);
 
   useEffect(() => {
     if (user?.id) fetchDashboardData();
   }, [user?.id, fetchDashboardData]);
+
+  // LOGIKA BATCH & NARASI SKOR INKLUSI
+  const inclusionScoreData = useMemo(() => {
+    const score = company?.inclusion_score || 0;
+    if (score >= 80) return { label: "Inclusion Champion", color: "text-emerald-600", bg: "bg-emerald-50", desc: "Instansi Anda adalah pionir inklusivitas dengan standar aksesibilitas tinggi." };
+    if (score >= 50) return { label: "Inclusive Progressive", color: "text-blue-600", bg: "bg-blue-50", desc: "Instansi Anda sedang bertransformasi menuju lingkungan kerja yang ramah disabilitas." };
+    return { label: "Inclusion Starter", color: "text-slate-500", bg: "bg-slate-50", desc: "Instansi Anda memulai langkah awal dalam membangun ekosistem kerja inklusif." };
+  }, [company?.inclusion_score]);
 
   const inclusionQuota = useMemo(() => {
     const total = company?.total_employees || 0;
@@ -106,37 +117,55 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
 
   const renderOverview = () => (
     <div className="space-y-8 text-left duration-500 animate-in fade-in">
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* NEW: SKOR INKLUSI & BATCH */}
+        <section className={`rounded-[2.5rem] border-2 border-slate-900 ${inclusionScoreData.bg} p-8 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]`}>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`rounded-xl p-3 bg-white shadow-sm ${inclusionScoreData.color}`}><Trophy size={24} /></div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Inclusion Score</p>
+                <h3 className={`text-xl font-black italic tracking-tighter ${inclusionScoreData.color}`}>{inclusionScoreData.label}</h3>
+              </div>
+            </div>
+            <div className="space-y-2">
+               <div className="flex justify-between items-end"><span className="text-4xl font-black italic leading-none">{company?.inclusion_score || 0}<span className="text-sm opacity-30">/100</span></span></div>
+               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200"><div className={`h-full transition-all duration-1000 ${inclusionScoreData.color.replace('text', 'bg')}`} style={{ width: `${company?.inclusion_score || 0}%` }} /></div>
+               <p className="text-[9px] font-bold leading-relaxed text-slate-500 italic">{inclusionScoreData.desc}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* STATS PENDING */}
         {stats.pendingAction > 0 ? (
           <button onClick={() => handleTabChange("applicants")} className="group flex items-center justify-between rounded-[2.5rem] border-2 border-blue-600 bg-blue-50 p-8 shadow-md transition-all hover:bg-blue-100">
             <div className="flex items-center gap-6 text-left">
               <div className="flex size-16 animate-bounce items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg"><AlertCircle size={32} /></div>
               <div>
-                <h2 className="text-xl font-black uppercase italic leading-none tracking-tighter text-blue-900">Review Talenta Baru</h2>
-                <p className="mt-2 text-[10px] font-bold uppercase text-blue-700/60">Ada {stats.pendingAction} lamaran menunggu tindakan</p>
+                <h2 className="text-xl font-black uppercase italic leading-none tracking-tighter text-blue-900">Review Talenta</h2>
+                <p className="mt-2 text-[10px] font-bold uppercase text-blue-700/60">Ada {stats.pendingAction} lamaran baru</p>
               </div>
             </div>
             <ArrowRight className="text-blue-600 transition-transform group-hover:translate-x-2" />
           </button>
         ) : (
-          <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm">
-            <div className="flex items-center gap-6">
+          <section className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-8 shadow-sm flex items-center gap-6">
               <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><CheckCircle2 size={32} /></div>
               <div className="text-left">
-                <h2 className="text-xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Semua Terkendali</h2>
-                <p className="mt-2 text-[10px] font-bold uppercase text-slate-400">Belum ada lamaran baru saat ini</p>
+                <h2 className="text-xl font-black uppercase italic leading-none tracking-tighter text-slate-900">Terkendali</h2>
+                <p className="mt-2 text-[10px] font-bold uppercase text-slate-400">Semua lamaran telah diproses</p>
               </div>
-            </div>
           </section>
         )}
 
+        {/* INCLUSION INDEX */}
         <section className="rounded-[2.5rem] border-2 border-blue-100 bg-blue-50 p-8 shadow-sm">
           <div className="flex items-center gap-6 text-left">
             <div className="rounded-3xl border-2 border-blue-100 bg-white p-5 text-blue-600"><Accessibility size={32} /></div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-900">Inclusion Index</h3>
               <p className="mt-1 text-4xl font-black italic leading-none text-blue-600">{ratings?.totalAvg?.toFixed(1) || "0.0"}<span className="text-sm text-blue-300">/5.0</span></p>
-              <p className="mt-1 text-[8px] font-bold uppercase italic text-blue-400">Berdasarkan feedback nyata talenta</p>
+              <p className="mt-1 text-[8px] font-bold uppercase italic text-blue-400">Feedback nyata talenta</p>
             </div>
           </div>
         </section>
@@ -244,23 +273,37 @@ export default function CompanyDashboard({ user, company: initialCompany }: { us
             </div>
           </div>
 
-          {/* Navigasi hanya muncul jika verified */}
-          {company?.is_verified && (
-            <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] border-2 border-slate-100 bg-slate-50 p-2 shadow-inner">
-              {[
-                { id: "overview", label: "Overview", icon: LayoutDashboard },
-                { id: "applicants", label: "Applicants", icon: Users },
-                { id: "jobs", label: "Jobs", icon: FileText },
-                { id: "simulator", label: "Simulator", icon: Search },
-                { id: "profile", label: "Profile", icon: Settings },
-                { id: "settings", label: "Account", icon: ShieldCheck },
-              ].map(tab => (
-                <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex items-center gap-3 rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'scale-105 bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-white'}`}>
-                  <tab.icon size={16} /> {tab.label}
-                </button>
-              ))}
-            </nav>
-          )}
+          <div className="flex flex-col items-center gap-6 lg:items-end">
+            {/* RECALCULATE BUTTON */}
+            {company?.is_verified && (
+              <button 
+                onClick={fetchDashboardData}
+                disabled={isProcessing}
+                className="flex items-center gap-2 rounded-xl border-2 border-slate-900 px-4 py-2 text-[9px] font-black uppercase tracking-widest transition-all hover:bg-slate-900 hover:text-white disabled:opacity-50"
+              >
+                {isProcessing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                Sinkronisasi Data
+              </button>
+            )}
+
+            {/* Navigasi hanya muncul jika verified */}
+            {company?.is_verified && (
+              <nav className="flex flex-wrap justify-center gap-2 rounded-[2.5rem] border-2 border-slate-100 bg-slate-50 p-2 shadow-inner">
+                {[
+                  { id: "overview", label: "Overview", icon: LayoutDashboard },
+                  { id: "applicants", label: "Applicants", icon: Users },
+                  { id: "jobs", label: "Jobs", icon: FileText },
+                  { id: "simulator", label: "Simulator", icon: Search },
+                  { id: "profile", label: "Profile", icon: Settings },
+                  { id: "settings", label: "Account", icon: ShieldCheck },
+                ].map(tab => (
+                  <button key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex items-center gap-3 rounded-2xl px-6 py-4 text-[10px] font-black uppercase transition-all ${activeTab === tab.id ? 'scale-105 bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-white'}`}>
+                    <tab.icon size={16} /> {tab.label}
+                  </button>
+                ))}
+              </nav>
+            )}
+          </div>
         </header>
 
         <main id="main-content" className="min-h-[60vh]">
