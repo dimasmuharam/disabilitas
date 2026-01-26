@@ -206,13 +206,13 @@ export default function PartnerDashboard({ user }: { user: any }) {
                 <h2 className={`text-2xl font-black uppercase italic tracking-tighter ${partner?.verification_status === 'rejected' ? 'text-rose-900' : 'text-amber-900'}`}>
                   {partner?.verification_status === 'rejected' ? "Verifikasi Ditolak" : "Akses Terbatas"}
                 </h2>
-                <p className="text-sm font-bold leading-relaxed opacity-80 text-slate-800">
+                <p className="text-sm font-bold leading-relaxed text-slate-800 opacity-80">
                   {partner?.verification_status === 'rejected' 
                     ? "Mohon periksa catatan di bawah dan perbarui dokumen verifikasi Anda agar Admin dapat meninjau kembali."
                     : "Dashboard Anda sedang dalam tahap tinjauan. Selesaikan pengisian profil dan unggah dokumen verifikasi agar Admin dapat mengaktifkan fitur operasional."}
                 </p>
                 {partner?.admin_notes && (
-                  <div className={`mt-4 rounded-xl border-2 p-4 bg-white/50 ${partner?.verification_status === 'rejected' ? 'border-rose-200' : 'border-amber-200'}`}>
+                  <div className={`mt-4 rounded-xl border-2 bg-white/50 p-4 ${partner?.verification_status === 'rejected' ? 'border-rose-200' : 'border-amber-200'}`}>
                     <p className={`text-[10px] font-black uppercase tracking-widest ${partner?.verification_status === 'rejected' ? 'text-rose-600' : 'text-amber-600'}`}>Catatan Admin:</p>
                     <p className="text-sm font-bold italic text-slate-700">&quot;{partner.admin_notes}&quot;</p>
                   </div>
@@ -247,8 +247,8 @@ export default function PartnerDashboard({ user }: { user: any }) {
                   <button onClick={() => navigateTo("selection", "Seleksi")} className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase underline decoration-2 underline-offset-4">Buka Seleksi <ArrowRight size={14}/></button>
                 </div>
               ) : (
-                <div className="flex flex-col justify-center rounded-[2.5rem] border-4 border-dashed border-slate-200 p-8 text-slate-400 text-center">
-                   <Lock size={24} className="mb-2 opacity-30 mx-auto" />
+                <div className="flex flex-col justify-center rounded-[2.5rem] border-4 border-dashed border-slate-200 p-8 text-center text-slate-400">
+                   <Lock size={24} className="mx-auto mb-2 opacity-30" />
                    <p className="text-[10px] font-black uppercase italic">Menu Terkunci</p>
                 </div>
               )}

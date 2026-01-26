@@ -237,7 +237,7 @@ export default function AdminDashboard({ user, serverStats, serverAudit }: Admin
             >
               <tab.icon size={18} aria-hidden="true" /> {tab.label}
               {tab.id === 'institution_verify' && verificationQueue.length > 0 && (
-                <span className="ml-2 bg-red-500 text-white text-[8px] px-2 py-0.5 rounded-full animate-pulse">
+                <span className="ml-2 animate-pulse rounded-full bg-red-500 px-2 py-0.5 text-[8px] text-white">
                   {verificationQueue.length}
                 </span>
               )}

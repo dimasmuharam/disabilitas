@@ -139,7 +139,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
   };
 
   return (
-    <div className="mx-auto max-w-6xl pb-20 text-left animate-in fade-in duration-500">
+    <div className="mx-auto max-w-6xl pb-20 text-left duration-500 animate-in fade-in">
       {/* Live Region Aksesibilitas untuk Screen Reader */}
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
@@ -164,11 +164,11 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                 placeholder="https://drive.google.com/..."
                 value={formData.verification_document_link}
                 onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
-                className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
+                className="w-full rounded-2xl border-2 border-blue-200 bg-white p-5 font-bold text-blue-900 shadow-inner outline-none focus:border-blue-600"
               />
-              <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
-                <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" />
-                <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
+              <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white/50 p-4">
+                <AlertCircle size={16} className="mt-1 shrink-0 text-blue-600" />
+                <p className="text-[10px] font-bold italic leading-relaxed text-blue-800">
                   Pastikan akses Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong>.
                 </p>
               </div>
@@ -312,7 +312,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
               </div>
               <div className="space-y-2">
                 <label htmlFor="comp-desc" className="ml-2 text-[10px] font-black uppercase text-slate-400">Tentang Instansi</label>
-                <textarea id="comp-desc" rows={8} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 text-sm font-medium outline-none focus:border-blue-600 shadow-inner" placeholder="Jelaskan lingkungan dan budaya kerja inklusif di instansi Anda..." />
+                <textarea id="comp-desc" rows={8} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-2xl border-2 border-slate-100 p-4 text-sm font-medium shadow-inner outline-none focus:border-blue-600" placeholder="Jelaskan lingkungan dan budaya kerja inklusif di instansi Anda..." />
               </div>
             </div>
           </div>
@@ -335,7 +335,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
                     <label key={acc} className="cursor-pointer">
                       <input type="checkbox" className="sr-only" checked={isChecked} onChange={() => handleToggleFeature(acc)} />
                       <div className={`rounded-2xl border-2 px-6 py-3 text-[10px] font-black uppercase transition-all 
-                        ${isChecked ? "border-emerald-600 bg-emerald-600 text-white shadow-md scale-105" : "border-slate-100 bg-slate-50 text-slate-400 hover:border-emerald-200"}
+                        ${isChecked ? "scale-105 border-emerald-600 bg-emerald-600 text-white shadow-md" : "border-slate-100 bg-slate-50 text-slate-400 hover:border-emerald-200"}
                       `}>
                         {acc}
                       </div>
@@ -352,7 +352,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
           
           {/* Pesan Status Inline Berdasarkan State announcement */}
           {announcement && (
-            <div className={`flex items-center gap-3 rounded-2xl border-4 p-5 text-[10px] font-black uppercase italic tracking-widest border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
+            <div className={`flex items-center gap-3 rounded-2xl border-4 border-slate-900 p-5 text-[10px] font-black uppercase italic tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
               ${announcement.includes("Sukses") ? "bg-emerald-400 text-slate-900" : 
                 announcement.includes("Sedang") ? "bg-blue-400 text-white" : 
                 "bg-rose-400 text-white"}`}>
@@ -388,7 +388,7 @@ export default function ProfileEditor({ company, user, onSuccess }: { company: a
               )}
             </div>
 
-            <p className="text-[9px] font-bold uppercase italic text-slate-400 max-w-xs text-right">
+            <p className="max-w-xs text-right text-[9px] font-bold uppercase italic text-slate-400">
               * Data statistik digunakan untuk riset nasional. Verifikasi dokumen diperlukan untuk otorisasi penuh.
             </p>
           </div>

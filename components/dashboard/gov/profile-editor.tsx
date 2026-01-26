@@ -164,7 +164,7 @@ export default function GovProfileEditor({ user, govData, onSaveSuccess }: GovPr
   );
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 pb-20 text-left animate-in fade-in duration-500">
+    <div className="mx-auto max-w-4xl space-y-10 pb-20 text-left duration-500 animate-in fade-in">
       
       <div className="sr-only" aria-live="assertive" role="status">{announcement}</div>
 
@@ -189,11 +189,11 @@ export default function GovProfileEditor({ user, govData, onSaveSuccess }: GovPr
                 placeholder="https://drive.google.com/..."
                 value={formData.verification_document_link}
                 onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
-                className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 shadow-inner bg-white text-blue-900"
+                className="w-full rounded-2xl border-2 border-blue-200 bg-white p-5 font-bold text-blue-900 shadow-inner outline-none focus:border-blue-600"
               />
-              <div className="flex items-start gap-3 rounded-2xl bg-white/50 p-4 border border-blue-100">
-                <AlertCircle size={16} className="text-blue-600 mt-1 shrink-0" aria-hidden="true" />
-                <p className="text-[10px] font-bold leading-relaxed text-blue-800 italic">
+              <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white/50 p-4">
+                <AlertCircle size={16} className="mt-1 shrink-0 text-blue-600" aria-hidden="true" />
+                <p className="text-[10px] font-bold italic leading-relaxed text-blue-800">
                   Pastikan akses Google Drive diatur ke <strong>&quot;Anyone with the link / Siapa saja yang memiliki link&quot;</strong>.
                 </p>
               </div>
@@ -238,7 +238,7 @@ export default function GovProfileEditor({ user, govData, onSaveSuccess }: GovPr
 
             {isNasional ? (
               <div className="space-y-2">
-                <label htmlFor="manual-name" className="ml-2 text-[10px) font-black uppercase tracking-widest text-slate-500">Nama Lengkap Instansi</label>
+                <label htmlFor="manual-name" className="text-[10px) ml-2 font-black uppercase tracking-widest text-slate-500">Nama Lengkap Instansi</label>
                 <input 
                   id="manual-name"
                   type="text"
@@ -351,7 +351,7 @@ export default function GovProfileEditor({ user, govData, onSaveSuccess }: GovPr
         {/* FOOTER: STATUS INLINE & TOMBOL AKSI */}
         <div className="space-y-6 border-t border-slate-100 pt-10">
           {announcement && (
-            <div className={`flex items-center gap-3 rounded-2xl border-4 p-5 text-[10px] font-black uppercase italic tracking-widest border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
+            <div className={`flex items-center gap-3 rounded-2xl border-4 border-slate-900 p-5 text-[10px] font-black uppercase italic tracking-widest shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]
               ${announcement.includes("Sukses") ? "bg-emerald-400 text-slate-900" : 
                 announcement.includes("Sedang") ? "bg-blue-400 text-white" : 
                 "bg-rose-400 text-white"}`}>

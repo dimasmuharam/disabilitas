@@ -163,8 +163,8 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
               <div className="mb-6 flex items-center gap-4">
                 <div className="rounded-2xl bg-blue-600 p-3 text-white"><Link2 size={24} /></div>
                 <div>
-                  <h2 className="text-xl font-black uppercase italic tracking-tighter text-blue-900 leading-none">Validasi Akses</h2>
-                  <p className="mt-2 text-[10px] font-bold text-blue-500 uppercase tracking-widest">Sertakan link SK/Dokumen Penetapan ULD dari G-Drive</p>
+                  <h2 className="text-xl font-black uppercase italic leading-none tracking-tighter text-blue-900">Validasi Akses</h2>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-blue-500">Sertakan link SK/Dokumen Penetapan ULD dari G-Drive</p>
                 </div>
               </div>
               <input 
@@ -172,7 +172,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                 placeholder="https://drive.google.com/..."
                 value={formData.verification_document_link}
                 onChange={e => setFormData({...formData, verification_document_link: e.target.value})}
-                className="w-full rounded-2xl border-2 border-blue-200 p-5 font-bold outline-none focus:border-blue-600 bg-white text-blue-900"
+                className="w-full rounded-2xl border-2 border-blue-200 bg-white p-5 font-bold text-blue-900 outline-none focus:border-blue-600"
               />
             </section>
           )}
@@ -200,7 +200,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                 {showUniList && (
                   <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border-4 border-slate-900 bg-white p-2 shadow-2xl">
                     {filteredUnis.map(u => (
-                      <button key={u} onClick={() => { setFormData({...formData, name: u}); setShowUniList(false); }} className="w-full p-3 text-left text-[10px] font-black uppercase hover:bg-blue-50 hover:text-blue-600 rounded-lg">{u}</button>
+                      <button key={u} onClick={() => { setFormData({...formData, name: u}); setShowUniList(false); }} className="w-full rounded-lg p-3 text-left text-[10px] font-black uppercase hover:bg-blue-50 hover:text-blue-600">{u}</button>
                     ))}
                   </div>
                 )}
@@ -225,7 +225,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
                 {showLocList && (
                   <div className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border-4 border-slate-900 bg-white p-2 shadow-2xl">
                     {filteredLocs.map(c => (
-                      <button key={c} onClick={() => { setFormData({...formData, location: c}); setShowLocList(false); }} className="w-full p-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 rounded-lg">{c}</button>
+                      <button key={c} onClick={() => { setFormData({...formData, location: c}); setShowLocList(false); }} className="w-full rounded-lg p-3 text-left text-[10px] font-black uppercase hover:bg-slate-50">{c}</button>
                     ))}
                   </div>
                 )}
@@ -253,9 +253,9 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
         <div className="space-y-8">
           <fieldset className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
             <legend className="mb-6 flex items-center gap-2 text-[11px] font-black uppercase text-blue-400"><ListChecks size={18} /> 14 Indikator Inklusi</legend>
-            <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="custom-scrollbar max-h-[400px] space-y-3 overflow-y-auto pr-2">
               {ACCOMMODATION_TYPES.map(item => (
-                <label key={item} className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-all">
+                <label key={item} className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10">
                   <input type="checkbox" checked={formData.master_accommodations_provided.includes(item)} onChange={() => handleCheckboxChange(item)} className="mt-1 size-5 accent-blue-500" />
                   <span className="text-[9px] font-black uppercase leading-tight text-slate-300">{item}</span>
                 </label>
@@ -265,7 +265,7 @@ export default function ProfileEditor({ campus, onUpdate, onBack }: ProfileEdito
 
           <div className="space-y-4">
             {announcement && (
-              <div className="rounded-2xl border-4 border-slate-900 bg-emerald-400 p-4 text-[10px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-2xl border-4 border-slate-900 bg-emerald-400 p-4 text-[10px] font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <CheckCircle2 size={16} /> {announcement}
               </div>
             )}

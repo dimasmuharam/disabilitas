@@ -97,16 +97,16 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
   )
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in fade-in duration-500">
+    <div className="grid grid-cols-1 gap-8 duration-500 animate-in fade-in xl:grid-cols-12">
       
       {/* KIRI: DAFTAR ANTREAN (4 Column) */}
-      <section className="xl:col-span-4 space-y-6">
+      <section className="space-y-6 xl:col-span-4">
         <div className="rounded-[2.5rem] border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-sm font-black uppercase italic tracking-tighter flex items-center gap-2">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-black uppercase italic tracking-tighter">
               <Clock className="text-blue-600" size={18} /> Antrean Verifikasi
             </h2>
-            <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full">
+            <span className="rounded-full bg-blue-600 px-3 py-1 text-[10px] font-black text-white">
               {queue.length} Request
             </span>
           </div>
@@ -116,26 +116,27 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
             <input 
               type="text"
               placeholder="Cari ID atau Tipe..."
-              className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-100 text-[10px] font-bold outline-none focus:border-blue-600"
+              className="w-full rounded-2xl border-2 border-slate-100 py-3 pl-10 pr-4 text-[10px] font-bold outline-none focus:border-blue-600"
               onChange={(e) => setSearchTerm(e.target.value)}
               aria-label="Cari dalam antrean"
             />
           </div>
 
-          <div className="space-y-3 max-h-[600px] overflow-y-auto no-scrollbar" role="list" aria-label="Daftar Permohonan Verifikasi">
+          <div className="no-scrollbar max-h-[600px] space-y-3 overflow-y-auto" role="listbox" aria-label="Daftar Permohonan Verifikasi">
             {filteredQueue.map((req) => (
               <button
                 key={req.id}
+                role="option"
                 onClick={() => setSelectedRequest(req)}
                 aria-selected={selectedRequest?.id === req.id}
-                className={`w-full text-left p-4 rounded-3xl border-2 transition-all flex items-center justify-between ${
+                className={`flex w-full items-center justify-between rounded-3xl border-2 p-4 text-left transition-all ${
                   selectedRequest?.id === req.id 
                   ? "border-blue-600 bg-blue-50" 
-                  : "border-slate-100 hover:border-slate-300 bg-slate-50"
+                  : "border-slate-100 bg-slate-50 hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${selectedRequest?.id === req.id ? 'bg-blue-600 text-white' : 'bg-white text-slate-400'}`}>
+                  <div className={`rounded-xl p-2 ${selectedRequest?.id === req.id ? 'bg-blue-600 text-white' : 'bg-white text-slate-400'}`}>
                     {getIcon(req.target_type)}
                   </div>
                   <div>
@@ -143,13 +144,13 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
                     <p className="text-[8px] font-bold text-slate-400">{new Date(req.created_at).toLocaleDateString('id-ID')}</p>
                   </div>
                 </div>
-                <div className="size-2 rounded-full bg-blue-600 animate-pulse" />
+                <div className="size-2 animate-pulse rounded-full bg-blue-600" />
               </button>
             ))}
             {queue.length === 0 && (
-              <div className="text-center py-10">
-                <ShieldCheck size={40} className="mx-auto text-slate-200 mb-2" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Semua akun sudah terverifikasi</p>
+              <div className="py-10 text-center">
+                <ShieldCheck size={40} className="mx-auto mb-2 text-slate-200" />
+                <p className="text-[10px] font-bold uppercase text-slate-400">Semua akun sudah terverifikasi</p>
               </div>
             )}
           </div>
@@ -159,27 +160,27 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
       {/* KANAN: DETAIL REVIEW (8 Column) */}
       <section className="xl:col-span-8">
         {!selectedRequest ? (
-          <div className="h-full min-h-[400px] rounded-[3rem] border-4 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
+          <div className="flex h-full min-h-[400px] flex-col items-center justify-center rounded-[3rem] border-4 border-dashed border-slate-200 text-slate-400">
             <Info size={48} className="mb-4 opacity-20" />
-            <p className="text-xs font-black uppercase tracking-widest italic">Pilih antrean untuk memulai review</p>
+            <p className="text-xs font-black uppercase italic tracking-widest">Pilih antrean untuk memulai review</p>
           </div>
         ) : (
           <div 
             ref={detailRef}
             tabIndex={-1}
-            className="rounded-[3rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] overflow-hidden outline-none"
+            className="overflow-hidden rounded-[3rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(37,99,235,1)] outline-none"
           >
             {/* Header Detail */}
-            <div className="bg-slate-900 p-8 text-white flex flex-col md:flex-row justify-between gap-6">
+            <div className="flex flex-col justify-between gap-6 bg-slate-900 p-8 text-white md:flex-row">
               <div className="flex items-center gap-4">
-                <div className="bg-blue-600 p-4 rounded-3xl shadow-lg">
+                <div className="rounded-3xl bg-blue-600 p-4 shadow-lg">
                   {getIcon(selectedRequest.target_type)}
                 </div>
                 <div>
                   <h3 className="text-xl font-black uppercase italic tracking-tighter">
                     {targetProfile?.name || "Loading..."}
                   </h3>
-                  <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400">
                     ID: {selectedRequest.target_id} • {selectedRequest.target_type}
                   </p>
                 </div>
@@ -188,7 +189,7 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
                 href={selectedRequest.document_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-2xl text-[10px] font-black uppercase hover:bg-blue-50 transition-all"
+                className="flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-[10px] font-black uppercase text-slate-900 transition-all hover:bg-blue-50"
                 aria-label="Buka Link Google Drive di Tab Baru"
               >
                 <ExternalLink size={16} /> Buka Dokumen G-Drive
@@ -199,26 +200,26 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
               {loadingProfile ? (
                 <div className="flex justify-center py-20"><Loader2 className="animate-spin text-blue-600" /></div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
                   {/* Info Dasar */}
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase text-blue-600 border-b-2 border-blue-50 pb-2">Profil Lengkap Lembaga</h4>
+                    <h4 className="border-b-2 border-blue-50 pb-2 text-[10px] font-black uppercase text-blue-600">Profil Lengkap Lembaga</h4>
                     <div className="space-y-4">
                       <div className="group">
-                        <label className="text-[8px] font-black text-slate-400 uppercase">Website & Email</label>
+                        <label className="text-[8px] font-black uppercase text-slate-400">Website & Email</label>
                         <p className="text-xs font-bold text-slate-700">{targetProfile?.website || '-'} / {targetProfile?.email || '-'}</p>
                       </div>
                       <div className="group">
-                        <label className="text-[8px] font-black text-slate-400 uppercase">Lokasi / Alamat</label>
+                        <label className="text-[8px] font-black uppercase text-slate-400">Lokasi / Alamat</label>
                         <p className="text-xs font-bold text-slate-700">{targetProfile?.location || 'Lokasi tidak diisi'}</p>
                       </div>
                       <div className="group">
-                        <label className="text-[8px] font-black text-slate-400 uppercase">NIB / Nomor Izin</label>
-                        <p className="text-xs font-black text-blue-600 tracking-widest">{targetProfile?.nib_number || 'TIDAK ADA NIB'}</p>
+                        <label className="text-[8px] font-black uppercase text-slate-400">NIB / Nomor Izin</label>
+                        <p className="text-xs font-black tracking-widest text-blue-600">{targetProfile?.nib_number || 'TIDAK ADA NIB'}</p>
                       </div>
                       <div className="group">
-                        <label className="text-[8px] font-black text-slate-400 uppercase">Deskripsi Lembaga</label>
-                        <p className="text-[10px] leading-relaxed font-medium text-slate-500 italic">
+                        <label className="text-[8px] font-black uppercase text-slate-400">Deskripsi Lembaga</label>
+                        <p className="text-[10px] font-medium italic leading-relaxed text-slate-500">
 &quot;{targetProfile?.description || 'Tidak ada deskripsi profil.'}&quot;
                         </p>
                       </div>
@@ -226,13 +227,13 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
                   </div>
 
                   {/* Aksi Verifikasi */}
-                  <div className="space-y-6 bg-slate-50 p-6 rounded-[2rem] border-2 border-slate-100">
-                    <h4 className="text-[10px] font-black uppercase text-slate-900 flex items-center gap-2">
+                  <div className="space-y-6 rounded-[2rem] border-2 border-slate-100 bg-slate-50 p-6">
+                    <h4 className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-900">
                       <AlertCircle size={14} /> Panel Keputusan
                     </h4>
                     
                     <div className="space-y-2">
-                      <label htmlFor="admin_notes" className="text-[8px] font-black text-slate-400 uppercase ml-2">Catatan untuk Lembaga (Wajib jika menolak)</label>
+                      <label htmlFor="admin_notes" className="ml-2 text-[8px] font-black uppercase text-slate-400">Catatan untuk Lembaga (Wajib jika menolak)</label>
                       <textarea 
                         id="admin_notes"
                         rows={4}
@@ -247,14 +248,14 @@ export default function InstitutionVerificationHub({ queue, onRefresh }: Verific
                       <button 
                         disabled={actionLoading}
                         onClick={() => handleAction(false)}
-                        className="flex items-center justify-center gap-2 bg-white border-2 border-red-500 text-red-600 px-4 py-4 rounded-2xl text-[10px] font-black uppercase hover:bg-red-50 disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 rounded-2xl border-2 border-red-500 bg-white p-4 text-[10px] font-black uppercase text-red-600 hover:bg-red-50 disabled:opacity-50"
                       >
                         <X size={16} /> Tolak
                       </button>
                       <button 
                         disabled={actionLoading}
                         onClick={() => handleAction(true)}
-                        className="flex items-center justify-center gap-2 bg-slate-900 text-white px-4 py-4 rounded-2xl text-[10px] font-black uppercase hover:bg-slate-800 shadow-lg disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 p-4 text-[10px] font-black uppercase text-white shadow-lg hover:bg-slate-800 disabled:opacity-50"
                       >
                         {actionLoading ? <Loader2 className="animate-spin" size={16} /> : <><Check size={16} /> Approve</>}
                       </button>

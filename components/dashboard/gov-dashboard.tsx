@@ -97,7 +97,7 @@ export default function GovDashboard({ user }: { user: any }) {
   if (loading) return (
     <div className="flex h-screen flex-col items-center justify-center bg-[#F8FAFC]" role="status">
       <Loader2 className="mb-4 animate-spin text-blue-600" size={48} />
-      <p className="font-black uppercase italic tracking-widest text-slate-400 animate-pulse">Sinkronisasi Data Otoritas...</p>
+      <p className="animate-pulse font-black uppercase italic tracking-widest text-slate-400">Sinkronisasi Data Otoritas...</p>
     </div>
   );
 
@@ -180,7 +180,7 @@ export default function GovDashboard({ user }: { user: any }) {
                 ></div>
               </div>
               {profileCompletion.missing.length > 0 && (
-                <p className="mb-4 text-[9px] font-bold leading-relaxed text-slate-400 italic">
+                <p className="mb-4 text-[9px] font-bold italic leading-relaxed text-slate-400">
                   <AlertTriangle size={10} className="mr-1 inline text-amber-500" />
                   Lengkapi: {profileCompletion.missing.join(", ")}
                 </p>
@@ -247,7 +247,7 @@ export default function GovDashboard({ user }: { user: any }) {
 
                   {/* EXPORT SECTION */}
                   <div className="mt-6 rounded-3xl border-4 border-slate-900 bg-white p-6 shadow-[8px_8px_0px_0px_rgba(59,130,246,1)]">
-                    <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Export Data Wilayah</p>
+                    <p className="mb-4 text-center text-[10px] font-black uppercase italic tracking-widest text-slate-400">Export Data Wilayah</p>
                     <div className="grid grid-cols-2 gap-3">
                       <button 
                         disabled={isExporting}
@@ -293,9 +293,9 @@ export default function GovDashboard({ user }: { user: any }) {
                     <div className="space-y-2">
                       <h2 className="text-2xl font-black uppercase italic tracking-tighter text-red-900">Verifikasi Ditolak</h2>
                       <p className="text-sm font-bold leading-relaxed text-red-800">
-                        Alasan Admin: <span className="underline italic">{govData?.admin_notes || "Dokumen atau informasi tidak valid."}</span>
+                        Alasan Admin: <span className="italic underline">{govData?.admin_notes || "Dokumen atau informasi tidak valid."}</span>
                       </p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-red-600/60 mt-2">
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-red-600/60">
                         Silakan perbarui data profil atau dokumen resmi Anda di bawah untuk pengajuan ulang.
                       </p>
                     </div>
@@ -321,7 +321,7 @@ export default function GovDashboard({ user }: { user: any }) {
                 />
               </div>
             ) : (
-              <div className="animate-in fade-in duration-500">
+              <div className="duration-500 animate-in fade-in">
                 {activeTab === "overview" && <GovAnalyticsOverview govData={govData} />}
                 {activeTab === "directory" && <GovTalentDirectory govData={govData} />}
                 {activeTab === "partnership" && <GovPartnershipManager govData={govData} />}
@@ -352,7 +352,7 @@ function NavButton({ active, onClick, icon, label, ariaLabel }: { active: boolea
       aria-current={active ? "page" : undefined}
       className={`group flex items-center gap-4 rounded-2xl border-4 p-4 outline-none transition-all focus:ring-4 focus:ring-blue-200 ${
         active 
-        ? 'border-slate-900 bg-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] translate-x-[-2px] translate-y-[-2px]' 
+        ? 'translate-x-[-2px] translate-y-[-2px] border-slate-900 bg-white shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]' 
         : 'border-transparent text-slate-400 hover:border-slate-200 hover:text-slate-600'
       }`}
     >

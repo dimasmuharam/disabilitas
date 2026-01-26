@@ -87,7 +87,7 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
   const COLORS = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a'];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 duration-500 animate-in fade-in">
       
       {/* NARRATIVE SECTION (Aksesibilitas & Konteks) */}
       <section 
@@ -195,22 +195,22 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
       </div>
 
       {/* RAW DATA TABLE (AUDIT & RESEARCH) */}
-      <section className="rounded-[2.5rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] overflow-hidden">
-        <div className="border-b-4 border-slate-900 bg-slate-50 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <section className="overflow-hidden rounded-[2.5rem] border-4 border-slate-900 bg-white shadow-[12px_12px_0px_0px_rgba(15,23,42,1)]">
+        <div className="flex flex-col items-center justify-between gap-4 border-b-4 border-slate-900 bg-slate-50 p-6 md:flex-row">
           <h3 className="text-lg font-black uppercase italic tracking-tighter">Detailed Application Logs</h3>
           <div className="relative w-full max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text"
               placeholder="Cari talent, perusahaan, atau status..."
-              className="w-full rounded-2xl border-4 border-slate-900 py-3 pl-12 pr-4 text-[10px] font-bold uppercase shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] outline-none focus:translate-y-[-2px] transition-all"
+              className="w-full rounded-2xl border-4 border-slate-900 py-3 pl-12 pr-4 text-[10px] font-bold uppercase shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] outline-none transition-all focus:translate-y-[-2px]"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-slate-900 text-[10px] font-black uppercase tracking-widest text-white">
                 <th className="px-6 py-4">Waktu</th>
@@ -224,13 +224,13 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
                 l.talent_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                 l.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
               ).map((log, i) => (
-                <tr key={i} className="hover:bg-slate-50 transition-colors">
+                <tr key={i} className="transition-colors hover:bg-slate-50">
                   <td className="px-6 py-4 text-[10px] font-bold text-slate-500">
                     {new Date(log.log_time).toLocaleDateString('id-ID')}
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-[11px] font-black text-slate-900">{log.talent_name}</div>
-                    <div className="text-[9px] font-bold uppercase text-blue-600 flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-[9px] font-bold uppercase text-blue-600">
                       <GraduationCap size={12} /> {log.education_level} - {log.university} ({log.education_model || 'N/A'})
                     </div>
                   </td>
@@ -240,10 +240,10 @@ export default function TransitionHiringAnalytics({ logs }: TransitionAnalyticsP
                       <ArrowUpRight size={14} className="text-slate-400" />
                       <span className="rounded-md bg-blue-600 px-2 py-1 text-[9px] font-black text-white">{log.new_status}</span>
                     </div>
-                    <div className="mt-1 text-[9px] font-bold text-slate-400 uppercase italic">@ {log.company_name}</div>
+                    <div className="mt-1 text-[9px] font-bold uppercase italic text-slate-400">@ {log.company_name}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="max-w-xs text-[10px] font-medium text-slate-600 italic">
+                    <p className="max-w-xs text-[10px] font-medium italic text-slate-600">
                       &quot;{log.hrd_notes_snapshot || 'Tidak ada catatan khusus.'}&quot;
                     </p>
                   </td>
